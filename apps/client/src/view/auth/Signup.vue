@@ -8,6 +8,12 @@ import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
+import { navigateTo } from "../../lib/navigation.ts";
+import {
+  continuationUrl,
+  oauthPromptIncludes,
+  signedOAuthQuery,
+} from "../../lib/oauth-continuation.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
 
@@ -43,7 +49,40 @@ const redirectUri = computed(() => {
   return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
 });
 
+/** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-up. */
+const oauthQuery = signedOAuthQuery(window.location.search);
+
+/**
+ * `prompt=create` (the Trusted Client asked for a sign-up): once a session exists, right
+ * after registering or because the user was signed in already, the provider needs an
+ * explicit continue to drop the prompt and finish the authorize request. Without a session
+ * the call is refused and the form renders.
+ */
+async function continueOAuthSignup(): Promise<boolean> {
+  if (!oauthQuery || !oauthPromptIncludes(window.location.search, "create")) {
+    return false;
+  }
+  try {
+    const { data } = await authClient.$fetch("/oauth2/continue", {
+      method: "POST",
+      body: { created: true, oauth_query: oauthQuery },
+    });
+    const trustedClientRedirect = continuationUrl(data);
+    if (!trustedClientRedirect) {
+      return false;
+    }
+    navigateTo(trustedClientRedirect);
+    return true;
+  } catch {
+    // unreachable provider: register first, the sign-up response resumes the request
+    return false;
+  }
+}
+
 onMounted(async () => {
+  if (await continueOAuthSignup()) {
+    return;
+  }
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
     signupEnabled.value = res.data.signupEnabled;
@@ -58,7 +97,7 @@ onMounted(async () => {
 const signup = handleSubmit(async (values) => {
   loading.value = true;
   try {
-    const { error } = await authClient.signUp.email({
+    const { data, error } = await authClient.signUp.email({
       email: values.email,
       password: values.password,
       firstName: values.firstName,
@@ -66,6 +105,7 @@ const signup = handleSubmit(async (values) => {
       name: `${values.firstName} ${values.lastName}`,
       preferredLanguage: convertLocaleToLanguage(locale.value as string),
       callbackURL: redirectUri.value,
+      ...(oauthQuery ? { oauth_query: oauthQuery } : {}),
     });
 
     if (error) {
@@ -74,9 +114,16 @@ const signup = handleSubmit(async (values) => {
         summary: t("auth.signup.error"),
         life: 5000,
       });
-    } else {
-      router.push("/signin");
+      return;
     }
+    const providerRedirect = oauthQuery ? continuationUrl(data) : undefined;
+    if (providerRedirect) {
+      // the provider resumed the authorize request, or sent the page back here to continue
+      // a `prompt=create` request now that a session exists
+      navigateTo(providerRedirect);
+      return;
+    }
+    router.push("/signin");
   } catch {
     toast.add({
       severity: "error",
@@ -246,9 +293,7 @@ const signup = handleSubmit(async (values) => {
           <router-link
             :to="{
               name: 'Signin',
-              query: {
-                redirect: redirectUri,
-              },
+              query: route.query,
             }"
             class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
           >

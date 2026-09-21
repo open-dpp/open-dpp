@@ -21,6 +21,7 @@ import {
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
+import { withDisplayName } from "../users/infrastructure/user-display-name-hook";
 import {
   createOAuthProviderPlugins,
   OAUTH_PROVIDER_DISABLED_PATHS,
@@ -286,6 +287,9 @@ export const AuthProvider: Provider = {
           },
         },
         user: {
+          create: {
+            before: async (user) => withDisplayName(user),
+          },
           update: {
             before: async (data, context) => guardEmailChangeUpdate(db, logger, data, context),
             after: async (user) => completeVerifiedEmailChange(db, emailService, logger, user),

@@ -17,3 +17,5 @@ process.env.OPEN_DPP_OAUTH_PROVIDER_ENABLED = "true";
 process.env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID = TEST_TRUSTED_CLIENT.clientId;
 process.env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET = TEST_TRUSTED_CLIENT.clientSecret;
 process.env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS = TEST_TRUSTED_CLIENT.redirectUris.join(",");
+// unset: the client name must default to the client id whatever the developer's env says
+process.env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME = "";

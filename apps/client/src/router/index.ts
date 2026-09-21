@@ -10,6 +10,7 @@ import { AUTH_ROUTES } from "./routes/auth";
 import { MEDIA_ROUTES } from "./routes/media";
 import { ORGANIZATION_ROUTES } from "./routes/organizations";
 import { PRESENTATION_ROUTES } from "./routes/presentation/presentation";
+import { resolveAuthRedirect } from "./auth-guard.ts";
 import { toRaw } from "vue";
 
 // const MODE = import.meta.env.MODE;
@@ -126,17 +127,9 @@ router.beforeEach(async (to, from) => {
   const { data: session } = await authClient.getSession();
   const isSignedIn = session !== null;
 
-  if (isSignedIn && to.meta?.onlyAnonymous) {
-    return "/";
-  }
-  if (!isSignedIn && !to.meta?.public) {
-    const fullRedirectUrl = encodeURIComponent(window.location.origin + to.fullPath);
-    return {
-      name: "Signin",
-      query: {
-        redirect: fullRedirectUrl,
-      },
-    };
+  const authRedirect = resolveAuthRedirect(to, isSignedIn, window.location.origin);
+  if (authRedirect) {
+    return authRedirect;
   }
 
   const { organizations } = useOrganizationsStore();

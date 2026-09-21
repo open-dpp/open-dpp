@@ -1,3 +1,5 @@
+// Must stay the first import: it forces the OAuth Provider off before the auth module validates env.
+import "./oauth-provider-off.test-env";
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 import type { INestApplication } from "@nestjs/common";
 import type { Connection } from "mongoose";

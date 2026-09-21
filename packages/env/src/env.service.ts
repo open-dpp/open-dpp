@@ -32,12 +32,14 @@ export class EnvService {
         "OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but the Trusted Client is not fully configured.",
       );
     }
+    // ConfigService.get falls back to raw process.env when the validated value is undefined,
+    // so an empty `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=` arrives as "" and means "not set"
     const clientName = this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME");
     return {
       clientId,
       clientSecret,
       redirectUris,
-      ...(clientName !== undefined ? { clientName } : {}),
+      ...(clientName ? { clientName } : {}),
     };
   }
 }

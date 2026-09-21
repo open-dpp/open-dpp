@@ -46,6 +46,18 @@ describe("EnvService.getTrustedClient", () => {
     });
   });
 
+  it("treats an empty client name as unset", () => {
+    // ConfigService.get falls back to the raw process.env value when the validated one is
+    // undefined, so `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=` arrives here as ""
+    const service = envServiceFor({ ...trustedClientEnv, OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: "" });
+
+    expect(service.getTrustedClient()).toEqual({
+      clientId: "landing-page",
+      clientSecret: "landing-page-secret",
+      redirectUris: ["https://landing.example.com/auth/callback"],
+    });
+  });
+
   it("refuses an enabled provider whose Trusted Client is incomplete", () => {
     const { OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: _, ...incomplete } = trustedClientEnv;
 

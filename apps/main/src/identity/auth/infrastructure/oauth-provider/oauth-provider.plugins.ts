@@ -2,6 +2,7 @@ import { oauthProvider } from "@better-auth/oauth-provider";
 import type { TrustedClientEnv } from "@open-dpp/env";
 import { jwt } from "better-auth/plugins";
 import { hashClientSecret } from "./client-secret";
+import { OAUTH_PROVIDER_CLAIMS_SUPPORTED, profileClaims } from "./trusted-client-claims";
 
 /** Umbrella scope: act as the User with the User's own authority against the open-dpp API. */
 export const OPEN_DPP_API_SCOPE = "open-dpp:api";
@@ -74,6 +75,10 @@ export function createOAuthProviderPlugins(trustedClient: TrustedClientEnv, issu
       // freezes the Trusted Client against the (already disabled) CRUD endpoints
       cachedTrustedClients: new Set([trustedClient.clientId]),
       storeClientSecret: { hash: hashClientSecret },
+      // standard profile claims from the User's own fields; both hooks run scope-agnostic
+      customIdTokenClaims: ({ user, scopes }) => profileClaims(user, scopes),
+      customUserInfoClaims: ({ user, scopes }) => profileClaims(user, scopes),
+      advertisedMetadata: { claims_supported: [...OAUTH_PROVIDER_CLAIMS_SUPPORTED] },
       // the RFC 8414 root alias sits outside the /api prefix and is deliberately unserved
       silenceWarnings: { oauthAuthServerConfig: true },
     }),
