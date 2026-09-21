@@ -47,7 +47,6 @@ describe("OrganizationsRepository", () => {
   it("should pass undefined for logo if organization has no logo", async () => {
     const organization = Organization.create({
       name: "Test Org",
-      slug: "test-org",
       metadata: {},
     });
 
@@ -105,5 +104,63 @@ describe("OrganizationsRepository", () => {
         }),
       }),
     );
+  });
+
+  it("sends the domain-minted id as the slug to better-auth on create", async () => {
+    mockAuth.api.createOrganization.mockResolvedValue({
+      id: new ObjectId().toString(),
+      name: "Test Org",
+      slug: "irrelevant",
+      logo: null,
+      metadata: "{}",
+      createdAt: new Date(),
+    });
+    const first = Organization.create({ name: "Test Org", metadata: {} });
+    const second = Organization.create({ name: "Test Org", metadata: {} });
+
+    await repository.create(first, {});
+    await repository.create(second, {});
+
+    const slugs = mockAuth.api.createOrganization.mock.calls.map(
+      ([call]: [{ body: { slug: string } }]) => call.body.slug,
+    );
+    expect(slugs).toEqual([first.id, second.id]);
+    expect(slugs[0]).not.toEqual(slugs[1]);
+  });
+
+  it("returns the persisted organization whose id and slug equal the domain id", async () => {
+    const organization = Organization.create({ name: "Test Org", metadata: {} });
+    mockAuth.api.createOrganization.mockResolvedValue({
+      id: organization.id,
+      name: "Test Org",
+      slug: organization.id,
+      logo: null,
+      metadata: "{}",
+      createdAt: new Date(),
+    });
+
+    const created = await repository.create(organization, {});
+
+    expect(created?.id).toEqual(organization.id);
+    expect(created?.slug).toEqual(organization.id);
+  });
+
+  it("does not send a slug on update", async () => {
+    const organizationObjectId = new ObjectId();
+    const organization = Organization.loadFromDb({
+      id: organizationObjectId.toString(),
+      name: "Test Org",
+      slug: organizationObjectId.toString(),
+      logo: null,
+      metadata: {},
+      createdAt: new Date(),
+    });
+    mockAuth.api.updateOrganization.mockResolvedValue({});
+    mockOrganizationModel.findOne.mockResolvedValue(null);
+
+    await repository.update(organization, {});
+
+    const [call] = mockAuth.api.updateOrganization.mock.calls[0] as [{ body: { data: object } }];
+    expect(call.body.data).not.toHaveProperty("slug");
   });
 });
