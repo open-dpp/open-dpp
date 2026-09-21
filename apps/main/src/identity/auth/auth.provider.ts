@@ -21,6 +21,10 @@ import {
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
+import {
+  createOAuthProviderPlugins,
+  OAUTH_PROVIDER_DISABLED_PATHS,
+} from "./infrastructure/oauth-provider/oauth-provider.plugins";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
@@ -137,11 +141,17 @@ export const AuthProvider: Provider = {
     }
     const mongoClient = mongooseConnection.getClient();
 
+    const authBasePath = `/api/${LatestApiVersionWithPrefixDto}/auth`;
+    // OAuth Provider: present only when enabled; the issuer is the auth mount on the origin
+    const trustedClient = configService.getTrustedClient();
+    const issuer = `${new URL(configService.get("OPEN_DPP_URL")).origin}${authBasePath}`;
+
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
-      basePath: `/api/${LatestApiVersionWithPrefixDto}/auth`,
+      basePath: authBasePath,
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
+      ...(trustedClient ? { disabledPaths: [...OAUTH_PROVIDER_DISABLED_PATHS] } : {}),
       logger: {
         disabled: false,
         log: (level, message, ...args) => {
@@ -328,6 +338,7 @@ export const AuthProvider: Provider = {
           },
         }),
         admin({}),
+        ...(trustedClient ? createOAuthProviderPlugins(trustedClient, issuer) : []),
       ],
       database: mongodbAdapter(db, {
         client: configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
@@ -335,6 +346,11 @@ export const AuthProvider: Provider = {
     });
 
     await ensureAdminSeeded(db, auth, configService, logger);
+    if (trustedClient) {
+      logger.log(
+        `OAuth Provider enabled for Trusted Client "${trustedClient.clientId}" (issuer ${issuer})`,
+      );
+    }
     logger.log("Auth initialized");
 
     return auth;

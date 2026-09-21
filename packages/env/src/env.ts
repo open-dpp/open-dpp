@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { trustedClientRedirectUrisSchema } from "./trusted-client";
 
 const asStrictBoolean = z
   .string()
@@ -6,6 +7,16 @@ const asStrictBoolean = z
     message: 'Expected "true" or "false"',
   })
   .transform((val) => val.toLowerCase() === "true");
+
+/** `KEY=""` in an env file means "not set", like an absent variable. */
+const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((v) => (v === "" ? undefined : v), schema);
+
+const TRUSTED_CLIENT_REQUIRED_KEYS = [
+  "OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID",
+  "OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET",
+  "OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS",
+] as const;
 
 export const envSchema = z
   .object({
@@ -73,6 +84,15 @@ export const envSchema = z
     OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
     OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
     OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
+    // OAuth Provider — open-dpp as identity provider for one Trusted Client (CONTEXT.md).
+    // Off by default; when on, the client variables are required (see superRefine).
+    OPEN_DPP_OAUTH_PROVIDER_ENABLED: asStrictBoolean.optional().default(false),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: emptyAsUndefined(
+      trustedClientRedirectUrisSchema.optional(),
+    ),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: emptyAsUndefined(z.string().optional()),
     // Instance Settings
     OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),
     OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: asStrictBoolean.optional(),
@@ -121,6 +141,18 @@ export const envSchema = z
             "OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL",
           ],
         });
+      }
+    }
+    // an enabled OAuth Provider needs its whole Trusted Client; a disabled one ignores it
+    if (val.OPEN_DPP_OAUTH_PROVIDER_ENABLED) {
+      for (const key of TRUSTED_CLIENT_REQUIRED_KEYS) {
+        if (!val[key]) {
+          ctx.addIssue({
+            code: "custom",
+            message: `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but ${key} is not set.`,
+            path: [key],
+          });
+        }
       }
     }
     const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;

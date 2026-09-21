@@ -34,4 +34,14 @@
   // Periodic full re-resolve. Regenerating the whole lockfile moves every range
   // together, so it stays consistent (unlike a partial `pnpm update`).
   lockFileMaintenance: { enabled: true },
+
+  packageRules: [
+    {
+      // The better-auth plugins peer-depend on better-auth and @better-auth/core per
+      // minor, and a missing @better-auth/core peer resolves to the newest release
+      // (splitting the core graph). Bump the whole family in one PR.
+      groupName: "better-auth",
+      matchPackageNames: ["better-auth", "@better-auth/**"],
+    },
+  ],
 }

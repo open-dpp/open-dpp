@@ -73,3 +73,107 @@ describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
     );
   });
 });
+
+describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
+  const trustedClientEnv = {
+    OPEN_DPP_OAUTH_PROVIDER_ENABLED: "true",
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: "landing-page",
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: "landing-page-secret",
+    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS:
+      "https://landing.example.com/auth/callback, https://landing.example.com/auth/callback-2",
+  };
+
+  it("is disabled by default", () => {
+    const env = validateEnv(baseEnv);
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_ENABLED).toBe(false);
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toBeUndefined();
+  });
+
+  it("rejects a non-boolean enabled flag", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_OAUTH_PROVIDER_ENABLED: "yes" })).toThrow(
+      /OPEN_DPP_OAUTH_PROVIDER_ENABLED/,
+    );
+  });
+
+  it("ignores an incomplete Trusted Client while disabled", () => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_OAUTH_PROVIDER_ENABLED: "false",
+        OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: "landing-page",
+      }),
+    ).not.toThrow();
+  });
+
+  it("parses the Trusted Client when enabled and complete", () => {
+    const env = validateEnv({ ...baseEnv, ...trustedClientEnv });
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_ENABLED).toBe(true);
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID).toBe("landing-page");
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET).toBe("landing-page-secret");
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toEqual([
+      "https://landing.example.com/auth/callback",
+      "https://landing.example.com/auth/callback-2",
+    ]);
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME).toBeUndefined();
+  });
+
+  it("keeps the optional client name", () => {
+    const env = validateEnv({
+      ...baseEnv,
+      ...trustedClientEnv,
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: "Landing page",
+    });
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME).toBe("Landing page");
+  });
+
+  it.each([
+    "OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID",
+    "OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET",
+    "OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS",
+  ] as const)(
+    "rejects an enabled provider without %s",
+    (missingKey: keyof typeof trustedClientEnv) => {
+      const { [missingKey]: _, ...incomplete } = trustedClientEnv;
+
+      expect(() => validateEnv({ ...baseEnv, ...incomplete })).toThrow(
+        /OPEN_DPP_OAUTH_PROVIDER_ENABLED/,
+      );
+    },
+  );
+
+  it("rejects an enabled provider with an empty client secret", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: "" }),
+    ).toThrow(/OPEN_DPP_OAUTH_PROVIDER_ENABLED/);
+  });
+
+  it("accepts an http redirect URI on loopback for local development", () => {
+    const env = validateEnv({
+      ...baseEnv,
+      ...trustedClientEnv,
+      OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: "http://localhost:3001/auth/callback",
+    });
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toEqual([
+      "http://localhost:3001/auth/callback",
+    ]);
+  });
+
+  it.each([
+    ["a relative path", "https://landing.example.com/auth/callback,/auth/callback"],
+    ["a plain http URL off loopback", "http://landing.example.com/auth/callback"],
+    ["a fragment", "https://landing.example.com/auth/callback#fragment"],
+    ["an empty list", " , "],
+  ])("rejects a redirect URI list with %s", (_label: string, redirectUris: string) => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        ...trustedClientEnv,
+        OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: redirectUris,
+      }),
+    ).toThrow(/OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS/);
+  });
+});
