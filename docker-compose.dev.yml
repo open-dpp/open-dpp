@@ -61,7 +61,7 @@ services:
   # safe to re-run against an existing volume. Nothing reads the buckets
   # anonymously (the backend proxies downloads), so no public-read policy.
   rustfs-init:
-    image: rustfs/rc:v0.1.35
+    image: rustfs/rc:v0.1.36
     depends_on:
       rustfs:
         condition: service_healthy
