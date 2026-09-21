@@ -25,6 +25,7 @@ import {
   createOAuthProviderPlugins,
   OAUTH_PROVIDER_DISABLED_PATHS,
 } from "./infrastructure/oauth-provider/oauth-provider.plugins";
+import { ensureTrustedClientUpserted } from "./infrastructure/oauth-provider/trusted-client-upsert";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
@@ -347,6 +348,8 @@ export const AuthProvider: Provider = {
 
     await ensureAdminSeeded(db, auth, configService, logger);
     if (trustedClient) {
+      // before the first request: the plugin pins the row in memory on first use
+      await ensureTrustedClientUpserted(db, (await auth.$context).adapter, trustedClient, logger);
       logger.log(
         `OAuth Provider enabled for Trusted Client "${trustedClient.clientId}" (issuer ${issuer})`,
       );

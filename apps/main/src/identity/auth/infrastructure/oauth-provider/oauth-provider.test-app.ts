@@ -29,14 +29,22 @@ export interface AuthTestApp {
   connection: Connection;
 }
 
+export interface BootOptions {
+  /** Reuse a database across boots (the default is a fresh one per boot). */
+  dbName?: string;
+}
+
 /** Boots the auth stack with the production prefix and versioning, on a fresh database. */
-export async function bootAuthTestApp(): Promise<AuthTestApp> {
+export async function bootAuthTestApp(options: BootOptions = {}): Promise<AuthTestApp> {
   const moduleRef = await Test.createTestingModule({
     imports: [
       EnvModule.forRoot(),
       MongooseModule.forRootAsync({
         imports: [EnvModule],
-        useFactory: (configService: EnvService) => ({ ...generateMongoConfig(configService) }),
+        useFactory: (configService: EnvService) => ({
+          ...generateMongoConfig(configService),
+          ...(options.dbName ? { dbName: options.dbName } : {}),
+        }),
         inject: [EnvService],
       }),
       AuthModule,

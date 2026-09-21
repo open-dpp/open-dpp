@@ -15,6 +15,9 @@ export const OAUTH_PROVIDER_SCOPES = [
   OPEN_DPP_API_SCOPE,
 ] as const;
 
+/** No client_credentials: machine-to-machine access stays on API keys. */
+export const OAUTH_PROVIDER_GRANT_TYPES = ["authorization_code", "refresh_token"] as const;
+
 /** 15 minutes: a JWT access token cannot be revoked, so it has to be short-lived. */
 export const ACCESS_TOKEN_LIFETIME_SECONDS = 15 * 60;
 
@@ -66,8 +69,7 @@ export function createOAuthProviderPlugins(trustedClient: TrustedClientEnv, issu
       consentPage: OAUTH_PROVIDER_CONSENT_PAGE,
       signup: { page: OAUTH_PROVIDER_SIGNUP_PAGE },
       scopes: [...OAUTH_PROVIDER_SCOPES],
-      // no client_credentials: machine-to-machine access stays on API keys
-      grantTypes: ["authorization_code", "refresh_token"],
+      grantTypes: [...OAUTH_PROVIDER_GRANT_TYPES],
       accessTokenExpiresIn: ACCESS_TOKEN_LIFETIME_SECONDS,
       // freezes the Trusted Client against the (already disabled) CRUD endpoints
       cachedTrustedClients: new Set([trustedClient.clientId]),
