@@ -119,6 +119,55 @@ pnpm run test:client
 pnpm run test:e2e
 ```
 
+## Changesets
+
+Every pull request that changes a workspace package must add a changeset — a small Markdown file under `.changeset/` that describes the change for the next release. The `@open-dpp/*` packages are version-locked, so the repository releases as one unit: a change that ships without a changeset never appears in a version bump or a `CHANGELOG.md`.
+
+A dedicated `changeset` CI job enforces this on every pull request against `main`.
+
+### When a changeset is required
+
+Required when the PR touches files inside a workspace package:
+
+- `apps/main/`, `apps/client/`
+- `packages/*`
+- `docs/`
+
+Not required when the PR touches only files outside those directories — root configuration, `.github/`, `Dockerfile`, `Makefile`, `README.md`, or this file — or only `apps/e2e/`, which is excluded from releases via `ignore` in [`.changeset/config.json`](./.changeset/config.json).
+
+If you are unsure, run the same check CI runs:
+
+```bash
+pnpm changeset status --since=origin/main
+```
+
+### Adding a changeset
+
+```bash
+pnpm changeset
+```
+
+Select `@open-dpp/api-client` (the `fixed` group bumps every other `@open-dpp/*` package along with it), pick `patch` / `minor` / `major`, and write a summary aimed at the people reading the changelog. Commit the generated `.changeset/*.md` file with your code.
+
+See [RELEASING.md](./RELEASING.md#adding-a-changeset-to-your-pr-contributor-flow) for the full contributor flow.
+
+### Changes that need no release note
+
+Refactors, test-only changes, and internal cleanups still touch a workspace package, but have nothing to tell users. Declare that explicitly with an empty changeset:
+
+```bash
+pnpm changeset --empty
+```
+
+This writes a `.changeset/*.md` file with no packages in it. The CI job accepts it, `changeset version` consumes it without bumping anything, and the PR carries a visible record that the omission was deliberate rather than forgotten.
+
+### Exemptions
+
+The CI job skips two kinds of pull request that cannot carry a changeset of their own:
+
+- The `chore: version packages` PR from the `changeset-release/main` branch, which consumes changesets instead of adding them.
+- Dependency updates from `renovate[bot]`, or any PR labelled `dependencies`.
+
 ## Releasing
 
 For information on how releases and versioning work, see [RELEASING.md](./RELEASING.md).
@@ -140,6 +189,7 @@ When opening a PR, please:
 - [ ] Relevant tests were added or updated.
 - [ ] Lint/build/tests pass locally.
 - [ ] Documentation was updated where needed.
+- [ ] A changeset was added (`pnpm changeset`, or `pnpm changeset --empty`), if the PR changes a workspace package.
 
 ## Documentation contributions
 
