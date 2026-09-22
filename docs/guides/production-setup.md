@@ -145,11 +145,11 @@ The feature is **off by default**. While `OPEN_DPP_OAUTH_PROVIDER_ENABLED` is un
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `OPEN_DPP_OAUTH_PROVIDER_ENABLED`       | `"true"` or `"false"` (default `"false"`). While `"true"`, the three client variables below are required.                                                                                                             |
 | `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`     | The Trusted Client's `client_id`, chosen by you.                                                                                                                                                                      |
-| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET` | The Trusted Client's `client_secret`, chosen by you. Hand it to the Trusted Client's server only; open-dpp stores a hash.                                                                                             |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET` | The Trusted Client's `client_secret`, chosen by you. Hand it to the Trusted Client's server only; open-dpp stores only a salted hash.                                                                                 |
 | `OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS` | Comma-separated list of the Trusted Client's callback URLs. Each entry is an absolute `https` URL without a fragment; `http` is accepted only on loopback hosts (`localhost`, `*.localhost`, `127.0.0.0/8`, `[::1]`). |
 | `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME`   | Optional display name of the Trusted Client. Defaults to the client id.                                                                                                                                               |
 
-An empty value (`KEY=""`) counts as unset. Enabling the provider without one of the required variables stops the startup with `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but <KEY> is not set.`; an invalid redirect URI stops it too, so a typo never surfaces later as an `invalid_redirect` error.
+An empty value (`KEY=""`) counts as unset. Enabling the provider without one of the required variables stops the startup with `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but <KEY> is not set.`; an invalid redirect URI stops it too, so a typo never surfaces later as an `invalid_redirect` error. Generate the client secret rather than choosing it, for example with `openssl rand -base64 32`; open-dpp enforces no minimum length.
 
 ```dotenv
 OPEN_DPP_OAUTH_PROVIDER_ENABLED=true
@@ -165,7 +165,7 @@ OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=Landing page
 - open-dpp creates a unique index on `oauthClient.clientId`, so several replicas booting at once converge on one row.
 - A failed write is logged at error level and does not stop the instance; OAuth requests are then rejected until the next boot.
 - Disabling the provider deletes nothing; the row stays inert until the provider is enabled again.
-- The client secret is stored as a SHA-256 hash. Rotating it invalidates nothing already issued (outstanding access, id and refresh tokens stay valid); it only changes which secret the Trusted Client must present from then on to exchange codes, refresh, revoke or introspect.
+- The client secret is stored as a salted scrypt hash, with the same key derivation open-dpp applies to User passwords, and is re-hashed with a fresh salt on every startup. Rotating it invalidates nothing already issued (outstanding access, id and refresh tokens stay valid); it only changes which secret the Trusted Client must present from then on to exchange codes, refresh, revoke or introspect.
 
 ### Endpoints and lockdown
 

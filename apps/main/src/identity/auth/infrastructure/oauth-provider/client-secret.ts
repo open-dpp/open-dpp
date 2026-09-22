@@ -1,10 +1,22 @@
-import { createHash } from "node:crypto";
+import { hashPassword, verifyPassword } from "better-auth/crypto";
 
 /**
- * Stores a Trusted Client secret exactly like the OAuth Provider plugin's default
- * (`storeClientSecret: "hashed"`): unpadded base64url of SHA-256. The app owns the
- * function so the startup upsert writes the same hash the plugin verifies against.
+ * Stores the Trusted Client secret the way User passwords are stored: better-auth's own
+ * salted scrypt hasher. The app owns both halves because the startup upsert writes the
+ * row and the OAuth Provider plugin verifies through `storeClientSecret.verify`.
  */
-export function hashClientSecret(clientSecret: string): string {
-  return createHash("sha256").update(clientSecret).digest("base64url");
+export function hashClientSecret(clientSecret: string): Promise<string> {
+  return hashPassword(clientSecret);
+}
+
+/**
+ * `false` for a wrong secret and for a stored value in any other format (for example a
+ * row written by an older release): the plugin then answers `invalid_client`, never a 500.
+ */
+export async function verifyClientSecret(presented: string, stored: string): Promise<boolean> {
+  try {
+    return await verifyPassword({ hash: stored, password: presented });
+  } catch {
+    return false;
+  }
 }

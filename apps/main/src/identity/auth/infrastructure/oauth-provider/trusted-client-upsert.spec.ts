@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Logger } from "@nestjs/common";
 import type { TrustedClientEnv } from "@open-dpp/env";
 import type { Db } from "mongodb";
+import { verifyClientSecret } from "./client-secret";
 import {
   ensureTrustedClientUpserted,
   OAUTH_CLIENT_MODEL,
@@ -15,13 +16,11 @@ const TRUSTED_CLIENT: TrustedClientEnv = {
   clientName: "Landing page",
 };
 
-// SHA-256 of "landing-page-secret", unpadded base64url: what the plugin verifies against.
-const HASHED_SECRET = "n7Oja6CwcOy7P2jn-_UGLdr5HtGggSf7hVXOHszy6p8";
-
 /** The row the OAuth Provider plugin expects for a confidential, consent-free web client. */
 const EXPECTED_ROW = {
   clientId: "landing-page",
-  clientSecret: HASHED_SECRET,
+  // salted scrypt: never the secret itself, verified below rather than compared
+  clientSecret: expect.any(String),
   name: "Landing page",
   redirectUris: ["https://landing.example.com/auth/callback"],
   tokenEndpointAuthMethod: "client_secret_basic",
@@ -69,6 +68,10 @@ describe("ensureTrustedClientUpserted", () => {
     });
     expect(update).not.toHaveBeenCalled();
     expect(logger.log).toHaveBeenCalledWith('Trusted Client "landing-page" created');
+
+    const stored = create.mock.calls[0][0].data.clientSecret as string;
+    expect(stored).not.toBe(TRUSTED_CLIENT.clientSecret);
+    await expect(verifyClientSecret(TRUSTED_CLIENT.clientSecret, stored)).resolves.toBe(true);
   });
 
   it("refreshes an existing row with the latest env values and keeps its creation date", async () => {
@@ -84,6 +87,10 @@ describe("ensureTrustedClientUpserted", () => {
       update: { ...EXPECTED_ROW, updatedAt: expect.any(Date) },
     });
     expect(logger.log).toHaveBeenCalledWith('Trusted Client "landing-page" updated');
+
+    const stored = update.mock.calls[0][0].update.clientSecret as string;
+    expect(stored).not.toBe(TRUSTED_CLIENT.clientSecret);
+    await expect(verifyClientSecret(TRUSTED_CLIENT.clientSecret, stored)).resolves.toBe(true);
   });
 
   it("converges on an update when a sibling replica wins the first-boot race", async () => {

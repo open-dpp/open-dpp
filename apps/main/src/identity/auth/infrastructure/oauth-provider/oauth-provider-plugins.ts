@@ -7,7 +7,7 @@ import {
   OAUTH_PROVIDER_SCOPES,
   REFRESH_TOKEN_LIFETIME_SECONDS,
 } from "../../domain/trusted-client-access-token";
-import { hashClientSecret } from "./client-secret";
+import { hashClientSecret, verifyClientSecret } from "./client-secret";
 import { OAUTH_PROVIDER_CLAIMS_SUPPORTED, profileClaims } from "./trusted-client-claims";
 
 export const OAUTH_PROVIDER_LOGIN_PAGE = "/signin";
@@ -63,7 +63,7 @@ export function createOAuthProviderPlugins(trustedClient: TrustedClientEnv, issu
       refreshTokenExpiresIn: REFRESH_TOKEN_LIFETIME_SECONDS,
       // freezes the Trusted Client against the (already disabled) CRUD endpoints
       cachedTrustedClients: new Set([trustedClient.clientId]),
-      storeClientSecret: { hash: hashClientSecret },
+      storeClientSecret: { hash: hashClientSecret, verify: verifyClientSecret },
       // standard profile claims from the User's own fields; both hooks run scope-agnostic
       customIdTokenClaims: ({ user, scopes }) => profileClaims(user, scopes),
       customUserInfoClaims: ({ user, scopes }) => profileClaims(user, scopes),

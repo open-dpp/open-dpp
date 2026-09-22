@@ -5,14 +5,15 @@ import { afterEach, describe, expect, it } from "@jest/globals";
 import type { INestApplication } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 import type { Connection } from "mongoose";
-import { hashClientSecret } from "./client-secret";
+import { hashClientSecret, verifyClientSecret } from "./client-secret";
 import { createAuthTestContext } from "./auth.test.context";
 import { OAUTH_CLIENT_MODEL } from "./trusted-client-upsert";
 
 /** The stored row for the env-configured Trusted Client, as the plugin reads it. */
 const EXPECTED_ROW = {
   clientId: TEST_TRUSTED_CLIENT.clientId,
-  clientSecret: hashClientSecret(TEST_TRUSTED_CLIENT.clientSecret),
+  // salted scrypt: never the secret itself, verified below rather than compared
+  clientSecret: expect.any(String),
   name: TEST_TRUSTED_CLIENT.clientId,
   redirectUris: TEST_TRUSTED_CLIENT.redirectUris,
   tokenEndpointAuthMethod: "client_secret_basic",
@@ -60,6 +61,9 @@ describe("Trusted Client bootstrap", () => {
         updatedAt: expect.any(Date),
       },
     ]);
+    await expect(
+      verifyClientSecret(TEST_TRUSTED_CLIENT.clientSecret, rows[0].clientSecret),
+    ).resolves.toBe(true);
   });
 
   it("enforces one row per client id with a unique index", async () => {
@@ -78,7 +82,7 @@ describe("Trusted Client bootstrap", () => {
       { clientId: TEST_TRUSTED_CLIENT.clientId },
       {
         $set: {
-          clientSecret: hashClientSecret("rotated-away"),
+          clientSecret: await hashClientSecret("rotated-away"),
           redirectUris: ["https://stale.example.com/callback"],
           name: "stale name",
           disabled: true,
@@ -99,5 +103,9 @@ describe("Trusted Client bootstrap", () => {
       }),
     ]);
     expect(rows[0].updatedAt.getTime()).toBeGreaterThanOrEqual(created.updatedAt.getTime());
+    await expect(
+      verifyClientSecret(TEST_TRUSTED_CLIENT.clientSecret, rows[0].clientSecret),
+    ).resolves.toBe(true);
+    await expect(verifyClientSecret("rotated-away", rows[0].clientSecret)).resolves.toBe(false);
   });
 });

@@ -30,10 +30,10 @@ export interface OAuthClientAdapter {
  * The stored shape of the one Trusted Client: a confidential web client with PKCE,
  * no consent step and the fixed scope list. Field names are the plugin's schema names.
  */
-export function buildTrustedClientRow(trustedClient: TrustedClientEnv) {
+export async function buildTrustedClientRow(trustedClient: TrustedClientEnv) {
   return {
     clientId: trustedClient.clientId,
-    clientSecret: hashClientSecret(trustedClient.clientSecret),
+    clientSecret: await hashClientSecret(trustedClient.clientSecret),
     name: trustedClient.clientName ?? trustedClient.clientId,
     redirectUris: [...trustedClient.redirectUris],
     tokenEndpointAuthMethod: "client_secret_basic",
@@ -84,7 +84,7 @@ async function upsertTrustedClient(
 ): Promise<UpsertOutcome> {
   const where: Where[] = [{ field: "clientId", value: trustedClient.clientId }];
   const now = new Date();
-  const row = buildTrustedClientRow(trustedClient);
+  const row = await buildTrustedClientRow(trustedClient);
   const refresh = () =>
     adapter.update({ model: OAUTH_CLIENT_MODEL, where, update: { ...row, updatedAt: now } });
 
