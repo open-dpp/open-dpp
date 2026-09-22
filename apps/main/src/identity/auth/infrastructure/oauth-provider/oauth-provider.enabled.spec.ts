@@ -8,7 +8,7 @@ import request from "supertest";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
 import { UsersService } from "../../../users/application/services/users.service";
 import { AUTH } from "../../auth.provider";
-import { AUTH_PATH, bootAuthTestApp, collectionNames } from "./oauth-provider.test-app";
+import { AUTH_PATH, createAuthTestContext, collectionNames } from "./auth.test.context";
 
 // The issuer is the better-auth mount on the instance origin; v2 is the latest API version.
 const ISSUER = "http://localhost:3000/api/v2/auth";
@@ -49,7 +49,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
-    const testApp = await bootAuthTestApp();
+    const testApp = await createAuthTestContext();
     app = testApp.app;
     connection = testApp.connection;
     betterAuthHelper.init(

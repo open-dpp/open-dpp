@@ -26,6 +26,23 @@ export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
   preferredLanguage: DisplayLanguageType;
 };
 
+function isUsableNamePart(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+/**
+ * The display name a User shows: first and last name joined by a space, blank or
+ * missing parts left out, `null` when neither is usable. The one place the rule lives;
+ * the better-auth boundary (`withDisplayName`) reuses it instead of restating it.
+ */
+export function deriveDisplayName(firstName: unknown, lastName: unknown): string | null {
+  const name = [firstName, lastName]
+    .filter(isUsableNamePart)
+    .map((part) => part.trim())
+    .join(" ");
+  return name || null;
+}
+
 export class User {
   public readonly id: string;
   public readonly email: string;
@@ -61,8 +78,7 @@ export class User {
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
-    const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
-    this.name = fullName || null;
+    this.name = deriveDisplayName(firstName, lastName);
     this.image = image;
     this.emailVerified = emailVerified;
     this.createdAt = createdAt;

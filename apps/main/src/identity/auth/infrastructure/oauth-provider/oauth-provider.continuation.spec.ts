@@ -17,7 +17,7 @@ import {
   TEST_PASSWORD,
   TEST_REDIRECT_URI,
 } from "./oauth-flow.test-helpers";
-import { AUTH_PATH, bootAuthTestApp } from "./oauth-provider.test-app";
+import { AUTH_PATH, createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 
 const TEN_MINUTES_MS = 10 * 60 * 1000;
@@ -44,7 +44,7 @@ describe("OAuth Provider login and signup continuation", () => {
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
-    const testApp = await bootAuthTestApp();
+    const testApp = await createAuthTestContext();
     app = testApp.app;
     betterAuthHelper.init(
       testApp.moduleRef.get<UsersService>(UsersService),

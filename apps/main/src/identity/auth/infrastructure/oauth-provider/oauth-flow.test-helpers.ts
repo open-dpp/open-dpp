@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { AUTH_PATH } from "./oauth-provider.test-app";
+import { AUTH_PATH } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 
 /** The issuer of the test instance: the better-auth mount on OPEN_DPP_URL (v2 is the latest API version). */

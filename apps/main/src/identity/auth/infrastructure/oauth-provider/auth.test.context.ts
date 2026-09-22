@@ -33,7 +33,7 @@ export const OAUTH_PROVIDER_COLLECTIONS = [
   "oauthConsent",
 ];
 
-export interface AuthTestApp {
+export interface AuthTestContext {
   app: INestApplication;
   moduleRef: TestingModule;
   connection: Connection;
@@ -41,7 +41,7 @@ export interface AuthTestApp {
   betterAuthHelper: BetterAuthHelper;
 }
 
-export interface BootOptions {
+export interface AuthTestContextOptions {
   /** Reuse a database across boots (the default is a fresh one per boot). */
   dbName?: string;
   /** Feature modules to mount next to the auth stack, e.g. `PolicyModule`. */
@@ -51,7 +51,9 @@ export interface BootOptions {
 }
 
 /** Boots the auth stack with the production prefix and versioning, on a fresh database. */
-export async function bootAuthTestApp(options: BootOptions = {}): Promise<AuthTestApp> {
+export async function createAuthTestContext(
+  options: AuthTestContextOptions = {},
+): Promise<AuthTestContext> {
   const moduleRef = await Test.createTestingModule({
     imports: [
       EnvModule.forRoot(),

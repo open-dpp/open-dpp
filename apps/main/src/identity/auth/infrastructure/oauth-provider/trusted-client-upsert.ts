@@ -3,7 +3,10 @@ import type { TrustedClientEnv } from "@open-dpp/env";
 import type { Where } from "better-auth";
 import type { Db } from "mongodb";
 import { hashClientSecret } from "./client-secret";
-import { OAUTH_PROVIDER_GRANT_TYPES, OAUTH_PROVIDER_SCOPES } from "./oauth-provider.plugins";
+import {
+  OAUTH_PROVIDER_GRANT_TYPES,
+  OAUTH_PROVIDER_SCOPES,
+} from "../../domain/trusted-client-access-token";
 
 /** The OAuth Provider plugin's client model; the mongo adapter uses the name as collection. */
 export const OAUTH_CLIENT_MODEL = "oauthClient";

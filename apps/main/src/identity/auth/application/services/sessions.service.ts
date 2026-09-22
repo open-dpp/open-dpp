@@ -3,12 +3,12 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import { AUTH } from "../../auth.provider";
 import { SessionMapper } from "../../infrastructure/mappers/session.mapper";
+import { VerifiedAccessToken } from "../../domain/trusted-client-access-token";
 import {
   AccessTokenVerifier,
   createAccessTokenVerifier,
-  VerifiedAccessToken,
 } from "../../infrastructure/oauth-provider/access-token-verifier";
-import { oauthProviderIssuer } from "../../infrastructure/oauth-provider/oauth-provider.issuer";
+import { oauthProviderIssuer } from "../../infrastructure/oauth-provider/oauth-provider-issuer";
 
 export interface VerifiedApiKey {
   userId: string;

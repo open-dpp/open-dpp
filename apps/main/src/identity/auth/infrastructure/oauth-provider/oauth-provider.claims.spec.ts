@@ -17,7 +17,7 @@ import {
   signInWithOAuthQuery,
   TEST_PASSWORD,
 } from "./oauth-flow.test-helpers";
-import { AUTH_PATH, bootAuthTestApp } from "./oauth-provider.test-app";
+import { AUTH_PATH, createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 
 interface SignedUpUser {
@@ -78,7 +78,7 @@ describe("OAuth Provider claims", () => {
   }
 
   beforeAll(async () => {
-    const testApp = await bootAuthTestApp();
+    const testApp = await createAuthTestContext();
     app = testApp.app;
     auth = testApp.moduleRef.get<Auth>(AUTH);
     usersService = testApp.moduleRef.get<UsersService>(UsersService);

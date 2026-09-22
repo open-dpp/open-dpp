@@ -25,9 +25,9 @@ import { withDisplayName } from "../users/infrastructure/user-display-name-hook"
 import {
   createOAuthProviderPlugins,
   OAUTH_PROVIDER_DISABLED_PATHS,
-} from "./infrastructure/oauth-provider/oauth-provider.plugins";
+} from "./infrastructure/oauth-provider/oauth-provider-plugins";
 import { AUTH_BASE_PATH } from "./auth-base-path";
-import { oauthProviderIssuer } from "./infrastructure/oauth-provider/oauth-provider.issuer";
+import { oauthProviderIssuer } from "./infrastructure/oauth-provider/oauth-provider-issuer";
 import { ensureTrustedClientUpserted } from "./infrastructure/oauth-provider/trusted-client-upsert";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 

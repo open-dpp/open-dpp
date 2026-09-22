@@ -214,7 +214,7 @@ The provider reuses open-dpp's own `/signin` and `/signup` pages; there is no se
 
 This is the contract the Trusted Client's developers implement. `{issuer}` stands for `https://<your host>/api/v2/auth`.
 
-**Client.** A confidential web client authenticating with `client_secret_basic` (HTTP Basic `client_id:client_secret` on the token, revoke and introspect endpoints), so every token-endpoint call happens **server side**. PKCE with `S256` is mandatory (`plain` is refused). Consent is skipped, so no consent page ever appears.
+**Client.** A confidential web client authenticating with `client_secret_basic` (HTTP Basic `client_id:client_secret`, used in the examples below) or `client_secret_post` (`client_id` and `client_secret` in the form body) on the token, revoke and introspect endpoints, so every one of those calls happens **server side**. PKCE with `S256` is mandatory (`plain` is refused). Consent is skipped, so no consent page ever appears.
 
 **Discovery.** `GET {issuer}/.well-known/openid-configuration`. The `issuer` in that document is `{issuer}`: it is the `iss` of every token and the `resource` value below. The JWKS at `{issuer}/jwks` holds EdDSA (Ed25519) keys, so the Trusted Client's JOSE library must support EdDSA to validate id tokens.
 

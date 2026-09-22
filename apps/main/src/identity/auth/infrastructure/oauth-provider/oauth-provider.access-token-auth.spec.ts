@@ -10,7 +10,7 @@ import { ApiKeysModule } from "../../../api-keys/api-keys.module";
 import { MemberRole } from "../../../organizations/domain/member-role.enum";
 import { ORGANIZATION_ID_HEADER } from "../../presentation/decorators/organization-id.decorator";
 import { obtainTokens, TEST_PASSWORD } from "./oauth-flow.test-helpers";
-import { API_PATH, AUTH_PATH, bootAuthTestApp } from "./oauth-provider.test-app";
+import { API_PATH, AUTH_PATH, createAuthTestContext } from "./auth.test.context";
 
 interface TestUser {
   id: string;
@@ -37,7 +37,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
   }
 
   beforeAll(async () => {
-    const testApp = await bootAuthTestApp({
+    const testApp = await createAuthTestContext({
       imports: [PolicyModule, ApiKeysModule],
       withAuthGuard: true,
     });

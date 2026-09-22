@@ -7,17 +7,17 @@ import request from "supertest";
 import {
   API_PATH,
   AUTH_PATH,
-  bootAuthTestApp,
+  createAuthTestContext,
   collectionNames,
   OAUTH_PROVIDER_COLLECTIONS,
-} from "./oauth-provider.test-app";
+} from "./auth.test.context";
 
 describe("OAuth Provider disabled (the default)", () => {
   let app: INestApplication;
   let connection: Connection;
 
   beforeAll(async () => {
-    ({ app, connection } = await bootAuthTestApp());
+    ({ app, connection } = await createAuthTestContext());
   });
 
   afterAll(async () => {
@@ -56,7 +56,7 @@ describe("OAuth Provider disabled (the default)", () => {
     let cookie: string;
 
     beforeAll(async () => {
-      const testApp = await bootAuthTestApp({ withAuthGuard: true });
+      const testApp = await createAuthTestContext({ withAuthGuard: true });
       guarded = testApp.app;
       ({ userCookie: cookie } =
         await testApp.betterAuthHelper.createOrganizationAndUserWithCookie());

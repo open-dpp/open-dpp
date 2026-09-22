@@ -6,7 +6,7 @@ import type { INestApplication } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 import type { Connection } from "mongoose";
 import { hashClientSecret } from "./client-secret";
-import { bootAuthTestApp } from "./oauth-provider.test-app";
+import { createAuthTestContext } from "./auth.test.context";
 import { OAUTH_CLIENT_MODEL } from "./trusted-client-upsert";
 
 /** The stored row for the env-configured Trusted Client, as the plugin reads it. */
@@ -38,7 +38,7 @@ describe("Trusted Client bootstrap", () => {
   const apps: INestApplication[] = [];
 
   async function boot(dbName: string) {
-    const testApp = await bootAuthTestApp({ dbName });
+    const testApp = await createAuthTestContext({ dbName });
     apps.push(testApp.app);
     return testApp;
   }

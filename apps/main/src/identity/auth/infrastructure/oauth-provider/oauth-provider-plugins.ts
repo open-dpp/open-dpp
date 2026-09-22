@@ -1,33 +1,14 @@
 import { oauthProvider } from "@better-auth/oauth-provider";
 import type { TrustedClientEnv } from "@open-dpp/env";
 import { jwt } from "better-auth/plugins";
+import {
+  ACCESS_TOKEN_LIFETIME_SECONDS,
+  OAUTH_PROVIDER_GRANT_TYPES,
+  OAUTH_PROVIDER_SCOPES,
+  REFRESH_TOKEN_LIFETIME_SECONDS,
+} from "../../domain/trusted-client-access-token";
 import { hashClientSecret } from "./client-secret";
 import { OAUTH_PROVIDER_CLAIMS_SUPPORTED, profileClaims } from "./trusted-client-claims";
-
-/** Umbrella scope: act as the User with the User's own authority against the open-dpp API. */
-export const OPEN_DPP_API_SCOPE = "open-dpp:api";
-
-/** The plugin option replaces its defaults, so the standard scopes are restated. */
-export const OAUTH_PROVIDER_SCOPES = [
-  "openid",
-  "profile",
-  "email",
-  "offline_access",
-  OPEN_DPP_API_SCOPE,
-] as const;
-
-/** No client_credentials: machine-to-machine access stays on API keys. */
-export const OAUTH_PROVIDER_GRANT_TYPES = ["authorization_code", "refresh_token"] as const;
-
-/** 15 minutes: a JWT access token cannot be revoked, so it has to be short-lived. */
-export const ACCESS_TOKEN_LIFETIME_SECONDS = 15 * 60;
-
-/**
- * 7 days, sliding: every rotation restarts the window, so a landing-page session ends
- * after a week without use. Nothing else cuts a refresh token off once the User has
- * signed out of open-dpp, hence shorter than the plugin's 30-day default (#954).
- */
-export const REFRESH_TOKEN_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
 
 export const OAUTH_PROVIDER_LOGIN_PAGE = "/signin";
 export const OAUTH_PROVIDER_SIGNUP_PAGE = "/signup";
