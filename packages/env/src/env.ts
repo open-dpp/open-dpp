@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { trustedClientRedirectUrisSchema } from "./trusted-client";
+import { isHttpsOrLoopbackUrl, trustedClientRedirectUrisSchema } from "./trusted-client";
 
 const asStrictBoolean = z
   .string()
@@ -153,6 +153,17 @@ export const envSchema = z
             path: [key],
           });
         }
+      }
+      // The issuer and every OAuth endpoint derive from OPEN_DPP_URL. Client credentials,
+      // authorization codes and tokens must not cross the network in cleartext, so the
+      // origin follows the redirect-URI rule: https, http only on loopback hosts.
+      if (!isHttpsOrLoopbackUrl(val.OPEN_DPP_URL)) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but OPEN_DPP_URL is not https. The OAuth Provider's issuer derives from it; http is allowed only on loopback hosts.",
+          path: ["OPEN_DPP_URL"],
+        });
       }
     }
     const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;

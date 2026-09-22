@@ -163,6 +163,30 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
   });
 
   it.each([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://[::1]:3000",
+    "http://dev.localhost",
+  ])(
+    "accepts an enabled provider on the http loopback origin %s for local development",
+    (origin: string) => {
+      expect(() =>
+        validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_URL: origin }),
+      ).not.toThrow();
+    },
+  );
+
+  it("rejects an enabled provider on a plain http origin off loopback", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_URL: "http://dpp.example.com" }),
+    ).toThrow(/OPEN_DPP_URL/);
+  });
+
+  it("ignores a plain http origin while disabled", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_URL: "http://dpp.example.com" })).not.toThrow();
+  });
+
+  it.each([
     ["a relative path", "https://landing.example.com/auth/callback,/auth/callback"],
     ["a plain http URL off loopback", "http://landing.example.com/auth/callback"],
     ["a fragment", "https://landing.example.com/auth/callback#fragment"],

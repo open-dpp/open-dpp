@@ -138,14 +138,29 @@ describe("ensureTrustedClientUpserted", () => {
     );
   });
 
-  it("logs a failed upsert instead of blocking startup", async () => {
+  it("fails the startup when the Trusted Client cannot be written", async () => {
     create.mockRejectedValue(new Error("connection reset"));
 
-    await expect(
-      ensureTrustedClientUpserted(db, adapter, TRUSTED_CLIENT, logger),
-    ).resolves.toBeUndefined();
+    await expect(ensureTrustedClientUpserted(db, adapter, TRUSTED_CLIENT, logger)).rejects.toThrow(
+      "connection reset",
+    );
 
     expect(update).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Trusted Client "landing-page"'),
+      expect.any(Error),
+    );
+  });
+
+  it("fails the startup when an existing row cannot be refreshed, so a stale Trusted Client never serves", async () => {
+    findOne.mockResolvedValue({ id: "68d0", clientId: "landing-page", clientSecret: "stale" });
+    update.mockRejectedValue(new Error("write refused"));
+
+    await expect(ensureTrustedClientUpserted(db, adapter, TRUSTED_CLIENT, logger)).rejects.toThrow(
+      "write refused",
+    );
+
+    expect(create).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Trusted Client "landing-page"'),
       expect.any(Error),

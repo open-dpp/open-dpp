@@ -25,12 +25,20 @@ describe("withDisplayName", () => {
     });
   });
 
-  it("leaves the user untouched when nothing can be derived", () => {
+  it("falls back to a stable display name when nothing can be derived", () => {
     const user = { name: "", firstName: null, lastName: undefined };
 
     const result = withDisplayName(user);
 
-    expect(result).toEqual({ data: user });
+    expect(result).toEqual({ data: { name: "User", firstName: null, lastName: undefined } });
     expect(result.data).not.toBe(user);
+    expect(user).toEqual({ name: "", firstName: null, lastName: undefined });
+  });
+
+  it("falls back when the name fields are blank or missing altogether", () => {
+    expect(withDisplayName({ firstName: "", lastName: "  " })).toEqual({
+      data: { name: "User", firstName: "", lastName: "  " },
+    });
+    expect(withDisplayName({ name: null })).toEqual({ data: { name: "User" } });
   });
 });

@@ -149,7 +149,7 @@ The feature is **off by default**. While `OPEN_DPP_OAUTH_PROVIDER_ENABLED` is un
 | `OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS` | Comma-separated list of the Trusted Client's callback URLs. Each entry is an absolute `https` URL without a fragment; `http` is accepted only on loopback hosts (`localhost`, `*.localhost`, `127.0.0.0/8`, `[::1]`). |
 | `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME`   | Optional display name of the Trusted Client. Defaults to the client id.                                                                                                                                               |
 
-An empty value (`KEY=""`) counts as unset. Enabling the provider without one of the required variables stops the startup with `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but <KEY> is not set.`; an invalid redirect URI stops it too, so a typo never surfaces later as an `invalid_redirect` error. Generate the client secret rather than choosing it, for example with `openssl rand -base64 32`; open-dpp enforces no minimum length.
+An empty value (`KEY=""`) counts as unset. Enabling the provider without one of the required variables stops the startup with `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but <KEY> is not set.`; an invalid redirect URI stops it too, so a typo never surfaces later as an `invalid_redirect` error. While enabled, `OPEN_DPP_URL` must be an `https` origin as well (`http` only on loopback hosts): the issuer and every OAuth endpoint derive from it, and client credentials, authorization codes and tokens must never travel in cleartext. Generate the client secret rather than choosing it, for example with `openssl rand -base64 32`; open-dpp enforces no minimum length.
 
 ```dotenv
 OPEN_DPP_OAUTH_PROVIDER_ENABLED=true
@@ -163,7 +163,7 @@ OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=Landing page
 
 - On every startup with the provider enabled, open-dpp writes the Trusted Client from these variables into the `oauthClient` collection (created on the first boot, updated afterwards). A changed secret, redirect list or name takes effect **after a restart**; the row's identity and creation date are preserved. A row flipped to `disabled` in the database is re-enabled on the next boot.
 - open-dpp creates a unique index on `oauthClient.clientId`, so several replicas booting at once converge on one row.
-- A failed write is logged at error level and does not stop the instance; OAuth requests are then rejected until the next boot.
+- A failed write is logged at error level and stops the startup, so the OAuth Provider never serves a stale secret or redirect list; fix the database problem and restart.
 - Disabling the provider deletes nothing; the row stays inert until the provider is enabled again.
 - The client secret is stored as a salted scrypt hash, with the same key derivation open-dpp applies to User passwords, and is re-hashed with a fresh salt on every startup. Rotating it invalidates nothing already issued (outstanding access, id and refresh tokens stay valid); it only changes which secret the Trusted Client must present from then on to exchange codes, refresh, revoke or introspect.
 

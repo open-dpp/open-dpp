@@ -28,8 +28,12 @@ function parseUrl(value: string): URL | undefined {
   }
 }
 
-/** True for https, for http on loopback, and for unparseable values (`z.url` reports those). */
-function isHttpsOrLoopback(value: string): boolean {
+/**
+ * True for https, for http on loopback, and for unparseable values (`z.url` reports those).
+ * The rule every URL the OAuth Provider hands to a browser follows: the Trusted Client's
+ * redirect URIs and, while the provider is enabled, `OPEN_DPP_URL` (the issuer's origin).
+ */
+export function isHttpsOrLoopbackUrl(value: string): boolean {
   const url = parseUrl(value);
   return url === undefined || url.protocol === "https:" || isLoopbackUrl(url);
 }
@@ -45,7 +49,7 @@ export const trustedClientRedirectUriSchema = z
   .refine((value) => !value.includes("#"), {
     message: "Redirect URI must not contain a fragment",
   })
-  .refine(isHttpsOrLoopback, {
+  .refine(isHttpsOrLoopbackUrl, {
     message: "Redirect URI must use https (http is allowed only on loopback hosts)",
   });
 

@@ -112,7 +112,10 @@ async function upsertTrustedClient(
 /**
  * Creates or refreshes the env-configured Trusted Client so the operator never touches
  * the database. Runs on every enabled boot, before the first request: the plugin caches
- * trusted clients process-wide on first use, so changes only ever land at startup.
+ * trusted clients process-wide on first use, so changes only ever land at startup. A
+ * failed write is fatal: a missing row would merely reject every OAuth request, but a
+ * stale row would keep a rotated secret or a removed redirect URI valid until the next
+ * boot, so the startup stops rather than serve it.
  */
 export async function ensureTrustedClientUpserted(
   db: Db,
@@ -125,10 +128,10 @@ export async function ensureTrustedClientUpserted(
     const outcome = await upsertTrustedClient(adapter, trustedClient);
     logger.log(`Trusted Client "${trustedClient.clientId}" ${outcome}`);
   } catch (error) {
-    // the rest of the instance must stay up; the OAuth Provider answers invalid_client until the next boot
     logger.error(
-      `Failed to upsert the Trusted Client "${trustedClient.clientId}"; OAuth Provider requests are rejected until the next boot`,
+      `Failed to write the Trusted Client "${trustedClient.clientId}"; refusing to start with a possibly stale Trusted Client`,
       error,
     );
+    throw error;
   }
 }

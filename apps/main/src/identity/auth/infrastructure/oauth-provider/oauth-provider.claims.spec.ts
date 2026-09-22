@@ -202,4 +202,18 @@ describe("OAuth Provider claims", () => {
       expect.objectContaining({ name: "Solo Rider", given_name: "Solo", family_name: "Rider" }),
     );
   });
+
+  it("gives a User created with blank names the fallback display name, so the claims never break", async () => {
+    // Admin email-only invites create Users with empty first and last names.
+    const blank = await signUp({ firstName: "", lastName: "", name: "" });
+    expect(blank.name).toBe("User");
+
+    const tokens = await obtainTokens(blank);
+    const response = await userinfo(tokens.access_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expect.objectContaining({ name: "User" }));
+    expect(response.body).not.toHaveProperty("given_name");
+    expect(response.body).not.toHaveProperty("family_name");
+  });
 });
