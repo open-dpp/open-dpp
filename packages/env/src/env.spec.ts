@@ -182,6 +182,15 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
     ).toThrow(/OPEN_DPP_URL/);
   });
 
+  it.each(["ftp://localhost:3000", "ws://127.0.0.1:3000"])(
+    "rejects an enabled provider on the loopback origin %s with a non-http(s) scheme",
+    (origin: string) => {
+      expect(() => validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_URL: origin })).toThrow(
+        /OPEN_DPP_URL/,
+      );
+    },
+  );
+
   it("ignores a plain http origin while disabled", () => {
     expect(() => validateEnv({ ...baseEnv, OPEN_DPP_URL: "http://dpp.example.com" })).not.toThrow();
   });
