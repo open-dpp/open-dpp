@@ -734,6 +734,7 @@ function createTemplatePaths() {
         summary: `Restrict Passports created from this template to data-only editing.`,
         parameters: [IdParamSchema, orgaIdHeader],
         requestBody: {
+          required: true,
           content: {
             [ContentType.JSON]: {
               schema: RestrictPassportEditingDtoSchema,
@@ -885,6 +886,7 @@ function createPassportPaths() {
         summary: `Remove this passport's data-only editing restriction.`,
         parameters: [IdParamSchema, orgaIdHeader],
         requestBody: {
+          required: true,
           content: {
             [ContentType.JSON]: {
               schema: RemoveEditingRestrictionsDtoSchema,
