@@ -76,6 +76,7 @@ export * from "./bulk-import/bulk-import-run.dto";
 export * from "./bulk-import/bulk-import-run-item.dto";
 export * from "./bulk-import/bulk-import-parse-result.dto";
 export * from "./organizations/member.dto";
+export * from "./organizations/organization.dto";
 export * from "./passports/passport.dto";
 export * from "./permalinks/permalink.dto";
 export * from "./presentation-configurations/presentation-configuration.dto";

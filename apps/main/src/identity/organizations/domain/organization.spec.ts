@@ -4,24 +4,50 @@ import { InvitationStatus } from "./invitation-status.enum";
 import { MemberRole } from "./member-role.enum";
 import { Organization } from "./organization";
 
+const OBJECT_ID_HEX = /^[0-9a-f]{24}$/;
+
 describe("organization", () => {
-  it("creates a organization and add members", () => {
+  it("creates an organization whose slug equals its id", () => {
     const organization = Organization.create({
       name: "Test Org",
-      slug: "test-org",
       logo: null,
       metadata: {},
     });
 
     expect(organization.id).toBeDefined();
     expect(organization.name).toEqual("Test Org");
-    expect(organization.slug).toEqual("test-org");
+    expect(organization.slug).toEqual(organization.id);
+  });
+
+  it("mints an ObjectId hex string as id so Mongo stores a real ObjectId", () => {
+    const organization = Organization.create({ name: "Test Org", metadata: {} });
+
+    expect(organization.id).toMatch(OBJECT_ID_HEX);
+  });
+
+  it("mints a fresh id per create", () => {
+    const first = Organization.create({ name: "Test Org", metadata: {} });
+    const second = Organization.create({ name: "Test Org", metadata: {} });
+
+    expect(first.id).not.toEqual(second.id);
+  });
+
+  it("keeps a stored slug that differs from the id when loading from the database", () => {
+    const organization = Organization.loadFromDb({
+      id: "690cf22459cdae7ce188c1f8",
+      name: "Legacy Org",
+      slug: "legacy-org",
+      logo: null,
+      metadata: {},
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+    });
+
+    expect(organization.slug).toEqual("legacy-org");
   });
 
   it("updates name and logo while preserving other fields", () => {
     const organization = Organization.create({
       name: "Test Org",
-      slug: "test-org",
       logo: null,
       metadata: { key: "value" },
     });
@@ -33,7 +59,7 @@ describe("organization", () => {
 
     expect(updated.id).toEqual(organization.id);
     expect(updated.name).toEqual("Updated Org");
-    expect(updated.slug).toEqual("test-org");
+    expect(updated.slug).toEqual(organization.id);
     expect(updated.logo).toEqual("https://example.com/logo.png");
     expect(updated.metadata).toEqual({ key: "value" });
     expect(updated.createdAt).toEqual(organization.createdAt);
@@ -42,7 +68,6 @@ describe("organization", () => {
   it("sets logo to null when update data has no logo", () => {
     const organization = Organization.create({
       name: "Test Org",
-      slug: "test-org",
       logo: "https://example.com/old-logo.png",
       metadata: {},
     });
@@ -57,7 +82,6 @@ describe("organization", () => {
   it("creates an invitation when inviting a member", () => {
     const organization = Organization.create({
       name: "Test Org",
-      slug: "test-org",
       logo: null,
       metadata: {},
     });
