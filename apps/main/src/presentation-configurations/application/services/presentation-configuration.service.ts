@@ -68,6 +68,7 @@ export class PresentationConfigurationService {
     holder: PresentationReferenceHolder,
     body: { label: string | null },
   ): Promise<PresentationConfiguration> {
+    this.assertPassportEditingNotRestricted(holder);
     const config = PresentationConfiguration.create({
       organizationId: holder.organizationId,
       referenceId: holder.id,
@@ -83,10 +84,21 @@ export class PresentationConfigurationService {
     patch: PresentationConfigurationPatchDto,
     ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
+    this.assertPassportEditingNotRestricted(holder);
     const config = await this.requireOwned(configId, {
       referenceType: holder.referenceType,
       referenceId: holder.id,
     });
+    return this.persistPatch(config, patch, ability);
+  }
+
+  async delete(holder: PresentationReferenceHolder, configId: string): Promise<void> {
+    this.assertPassportEditingNotRestricted(holder);
+    await this.getById(holder, configId);
+    await this.presentationConfigurationRepository.deleteById(configId);
+  }
+
+  private assertPassportEditingNotRestricted(holder: PresentationReferenceHolder): void {
     if (
       holder.referenceType === DigitalProductDocumentTypes.Passport &&
       holder.editingMode === PassportEditingMode.DataOnly
@@ -95,12 +107,6 @@ export class PresentationConfigurationService {
         `Passport ${holder.id} editing is restricted to data; presentation configuration is not editable`,
       );
     }
-    return this.persistPatch(config, patch, ability);
-  }
-
-  async delete(holder: PresentationReferenceHolder, configId: string): Promise<void> {
-    await this.getById(holder, configId);
-    await this.presentationConfigurationRepository.deleteById(configId);
   }
 
   async getEffective(

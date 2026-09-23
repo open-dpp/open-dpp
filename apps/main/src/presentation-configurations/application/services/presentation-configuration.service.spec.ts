@@ -137,6 +137,14 @@ describe("PresentationConfigurationService", () => {
       expect(created.referenceId).toBe(passport.id);
       expect(created.referenceType).toBe("passport");
     });
+
+    it("rejects creating a config for a passport whose editing is restricted to data", async () => {
+      const passport = makePassport({ editingMode: PassportEditingMode.DataOnly });
+
+      await expect(service.create(passportHolder(passport), { label: "v1" })).rejects.toThrow(
+        ValueError,
+      );
+    });
   });
 
   describe("delete (passport)", () => {
@@ -159,6 +167,20 @@ describe("PresentationConfigurationService", () => {
 
       const stillThere = await service.getById(passportHolder(passportB), configForB.id);
       expect(stillThere.id).toBe(configForB.id);
+    });
+
+    it("rejects deleting a config for a passport whose editing is restricted to data", async () => {
+      const passport = makePassport({ editingMode: PassportEditingMode.Full });
+      const created = await service.create(passportHolder(passport), { label: "v1" });
+      const restrictedHolder = {
+        ...passportHolder(passport),
+        editingMode: PassportEditingMode.DataOnly,
+      };
+
+      await expect(service.delete(restrictedHolder, created.id)).rejects.toThrow(ValueError);
+
+      const stillThere = await service.getById(passportHolder(passport), created.id);
+      expect(stillThere.id).toBe(created.id);
     });
   });
 
