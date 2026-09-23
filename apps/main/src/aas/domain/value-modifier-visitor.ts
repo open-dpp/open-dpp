@@ -157,10 +157,8 @@ export class ValueModifierVisitor
 
   visitProperty(element: Property, context?: ValueModifierVisitorContextType): void {
     this.modificationGuard(element);
-    const value = z
-      .string()
-      .nullish()
-      .parse(context?.data !== undefined ? context.data : element.value);
+    const schema = z.union([z.string(), z.number(), z.boolean()]).pipe(z.coerce.string()).nullish();
+    const value = schema.parse(context?.data !== undefined ? context.data : element.value);
 
     if (value !== undefined) {
       const oldValue = element.value;

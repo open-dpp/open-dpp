@@ -3,6 +3,7 @@ import type {
   DigitalProductDocumentStatusModificationDto,
   GetAllActivitiesParamsDto,
   GetAllParamsDto,
+  RestrictPassportEditingDto,
   TemplateCreateDto,
   TemplateDto,
   TemplatePaginationDto,
@@ -68,6 +69,16 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   ): Promise<AxiosResponse<TemplateDto>> {
     return await this.axiosInstance.put<TemplateDto>(
       `${this.templatesEndpoint}/${id}/status`,
+      data,
+    );
+  }
+
+  public async setPassportEditingMode(
+    id: string,
+    data: RestrictPassportEditingDto,
+  ): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.put<TemplateDto>(
+      `${this.templatesEndpoint}/${id}/passport-editing-mode`,
       data,
     );
   }

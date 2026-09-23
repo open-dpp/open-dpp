@@ -7,11 +7,14 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
+import { ValueError } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../../database/query-options";
 import { TransactionService } from "../../../database/transaction.service";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
-import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
+import { PassportExportable } from "../../../aas/domain/exportable/passport-exportable";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { EnvironmentService, UserContext } from "../../../aas/presentation/environment.service";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
@@ -36,6 +39,7 @@ import { handleDppStatusChangeRequest } from "../../../digital-product-document/
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
 import { DigitalProductDocumentStatusChangedActivity } from "../../../activity-history/domain/activities/digital-product-document-status-changed.activity";
+import { PassportEditingModeChangedActivity } from "../../../activity-history/domain/activities/passport-editing-mode-changed.activity";
 
 @Injectable()
 export class PassportService {
@@ -62,7 +66,7 @@ export class PassportService {
     );
   }
 
-  async getExpandedProductPassport(passportId: string): Promise<AasExportable> {
+  async getExpandedProductPassport(passportId: string): Promise<PassportExportable> {
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
@@ -76,7 +80,7 @@ export class PassportService {
         `Passport ${passportId} has no environment; returning empty shells and submodels`,
       );
 
-      return AasExportable.createFromPassport(
+      return PassportExportable.fromPassport(
         passport,
         ExpandedEnvironment.fromEnvironment(
           Environment.create({}),
@@ -92,7 +96,7 @@ export class PassportService {
       passport.environment,
     );
 
-    return AasExportable.createFromPassport(
+    return PassportExportable.fromPassport(
       passport,
       expandedEnvironment,
       presentationConfiguration,
@@ -133,6 +137,44 @@ export class PassportService {
     return PassportDtoSchema.parse(saved.toPlain());
   }
 
+  async removeEditingRestrictions(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    userContext: UserContext,
+  ) {
+    const passport =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        userContext.subject,
+        organizationId,
+      );
+    passport.withTracking().removeEditingRestrictions();
+    const activity = PassportEditingModeChangedActivity.create({
+      correlationId,
+      userId: userContext.userId,
+      digitalProductDocumentId: id,
+      item: passport,
+    });
+
+    const saved = await this.transactionService.withTransaction(async (options) => {
+      const persisted = await this.passportRepository.save(passport, options);
+      if (!activity.isNoop()) {
+        await this.activityRepository.createMany([activity], options);
+      }
+      return persisted;
+    });
+    return PassportDtoSchema.parse(saved.toPlain());
+  }
+
+  assertFullEditingMode(passport: Passport): void {
+    if (passport.getEditingMode() !== PassportEditingMode.Full) {
+      throw new ValueError(
+        `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+      );
+    }
+  }
+
   async createPassportFromTemplate(
     organizationId: string,
     templateId: string,
@@ -146,7 +188,13 @@ export class PassportService {
       );
     }
     const environment = await this.environmentService.copyEnvironment(template.environment);
-    return await this.createAndPersistPassport(organizationId, environment, templateId, options);
+    return await this.createAndPersistPassport(
+      organizationId,
+      environment,
+      templateId,
+      options,
+      template.getPassportEditingMode(),
+    );
   }
 
   /**
@@ -158,11 +206,13 @@ export class PassportService {
     environment: Environment,
     templateId?: string,
     options?: DbSessionOptions,
+    editingMode?: PassportEditingModeType,
   ): Promise<Passport> {
     const passport = Passport.create({
       organizationId,
       templateId,
       environment,
+      editingMode,
     });
     const upid = passport.createUniqueProductIdentifier();
 

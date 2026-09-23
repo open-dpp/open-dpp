@@ -54,6 +54,7 @@ import {
   LatestAasExportVersion,
 } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 import { TransactionService } from "../../../database/transaction.service";
 import { EmailService } from "../../../email/email.service";
@@ -1064,6 +1065,76 @@ describe("aasSerializationService", () => {
       expect(message).toContain("Invalid import data format:");
       expect(message).toContain("presentationConfiguration.elementDesign");
       expect(capturedPassport).toBeUndefined();
+    });
+  });
+
+  describe("editing mode export/import", () => {
+    const orgId = "org-1";
+
+    it("defaults passportEditingMode to Full on v5.0 import (Template)", async () => {
+      const data = buildExportData({ version: AasExportVersion.v5_0 });
+
+      const imported = await aasSerializationService.importTemplate(
+        data,
+        orgId,
+        async (t, options) => {
+          await templateRepository.save(t, options);
+        },
+      );
+
+      expect(imported.getPassportEditingMode()).toEqual(PassportEditingMode.Full);
+    });
+
+    it("defaults editingMode to Full on v5.0 import (Passport)", async () => {
+      const data = buildExportData({ version: AasExportVersion.v5_0 });
+
+      const imported = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
+      );
+
+      expect(imported.getEditingMode()).toEqual(PassportEditingMode.Full);
+    });
+
+    it("round-trips passportEditingMode through v6.0 export/import (Template)", async () => {
+      const data = buildExportData({ version: AasExportVersion.v6_0 });
+      (data as any).passportEditingMode = PassportEditingMode.DataOnly;
+
+      const imported = await aasSerializationService.importTemplate(
+        data,
+        orgId,
+        async (t, options) => {
+          await templateRepository.save(t, options);
+        },
+      );
+      expect(imported.getPassportEditingMode()).toEqual(PassportEditingMode.DataOnly);
+
+      const loaded = await templateRepository.findOneOrFail(imported.id);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+      const reExported = await aasSerializationService.exportTemplate(loaded, admin);
+      expect((reExported as any).passportEditingMode).toEqual(PassportEditingMode.DataOnly);
+    });
+
+    it("round-trips editingMode through v6.0 export/import (Passport)", async () => {
+      const data = buildExportData({ version: AasExportVersion.v6_0 });
+      (data as any).editingMode = PassportEditingMode.DataOnly;
+
+      const imported = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
+      );
+      expect(imported.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+
+      const loaded = await passportRepository.findOneOrFail(imported.id);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+      const reExported = await aasSerializationService.exportPassport(loaded, admin);
+      expect((reExported as any).editingMode).toEqual(PassportEditingMode.DataOnly);
     });
   });
 

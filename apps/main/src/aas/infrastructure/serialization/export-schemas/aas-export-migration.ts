@@ -1,14 +1,16 @@
+import type { DigitalProductDocumentTypesType } from "@open-dpp/dto";
 import { Security } from "../../../domain/security/security";
 import { migrateSubmodelLinks } from "../../migrate-links";
 import { AasExportVersion } from "./aas-export-shared";
-import {
-  AasExportLatestVersion,
-  AasExportSchemas,
-  aasExportSchemaJsonLatest,
-} from "./aas-export-types";
+import { AasExportLatestVersion, AasExportSchemas, exportSchemas } from "./aas-export-types";
 
-export function ParseWithMigration(data: unknown): AasExportLatestVersion {
-  let exportedAas = AasExportSchemas.parse(data);
+export function ParseWithMigration(
+  data: unknown,
+  referenceType: DigitalProductDocumentTypesType,
+): AasExportLatestVersion {
+  const { schemas, latestSchema } = exportSchemas(referenceType);
+
+  let exportedAas = schemas.parse(data);
   if (exportedAas.version === AasExportVersion.v1_0) {
     const security = Security.create({});
     exportedAas.environment.submodels.forEach((submodel) => {
@@ -62,9 +64,10 @@ export function ParseWithMigration(data: unknown): AasExportLatestVersion {
     });
   }
 
-  return aasExportSchemaJsonLatest.parse({
+  return latestSchema.parse({
     ...exportedAas,
     createdAt: exportedAas.createdAt.toISOString(),
     updatedAt: exportedAas.updatedAt.toISOString(),
+    version: AasExportVersion.v6_0,
   });
 }

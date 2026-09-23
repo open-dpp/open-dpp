@@ -29,6 +29,12 @@ const disableEdit = computed(() => {
   return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
+// Metadata (idShort, displayName, description, semanticId, qualifiers) and permissions are
+// structural, not the leaf value — stay locked while restricted to data. The value field
+// itself deliberately does NOT get this check (see FileForm's `disabled-value` binding
+// below) so it stays editable, with submission routed through the value-only endpoint.
+const disableMetadata = computed(() => disableEdit.value || props.isEditingRestrictedToData);
+
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;
 } | null>(null);
@@ -59,10 +65,15 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-4 p-2">
-    <FileForm :show-errors="showErrors" :editor-mode="EditorMode.EDIT" :disabled="disableEdit" />
+    <FileForm
+      :show-errors="showErrors"
+      :editor-mode="EditorMode.EDIT"
+      :disabled="disableMetadata"
+      :disabled-value="disableEdit"
+    />
     <PermissionsForm
       ref="permissionsFormRef"
-      :disabled="disableEdit"
+      :disabled="disableMetadata"
       :ignored-permission-options="[Permissions.Create]"
       :path="props.path"
       :modify-shell="props.modifyShell"
