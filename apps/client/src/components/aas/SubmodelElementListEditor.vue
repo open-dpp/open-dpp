@@ -272,6 +272,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
           </div>
           <Button
+            v-if="!props.isEditingRestrictedToData"
             v-tooltip.top="!canCreateColumnsAndRows ? missingPermissionsMsg : undefined"
             :label="t('aasEditor.table.addColumnEnd')"
             :disabled="!canCreateColumnsAndRows"

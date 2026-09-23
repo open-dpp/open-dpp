@@ -99,6 +99,11 @@ const permalinkActions = computed(() => [
     },
   },
 ]);
+const restrictedPassportEditMode = computed(
+  () =>
+    props.type === DigitalProductDocumentType.Passport &&
+    editingMode.value === PassportEditingModeDto.DataOnly,
+);
 </script>
 
 <template>
@@ -166,13 +171,10 @@ const permalinkActions = computed(() => [
             @click="onRestrictPassportEditingButtonClicked(model)"
           />
           <Button
-            v-if="
-              type === DigitalProductDocumentType.Passport &&
-              editingMode === PassportEditingModeDto.DataOnly
-            "
-            icon="pi pi-lock-open"
+            v-if="restrictedPassportEditMode"
+            icon="pi pi-lock"
             text
-            severity="secondary"
+            severity="warn"
             :aria-label="t('passports.removeEditingRestrictions')"
             v-tooltip.bottom="t('passports.removeEditingRestrictionsTooltip')"
             @click="onRemoveEditingRestrictionsButtonClicked(model)"
@@ -182,13 +184,6 @@ const permalinkActions = computed(() => [
       <template #center>
         <div v-if="type === DigitalProductDocumentType.Passport" class="flex items-center gap-2">
           <Tag severity="contrast">{{ t(`status.${status.toLowerCase()}`) }}</Tag>
-          <Tag
-            v-if="editingMode === PassportEditingModeDto.DataOnly"
-            v-tooltip.bottom="t('passports.removeEditingRestrictionsTooltip')"
-            severity="warn"
-            icon="pi pi-lock"
-            >{{ t("passports.restrictedEditingTag") }}</Tag
-          >
         </div>
       </template>
       <template #end>
