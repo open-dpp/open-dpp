@@ -133,8 +133,8 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
       zod-vue-i18n:
-        specifier: ^0.0.9
-        version: 0.0.9(vue-i18n@11.4.12(vue@3.5.43(typescript@5.9.3)))(zod@4.4.3)
+        specifier: ^0.0.10
+        version: 0.0.10(vue-i18n@11.4.12(vue@3.5.43(typescript@5.9.3)))(zod@4.4.3)
     devDependencies:
       '@open-dpp/testing':
         specifier: workspace:*
@@ -9102,8 +9102,8 @@ packages:
     peerDependencies:
       zod: ^3.25.28 || ^4
 
-  zod-vue-i18n@0.0.9:
-    resolution: {integrity: sha512-BgIk/gCwGb94a5rIc6PafeKP6Ojx7ZijoqVhe3wg3vLwmP6TeyDvsRIBJlo+pQeHokI1qm5BEIZiKU5ltsKJ6A==}
+  zod-vue-i18n@0.0.10:
+    resolution: {integrity: sha512-mz7C1dl3AhzT9zUYtXXkPOQ0/GmtViQeh+GYjLiomKCVdZM5hHZXPACdCKpkFrvOpgYFkx6775bYuTkU02bnIg==}
     engines: {node: '>= 16.x'}
     peerDependencies:
       vue-i18n: ^11.2.0
@@ -18271,7 +18271,7 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  zod-vue-i18n@0.0.9(vue-i18n@11.4.12(vue@3.5.43(typescript@5.9.3)))(zod@4.4.3):
+  zod-vue-i18n@0.0.10(vue-i18n@11.4.12(vue@3.5.43(typescript@5.9.3)))(zod@4.4.3):
     dependencies:
       vue-i18n: 11.4.12(vue@3.5.43(typescript@5.9.3))
       zod: 4.4.3
