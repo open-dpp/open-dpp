@@ -31,7 +31,7 @@
     "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.1",
     "@dotenvx/dotenvx": "^1.75.1",
     "@types/node": "^22.20.3",
