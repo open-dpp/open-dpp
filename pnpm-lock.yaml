@@ -124,7 +124,7 @@ importers:
         specifier: ^5.3.4
         version: 5.3.4(chart.js@4.5.1)(vue@3.5.43(typescript@5.9.3))
       vue-i18n:
-        specifier: ^11.4.10
+        specifier: ^11.4.12
         version: 11.4.12(vue@3.5.43(typescript@5.9.3))
       vue-router:
         specifier: ^5.1.0
