@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.3.0",
-    "@swc/core": "^1.15.41",
+    "@swc/core": "^1.16.2",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
