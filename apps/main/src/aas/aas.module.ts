@@ -1,6 +1,5 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { MediaModule } from "../media/media.module";
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { AasRepository } from "./infrastructure/aas.repository";
@@ -28,7 +27,6 @@ import { DatabaseModule } from "../database/database.module";
       { name: SubmodelDoc.name, schema: SubmodelSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ]),
-    OrganizationsModule,
     MediaModule,
     forwardRef(() => PresentationConfigurationsModule),
     ActivityHistoryModule,
