@@ -1,6 +1,6 @@
 import { expect } from "@jest/globals";
 import { Language } from "@open-dpp/dto";
-import { User } from "./user";
+import { deriveDisplayName, User } from "./user";
 import { UserRole } from "./user-role.enum";
 
 describe("user", () => {
@@ -253,5 +253,26 @@ describe("user", () => {
       expect(result).toBe(user);
       expect(result.updatedAt).toBe(user.updatedAt);
     });
+  });
+});
+
+describe("deriveDisplayName", () => {
+  it("joins first and last name with a single space", () => {
+    expect(deriveDisplayName("John", "Doe")).toBe("John Doe");
+  });
+
+  it("uses whichever name part exists", () => {
+    expect(deriveDisplayName("Solo", null)).toBe("Solo");
+    expect(deriveDisplayName(null, "Rider")).toBe("Rider");
+  });
+
+  it("ignores blank parts and trims the rest", () => {
+    expect(deriveDisplayName("  Jane ", "   ")).toBe("Jane");
+  });
+
+  it("yields null when no part is usable", () => {
+    expect(deriveDisplayName(null, null)).toBeNull();
+    expect(deriveDisplayName("", "   ")).toBeNull();
+    expect(deriveDisplayName(undefined, 42)).toBeNull();
   });
 });

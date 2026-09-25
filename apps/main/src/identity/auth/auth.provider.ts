@@ -21,7 +21,10 @@ import {
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { fillMissingDisplayName } from "../users/infrastructure/user-display-name-hook";
+import { oauthProviderAuthOptions } from "./infrastructure/oauth-provider/oauth-provider-plugins";
+import { AUTH_BASE_PATH } from "./auth-base-path";
+import { bootstrapTrustedClient } from "./infrastructure/oauth-provider/trusted-client-upsert";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
 export const AUTH = "auth";
@@ -137,11 +140,15 @@ export const AuthProvider: Provider = {
     }
     const mongoClient = mongooseConnection.getClient();
 
+    // OAuth Provider: plugins and lockdown only while enabled
+    const oauthProvider = oauthProviderAuthOptions(configService);
+
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
-      basePath: `/api/${LatestApiVersionWithPrefixDto}/auth`,
+      basePath: AUTH_BASE_PATH,
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
+      disabledPaths: oauthProvider.disabledPaths,
       logger: {
         disabled: false,
         log: (level, message, ...args) => {
@@ -275,6 +282,9 @@ export const AuthProvider: Provider = {
           },
         },
         user: {
+          create: {
+            before: async (user) => fillMissingDisplayName(user),
+          },
           update: {
             before: async (data, context) => guardEmailChangeUpdate(db, logger, data, context),
             after: async (user) => completeVerifiedEmailChange(db, emailService, logger, user),
@@ -328,6 +338,7 @@ export const AuthProvider: Provider = {
           },
         }),
         admin({}),
+        ...oauthProvider.plugins,
       ],
       database: mongodbAdapter(db, {
         client: configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
@@ -335,6 +346,7 @@ export const AuthProvider: Provider = {
     });
 
     await ensureAdminSeeded(db, auth, configService, logger);
+    await bootstrapTrustedClient(configService, db, auth, logger);
     logger.log("Auth initialized");
 
     return auth;

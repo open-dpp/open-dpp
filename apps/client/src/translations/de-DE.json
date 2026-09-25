@@ -893,7 +893,8 @@
       "alreadyAMember": "Bereits registriert?",
       "ctaSignIn": "Jetzt anmelden",
       "error": "Registrierung fehlgeschlagen.",
-      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator."
+      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator.",
+      "oauthContinueError": "Die Weiterleitung zur aufrufenden Anwendung ist fehlgeschlagen. Bitte registrieren Sie sich oder melden Sie sich erneut an."
     },
     "passwordResetRequest": {
       "title": "Passwort zurücksetzen",

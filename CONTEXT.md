@@ -28,6 +28,13 @@ _Avoid_: cancel (used interchangeably in UI, but Revoke is the precise term for 
 **Preferred Language**:
 The User's chosen UI language, persisted on the User and mirrored to the browser locale on load and on save.
 
+**OAuth Provider**:
+open-dpp acting as the identity provider and authorization server for a Trusted Client: a User signs in once with open-dpp, and the Trusted Client receives proof of who they are and may act on their behalf against open-dpp. The inverse of an Account's external identity provider, where open-dpp is the one relying on someone else. Optional per instance; when not configured, open-dpp is nobody's identity provider.
+
+**Trusted Client**:
+The single external application an operator has configured to use open-dpp as its OAuth Provider. It is trusted because the operator chose it, so Users are not asked to consent to it. There is at most one per instance, and it cannot be created or changed by Users.
+_Not to be confused with_: an API key (a User-minted credential for their own use) or an Account (a User's link to an authentication method).
+
 ## Organization & Membership
 
 **Member**:

@@ -1,5 +1,21 @@
 # @open-dpp/testing
 
+## 6.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.1.1
+  - @open-dpp/env@6.1.1
+
+## 6.1.0
+
+### Patch Changes
+
+- Updated dependencies [[`a7a6759`](https://github.com/open-dpp/open-dpp/commit/a7a675966ff4aae683a178cf5a7ab8f8e759823b)]:
+  - @open-dpp/dto@6.1.0
+  - @open-dpp/env@6.1.0
+
 ## 6.0.0
 
 ### Patch Changes

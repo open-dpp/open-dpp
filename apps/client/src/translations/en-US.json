@@ -893,7 +893,8 @@
       "alreadyAMember": "Already a member?",
       "ctaSignIn": "Sign in now",
       "error": "Sign up failed.",
-      "disabled": "Signup is currently disabled. Please contact your administrator."
+      "disabled": "Signup is currently disabled. Please contact your administrator.",
+      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again."
     },
     "passwordResetRequest": {
       "title": "Request password reset",

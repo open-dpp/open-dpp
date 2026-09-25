@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/main",
-  "version": "6.0.0",
+  "version": "6.1.1",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@better-auth/api-key": "^1.6.17",
+    "@better-auth/core": "^1.6.17",
+    "@better-auth/oauth-provider": "^1.6.17",
     "@langchain/core": "^1.1.48",
     "@langchain/langgraph": "^0.4.10",
     "@langchain/mcp-adapters": "^1.1.3",
