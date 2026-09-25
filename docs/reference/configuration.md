@@ -81,9 +81,9 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Official templates
 
-| Variable                             | Type   | Required | Default                               | Description                                                                                                                                                                                                                              |
-| ------------------------------------ | ------ | -------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPEN_DPP_OFFICIAL_TEMPLATES_REPO`   | string | No       | `github:open-dpp/passport-templates`   | Source repository for official templates, in the form `<provider>:<owner>/<repo>` or `<provider>:<owner>/<repo>@<branch>`. The branch defaults to the repository's default branch when omitted. Only `github` is currently supported. |
+| Variable                           | Type   | Required | Default                              | Description                                                                                                                                                                                                                           |
+| ---------------------------------- | ------ | -------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_OFFICIAL_TEMPLATES_REPO` | string | No       | `github:open-dpp/passport-templates` | Source repository for official templates, in the form `<provider>:<owner>/<repo>` or `<provider>:<owner>/<repo>@<branch>`. The branch defaults to the repository's default branch when omitted. Only `github` is currently supported. |
 
 > Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates page — for example after adding a template to the repo, or if the initial import at organization-creation time failed (e.g. the repository was briefly unreachable).
 
