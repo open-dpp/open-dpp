@@ -23,7 +23,7 @@
   "dependencies": {
     "@better-auth/api-key": "^1.6.17",
     "@better-auth/core": "^1.6.17",
-    "@better-auth/oauth-provider": "^1.6.17",
+    "@better-auth/oauth-provider": "^1.7.0",
     "@langchain/core": "^1.1.48",
     "@langchain/langgraph": "^0.4.10",
     "@langchain/mcp-adapters": "^1.1.3",
