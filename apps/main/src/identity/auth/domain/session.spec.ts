@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { Session } from "./session";
+import { AuthMethod, Session } from "./session";
 
 describe("session", () => {
   it("should create a session with valid properties", () => {
@@ -70,6 +70,26 @@ describe("session", () => {
     expect(session.userAgent).toBeUndefined();
     expect(session.activeOrganizationId).toBeNull();
     expect(session.activeTeamId).toBeNull();
+  });
+
+  it("defaults to the browser session auth method", () => {
+    const session = Session.create({ userId: "user-123", token: "valid-token" });
+
+    expect(session.authMethod).toBe(AuthMethod.SESSION);
+  });
+
+  it("carries the OAuth auth method and the token's expiry for a Trusted Client access token", () => {
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    const session = Session.create({
+      userId: "user-123",
+      token: "oauth",
+      authMethod: AuthMethod.OAUTH,
+      expiresAt,
+    });
+
+    expect(session.authMethod).toBe(AuthMethod.OAUTH);
+    expect(session.expiresAt).toEqual(expiresAt);
   });
 
   it("should load session from database properties", () => {

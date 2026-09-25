@@ -73,3 +73,153 @@ describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
     );
   });
 });
+
+describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
+  const trustedClientEnv = {
+    OPEN_DPP_OAUTH_PROVIDER_ENABLED: "true",
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: "landing-page",
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: "landing-page-secret",
+    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS:
+      "https://landing.example.com/auth/callback, https://landing.example.com/auth/callback-2",
+  };
+
+  it("is disabled by default", () => {
+    const env = validateEnv(baseEnv);
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_ENABLED).toBe(false);
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toBeUndefined();
+  });
+
+  it("rejects a non-boolean enabled flag", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_OAUTH_PROVIDER_ENABLED: "yes" })).toThrow(
+      /OPEN_DPP_OAUTH_PROVIDER_ENABLED/,
+    );
+  });
+
+  it("ignores an incomplete Trusted Client while disabled", () => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_OAUTH_PROVIDER_ENABLED: "false",
+        OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: "landing-page",
+      }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    ["an unparseable redirect URI", "not a url"],
+    ["a plain http redirect URI off loopback", "http://landing.example.com/auth/callback"],
+    ["a redirect URI with a fragment", "https://landing.example.com/auth/callback#fragment"],
+  ])("ignores %s while disabled", (_label: string, redirectUris: string) => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_OAUTH_PROVIDER_ENABLED: "false",
+        OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: redirectUris,
+      }),
+    ).not.toThrow();
+  });
+
+  it("keeps the Trusted Client variables as written when enabled and complete", () => {
+    // EnvService.getTrustedClient() parses them into a TrustedClientEnv
+    const env = validateEnv({ ...baseEnv, ...trustedClientEnv });
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_ENABLED).toBe(true);
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID).toBe("landing-page");
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET).toBe("landing-page-secret");
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toBe(
+      trustedClientEnv.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS,
+    );
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME).toBeUndefined();
+  });
+
+  it("keeps the optional client name", () => {
+    const env = validateEnv({
+      ...baseEnv,
+      ...trustedClientEnv,
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: "Landing page",
+    });
+
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME).toBe("Landing page");
+  });
+
+  it.each([
+    "OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID",
+    "OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET",
+    "OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS",
+  ] as const)(
+    "rejects an enabled provider without %s",
+    (missingKey: keyof typeof trustedClientEnv) => {
+      const { [missingKey]: _, ...incomplete } = trustedClientEnv;
+
+      expect(() => validateEnv({ ...baseEnv, ...incomplete })).toThrow(
+        /OPEN_DPP_OAUTH_PROVIDER_ENABLED/,
+      );
+    },
+  );
+
+  it("rejects an enabled provider with an empty client secret", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: "" }),
+    ).toThrow(/OPEN_DPP_OAUTH_PROVIDER_ENABLED/);
+  });
+
+  it("accepts an http redirect URI on loopback for local development", () => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        ...trustedClientEnv,
+        OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: "http://localhost:3001/auth/callback",
+      }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://[::1]:3000",
+    "http://dev.localhost",
+  ])(
+    "accepts an enabled provider on the http loopback origin %s for local development",
+    (origin: string) => {
+      expect(() =>
+        validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_URL: origin }),
+      ).not.toThrow();
+    },
+  );
+
+  it("rejects an enabled provider on a plain http origin off loopback", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_URL: "http://dpp.example.com" }),
+    ).toThrow(/OPEN_DPP_URL/);
+  });
+
+  it.each(["ftp://localhost:3000", "ws://127.0.0.1:3000"])(
+    "rejects an enabled provider on the loopback origin %s with a non-http(s) scheme",
+    (origin: string) => {
+      expect(() => validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_URL: origin })).toThrow(
+        /OPEN_DPP_URL/,
+      );
+    },
+  );
+
+  it("ignores a plain http origin while disabled", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_URL: "http://dpp.example.com" })).not.toThrow();
+  });
+
+  it.each([
+    ["an unparseable value", "not a url"],
+    ["a relative path", "https://landing.example.com/auth/callback,/auth/callback"],
+    ["a plain http URL off loopback", "http://landing.example.com/auth/callback"],
+    ["a fragment", "https://landing.example.com/auth/callback#fragment"],
+    ["an empty list", " , "],
+  ])("rejects a redirect URI list with %s", (_label: string, redirectUris: string) => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        ...trustedClientEnv,
+        OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: redirectUris,
+      }),
+    ).toThrow(/OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS/);
+  });
+});
