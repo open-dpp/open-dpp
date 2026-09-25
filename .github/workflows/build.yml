@@ -43,10 +43,15 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
+      - name: Test CI scripts
+        run: node --test ".github/scripts/*.test.mjs"
+
   changeset:
+    # PR author, not github.actor: the actor is whoever pushed last, which on a
+    # Renovate PR can be a maintainer or the changeset bot.
     if: >-
       github.event_name == 'pull_request'
-      && github.actor != 'renovate[bot]'
+      && github.event.pull_request.user.login != 'renovate[bot]'
       && github.head_ref != 'changeset-release/main'
       && !contains(github.event.pull_request.labels.*.name, 'dependencies')
     runs-on: ubuntu-latest

@@ -36,7 +36,51 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Publish only while the current version has no release tag, which in
+      # practice is the push that merges the "chore: version packages" PR. Any
+      # other push to main would re-run `changeset publish`, and right after a
+      # release npm can still report the new version as unpublished, so it
+      # tries again and fails with E409. Release runs are serialized, so the
+      # next run already sees the tag the publishing run pushed. A publish that
+      # failed, or whose run was cancelled while pending, left no tag, so the
+      # next push retries it. The fixed group moves every version together, so
+      # api-client stands in for all of them.
+      - name: Decide whether to publish
+        id: plan
+        run: |
+          set -euo pipefail
+
+          version=$(jq -r .version packages/api-client/package.json)
+          # --exit-code: 0 = tag exists, 2 = no such tag, anything else = error.
+          status=0
+          git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null || status=$?
+          case "$status" in
+            0) unreleased=false ;;
+            2) unreleased=true ;;
+            *) echo "::error::Could not look up tag v$version on origin (git exit $status)" >&2; exit 1 ;;
+          esac
+
+          # The files @changesets/read treats as changesets.
+          pending=$(find .changeset -maxdepth 1 -type f -name '*.md' ! -name '.*' ! -iname README.md | wc -l)
+
+          # changesets/action never publishes while changesets are pending: it
+          # opens the version PR instead, and still reads `publish` to word that
+          # PR's description ("merge this and the packages will be published").
+          # An empty `publish` makes it skip publishing.
+          if [ "$unreleased" = true ] || [ "$pending" -gt 0 ]; then
+            publish='pnpm release'
+          else
+            publish=''
+          fi
+
+          echo "Version $version (unreleased=$unreleased), $pending pending changeset(s), publish='$publish'"
+          {
+            echo "unreleased=$unreleased"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Guard against burned npm versions
+        if: steps.plan.outputs.unreleased == 'true'
         run: |
           set -euo pipefail
 
@@ -86,7 +130,7 @@ jobs:
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           version: pnpm version-packages
-          publish: pnpm release
+          publish: ${{ steps.plan.outputs.publish }}
           title: "chore: version packages"
           commit: "chore: version packages"
         env:
