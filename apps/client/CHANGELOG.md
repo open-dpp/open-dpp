@@ -1,5 +1,15 @@
 # @open-dpp/client
 
+## 6.1.1
+
+### Patch Changes
+
+- [#955](https://github.com/open-dpp/open-dpp/pull/955) [`5735fe6`](https://github.com/open-dpp/open-dpp/commit/5735fe63b8b99cff63f4e14f5f35dd6923bf397c) Thanks [@Hentra](https://github.com/Hentra)! - The organization creation page now focuses exclusively on creating an organization
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.1.1
+  - @open-dpp/dto@6.1.1
+
 ## 6.1.0
 
 ### Minor Changes
