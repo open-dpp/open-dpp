@@ -73,3 +73,39 @@ describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
     );
   });
 });
+
+describe("validateEnv — OPEN_DPP_OFFICIAL_TEMPLATES_REPO", () => {
+  it("defaults to the open-dpp project's own repo when omitted", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_OFFICIAL_TEMPLATES_REPO).toBe(
+      "github:open-dpp/passport-templates",
+    );
+  });
+
+  it("accepts a bare owner/repo slug", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "github:some-org/some-repo" })
+        .OPEN_DPP_OFFICIAL_TEMPLATES_REPO,
+    ).toBe("github:some-org/some-repo");
+  });
+
+  it("accepts a slug with a pinned branch", () => {
+    expect(
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "github:some-org/some-repo@staging",
+      }).OPEN_DPP_OFFICIAL_TEMPLATES_REPO,
+    ).toBe("github:some-org/some-repo@staging");
+  });
+
+  it("rejects a value with no provider prefix", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "some-org/some-repo" }),
+    ).toThrow(/OPEN_DPP_OFFICIAL_TEMPLATES_REPO/);
+  });
+
+  it("rejects an unsupported provider", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "gitlab:some-org/some-repo" }),
+    ).toThrow(/Unsupported official templates provider "gitlab"/);
+  });
+});
