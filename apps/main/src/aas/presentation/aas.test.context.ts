@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadata.interface";
 import { APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -124,6 +125,7 @@ export function createAasTestContext<T>(
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({

@@ -52,6 +52,14 @@ export const envSchema = z
       (v) => (v === "" ? undefined : v),
       z.url({ protocol: /^https?$/ }).optional(),
     ),
+    // Official templates — public repo templates are imported from; safe defaults point at the
+    // open-dpp project's own repo, override to point at a fork/mirror or a test fixture repo.
+    OPEN_DPP_OFFICIAL_TEMPLATES_REPO_OWNER: z.coerce.string().optional().default("open-dpp"),
+    OPEN_DPP_OFFICIAL_TEMPLATES_REPO_NAME: z.coerce
+      .string()
+      .optional()
+      .default("passport-templates"),
+    OPEN_DPP_OFFICIAL_TEMPLATES_REPO_BRANCH: z.coerce.string().optional().default("main"),
     // Misc
     OPEN_DPP_BUILD_API_DOC: asStrictBoolean.optional().default(false),
     OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce.string().or(z.number()).optional().default("10mb"),

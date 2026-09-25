@@ -31,7 +31,14 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
-const { createTemplate, templates, loading, fetchTemplates } = useTemplates();
+const {
+  createTemplate,
+  templates,
+  loading,
+  fetchTemplates,
+  importingOfficialTemplates,
+  importOfficialTemplates,
+} = useTemplates();
 
 const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
   DigitalProductDocumentType.Template,
@@ -104,6 +111,11 @@ async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDto
   await resetCursor();
 }
 
+async function onImportOfficialTemplatesClicked() {
+  await importOfficialTemplates();
+  await reloadCurrentPage();
+}
+
 onMounted(async () => {
   await nextPage();
 });
@@ -136,6 +148,12 @@ onMounted(async () => {
         :disabled="importingTemplate"
         custom-upload
         @select="onTemplateFileSelect"
+      />
+      <Button
+        :label="t('templates.importOfficial')"
+        severity="secondary"
+        :loading="importingOfficialTemplates"
+        @click="onImportOfficialTemplatesClicked"
       />
     </template>
     <template #actions="{ item, goToItem }">

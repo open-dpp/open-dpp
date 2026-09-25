@@ -733,7 +733,11 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",
-    "errorFetchList": "Failed to load templates"
+    "errorFetchList": "Failed to load templates",
+    "importOfficial": "Import official templates",
+    "importOfficialSuccess": "Imported {imported} official template(s).",
+    "importOfficialPartialFailure": "Imported {imported} official template(s), {failed} failed.",
+    "importOfficialError": "Failed to import official templates."
   },
   "actions": {
     "member": {

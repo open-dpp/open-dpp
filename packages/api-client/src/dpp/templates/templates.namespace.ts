@@ -3,6 +3,7 @@ import type {
   DigitalProductDocumentStatusModificationDto,
   GetAllActivitiesParamsDto,
   GetAllParamsDto,
+  ImportOfficialTemplatesResultDto,
   TemplateCreateDto,
   TemplateDto,
   TemplatePaginationDto,
@@ -56,6 +57,12 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
 
   public async import(data: Record<string, unknown>): Promise<AxiosResponse<TemplateDto>> {
     return await this.axiosInstance.post<TemplateDto>(`${this.templatesEndpoint}/import`, data);
+  }
+
+  public async importOfficial(): Promise<AxiosResponse<ImportOfficialTemplatesResultDto>> {
+    return await this.axiosInstance.post<ImportOfficialTemplatesResultDto>(
+      `${this.templatesEndpoint}/import-official`,
+    );
   }
 
   public async deleteById(id: string) {

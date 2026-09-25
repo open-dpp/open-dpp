@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, jest } from "@jest/globals"
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
@@ -30,6 +31,7 @@ describe("mediaController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
