@@ -91,6 +91,14 @@ open-dpp is configured through environment variables. Some settings can also be 
 | `OPEN_DPP_INSTANCE_SIGNUP_ENABLED`                | strict boolean (string) | No       | true    | Allows/disables signup; value must be `"true"` or `"false"`.                                                   |
 | `OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED` | strict boolean (string) | No       | true    | Allows/disables creation of organizations for users which are not admins; value must be `"true"` or `"false"`. |
 
+## Official templates
+
+| Variable                           | Type   | Required | Default                              | Description                                                                                                                                                                                                                           |
+| ---------------------------------- | ------ | -------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_OFFICIAL_TEMPLATES_REPO` | string | No       | `github:open-dpp/passport-templates` | Source repository for official templates, in the form `<provider>:<owner>/<repo>` or `<provider>:<owner>/<repo>@<branch>`. The branch defaults to the repository's default branch when omitted. Only `github` is currently supported. |
+
+> Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates page — for example after adding a template to the repo, or if the initial import at organization-creation time failed (e.g. the repository was briefly unreachable).
+
 ## Default caps
 
 | Variable                                   | Type          | Required | Default | Description                                  |

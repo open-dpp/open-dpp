@@ -4,6 +4,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { allPermissionsPlainAllow } from "@open-dpp/testing";
 import { generateMongoConfig } from "../../../database/config";
@@ -298,6 +299,7 @@ describe("aasSerializationService", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
