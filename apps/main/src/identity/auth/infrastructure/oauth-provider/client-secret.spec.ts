@@ -39,7 +39,18 @@ describe("verifyClientSecret", () => {
     ["an empty stored value", ""],
     ["garbage", "not-a-hash"],
     ["garbage with the salt separator", "abc:def"],
+    ["a salt without a key", "abc:"],
+    ["a key without a salt", ":def"],
   ])("fails closed on %s instead of throwing", async (_label, stored) => {
     await expect(verifyClientSecret(SECRET, stored)).resolves.toBe(false);
+  });
+
+  it("lets an unexpected verifier failure surface instead of calling it a wrong secret", async () => {
+    const stored = await hashClientSecret(SECRET);
+
+    // not a format problem of the stored row: scrypt itself fails on a non-string secret
+    await expect(verifyClientSecret(undefined as unknown as string, stored)).rejects.toThrow(
+      TypeError,
+    );
   });
 });

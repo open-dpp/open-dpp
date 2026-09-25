@@ -30,8 +30,9 @@ import {
   OPEN_DPP_API_SCOPE,
   REFRESH_TOKEN_LIFETIME_SECONDS,
 } from "../../domain/trusted-client-access-token";
-import { API_PATH, AUTH_PATH, createAuthTestContext } from "./auth.test.context";
+import { API_PATH, createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 interface TestUser {
   id: string;
@@ -163,7 +164,7 @@ describe("OAuth Provider flow for the Trusted Client", () => {
 
     it("userinfo answers with the User's claims", async () => {
       const response = await request(app.getHttpServer())
-        .get(`${AUTH_PATH}/oauth2/userinfo`)
+        .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
         .set("Authorization", bearer(tokens.access_token));
 
       expect(response.status).toBe(200);
@@ -360,7 +361,7 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       );
 
       const userinfo = await request(app.getHttpServer())
-        .get(`${AUTH_PATH}/oauth2/userinfo`)
+        .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
         .set("Authorization", bearer(opaque.access_token));
       expect(userinfo.status).toBe(200);
       expect(userinfo.body.sub).toBe(who.id);

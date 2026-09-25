@@ -10,6 +10,7 @@ import { Reflector } from "@nestjs/core";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { randomUUID } from "node:crypto";
+import { describeError } from "../../../../lib/describe-error";
 import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
@@ -49,10 +50,6 @@ function invalidAccessToken(): UnauthorizedException {
 
 function forbidden(message: string): ForbiddenException {
   return new ForbiddenException({ code: "FORBIDDEN", message });
-}
-
-function describeError(error: unknown): string {
-  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
 }
 
 /**

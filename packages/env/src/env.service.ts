@@ -2,6 +2,7 @@ import type { Env } from "./env";
 import type { TrustedClientEnv } from "./trusted-client";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { parseTrustedClientEnv } from "./trusted-client";
 
 @Injectable()
 export class EnvService {
@@ -17,29 +18,29 @@ export class EnvService {
 
   /**
    * The Trusted Client of the OAuth Provider, or `undefined` while the OAuth Provider
-   * is disabled. `validateEnv` already guarantees the client is complete when enabled;
-   * the throw only guards a ConfigService that skipped validation.
+   * is disabled. `validateEnv` already guarantees the client is complete and valid when
+   * enabled; the throw only guards a ConfigService that skipped validation.
    */
   getTrustedClient(): TrustedClientEnv | undefined {
     if (!this.get("OPEN_DPP_OAUTH_PROVIDER_ENABLED")) {
       return undefined;
     }
-    const clientId = this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID");
-    const clientSecret = this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET");
-    const redirectUris = this.get("OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS");
-    if (!clientId || !clientSecret || !redirectUris || redirectUris.length === 0) {
+    // ConfigService.get falls back to raw process.env when the validated value is undefined,
+    // so an empty `KEY=` arrives as ""; the parser treats it as unset
+    const result = parseTrustedClientEnv({
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID"),
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET"),
+      OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: this.get("OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS"),
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME"),
+    });
+    if (!result.success) {
+      const details = result.issues
+        .map(({ path, message }) => `${path.join(".")}: ${message}`)
+        .join("; ");
       throw new Error(
-        "OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but the Trusted Client is not fully configured.",
+        `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but the Trusted Client is not fully configured (${details}).`,
       );
     }
-    // ConfigService.get falls back to raw process.env when the validated value is undefined,
-    // so an empty `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=` arrives as "" and means "not set"
-    const clientName = this.get("OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME");
-    return {
-      clientId,
-      clientSecret,
-      redirectUris,
-      ...(clientName ? { clientName } : {}),
-    };
+    return result.data;
   }
 }

@@ -21,14 +21,10 @@ import {
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
-import { withDisplayName } from "../users/infrastructure/user-display-name-hook";
-import {
-  createOAuthProviderPlugins,
-  OAUTH_PROVIDER_DISABLED_PATHS,
-} from "./infrastructure/oauth-provider/oauth-provider-plugins";
+import { fillMissingDisplayName } from "../users/infrastructure/user-display-name-hook";
+import { oauthProviderAuthOptions } from "./infrastructure/oauth-provider/oauth-provider-plugins";
 import { AUTH_BASE_PATH } from "./auth-base-path";
-import { oauthProviderIssuer } from "./infrastructure/oauth-provider/oauth-provider-issuer";
-import { ensureTrustedClientUpserted } from "./infrastructure/oauth-provider/trusted-client-upsert";
+import { bootstrapTrustedClient } from "./infrastructure/oauth-provider/trusted-client-upsert";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
 export const AUTH = "auth";
@@ -144,16 +140,15 @@ export const AuthProvider: Provider = {
     }
     const mongoClient = mongooseConnection.getClient();
 
-    // OAuth Provider: present only when enabled; the issuer is the auth mount on the origin
-    const trustedClient = configService.getTrustedClient();
-    const issuer = oauthProviderIssuer(configService);
+    // OAuth Provider: plugins and lockdown only while enabled
+    const oauthProvider = oauthProviderAuthOptions(configService);
 
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
       basePath: AUTH_BASE_PATH,
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
-      ...(trustedClient ? { disabledPaths: [...OAUTH_PROVIDER_DISABLED_PATHS] } : {}),
+      disabledPaths: oauthProvider.disabledPaths,
       logger: {
         disabled: false,
         log: (level, message, ...args) => {
@@ -288,7 +283,7 @@ export const AuthProvider: Provider = {
         },
         user: {
           create: {
-            before: async (user) => withDisplayName(user),
+            before: async (user) => fillMissingDisplayName(user),
           },
           update: {
             before: async (data, context) => guardEmailChangeUpdate(db, logger, data, context),
@@ -343,7 +338,7 @@ export const AuthProvider: Provider = {
           },
         }),
         admin({}),
-        ...(trustedClient ? createOAuthProviderPlugins(trustedClient, issuer) : []),
+        ...oauthProvider.plugins,
       ],
       database: mongodbAdapter(db, {
         client: configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
@@ -351,13 +346,7 @@ export const AuthProvider: Provider = {
     });
 
     await ensureAdminSeeded(db, auth, configService, logger);
-    if (trustedClient) {
-      // before the first request: the plugin pins the row in memory on first use
-      await ensureTrustedClientUpserted(db, (await auth.$context).adapter, trustedClient, logger);
-      logger.log(
-        `OAuth Provider enabled for Trusted Client "${trustedClient.clientId}" (issuer ${issuer})`,
-      );
-    }
+    await bootstrapTrustedClient(configService, db, auth, logger);
     logger.log("Auth initialized");
 
     return auth;

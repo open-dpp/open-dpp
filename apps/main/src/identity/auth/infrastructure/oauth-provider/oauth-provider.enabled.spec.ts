@@ -8,7 +8,8 @@ import request from "supertest";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
 import { UsersService } from "../../../users/application/services/users.service";
 import { AUTH } from "../../auth.provider";
-import { AUTH_PATH, createAuthTestContext, collectionNames } from "./auth.test.context";
+import { createAuthTestContext, collectionNames } from "./auth.test.context";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 // The issuer is the better-auth mount on the instance origin; v2 is the latest API version.
 const ISSUER = "http://localhost:3000/api/v2/auth";
@@ -64,7 +65,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
 
   it("serves the OpenID discovery document under the auth mount", async () => {
     const response = await request(app.getHttpServer()).get(
-      `${AUTH_PATH}/.well-known/openid-configuration`,
+      `${AUTH_BASE_PATH}/.well-known/openid-configuration`,
     );
 
     expect(response.status).toBe(200);
@@ -85,7 +86,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
 
   it("serves the authorization server metadata under the auth mount", async () => {
     const response = await request(app.getHttpServer()).get(
-      `${AUTH_PATH}/.well-known/oauth-authorization-server`,
+      `${AUTH_BASE_PATH}/.well-known/oauth-authorization-server`,
     );
 
     expect(response.status).toBe(200);
@@ -93,7 +94,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
   });
 
   it("publishes an EdDSA signing key, creating the jwks collection on demand", async () => {
-    const response = await request(app.getHttpServer()).get(`${AUTH_PATH}/jwks`);
+    const response = await request(app.getHttpServer()).get(`${AUTH_BASE_PATH}/jwks`);
 
     expect(response.status).toBe(200);
     expect(response.body.keys).toEqual([
@@ -108,7 +109,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
   });
 
   it.each(LOCKED_DOWN_ENDPOINTS)("locks down %s %s", async (method, path) => {
-    const response = await request(app.getHttpServer())[method](`${AUTH_PATH}${path}`);
+    const response = await request(app.getHttpServer())[method](`${AUTH_BASE_PATH}${path}`);
 
     expect(response.status).toBe(404);
     expect(response.text).toBe("Not Found");
@@ -118,7 +119,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
     ["post", "/token"],
     ["get", "/oauth2/register"],
   ] as const)("locks down %s %s whatever the method", async (method, path) => {
-    const response = await request(app.getHttpServer())[method](`${AUTH_PATH}${path}`);
+    const response = await request(app.getHttpServer())[method](`${AUTH_BASE_PATH}${path}`);
 
     expect(response.status).toBe(404);
     expect(response.text).toBe("Not Found");
@@ -129,7 +130,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
     ["upper case", "/oauth2/Register"],
     ["percent-encoded slash", "/oauth2%2Fregister"],
   ])("answers 404 to a locked-down path with a %s", async (_variant, path) => {
-    const response = await request(app.getHttpServer()).post(`${AUTH_PATH}${path}`);
+    const response = await request(app.getHttpServer()).post(`${AUTH_BASE_PATH}${path}`);
 
     expect(response.status).toBe(404);
   });
@@ -137,7 +138,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
   it.each(["/admin/oauth2/create-client", "/admin/oauth2/update-client"])(
     "never routes the server-only admin endpoint %s",
     async (path) => {
-      const response = await request(app.getHttpServer()).post(`${AUTH_PATH}${path}`);
+      const response = await request(app.getHttpServer()).post(`${AUTH_BASE_PATH}${path}`);
 
       expect(response.status).toBe(404);
     },
@@ -145,7 +146,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
 
   it.each(REACHABLE_ENDPOINTS)("keeps %s %s reachable", async (method, path) => {
     const response = await request(app.getHttpServer())
-      [method](`${AUTH_PATH}${path}`)
+      [method](`${AUTH_BASE_PATH}${path}`)
       .set("Accept", "application/json");
 
     expect(response.status).not.toBe(404);
@@ -156,7 +157,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
     const cookie = await betterAuthHelper.signAsUser(user.id);
 
     const response = await request(app.getHttpServer())
-      .get(`${AUTH_PATH}/get-session`)
+      .get(`${AUTH_BASE_PATH}/get-session`)
       .set("Cookie", cookie);
 
     expect(response.status).toBe(200);

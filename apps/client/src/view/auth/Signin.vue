@@ -8,8 +8,7 @@ import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
-import { navigateTo } from "../../lib/navigation.ts";
-import { continuationUrl, signedOAuthQuery } from "../../lib/oauth-continuation.ts";
+import { readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
@@ -59,18 +58,19 @@ const redirectUri = computed(() => {
 });
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-in. */
-const oauthQuery = signedOAuthQuery(window.location.search);
+const oauthContinuation = readOAuthContinuation(window.location.search);
 
 const signin = handleSubmit(async (values) => {
   loading.value = true;
   try {
-    const { data, error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-      callbackURL: redirectUri.value,
-      rememberMe: rememberMe.value,
-      ...(oauthQuery ? { oauth_query: oauthQuery } : {}),
-    });
+    const { data, error } = await authClient.signIn.email(
+      oauthContinuation.withOAuthQuery({
+        email: values.email,
+        password: values.password,
+        callbackURL: redirectUri.value,
+        rememberMe: rememberMe.value,
+      }),
+    );
 
     if (error) {
       toast.add({
@@ -82,10 +82,8 @@ const signin = handleSubmit(async (values) => {
       return;
     }
 
-    const trustedClientRedirect = oauthQuery ? continuationUrl(data) : undefined;
-    if (trustedClientRedirect) {
-      // the provider resumed the authorize request: hand the browser to the Trusted Client
-      navigateTo(trustedClientRedirect);
+    // the provider resumed the authorize request: hand the browser to the Trusted Client
+    if (oauthContinuation.resumeFromResponse(data)) {
       return;
     }
 

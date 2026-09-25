@@ -87,6 +87,7 @@ export * from "./shared/table.dto";
 export * from "./status/status.dto";
 export * from "./templates/template.dto";
 export * from "./api-keys/api-key.dto";
+export * from "./oauth-provider/continue-authorization.dto";
 export * from "./users/create-user.dto";
 export * from "./users/me.dto";
 export * from "./users/pending-email-change.dto";

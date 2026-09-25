@@ -1,8 +1,9 @@
 import type { Logger } from "@nestjs/common";
-import type { TrustedClientEnv } from "@open-dpp/env";
+import type { EnvService, TrustedClientEnv } from "@open-dpp/env";
 import type { Where } from "better-auth";
 import type { Db } from "mongodb";
 import { hashClientSecret } from "./client-secret";
+import { oauthProviderIssuer } from "./oauth-provider-issuer";
 import {
   OAUTH_PROVIDER_GRANT_TYPES,
   OAUTH_PROVIDER_SCOPES,
@@ -134,4 +135,30 @@ export async function ensureTrustedClientUpserted(
     );
     throw error;
   }
+}
+
+/** The part of a better-auth instance the bootstrap needs: its internal adapter. */
+export interface TrustedClientAuthContext {
+  readonly $context: Promise<{ adapter: OAuthClientAdapter }>;
+}
+
+/**
+ * Startup step of an enabled OAuth Provider: writes the Trusted Client (see
+ * `ensureTrustedClientUpserted`) before the first request, because the plugin pins the
+ * row in memory on first use. Does nothing while the OAuth Provider is disabled.
+ */
+export async function bootstrapTrustedClient(
+  configService: EnvService,
+  db: Db,
+  auth: TrustedClientAuthContext,
+  logger: Logger,
+): Promise<void> {
+  const trustedClient = configService.getTrustedClient();
+  if (!trustedClient) {
+    return;
+  }
+  await ensureTrustedClientUpserted(db, (await auth.$context).adapter, trustedClient, logger);
+  logger.log(
+    `OAuth Provider enabled for Trusted Client "${trustedClient.clientId}" (issuer ${oauthProviderIssuer(configService)})`,
+  );
 }

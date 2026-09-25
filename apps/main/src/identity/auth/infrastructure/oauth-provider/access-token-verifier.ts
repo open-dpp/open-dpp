@@ -1,4 +1,5 @@
 import { verifyJwsAccessToken } from "better-auth/oauth2";
+import { describeError } from "../../../../lib/describe-error";
 import {
   AccessTokenVerification,
   checkTrustedClientClaims,
@@ -21,10 +22,6 @@ export interface AccessTokenVerifierOptions {
 export type AccessTokenVerifier = (token: string) => Promise<AccessTokenVerification>;
 
 const ACCESS_TOKEN_ALGORITHMS = ["EdDSA"];
-
-function describeError(error: unknown): string {
-  return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-}
 
 /**
  * The signing keys could not be loaded: an outage of the instance, not a verdict on

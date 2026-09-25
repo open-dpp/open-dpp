@@ -17,8 +17,9 @@ import {
   TEST_PASSWORD,
   TEST_REDIRECT_URI,
 } from "./oauth-flow.test-helpers";
-import { AUTH_PATH, createAuthTestContext } from "./auth.test.context";
+import { createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 const TEN_MINUTES_MS = 10 * 60 * 1000;
 
@@ -95,7 +96,7 @@ describe("OAuth Provider login and signup continuation", () => {
 
     it("answers a browser navigation with a 302 to the sign-in page", async () => {
       const response = await request(app.getHttpServer()).get(
-        `${AUTH_PATH}/oauth2/authorize?${authorizeQuery(createPkcePair())}`,
+        `${AUTH_BASE_PATH}/oauth2/authorize?${authorizeQuery(createPkcePair())}`,
       );
 
       expect(response.status).toBe(302);
@@ -184,7 +185,7 @@ describe("OAuth Provider login and signup continuation", () => {
       expect(pending.body.url.startsWith("/signup?")).toBe(true);
 
       const response = await request(app.getHttpServer())
-        .post(`${AUTH_PATH}/oauth2/continue`)
+        .post(`${AUTH_BASE_PATH}/oauth2/continue`)
         .set("Accept", "application/json")
         .set("Cookie", cookie)
         .send({ created: true, oauth_query: signedQueryOf(pending.body.url) });
@@ -198,7 +199,7 @@ describe("OAuth Provider login and signup continuation", () => {
       const pending = await authorize(app, authorizeQuery(createPkcePair(), { prompt: "create" }));
 
       const response = await request(app.getHttpServer())
-        .post(`${AUTH_PATH}/oauth2/continue`)
+        .post(`${AUTH_BASE_PATH}/oauth2/continue`)
         .set("Accept", "application/json")
         .send({ created: true, oauth_query: signedQueryOf(pending.body.url) });
 
@@ -219,7 +220,7 @@ describe("OAuth Provider login and signup continuation", () => {
       const { body: pending } = await authorize(app, authorizeQuery(createPkcePair()));
 
       const response = await request(app.getHttpServer())
-        .post(`${AUTH_PATH}/sign-up/email`)
+        .post(`${AUTH_BASE_PATH}/sign-up/email`)
         .set("Accept", "application/json")
         .send({
           ...signUpBody(`plain-signup-${Date.now()}@test.test`),
@@ -238,7 +239,7 @@ describe("OAuth Provider login and signup continuation", () => {
       );
 
       const signUp = await request(app.getHttpServer())
-        .post(`${AUTH_PATH}/sign-up/email`)
+        .post(`${AUTH_BASE_PATH}/sign-up/email`)
         .set("Accept", "application/json")
         .send({
           ...signUpBody(`create-signup-${Date.now()}@test.test`),
@@ -254,7 +255,7 @@ describe("OAuth Provider login and signup continuation", () => {
       const sessionCookie = sessionCookieOf(signUp.headers["set-cookie"]);
 
       const response = await request(app.getHttpServer())
-        .post(`${AUTH_PATH}/oauth2/continue`)
+        .post(`${AUTH_BASE_PATH}/oauth2/continue`)
         .set("Accept", "application/json")
         .set("Cookie", sessionCookie)
         .send({ created: true, oauth_query: signedQueryOf(bounced) });

@@ -139,7 +139,7 @@ ClamAV loads its signature database on start; plan for roughly 1–2 GB of RAM a
 
 open-dpp can act as an OpenID Connect provider and OAuth 2.1 authorization server for **exactly one** operator-configured application, the **Trusted Client**: for example a landing page or billing portal that lets Users sign in with their open-dpp account. A User signs in once with open-dpp; the Trusted Client receives an id token and userinfo and may call the open-dpp API on the User's behalf with a short-lived access token. Because the operator chose the client, Users are never asked to consent to it.
 
-The feature is **off by default**. While `OPEN_DPP_OAUTH_PROVIDER_ENABLED` is unset or `"false"`, open-dpp is nobody's identity provider: the OAuth endpoints do not exist (`404`), no OAuth collections are created, and rows left over from an earlier enabled phase are ignored. Nothing else in the instance changes.
+The feature is **off by default**. While `OPEN_DPP_OAUTH_PROVIDER_ENABLED` is unset or `"false"`, open-dpp is nobody's identity provider: the OAuth endpoints do not exist (`404`), no OAuth collections are created, and rows left over from an earlier enabled phase are ignored. Two related changes apply whatever the flag says: a User created without a usable display name gets one (their first and last name, or `User` when both are blank), and `GET /api/v2/organizations/member` reads a User's Organizations from the database, so API keys can call it as well.
 
 | Variable                                | Description                                                                                                                                                                                                           |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -171,17 +171,17 @@ OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=Landing page
 
 Everything lives under the **issuer** `https://<your host>/api/v2/auth` (the `OPEN_DPP_URL` origin plus the authentication mount). Reachable while enabled:
 
-| Endpoint                                              | Purpose                                                                        |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `GET {issuer}/.well-known/openid-configuration`       | OpenID Connect discovery                                                       |
-| `GET {issuer}/.well-known/oauth-authorization-server` | OAuth 2.0 authorization-server metadata (RFC 8414)                             |
-| `GET {issuer}/jwks`                                   | Signing keys (JWKS)                                                            |
-| `GET {issuer}/oauth2/authorize`                       | Authorization endpoint                                                         |
-| `POST {issuer}/oauth2/token`                          | Token endpoint                                                                 |
-| `GET {issuer}/oauth2/userinfo`                        | UserInfo endpoint                                                              |
-| `POST {issuer}/oauth2/revoke`                         | Token revocation (RFC 7009)                                                    |
-| `POST {issuer}/oauth2/introspect`                     | Token introspection (RFC 7662)                                                 |
-| `POST {issuer}/oauth2/continue`                       | Resumes a pending authorization after a sign-up (used by open-dpp's own pages) |
+| Endpoint                                              | Purpose                                                                                                                             |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `GET {issuer}/.well-known/openid-configuration`       | OpenID Connect discovery                                                                                                            |
+| `GET {issuer}/.well-known/oauth-authorization-server` | OAuth 2.0 authorization-server metadata (RFC 8414)                                                                                  |
+| `GET {issuer}/jwks`                                   | Signing keys (JWKS)                                                                                                                 |
+| `GET {issuer}/oauth2/authorize`                       | Authorization endpoint                                                                                                              |
+| `POST {issuer}/oauth2/token`                          | Token endpoint                                                                                                                      |
+| `GET {issuer}/oauth2/userinfo`                        | UserInfo endpoint                                                                                                                   |
+| `POST {issuer}/oauth2/revoke`                         | Token revocation (RFC 7009)                                                                                                         |
+| `POST {issuer}/oauth2/introspect`                     | Token introspection (RFC 7662)                                                                                                      |
+| `POST {issuer}/oauth2/continue`                       | Resumes a pending authorization after a sign-up (open-dpp's sign-up page reaches it through `POST /api/v2/oauth-provider/continue`) |
 
 Everything else the underlying library offers is switched off and answers `404 Not Found` for every HTTP method: dynamic client registration and client management (`/oauth2/register`, `/oauth2/create-client`, `/oauth2/update-client`, `/oauth2/delete-client`, `/oauth2/get-client`, `/oauth2/get-clients`, `/oauth2/public-client`, `/oauth2/public-client-prelogin`, `/oauth2/client/rotate-secret`), consent management (`/oauth2/consent`, `/oauth2/get-consent`, `/oauth2/get-consents`, `/oauth2/update-consent`, `/oauth2/delete-consent`), RP-initiated logout (`/oauth2/end-session`; the discovery document still advertises an `end_session_endpoint`, a known cosmetic quirk) and the session-to-JWT endpoint `/token`. The provider exists only on the latest API version: `/api/v1/auth/oauth2/...` is `404`.
 
@@ -291,9 +291,9 @@ The **access token** is a JWT with header `{ "alg": "EdDSA", "kid": "…" }` (no
 
 There is no `jti`: two tokens minted in the same second for the same User can be byte-identical, so never use token equality as a "refresh happened" signal. The API validates the access token itself; the Trusted Client only stores it and sends it along.
 
-The **id token** (`aud` = client id) carries `iss`, `sub`, `nonce`, `iat`, `exp`, `auth_time`, `acr`, `name`, `email`, `email_verified` and, with the `profile` scope, `given_name` (first name), `family_name` (last name) and `locale` (the User's preferred language, `en` or `de`); `picture` only when the User has an image. There are **no organization or role claims**; the Trusted Client learns a User's Organizations and roles through the API (step 5).
+The **id token** (`aud` = client id) carries `iss`, `sub`, `nonce`, `iat`, `exp`, `auth_time` and `acr`; with the `profile` scope also `name`, `given_name` (first name), `family_name` (last name) and `locale` (the User's preferred language, `en` or `de`), plus `picture` only when the User has an image; with the `email` scope also `email` and `email_verified`. There are **no organization or role claims**; the Trusted Client learns a User's Organizations and roles through the API (step 5).
 
-`GET {issuer}/oauth2/userinfo` with `Authorization: Bearer <access token>` returns `sub`, `name`, `email`, `email_verified` and, with `profile`, `given_name`, `family_name` and `locale`.
+`GET {issuer}/oauth2/userinfo` with `Authorization: Bearer <access token>` returns `sub` and the same scope-gated claims: with `profile` `name`, `given_name`, `family_name` and `locale` (and `picture` when set), with `email` `email` and `email_verified`.
 
 #### 4. Refresh, revoke, logout
 

@@ -1,10 +1,13 @@
 /** Umbrella scope: act as the User with the User's own authority against the open-dpp API. */
 export const OPEN_DPP_API_SCOPE = "open-dpp:api";
 
+/** OIDC scope that grants the profile claims (`name`, `given_name`, `family_name`, `locale`). */
+export const PROFILE_SCOPE = "profile";
+
 /** The plugin option replaces its defaults, so the standard scopes are restated. */
 export const OAUTH_PROVIDER_SCOPES = [
   "openid",
-  "profile",
+  PROFILE_SCOPE,
   "email",
   "offline_access",
   OPEN_DPP_API_SCOPE,

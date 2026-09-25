@@ -8,12 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
-import { navigateTo } from "../../lib/navigation.ts";
-import {
-  continuationUrl,
-  oauthPromptIncludes,
-  signedOAuthQuery,
-} from "../../lib/oauth-continuation.ts";
+import { continueOAuthSignup, readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
 
@@ -50,38 +45,20 @@ const redirectUri = computed(() => {
 });
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-up. */
-const oauthQuery = signedOAuthQuery(window.location.search);
-
-/**
- * `prompt=create` (the Trusted Client asked for a sign-up): once a session exists, right
- * after registering or because the user was signed in already, the provider needs an
- * explicit continue to drop the prompt and finish the authorize request. Without a session
- * the call is refused and the form renders.
- */
-async function continueOAuthSignup(): Promise<boolean> {
-  if (!oauthQuery || !oauthPromptIncludes(window.location.search, "create")) {
-    return false;
-  }
-  try {
-    const { data } = await authClient.$fetch("/oauth2/continue", {
-      method: "POST",
-      body: { created: true, oauth_query: oauthQuery },
-    });
-    const trustedClientRedirect = continuationUrl(data);
-    if (!trustedClientRedirect) {
-      return false;
-    }
-    navigateTo(trustedClientRedirect);
-    return true;
-  } catch {
-    // unreachable provider: register first, the sign-up response resumes the request
-    return false;
-  }
-}
+const oauthContinuation = readOAuthContinuation(window.location.search);
 
 onMounted(async () => {
-  if (await continueOAuthSignup()) {
+  const outcome = await continueOAuthSignup(oauthContinuation, apiClient.dpp.oauthProvider);
+  if (outcome === "continued") {
     return;
+  }
+  if (outcome === "failed") {
+    // the form still renders: registering resumes the request as well
+    toast.add({
+      severity: "error",
+      summary: t("auth.signup.oauthContinueError"),
+      life: 5000,
+    });
   }
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
@@ -97,16 +74,17 @@ onMounted(async () => {
 const signup = handleSubmit(async (values) => {
   loading.value = true;
   try {
-    const { data, error } = await authClient.signUp.email({
-      email: values.email,
-      password: values.password,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      name: `${values.firstName} ${values.lastName}`,
-      preferredLanguage: convertLocaleToLanguage(locale.value as string),
-      callbackURL: redirectUri.value,
-      ...(oauthQuery ? { oauth_query: oauthQuery } : {}),
-    });
+    const { data, error } = await authClient.signUp.email(
+      oauthContinuation.withOAuthQuery({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        name: `${values.firstName} ${values.lastName}`,
+        preferredLanguage: convertLocaleToLanguage(locale.value as string),
+        callbackURL: redirectUri.value,
+      }),
+    );
 
     if (error) {
       toast.add({
@@ -116,11 +94,9 @@ const signup = handleSubmit(async (values) => {
       });
       return;
     }
-    const providerRedirect = oauthQuery ? continuationUrl(data) : undefined;
-    if (providerRedirect) {
-      // the provider resumed the authorize request, or sent the page back here to continue
-      // a `prompt=create` request now that a session exists
-      navigateTo(providerRedirect);
+    // the provider resumed the authorize request, or sent the page back here to continue
+    // a `prompt=create` request now that a session exists
+    if (oauthContinuation.resumeFromResponse(data)) {
       return;
     }
     router.push("/signin");

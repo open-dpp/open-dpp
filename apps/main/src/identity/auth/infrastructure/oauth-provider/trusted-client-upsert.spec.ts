@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Logger } from "@nestjs/common";
-import type { TrustedClientEnv } from "@open-dpp/env";
+import type { EnvService, TrustedClientEnv } from "@open-dpp/env";
 import type { Db } from "mongodb";
 import { verifyClientSecret } from "./client-secret";
 import {
+  bootstrapTrustedClient,
   ensureTrustedClientUpserted,
   OAUTH_CLIENT_MODEL,
   type OAuthClientAdapter,
@@ -174,6 +175,57 @@ describe("ensureTrustedClientUpserted", () => {
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ name: "landing-page" }) }),
+    );
+  });
+});
+
+describe("bootstrapTrustedClient", () => {
+  const logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger;
+
+  function envServiceWith(trustedClient: TrustedClientEnv | undefined): EnvService {
+    return {
+      getTrustedClient: () => trustedClient,
+      get: (key: string) => (key === "OPEN_DPP_URL" ? "https://dpp.example.com" : undefined),
+    } as unknown as EnvService;
+  }
+
+  it("touches neither the database nor better-auth while the OAuth Provider is disabled", async () => {
+    const db = { collection: jest.fn() } as unknown as Db;
+    const context = jest.fn();
+    const auth = {
+      get $context() {
+        context();
+        return Promise.reject(new Error("must not be read"));
+      },
+    };
+
+    await bootstrapTrustedClient(envServiceWith(undefined), db, auth, logger);
+
+    expect(db.collection).not.toHaveBeenCalled();
+    expect(context).not.toHaveBeenCalled();
+  });
+
+  it("upserts the Trusted Client through better-auth's adapter and logs the issuer", async () => {
+    const createIndex = jest.fn<(...args: unknown[]) => Promise<string>>().mockResolvedValue("x");
+    const db = { collection: jest.fn(() => ({ createIndex })) } as unknown as Db;
+    const adapter: OAuthClientAdapter = {
+      findOne: jest.fn<OAuthClientAdapter["findOne"]>().mockResolvedValue(null),
+      create: jest.fn<OAuthClientAdapter["create"]>().mockResolvedValue({}),
+      update: jest.fn<OAuthClientAdapter["update"]>().mockResolvedValue({}),
+    };
+
+    await bootstrapTrustedClient(
+      envServiceWith(TRUSTED_CLIENT),
+      db,
+      { $context: Promise.resolve({ adapter }) },
+      logger,
+    );
+
+    expect(adapter.create).toHaveBeenCalledWith(
+      expect.objectContaining({ model: OAUTH_CLIENT_MODEL }),
+    );
+    expect(logger.log).toHaveBeenCalledWith(
+      'OAuth Provider enabled for Trusted Client "landing-page" (issuer https://dpp.example.com/api/v2/auth)',
     );
   });
 });

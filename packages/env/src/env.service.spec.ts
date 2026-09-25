@@ -12,7 +12,8 @@ describe("EnvService.getTrustedClient", () => {
     OPEN_DPP_OAUTH_PROVIDER_ENABLED: true,
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: "landing-page",
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: "landing-page-secret",
-    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: ["https://landing.example.com/auth/callback"],
+    // validateEnv keeps the list as written; getTrustedClient() parses it
+    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: "https://landing.example.com/auth/callback",
   };
 
   it("returns undefined while the OAuth Provider is disabled", () => {
@@ -56,6 +57,28 @@ describe("EnvService.getTrustedClient", () => {
       clientSecret: "landing-page-secret",
       redirectUris: ["https://landing.example.com/auth/callback"],
     });
+  });
+
+  it("parses a comma-separated redirect URI list", () => {
+    const service = envServiceFor({
+      ...trustedClientEnv,
+      OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS:
+        "https://landing.example.com/auth/callback, http://localhost:3001/auth/callback",
+    });
+
+    expect(service.getTrustedClient()?.redirectUris).toEqual([
+      "https://landing.example.com/auth/callback",
+      "http://localhost:3001/auth/callback",
+    ]);
+  });
+
+  it("refuses an enabled provider whose redirect URIs are invalid", () => {
+    const service = envServiceFor({
+      ...trustedClientEnv,
+      OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: "http://landing.example.com/auth/callback",
+    });
+
+    expect(() => service.getTrustedClient()).toThrow(/OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS/);
   });
 
   it("refuses an enabled provider whose Trusted Client is incomplete", () => {

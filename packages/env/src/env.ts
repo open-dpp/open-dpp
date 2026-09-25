@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isHttpsOrLoopbackUrl, trustedClientRedirectUrisSchema } from "./trusted-client";
+import { isHttpsOrLoopbackUrl, parseTrustedClientEnv } from "./trusted-client";
 
 const asStrictBoolean = z
   .string()
@@ -11,12 +11,6 @@ const asStrictBoolean = z
 /** `KEY=""` in an env file means "not set", like an absent variable. */
 const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
-
-const TRUSTED_CLIENT_REQUIRED_KEYS = [
-  "OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID",
-  "OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET",
-  "OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS",
-] as const;
 
 export const envSchema = z
   .object({
@@ -85,13 +79,12 @@ export const envSchema = z
     OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
     OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
     // OAuth Provider — open-dpp as identity provider for one Trusted Client (CONTEXT.md).
-    // Off by default; when on, the client variables are required (see superRefine).
+    // Off by default; when on, the client variables are required and validated (see
+    // superRefine), when off they are ignored. EnvService.getTrustedClient() parses them.
     OPEN_DPP_OAUTH_PROVIDER_ENABLED: asStrictBoolean.optional().default(false),
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: emptyAsUndefined(z.string().optional()),
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: emptyAsUndefined(z.string().optional()),
-    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: emptyAsUndefined(
-      trustedClientRedirectUrisSchema.optional(),
-    ),
+    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: emptyAsUndefined(z.string().optional()),
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: emptyAsUndefined(z.string().optional()),
     // Instance Settings
     OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),
@@ -145,19 +138,17 @@ export const envSchema = z
     }
     // an enabled OAuth Provider needs its whole Trusted Client; a disabled one ignores it
     if (val.OPEN_DPP_OAUTH_PROVIDER_ENABLED) {
-      for (const key of TRUSTED_CLIENT_REQUIRED_KEYS) {
-        if (!val[key]) {
-          ctx.addIssue({
-            code: "custom",
-            message: `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but ${key} is not set.`,
-            path: [key],
-          });
+      const trustedClient = parseTrustedClientEnv(val);
+      if (!trustedClient.success) {
+        for (const { path, message } of trustedClient.issues) {
+          ctx.addIssue({ code: "custom", message, path });
         }
       }
       // The issuer and every OAuth endpoint derive from OPEN_DPP_URL. Client credentials,
       // authorization codes and tokens must not cross the network in cleartext, so the
       // origin follows the redirect-URI rule: https, http only on loopback hosts.
-      if (!isHttpsOrLoopbackUrl(val.OPEN_DPP_URL)) {
+      // A value that is no URL at all is already reported by its field schema.
+      if (URL.canParse(val.OPEN_DPP_URL) && !isHttpsOrLoopbackUrl(val.OPEN_DPP_URL)) {
         ctx.addIssue({
           code: "custom",
           message:

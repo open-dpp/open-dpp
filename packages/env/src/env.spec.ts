@@ -106,16 +106,30 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
     ).not.toThrow();
   });
 
-  it("parses the Trusted Client when enabled and complete", () => {
+  it.each([
+    ["an unparseable redirect URI", "not a url"],
+    ["a plain http redirect URI off loopback", "http://landing.example.com/auth/callback"],
+    ["a redirect URI with a fragment", "https://landing.example.com/auth/callback#fragment"],
+  ])("ignores %s while disabled", (_label: string, redirectUris: string) => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_OAUTH_PROVIDER_ENABLED: "false",
+        OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: redirectUris,
+      }),
+    ).not.toThrow();
+  });
+
+  it("keeps the Trusted Client variables as written when enabled and complete", () => {
+    // EnvService.getTrustedClient() parses them into a TrustedClientEnv
     const env = validateEnv({ ...baseEnv, ...trustedClientEnv });
 
     expect(env.OPEN_DPP_OAUTH_PROVIDER_ENABLED).toBe(true);
     expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID).toBe("landing-page");
     expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET).toBe("landing-page-secret");
-    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toEqual([
-      "https://landing.example.com/auth/callback",
-      "https://landing.example.com/auth/callback-2",
-    ]);
+    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toBe(
+      trustedClientEnv.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS,
+    );
     expect(env.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME).toBeUndefined();
   });
 
@@ -151,15 +165,13 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
   });
 
   it("accepts an http redirect URI on loopback for local development", () => {
-    const env = validateEnv({
-      ...baseEnv,
-      ...trustedClientEnv,
-      OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: "http://localhost:3001/auth/callback",
-    });
-
-    expect(env.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS).toEqual([
-      "http://localhost:3001/auth/callback",
-    ]);
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        ...trustedClientEnv,
+        OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: "http://localhost:3001/auth/callback",
+      }),
+    ).not.toThrow();
   });
 
   it.each([
@@ -196,6 +208,7 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
   });
 
   it.each([
+    ["an unparseable value", "not a url"],
     ["a relative path", "https://landing.example.com/auth/callback,/auth/callback"],
     ["a plain http URL off loopback", "http://landing.example.com/auth/callback"],
     ["a fragment", "https://landing.example.com/auth/callback#fragment"],

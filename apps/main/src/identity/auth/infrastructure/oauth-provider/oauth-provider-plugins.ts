@@ -1,5 +1,5 @@
 import { oauthProvider } from "@better-auth/oauth-provider";
-import type { TrustedClientEnv } from "@open-dpp/env";
+import type { EnvService, TrustedClientEnv } from "@open-dpp/env";
 import { jwt } from "better-auth/plugins";
 import {
   ACCESS_TOKEN_LIFETIME_SECONDS,
@@ -8,6 +8,7 @@ import {
   REFRESH_TOKEN_LIFETIME_SECONDS,
 } from "../../domain/trusted-client-access-token";
 import { hashClientSecret, verifyClientSecret } from "./client-secret";
+import { oauthProviderIssuer } from "./oauth-provider-issuer";
 import { OAUTH_PROVIDER_CLAIMS_SUPPORTED, profileClaims } from "./trusted-client-claims";
 
 export const OAUTH_PROVIDER_LOGIN_PAGE = "/signin";
@@ -72,4 +73,26 @@ export function createOAuthProviderPlugins(trustedClient: TrustedClientEnv, issu
       silenceWarnings: { oauthAuthServerConfig: true },
     }),
   ];
+}
+
+/** What the OAuth Provider adds to the better-auth options: nothing while it is disabled. */
+export interface OAuthProviderAuthOptions {
+  /** Top-level `disabledPaths`; absent while disabled, so the options stay unchanged. */
+  readonly disabledPaths?: string[];
+  readonly plugins: ReturnType<typeof createOAuthProviderPlugins>;
+}
+
+/**
+ * The better-auth wiring of the OAuth Provider, read from env: the plugins and the
+ * lockdown while enabled, nothing while disabled (no endpoints, no collections touched).
+ */
+export function oauthProviderAuthOptions(configService: EnvService): OAuthProviderAuthOptions {
+  const trustedClient = configService.getTrustedClient();
+  if (!trustedClient) {
+    return { plugins: [] };
+  }
+  return {
+    disabledPaths: [...OAUTH_PROVIDER_DISABLED_PATHS],
+    plugins: createOAuthProviderPlugins(trustedClient, oauthProviderIssuer(configService)),
+  };
 }

@@ -1,8 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { AUTH_PATH } from "./auth.test.context";
+
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 /** The issuer of the test instance: the better-auth mount on OPEN_DPP_URL (v2 is the latest API version). */
 export const ISSUER = "http://localhost:3000/api/v2/auth";
@@ -49,7 +50,7 @@ export function authorizeQuery(
 /** GET /oauth2/authorize as a browser fetch: every redirect comes back as `200 { redirect, url }`. */
 export function authorize(app: INestApplication, query: URLSearchParams, cookie?: string) {
   const pending = request(app.getHttpServer())
-    .get(`${AUTH_PATH}/oauth2/authorize?${query}`)
+    .get(`${AUTH_BASE_PATH}/oauth2/authorize?${query}`)
     .set("Accept", "application/json");
   return cookie ? pending.set("Cookie", cookie) : pending;
 }
@@ -70,7 +71,7 @@ export function signInWithOAuthQuery(
   oauthQuery: string,
 ) {
   return request(app.getHttpServer())
-    .post(`${AUTH_PATH}/sign-in/email`)
+    .post(`${AUTH_BASE_PATH}/sign-in/email`)
     .set("Accept", "application/json")
     .send({ ...credentials, oauth_query: oauthQuery });
 }
@@ -94,7 +95,7 @@ export function exchangeCode(
   secret?: string,
 ) {
   return request(app.getHttpServer())
-    .post(`${AUTH_PATH}/oauth2/token`)
+    .post(`${AUTH_BASE_PATH}/oauth2/token`)
     .set("Authorization", clientBasicAuth(secret))
     .type("form")
     .send({
@@ -119,7 +120,7 @@ export function refreshTokens(
   secret?: string,
 ) {
   return request(app.getHttpServer())
-    .post(`${AUTH_PATH}/oauth2/token`)
+    .post(`${AUTH_BASE_PATH}/oauth2/token`)
     .set("Authorization", clientBasicAuth(secret))
     .type("form")
     .send({
@@ -136,7 +137,7 @@ export function revokeToken(
   hint: "access_token" | "refresh_token",
 ) {
   return request(app.getHttpServer())
-    .post(`${AUTH_PATH}/oauth2/revoke`)
+    .post(`${AUTH_BASE_PATH}/oauth2/revoke`)
     .set("Authorization", clientBasicAuth())
     .type("form")
     .send({ token, token_type_hint: hint });
@@ -149,7 +150,7 @@ export function introspectToken(
   hint?: "access_token" | "refresh_token",
 ) {
   return request(app.getHttpServer())
-    .post(`${AUTH_PATH}/oauth2/introspect`)
+    .post(`${AUTH_BASE_PATH}/oauth2/introspect`)
     .set("Authorization", clientBasicAuth())
     .type("form")
     .send(hint ? { token, token_type_hint: hint } : { token });

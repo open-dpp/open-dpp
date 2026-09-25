@@ -1,3 +1,6 @@
+import { isNonBlankString } from "../../../../lib/non-blank-string";
+import { PROFILE_SCOPE } from "../../domain/trusted-client-access-token";
+
 /**
  * Claims the Trusted Client may find in id tokens and at `/oauth2/userinfo`. The plugin
  * derives `sub`, `name`, `picture`, `email` and `email_verified` itself; this instance adds
@@ -21,8 +24,6 @@ export const OAUTH_PROVIDER_CLAIMS_SUPPORTED = [
   "family_name",
   "locale",
 ] as const;
-
-const PROFILE_SCOPE = "profile";
 
 /**
  * The user record as better-auth hands it to the claim hooks: the core fields plus this
@@ -49,10 +50,6 @@ export function profileClaims(
     ["locale", user.preferredLanguage],
   ];
   return Object.fromEntries(
-    candidates.filter((entry): entry is [string, string] => isPresent(entry[1])),
+    candidates.filter((entry): entry is [string, string] => isNonBlankString(entry[1])),
   );
-}
-
-function isPresent(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
 }

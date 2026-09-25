@@ -17,8 +17,9 @@ import {
   signInWithOAuthQuery,
   TEST_PASSWORD,
 } from "./oauth-flow.test-helpers";
-import { AUTH_PATH, createAuthTestContext } from "./auth.test.context";
+import { createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 interface SignedUpUser {
   id: string;
@@ -73,7 +74,7 @@ describe("OAuth Provider claims", () => {
 
   function userinfo(accessToken: string) {
     return request(app.getHttpServer())
-      .get(`${AUTH_PATH}/oauth2/userinfo`)
+      .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
       .set("Authorization", `Bearer ${accessToken}`);
   }
 
@@ -97,7 +98,7 @@ describe("OAuth Provider claims", () => {
 
   it("advertises the standard claims, and only those", async () => {
     const response = await request(app.getHttpServer()).get(
-      `${AUTH_PATH}/.well-known/openid-configuration`,
+      `${AUTH_BASE_PATH}/.well-known/openid-configuration`,
     );
 
     expect(response.status).toBe(200);

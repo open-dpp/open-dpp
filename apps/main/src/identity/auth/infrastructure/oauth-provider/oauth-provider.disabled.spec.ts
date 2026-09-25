@@ -6,11 +6,11 @@ import type { Connection } from "mongoose";
 import request from "supertest";
 import {
   API_PATH,
-  AUTH_PATH,
   createAuthTestContext,
   collectionNames,
   OAUTH_PROVIDER_COLLECTIONS,
 } from "./auth.test.context";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 describe("OAuth Provider disabled (the default)", () => {
   let app: INestApplication;
@@ -25,7 +25,7 @@ describe("OAuth Provider disabled (the default)", () => {
   });
 
   it("still serves the session endpoint on the auth mount", async () => {
-    const response = await request(app.getHttpServer()).get(`${AUTH_PATH}/get-session`);
+    const response = await request(app.getHttpServer()).get(`${AUTH_BASE_PATH}/get-session`);
 
     expect(response.status).toBe(200);
   });
@@ -40,7 +40,7 @@ describe("OAuth Provider disabled (the default)", () => {
     ["post", "/oauth2/introspect"],
     ["post", "/oauth2/revoke"],
   ] as const)("does not serve %s %s", async (method, path) => {
-    const response = await request(app.getHttpServer())[method](`${AUTH_PATH}${path}`);
+    const response = await request(app.getHttpServer())[method](`${AUTH_BASE_PATH}${path}`);
 
     expect(response.status).toBe(404);
   });
@@ -73,6 +73,15 @@ describe("OAuth Provider disabled (the default)", () => {
         .set("Authorization", "Bearer not.an.access-token");
 
       expect(response.status).toBe(200);
+    });
+
+    it("does not serve the sign-up continuation", async () => {
+      const response = await request(guarded.getHttpServer())
+        .post(`${API_PATH}/oauth-provider/continue`)
+        .set("Cookie", cookie)
+        .send({ oauthQuery: "client_id=landing-page&prompt=create&exp=1&sig=abc" });
+
+      expect(response.status).toBe(404);
     });
 
     it("refuses a bearer token without a browser session as before (no 401 of its own)", async () => {

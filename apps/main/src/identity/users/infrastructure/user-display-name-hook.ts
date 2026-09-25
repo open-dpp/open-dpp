@@ -1,3 +1,4 @@
+import { isNonBlankString } from "../../../lib/non-blank-string";
 import { deriveDisplayName } from "../domain/user";
 
 /**
@@ -23,14 +24,10 @@ export interface UserNameFields {
  * `User.name` stays derived from the first and last name. Returns a new record; the input is
  * never mutated.
  */
-export function withDisplayName<T extends UserNameFields>(user: T): { data: T } {
-  if (hasDisplayName(user.name)) {
+export function fillMissingDisplayName<T extends UserNameFields>(user: T): { data: T } {
+  if (isNonBlankString(user.name)) {
     return { data: { ...user } };
   }
   const derived = deriveDisplayName(user.firstName, user.lastName);
   return { data: { ...user, name: derived ?? DISPLAY_NAME_FALLBACK } };
-}
-
-function hasDisplayName(name: string | null | undefined): name is string {
-  return typeof name === "string" && name.trim().length > 0;
 }

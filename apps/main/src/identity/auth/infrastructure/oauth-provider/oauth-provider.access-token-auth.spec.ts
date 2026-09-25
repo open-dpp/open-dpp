@@ -10,7 +10,8 @@ import { ApiKeysModule } from "../../../api-keys/api-keys.module";
 import { MemberRole } from "../../../organizations/domain/member-role.enum";
 import { ORGANIZATION_ID_HEADER } from "../../presentation/decorators/organization-id.decorator";
 import { obtainTokens, TEST_PASSWORD } from "./oauth-flow.test-helpers";
-import { API_PATH, AUTH_PATH, createAuthTestContext } from "./auth.test.context";
+import { API_PATH, createAuthTestContext } from "./auth.test.context";
+import { AUTH_BASE_PATH } from "../../auth-base-path";
 
 interface TestUser {
   id: string;
@@ -120,7 +121,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
       );
 
       const response = await request(app.getHttpServer())
-        .get(`${AUTH_PATH}/oauth2/userinfo`)
+        .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
         .set("Authorization", bearer(tokens.access_token));
 
       expect(response.status).toBe(200);
@@ -129,7 +130,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
 
     it("serves userinfo to the full token as well", async () => {
       const response = await request(app.getHttpServer())
-        .get(`${AUTH_PATH}/oauth2/userinfo`)
+        .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
         .set("Authorization", bearer(accessToken));
 
       expect(response.status).toBe(200);
@@ -138,7 +139,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
 
     it("lets the plugin answer a forged bearer on its own endpoints", async () => {
       const response = await request(app.getHttpServer())
-        .get(`${AUTH_PATH}/oauth2/userinfo`)
+        .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
         .set("Authorization", bearer(tampered(accessToken)));
 
       // not served, and not the guard's verdict either: the plugin's own error handling

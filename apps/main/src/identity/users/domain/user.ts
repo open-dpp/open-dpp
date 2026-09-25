@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { UserRole, UserRoleType } from "./user-role.enum";
 import { DisplayLanguage, DisplayLanguageType } from "@open-dpp/dto";
+import { isNonBlankString } from "../../../lib/non-blank-string";
 
 export interface UserCreateProps {
   email: string;
@@ -26,18 +27,14 @@ export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
   preferredLanguage: DisplayLanguageType;
 };
 
-function isUsableNamePart(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
 /**
  * The display name a User shows: first and last name joined by a space, blank or
  * missing parts left out, `null` when neither is usable. The one place the rule lives;
- * the better-auth boundary (`withDisplayName`) reuses it instead of restating it.
+ * the better-auth boundary (`fillMissingDisplayName`) reuses it instead of restating it.
  */
 export function deriveDisplayName(firstName: unknown, lastName: unknown): string | null {
   const name = [firstName, lastName]
-    .filter(isUsableNamePart)
+    .filter(isNonBlankString)
     .map((part) => part.trim())
     .join(" ");
   return name || null;

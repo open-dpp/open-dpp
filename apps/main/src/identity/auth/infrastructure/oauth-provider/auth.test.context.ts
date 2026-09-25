@@ -5,6 +5,12 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { AllApiVersions, LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import {
+  ForbiddenExceptionFilter,
+  NotFoundExceptionFilter,
+  NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
+} from "@open-dpp/exception";
 import type { Auth } from "better-auth";
 import type { Connection } from "mongoose";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
@@ -13,16 +19,12 @@ import { EmailService } from "../../../../email/email.service";
 import { OrganizationsModule } from "../../../organizations/organizations.module";
 import { UsersService } from "../../../users/application/services/users.service";
 import { UsersModule } from "../../../users/users.module";
-import { AUTH_BASE_PATH } from "../../auth-base-path";
 import { AuthModule } from "../../auth.module";
 import { AUTH } from "../../auth.provider";
 import { AuthGuard } from "../guards/auth.guard";
 
 /** The API prefix of the latest version, as the production bootstrap exposes every route. */
 export const API_PATH = `/api/${LatestApiVersionWithPrefixDto}`;
-
-/** The better-auth mount, as the production bootstrap exposes it. */
-export const AUTH_PATH = AUTH_BASE_PATH;
 
 /** Collections the OAuth Provider (and its jwt plugin) create lazily on first use. */
 export const OAUTH_PROVIDER_COLLECTIONS = [
@@ -50,7 +52,7 @@ export interface AuthTestContextOptions {
   withAuthGuard?: boolean;
 }
 
-/** Boots the auth stack with the production prefix and versioning, on a fresh database. */
+/** Boots the auth stack with the production prefix, versioning and error filters, on a fresh database. */
 export async function createAuthTestContext(
   options: AuthTestContextOptions = {},
 ): Promise<AuthTestContext> {
@@ -78,6 +80,13 @@ export async function createAuthTestContext(
 
   const app = moduleRef.createNestApplication();
   app.setGlobalPrefix("api");
+  // the domain-error filters of the production bootstrap (main.ts)
+  app.useGlobalFilters(
+    new NotFoundInDatabaseExceptionFilter(),
+    new NotFoundExceptionFilter(),
+    new ValueErrorFilter(),
+    new ForbiddenExceptionFilter(),
+  );
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: AllApiVersions });
   await app.init();
 
