@@ -13,19 +13,12 @@ export class OrganizationCreatedListener {
   constructor(private readonly officialTemplatesImportService: OfficialTemplatesImportService) {}
 
   @OnEvent(ORGANIZATION_CREATED_EVENT)
-  handleOrganizationCreated(event: OrganizationCreatedEvent): void {
+  async handleOrganizationCreated(event: OrganizationCreatedEvent): Promise<void> {
     try {
-      this.officialTemplatesImportService
-        .importOfficialTemplates(event.organizationId)
-        .catch((error) => {
-          this.logger.error(
-            `Failed to seed official templates for organization ${event.organizationId}`,
-            error,
-          );
-        });
+      await this.officialTemplatesImportService.importOfficialTemplates(event.organizationId);
     } catch (error) {
       this.logger.error(
-        `Failed to start official templates seed for organization ${event.organizationId}`,
+        `Failed to seed official templates for organization ${event.organizationId}`,
         error,
       );
     }
