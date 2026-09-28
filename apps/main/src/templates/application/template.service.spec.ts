@@ -28,6 +28,7 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplateService } from "./template.service";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 describe("templateService", () => {
   let service: TemplateService;
@@ -39,6 +40,7 @@ describe("templateService", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
