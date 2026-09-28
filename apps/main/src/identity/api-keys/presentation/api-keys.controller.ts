@@ -29,11 +29,11 @@ import { Pagination } from "../../../pagination/pagination";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import type { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
-import { DenyApiKeyAuth } from "../../auth/presentation/decorators/deny-api-key-auth.decorator";
+import { SessionOnly } from "../../auth/presentation/decorators/session-only.decorator";
 import { ApiKeysService } from "../application/services/api-keys.service";
 import { ApiKeyMapper } from "../infrastructure/mappers/api-key.mapper";
 
-@DenyApiKeyAuth()
+@SessionOnly()
 @Controller("users/me/api-keys")
 export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}

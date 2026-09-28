@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { HttpModule } from "@nestjs/axios";
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -39,6 +40,7 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
 @Module({
   imports: [
     EnvModule.forRoot(),
+    EventEmitterModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [EnvModule],
       useFactory: (configService: EnvService) => ({

@@ -16,6 +16,8 @@ cp .env.dev.example .env.dev
 
 Then update secrets and tokens in `.env.dev`.
 
+The OAuth Provider is off by default. To try it against a local Trusted Client, uncomment the `OPEN_DPP_OAUTH_PROVIDER_*` block in `.env.dev` (an `http://localhost:…` redirect URI is accepted on loopback hosts); the backend then serves the issuer at `<OPEN_DPP_URL>/api/v2/auth`. See the [Production setup](/guides/production-setup#oauth-provider) guide for the contract. Two maintainer notes: `apps/main` declares `@better-auth/core` explicitly next to the better-auth plugins, and the family is bumped together, because a plugin's unpinned core peer resolves to the newest release and splits the core graph; the plugin's mandatory `consentPage` option points at a route that never renders, since the Trusted Client skips consent.
+
 ## 3) Generate MongoDB key file
 
 ```bash

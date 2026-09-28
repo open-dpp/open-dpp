@@ -3,14 +3,10 @@ import { useI18n } from "vue-i18n";
 import CreateOrganizationForm from "../../components/organizations/CreateOrganizationForm.vue";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
 import { useInstanceSettings } from "../../composables/instance.settings.ts";
-import InvitationsTable from "./InvitationsTable.vue";
-import { useRoute } from "vue-router";
-import { onMounted, watch } from "vue";
+import { onMounted } from "vue";
 
 const { t } = useI18n();
 const { canCreateOrganization, fetchInstanceSettings } = useInstanceSettings();
-const route = useRoute();
-const hideInvitations = route.query.hideInvitations === "true";
 
 onMounted(async () => {
   await fetchInstanceSettings();
@@ -37,9 +33,6 @@ onMounted(async () => {
             </p>
           </div>
         </template>
-      </Card>
-      <Card v-if="!hideInvitations">
-        <template #content><InvitationsTable /></template>
       </Card>
     </div>
   </ContentViewWrapper>

@@ -6,10 +6,15 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Session } from "../../../auth/domain/session";
 import { UserRole, UserRoleType } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberRoleEnum, MemberRoleType } from "../../domain/member-role.enum";
+import {
+  ORGANIZATION_CREATED_EVENT,
+  OrganizationCreatedEvent,
+} from "../../domain/events/organization-created.event";
 import {
   Organization,
   OrganizationCreateProps,
@@ -34,6 +39,7 @@ export class OrganizationsService {
     private readonly invitationsRepository: InvitationsRepository,
     private readonly instanceSettingsService: InstanceSettingsService,
     private readonly policyManagementService: PolicyManagementService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createOrganization(
@@ -61,6 +67,13 @@ export class OrganizationsService {
         error,
       );
     }
+
+    // Other modules react to this asynchronously (e.g. seeding official templates); org creation
+    // itself doesn't need to know who's listening or what they do with it.
+    this.eventEmitter.emit(
+      ORGANIZATION_CREATED_EVENT,
+      OrganizationCreatedEvent.create({ organizationId: createdOrganization.id }),
+    );
 
     // BetterAuth's createOrganization already adds the authenticated user as owner; do not add again.
     return createdOrganization;
@@ -96,13 +109,20 @@ export class OrganizationsService {
     return result;
   }
 
-  async getMemberOrganizations(
-    userId: string,
-    headers: BetterAuthHeaders,
-  ): Promise<Organization[]> {
+  /**
+   * The organizations the User is a member of, read from the memberships: the answer
+   * is the same whichever credential (cookie, api key, Trusted Client token) the
+   * request carried, so it never asks better-auth for the browser session.
+   */
+  async getMemberOrganizations(userId: string): Promise<Organization[]> {
     this.logger.debug(`Getting organizations for user: ${userId}`);
-    // Using default repo (BetterAuth) as per original handler
-    return this.organizationsRepository.findManyByMember(headers);
+    const memberships = await this.membersRepository.findByUserId(userId);
+    if (memberships.length === 0) {
+      return [];
+    }
+    return this.organizationsRepository.findManyByIds(
+      memberships.map((membership) => membership.organizationId),
+    );
   }
 
   async getOrganization(organizationId: string, session?: Session): Promise<Organization | null> {

@@ -3,6 +3,7 @@ import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { getConnectionToken, getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -47,6 +48,7 @@ describe("OrganizationsController", () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({

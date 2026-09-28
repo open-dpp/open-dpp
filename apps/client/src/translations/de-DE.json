@@ -779,7 +779,11 @@
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "select": "Vorlage auswählen",
-    "errorFetchList": "Laden der Vorlagen fehlgeschlagen"
+    "errorFetchList": "Laden der Vorlagen fehlgeschlagen",
+    "importOfficial": "Offizielle Vorlagen importieren",
+    "importOfficialSuccess": "{imported} offizielle Vorlage(n) importiert.",
+    "importOfficialPartialFailure": "{imported} offizielle Vorlage(n) importiert, {failed} fehlgeschlagen.",
+    "importOfficialError": "Offizielle Vorlagen konnten nicht importiert werden."
   },
   "actions": {
     "member": {
@@ -905,7 +909,8 @@
       "alreadyAMember": "Bereits registriert?",
       "ctaSignIn": "Jetzt anmelden",
       "error": "Registrierung fehlgeschlagen.",
-      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator."
+      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator.",
+      "oauthContinueError": "Die Weiterleitung zur aufrufenden Anwendung ist fehlgeschlagen. Bitte registrieren Sie sich oder melden Sie sich erneut an."
     },
     "passwordResetRequest": {
       "title": "Passwort zurücksetzen",

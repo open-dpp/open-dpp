@@ -43,6 +43,49 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
+  changeset:
+    if: >-
+      github.event_name == 'pull_request'
+      && github.actor != 'renovate[bot]'
+      && github.head_ref != 'changeset-release/main'
+      && !contains(github.event.pull_request.labels.*.name, 'dependencies')
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: 24
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Require a changeset
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -uo pipefail
+
+          # Exits non-zero when a workspace package changed since the ref and no
+          # changeset covers it. An empty changeset counts as covering it, which
+          # is the escape hatch for changes that need no release note.
+          if pnpm changeset status --since="origin/$BASE_REF"; then
+            exit 0
+          fi
+
+          echo "::error::This pull request changes a workspace package but adds no changeset. Run 'pnpm changeset' to describe the change for the CHANGELOG, or 'pnpm changeset --empty' if it needs no release note, then commit the generated .changeset/*.md file. See CONTRIBUTING.md#changesets."
+          exit 1
+
   test:
     runs-on: ubuntu-latest
     permissions:

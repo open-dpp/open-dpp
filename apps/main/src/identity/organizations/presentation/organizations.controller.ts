@@ -100,14 +100,8 @@ export class OrganizationsController {
   }
 
   @Get("member")
-  async getMemberOrganizations(
-    @Headers() headers: Record<string, string>,
-    @AuthSession() session: Session,
-  ): Promise<OrganizationDto[]> {
-    const organizations = await this.organizationsService.getMemberOrganizations(
-      session.userId,
-      extractBetterAuthHeaders(headers),
-    );
+  async getMemberOrganizations(@AuthSession() session: Session): Promise<OrganizationDto[]> {
+    const organizations = await this.organizationsService.getMemberOrganizations(session.userId);
     return organizations.map(toOrganizationDto);
   }
 

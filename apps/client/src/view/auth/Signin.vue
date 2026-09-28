@@ -8,6 +8,7 @@ import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
+import { readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
@@ -56,15 +57,20 @@ const redirectUri = computed(() => {
   return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
 });
 
+/** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-in. */
+const oauthContinuation = readOAuthContinuation(window.location.search);
+
 const signin = handleSubmit(async (values) => {
   loading.value = true;
   try {
-    const { error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-      callbackURL: redirectUri.value,
-      rememberMe: rememberMe.value,
-    });
+    const { data, error } = await authClient.signIn.email(
+      oauthContinuation.withOAuthQuery({
+        email: values.email,
+        password: values.password,
+        callbackURL: redirectUri.value,
+        rememberMe: rememberMe.value,
+      }),
+    );
 
     if (error) {
       toast.add({
@@ -73,6 +79,11 @@ const signin = handleSubmit(async (values) => {
         life: 5000,
       });
       resetField("password");
+      return;
+    }
+
+    // the provider resumed the authorize request: hand the browser to the Trusted Client
+    if (oauthContinuation.resumeFromResponse(data)) {
       return;
     }
 
@@ -209,9 +220,7 @@ const signin = handleSubmit(async (values) => {
           <router-link
             :to="{
               name: 'Signup',
-              query: {
-                redirect: redirectUri,
-              },
+              query: route.query,
             }"
             class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
           >

@@ -17,18 +17,6 @@ export class OrganizationsRepository {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
-  async findManyByMember(headers: BetterAuthHeaders): Promise<Organization[]> {
-    const result = await (this.auth.api as any).listOrganizations({
-      headers,
-    });
-
-    if (!result || !Array.isArray(result)) {
-      return [];
-    }
-
-    return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
-  }
-
   async create(
     organization: Organization,
     headers: BetterAuthHeaders,

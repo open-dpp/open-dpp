@@ -1,12 +1,9 @@
-import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { ValueError } from "@open-dpp/exception";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberWithUser } from "../../domain/member";
-import { Organization } from "../../domain/organization";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
-import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { SessionsRepository } from "../../../auth/infrastructure/adapters/sessions.repository";
 import { MemberRoleType } from "../../domain/member-role.enum";
 
@@ -16,7 +13,6 @@ export class MembersService {
 
   constructor(
     private readonly membersRepository: MembersRepository,
-    private readonly organizationsRepository: OrganizationsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly sessionsRepository: SessionsRepository,
   ) {}
@@ -42,15 +38,6 @@ export class MembersService {
     }
     const user = await this.usersRepository.findOneById(userId);
     return user !== null && user.role === UserRole.ADMIN;
-  }
-
-  async getMemberOrganizations(
-    userId: string,
-    headers: BetterAuthHeaders,
-  ): Promise<Organization[]> {
-    this.logger.debug(`Getting organizations for user: ${userId}`);
-    // Using default repo (BetterAuth) as per original handler
-    return this.organizationsRepository.findManyByMember(headers);
   }
 
   async getMembers(organizationId: string): Promise<MemberWithUser[]> {

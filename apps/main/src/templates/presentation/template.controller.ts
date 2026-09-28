@@ -8,6 +8,7 @@ import type {
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
+  ImportOfficialTemplatesResultDto,
   MoveSubmodelDto,
   MoveSubmodelElementDto,
   ReorderColumnDto,
@@ -32,6 +33,7 @@ import {
   PassportEditingModeDto,
   AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
+  ImportOfficialTemplatesResultDtoSchema,
   Populates,
   RestrictPassportEditingDtoSchema,
   TemplateCreateDtoSchema,
@@ -124,6 +126,7 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { OfficialTemplatesImportService } from "../application/services/official-templates-import.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -157,6 +160,7 @@ export class TemplateController
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
+    private readonly officialTemplatesImportService: OfficialTemplatesImportService,
   ) {}
 
   @ApiGetShells()
@@ -1092,6 +1096,16 @@ export class TemplateController
       },
     );
     return TemplateDtoSchema.parse(template.toPlain());
+  }
+
+  @Post("/import-official")
+  @HttpCode(HttpStatus.OK)
+  async importOfficialTemplates(
+    @OrganizationId() organizationId: string,
+  ): Promise<ImportOfficialTemplatesResultDto> {
+    const result =
+      await this.officialTemplatesImportService.importOfficialTemplates(organizationId);
+    return ImportOfficialTemplatesResultDtoSchema.parse(result);
   }
 
   @Get()

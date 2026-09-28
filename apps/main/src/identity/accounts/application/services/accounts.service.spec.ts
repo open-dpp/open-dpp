@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import { Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Connection, Types } from "mongoose";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
@@ -29,6 +30,7 @@ describe("AccountsService.verifyPassword (integration)", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({ ...generateMongoConfig(configService) }),

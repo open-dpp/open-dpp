@@ -749,7 +749,11 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",
-    "errorFetchList": "Failed to load templates"
+    "errorFetchList": "Failed to load templates",
+    "importOfficial": "Import official templates",
+    "importOfficialSuccess": "Imported {imported} official template(s).",
+    "importOfficialPartialFailure": "Imported {imported} official template(s), {failed} failed.",
+    "importOfficialError": "Failed to import official templates."
   },
   "actions": {
     "member": {
@@ -905,7 +909,8 @@
       "alreadyAMember": "Already a member?",
       "ctaSignIn": "Sign in now",
       "error": "Sign up failed.",
-      "disabled": "Signup is currently disabled. Please contact your administrator."
+      "disabled": "Signup is currently disabled. Please contact your administrator.",
+      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again."
     },
     "passwordResetRequest": {
       "title": "Request password reset",
