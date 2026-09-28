@@ -29,7 +29,7 @@ import { CorrelationIdService } from "../common/middleware/correlation-id.servic
     ActivityHistoryModule,
     AasModule,
     AuthModule,
-    HttpModule,
+    HttpModule.register({ timeout: 60_000 }),
     forwardRef(() => BulkImportModule),
     OrganizationsModule,
     PresentationConfigurationsModule,
