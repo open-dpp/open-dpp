@@ -11,13 +11,16 @@ import {
   OAUTH_PROVIDER_COLLECTIONS,
 } from "./auth.test.context";
 import { AUTH_BASE_PATH } from "../../auth-base-path";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 describe("OAuth Provider disabled (the default)", () => {
   let app: INestApplication;
   let connection: Connection;
 
   beforeAll(async () => {
-    ({ app, connection } = await createAuthTestContext());
+    ({ app, connection } = await createAuthTestContext({
+      imports: [EventEmitterModule.forRoot()],
+    }));
   });
 
   afterAll(async () => {
@@ -56,7 +59,10 @@ describe("OAuth Provider disabled (the default)", () => {
     let cookie: string;
 
     beforeAll(async () => {
-      const testApp = await createAuthTestContext({ withAuthGuard: true });
+      const testApp = await createAuthTestContext({
+        imports: [EventEmitterModule.forRoot()],
+        withAuthGuard: true,
+      });
       guarded = testApp.app;
       ({ userCookie: cookie } =
         await testApp.betterAuthHelper.createOrganizationAndUserWithCookie());

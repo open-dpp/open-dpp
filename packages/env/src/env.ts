@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { isHttpsOrLoopbackUrl, parseTrustedClientEnv } from "./trusted-client";
 
+// "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>". Only "github" is
+// supported today; the provider prefix is a seam for other git hosts (GitLab, Bitbucket, a
+// self-hosted server) later without changing this env var's shape or breaking existing values.
+const OFFICIAL_TEMPLATES_REPO_PATTERN = /^([a-z][a-z0-9-]*):([^/\s]+)\/([^@\s]+)(?:@(\S+))?$/;
+const SUPPORTED_OFFICIAL_TEMPLATES_PROVIDERS = ["github"] as const;
+
 const asStrictBoolean = z
   .string()
   .refine((val) => val.toLowerCase() === "true" || val.toLowerCase() === "false", {
@@ -57,6 +63,32 @@ export const envSchema = z
       (v) => (v === "" ? undefined : v),
       z.url({ protocol: /^https?$/ }).optional(),
     ),
+    // Official templates — public repo templates are imported from; the default points at the
+    // open-dpp project's own repo, override to point at a fork/mirror or a test fixture repo.
+    // Format: "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>"; branch
+    // defaults to the repo's default branch when omitted.
+    OPEN_DPP_OFFICIAL_TEMPLATES_REPO: z.coerce
+      .string()
+      .optional()
+      .default("github:open-dpp/passport-templates")
+      .superRefine((value, ctx) => {
+        const match = OFFICIAL_TEMPLATES_REPO_PATTERN.exec(value);
+        if (!match) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              'OPEN_DPP_OFFICIAL_TEMPLATES_REPO must look like "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>"',
+          });
+          return;
+        }
+        const [, provider] = match;
+        if (!SUPPORTED_OFFICIAL_TEMPLATES_PROVIDERS.includes(provider as "github")) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Unsupported official templates provider "${provider}"; only ${SUPPORTED_OFFICIAL_TEMPLATES_PROVIDERS.map((p) => `"${p}"`).join(", ")} is currently supported`,
+          });
+        }
+      }),
     // Misc
     OPEN_DPP_BUILD_API_DOC: asStrictBoolean.optional().default(false),
     OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce.string().or(z.number()).optional().default("10mb"),

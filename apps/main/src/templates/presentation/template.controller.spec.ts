@@ -1,12 +1,15 @@
 import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
+import { HttpModule, HttpService } from "@nestjs/axios";
 
 import {
   AssetKind,
   DigitalProductDocumentStatusModificationMethodDto,
   DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
+import { AxiosResponse } from "axios";
+import { of } from "rxjs";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -31,7 +34,9 @@ import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
+import { OfficialTemplatesImportService } from "../application/services/official-templates-import.service";
 import { Template } from "../domain/template";
+import { OfficialTemplateRepository } from "../infrastructure/official-template.repository";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplatesModule } from "../templates.module";
@@ -48,8 +53,13 @@ describe("templateController", () => {
     basePathV1,
     basePathV2,
     {
-      imports: [TemplatesModule, PresentationConfigurationsModule],
-      providers: [TemplateRepository, AasSerializationService],
+      imports: [TemplatesModule, PresentationConfigurationsModule, HttpModule],
+      providers: [
+        TemplateRepository,
+        AasSerializationService,
+        OfficialTemplateRepository,
+        OfficialTemplatesImportService,
+      ],
       controllers: [TemplateController],
     },
     [
@@ -475,6 +485,52 @@ describe("templateController", () => {
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
+  });
+
+  it("/POST import-official imports every file the source repo lists, skipping any that fail", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const validPayload = buildEmptyExportPayload();
+
+    const getSpy = jest.spyOn(HttpService.prototype, "get").mockImplementation((url: string) => {
+      if (url.includes("api.github.com")) {
+        return of({
+          data: [
+            { name: "battery.json", type: "file" },
+            { name: "broken.json", type: "file" },
+            { name: "README.md", type: "file" },
+          ],
+        } as AxiosResponse);
+      }
+      if (url.endsWith("broken.json")) {
+        return of({ data: { invalid: "data" } } as AxiosResponse);
+      }
+      return of({ data: validPayload } as AxiosResponse);
+    });
+
+    try {
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/import-official`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      expect(response.body.imported).toHaveLength(1);
+      expect(response.body.imported[0].fileName).toEqual("battery.json");
+      expect(response.body.imported[0].templateId).toBeDefined();
+      expect(response.body.failed).toHaveLength(1);
+      expect(response.body.failed[0].fileName).toEqual("broken.json");
+
+      const listResponse = await request(app.getHttpServer())
+        .get(basePathV2)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+      expect(listResponse.body.result).toHaveLength(1);
+      expect(listResponse.body.result[0].id).toEqual(response.body.imported[0].templateId);
+    } finally {
+      getSpy.mockRestore();
+    }
   });
 
   it("/PUT template status", async () => {

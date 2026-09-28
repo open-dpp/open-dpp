@@ -6,6 +6,7 @@ import {
   CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   DigitalProductDocumentStatusModificationDtoSchema,
+  ImportOfficialTemplatesResultDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
@@ -755,6 +756,21 @@ function createTemplatePaths() {
                   },
                 },
               },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}/import-official`]: {
+      post: {
+        tags: [tag],
+        summary: `Imports the official templates from the configured source repository into the organization. Fetches every template file currently in the repo and imports each independently, skipping (and reporting) any that fail rather than aborting the whole run.`,
+        parameters: [orgaIdHeader],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: ImportOfficialTemplatesResultDtoSchema },
             },
           },
         },

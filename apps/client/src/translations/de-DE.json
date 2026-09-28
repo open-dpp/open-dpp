@@ -763,7 +763,11 @@
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "select": "Vorlage auswählen",
-    "errorFetchList": "Laden der Vorlagen fehlgeschlagen"
+    "errorFetchList": "Laden der Vorlagen fehlgeschlagen",
+    "importOfficial": "Offizielle Vorlagen importieren",
+    "importOfficialSuccess": "{imported} offizielle Vorlage(n) importiert.",
+    "importOfficialPartialFailure": "{imported} offizielle Vorlage(n) importiert, {failed} fehlgeschlagen.",
+    "importOfficialError": "Offizielle Vorlagen konnten nicht importiert werden."
   },
   "actions": {
     "member": {
