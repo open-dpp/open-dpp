@@ -33,6 +33,7 @@ import {
 import { API_PATH, createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 import { AUTH_BASE_PATH } from "../../auth-base-path";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 interface TestUser {
   id: string;
@@ -76,7 +77,10 @@ describe("OAuth Provider flow for the Trusted Client", () => {
   }
 
   beforeAll(async () => {
-    const testApp = await createAuthTestContext({ imports: [PolicyModule], withAuthGuard: true });
+    const testApp = await createAuthTestContext({
+      imports: [PolicyModule, EventEmitterModule.forRoot()],
+      withAuthGuard: true,
+    });
     app = testApp.app;
     betterAuthHelper = testApp.betterAuthHelper;
     user = (await betterAuthHelper.createUser()).user;

@@ -8,6 +8,7 @@ import type { Connection } from "mongoose";
 import { hashClientSecret, verifyClientSecret } from "./client-secret";
 import { createAuthTestContext } from "./auth.test.context";
 import { OAUTH_CLIENT_MODEL } from "./trusted-client-upsert";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 /** The stored row for the env-configured Trusted Client, as the plugin reads it. */
 const EXPECTED_ROW = {
@@ -39,7 +40,10 @@ describe("Trusted Client bootstrap", () => {
   const apps: INestApplication[] = [];
 
   async function boot(dbName: string) {
-    const testApp = await createAuthTestContext({ dbName });
+    const testApp = await createAuthTestContext({
+      imports: [EventEmitterModule.forRoot()],
+      dbName,
+    });
     apps.push(testApp.app);
     return testApp;
   }

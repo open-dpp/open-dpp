@@ -13,6 +13,7 @@ import {
   signedQueryOf,
   TEST_REDIRECT_URI,
 } from "./oauth-flow.test-helpers";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 const CONTINUE_PATH = `${API_PATH}/oauth-provider/continue`;
 
@@ -34,7 +35,10 @@ describe("POST /oauth-provider/continue (sign-up continuation for the SPA)", () 
   }
 
   beforeAll(async () => {
-    const testApp = await createAuthTestContext({ withAuthGuard: true });
+    const testApp = await createAuthTestContext({
+      imports: [EventEmitterModule.forRoot()],
+      withAuthGuard: true,
+    });
     app = testApp.app;
     betterAuthHelper = testApp.betterAuthHelper;
     userId = (await betterAuthHelper.createUser()).user.id;

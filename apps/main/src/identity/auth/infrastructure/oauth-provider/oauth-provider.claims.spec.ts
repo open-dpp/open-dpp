@@ -20,6 +20,7 @@ import {
 import { createAuthTestContext } from "./auth.test.context";
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 import { AUTH_BASE_PATH } from "../../auth-base-path";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 interface SignedUpUser {
   id: string;
@@ -79,7 +80,7 @@ describe("OAuth Provider claims", () => {
   }
 
   beforeAll(async () => {
-    const testApp = await createAuthTestContext();
+    const testApp = await createAuthTestContext({ imports: [EventEmitterModule.forRoot()] });
     app = testApp.app;
     auth = testApp.moduleRef.get<Auth>(AUTH);
     usersService = testApp.moduleRef.get<UsersService>(UsersService);
