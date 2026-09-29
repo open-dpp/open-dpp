@@ -1,5 +1,15 @@
 # @open-dpp/client
 
+## 6.1.3
+
+### Patch Changes
+
+- [#980](https://github.com/open-dpp/open-dpp/pull/980) [`edb4deb`](https://github.com/open-dpp/open-dpp/commit/edb4deb19fbc4d93db7b592efca9d7f3c47f678a) Thanks [@florianBieck](https://github.com/florianBieck)! - Signing in with email and password while a Trusted Client waits for the OAuth Provider sends the browser to the Trusted Client once again. It went there twice with the same single-use code, so the second code exchange failed and the User saw the Trusted Client's sign-in error.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.1.3
+  - @open-dpp/dto@6.1.3
+
 ## 6.1.2
 
 ### Patch Changes
