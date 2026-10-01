@@ -19,7 +19,7 @@ importers:
         specifier: ^1.75.1
         version: 1.75.1
       '@types/node':
-        specifier: ^22.20.3
+        specifier: ^22.20.4
         version: 22.20.4
       oxfmt:
         specifier: ^0.45.0
@@ -605,7 +605,7 @@ importers:
         specifier: ^30.0.0
         version: 30.0.0
       '@types/node':
-        specifier: ^22.20.3
+        specifier: ^22.20.4
         version: 22.20.4
       jest:
         specifier: ^30.4.2
