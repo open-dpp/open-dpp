@@ -26,11 +26,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "@nestjs/common": "^11.2.5",
-    "@nestjs/core": "^11.2.5"
+    "@nestjs/common": "^11.2.6",
+    "@nestjs/core": "^11.2.6"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.2.5",
+    "@nestjs/testing": "^11.2.6",
     "@swc/core": "^1.16.12",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
