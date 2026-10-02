@@ -1,5 +1,11 @@
 # @open-dpp/dto
 
+## 6.1.4
+
+### Patch Changes
+
+- [#904](https://github.com/open-dpp/open-dpp/pull/904) [`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36) Thanks [@mr42](https://github.com/mr42)! - In the template editor a user can restrict editing of derived passports to data only. Meaning, the structure, layout and security rules of a passport created from a template with restriction enabled cannot be modified. Only the data values of such a passport can be modified.
+
 ## 6.1.3
 
 ## 6.1.2
