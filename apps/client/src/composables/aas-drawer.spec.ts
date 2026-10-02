@@ -103,4 +103,80 @@ describe("aasDrawer composable", () => {
     });
     expect(editorVNode.value?.props.data.modelType).toBe(KeyTypes.Property);
   });
+
+  describe("save button visibility when isEditingRestrictedToData", () => {
+    const mockCanAllowed = () => true;
+
+    it("stays visible for a Property (leaf value) editor", () => {
+      const data = PropertyJsonSchema.parse(propertyInputPlainFactory.build());
+      const { openDrawer, saveButtonIsVisible } = useAasDrawer({
+        onHideDrawer,
+        can: mockCanAllowed,
+        isEditingRestrictedToData: true,
+      });
+      openDrawer({
+        type: KeyTypes.Property,
+        data,
+        title: "x",
+        mode: EditorMode.EDIT,
+        path: { submodelId: "s1", idShortPath: data.idShort },
+        callback: async () => {},
+      });
+      expect(saveButtonIsVisible.value).toBe(true);
+    });
+
+    it("is hidden for a Submodel (container, no leaf value) editor", () => {
+      const submodel: SubmodelResponseDto = submodelPlainToResponse(
+        submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
+      );
+      const { openDrawer, saveButtonIsVisible } = useAasDrawer({
+        onHideDrawer,
+        can: mockCanAllowed,
+        isEditingRestrictedToData: true,
+      });
+      openDrawer({
+        type: KeyTypes.Submodel,
+        data: submodel,
+        title: "x",
+        mode: EditorMode.EDIT,
+        path: { submodelId: submodel.id },
+        callback: async () => {},
+      });
+      expect(saveButtonIsVisible.value).toBe(false);
+    });
+
+    it("is hidden for the AssetAdministrationShell editor, overriding its usual always-visible rule", () => {
+      const { openDrawer, saveButtonIsVisible } = useAasDrawer({
+        onHideDrawer,
+        can: mockCanAllowed,
+        isEditingRestrictedToData: true,
+      });
+      openDrawer({
+        type: KeyTypes.AssetAdministrationShell,
+        data: {} as any,
+        title: "x",
+        mode: EditorMode.EDIT,
+        path: {},
+        callback: async () => {},
+      });
+      expect(saveButtonIsVisible.value).toBe(false);
+    });
+
+    it("does not affect the save button when false (default)", () => {
+      const data = PropertyJsonSchema.parse(propertyInputPlainFactory.build());
+      const { openDrawer, saveButtonIsVisible } = useAasDrawer({
+        onHideDrawer,
+        can: mockCanAllowed,
+      });
+      openDrawer({
+        type: KeyTypes.Submodel,
+        data: {} as any,
+        title: "x",
+        mode: EditorMode.EDIT,
+        path: { submodelId: "s1", idShortPath: data.idShort },
+        callback: async () => {},
+      });
+      expect(saveButtonIsVisible.value).toBe(true);
+    });
+  });
 });

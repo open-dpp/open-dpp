@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import {
   findAllByOrganizationId,
   findByIds,
@@ -43,6 +44,14 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     };
   }
 
+  migrate1_1_0To1_2_0(plain: any) {
+    return {
+      ...plain,
+      editingMode: PassportEditingMode.Full,
+      _schemaVersion: PassportDocVersion.v1_2_0,
+    };
+  }
+
   async fromPlainWithMigration(plain: any): Promise<Passport> {
     let migratedVersion = plain;
     if (
@@ -51,6 +60,9 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     ) {
       migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
     }
+    if (migratedVersion._schemaVersion === PassportDocVersion.v1_1_0) {
+      migratedVersion = this.migrate1_1_0To1_2_0(migratedVersion);
+    }
     return this.fromPlain(migratedVersion);
   }
 
@@ -58,7 +70,7 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     return await save(
       passport,
       this.passportDoc,
-      PassportDocVersion.v1_1_0,
+      PassportDocVersion.v1_2_0,
       this.fromPlain.bind(this),
       undefined,
       options,

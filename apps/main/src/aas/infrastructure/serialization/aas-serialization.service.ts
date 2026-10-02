@@ -1,17 +1,25 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
-import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
+import {
+  DigitalProductDocumentTypes,
+  DigitalProductDocumentTypesType,
+  KeyTypes,
+} from "@open-dpp/dto";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
 import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
-import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../../../templates/domain/template";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { ConceptDescription } from "../../domain/concept-description";
 import { Environment } from "../../domain/environment";
-import { AasExportable } from "../../domain/exportable/aas-exportable";
+import { PassportExportable } from "../../domain/exportable/passport-exportable";
+import { TemplateExportable } from "../../domain/exportable/template-exportable";
 import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { EnvironmentService } from "../../presentation/environment.service";
@@ -22,7 +30,10 @@ import {
 } from "./aas-import.mapper";
 import {
   AasExportLatestVersion,
-  aasExportSchemaJsonLatest,
+  PassportExportLatestVersion,
+  PassportExportLatestVersionSchema,
+  TemplateExportLatestVersion,
+  TemplateExportLatestVersionSchema,
 } from "./export-schemas/aas-export-types";
 import { extractMediaIds } from "./extract-media-ids";
 import { ParseWithMigration } from "./export-schemas/aas-export-migration";
@@ -55,32 +66,32 @@ export class AasSerializationService {
   async exportPassport(
     passport: Passport,
     subject: SubjectAttributes,
-  ): Promise<AasExportLatestVersion> {
+  ): Promise<PassportExportLatestVersion> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
       passport.environment,
     );
     const presentationConfiguration = await this.presentationConfigurationService.getEffective(
       passportToHolder(passport),
     );
-    const aasExportable = AasExportable.createFromPassport(
+    const aasExportable = PassportExportable.fromPassport(
       passport,
       expandedEnvironment,
       presentationConfiguration,
     );
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
+    return PassportExportLatestVersionSchema.parse(aasExportable.toExportPlain(subject));
   }
 
   async exportTemplate(
     template: Template,
     subject: SubjectAttributes,
-  ): Promise<AasExportLatestVersion> {
+  ): Promise<TemplateExportLatestVersion> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
       template.environment,
     );
     const presentationConfiguration = await this.presentationConfigurationService.getEffective(
       templateToHolder(template),
     );
-    const aasExportable = AasExportable.createFromTemplate(
+    const aasExportable = TemplateExportable.fromTemplate(
       template,
       expandedEnvironment,
       presentationConfiguration,
@@ -88,7 +99,7 @@ export class AasSerializationService {
 
     const aasExportablePlain = aasExportable.toExportPlain(subject);
 
-    return aasExportSchemaJsonLatest.parse(aasExportablePlain);
+    return TemplateExportLatestVersionSchema.parse(aasExportablePlain);
   }
 
   async importPassport(
@@ -100,12 +111,13 @@ export class AasSerializationService {
     return this.importEntity(
       data,
       organizationId,
-      (environment) =>
+      (environment, schema: PassportExportLatestVersion) =>
         Passport.create({
           organizationId,
           environment,
           createdAt: new Date(),
           updatedAt: new Date(),
+          editingMode: schema.editingMode ?? PassportEditingMode.Full,
         }),
       DigitalProductDocumentTypes.Passport,
       savePassport,
@@ -122,12 +134,13 @@ export class AasSerializationService {
     return this.importEntity(
       data,
       organizationId,
-      (environment) =>
+      (environment, schema: TemplateExportLatestVersion) =>
         Template.create({
           organizationId,
           environment,
           createdAt: new Date(),
           updatedAt: new Date(),
+          passportEditingMode: schema.passportEditingMode ?? PassportEditingMode.Full,
         }),
       DigitalProductDocumentTypes.Template,
       saveTemplate,
@@ -138,13 +151,16 @@ export class AasSerializationService {
   private async importEntity<T extends { id: string }>(
     data: unknown,
     organizationId: string,
-    entityFactory: (environment: Environment) => T,
-    referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
+    entityFactory: (environment: Environment, schema: AasExportLatestVersion) => T,
+    referenceType: DigitalProductDocumentTypesType,
     saveEntity: (entity: T, options: DbSessionOptions) => Promise<void>,
     afterPersist?: (entity: T, options: DbSessionOptions) => Promise<void>,
   ): Promise<T> {
     try {
-      const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
+      const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(
+        data,
+        referenceType,
+      );
 
       const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
         await this.nullifyForeignMedia(shells, submodels, organizationId);
@@ -155,7 +171,7 @@ export class AasSerializationService {
         conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
       });
 
-      const entity = entityFactory(environment);
+      const entity = entityFactory(environment, schema);
 
       const presentationConfiguration = buildImportedPresentationConfiguration({
         schema,
@@ -261,8 +277,11 @@ export class AasSerializationService {
     });
   }
 
-  private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
-    const schema = ParseWithMigration(data);
+  private parseAndMapEnvironment(
+    data: unknown,
+    referenceType: DigitalProductDocumentTypesType,
+  ): ImportedEnvironmentData {
+    const schema = ParseWithMigration(data, referenceType);
 
     const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
 

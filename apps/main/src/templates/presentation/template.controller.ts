@@ -12,6 +12,7 @@ import type {
   MoveSubmodelDto,
   MoveSubmodelElementDto,
   ReorderColumnDto,
+  RestrictPassportEditingDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -29,10 +30,12 @@ import type {
 } from "@open-dpp/dto";
 
 import {
+  PassportEditingModeDto,
   AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   ImportOfficialTemplatesResultDtoSchema,
   Populates,
+  RestrictPassportEditingDtoSchema,
   TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
@@ -40,6 +43,7 @@ import {
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -968,6 +972,28 @@ export class TemplateController
       subject,
       userId,
     });
+  }
+
+  @Put(":id/passport-editing-mode")
+  async restrictPassportEditingToData(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @Body(new ZodValidationPipe(RestrictPassportEditingDtoSchema))
+    body: RestrictPassportEditingDto,
+  ): Promise<TemplateDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    if (body.mode === PassportEditingModeDto.DataOnly) {
+      return this.templateService.restrictPassportEditingToData(correlationId, organizationId, id, {
+        subject,
+        userId,
+      });
+    } else {
+      throw new BadRequestException(`Mode ${body.mode} not supported yet.`);
+    }
   }
 
   @ApiGetActivities()

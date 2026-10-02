@@ -21,6 +21,7 @@ import { RowDeletedActivity } from "./row-deleted.activity";
 import { SubmodelAddedActivity } from "./submodel-added.activity";
 import { SubmodelDeletedActivity } from "./submodel-deleted.activity";
 import { DigitalProductDocumentStatusChangedActivity } from "./digital-product-document-status-changed.activity";
+import { PassportEditingModeChangedActivity } from "./passport-editing-mode-changed.activity";
 import { SubmodelElementMovedActivity } from "./submodel-element-moved.activity";
 import { SubmodelMovedActivity } from "./submodel-moved.activity";
 
@@ -57,4 +58,5 @@ export function registerActivityClasses(): void {
     ActivityTypes.DigitalProductDocumentStatusChanged,
     DigitalProductDocumentStatusChangedActivity,
   );
+  registerActivity(ActivityTypes.PassportEditingModeChanged, PassportEditingModeChangedActivity);
 }

@@ -5,6 +5,7 @@ import { AasModule } from "../aas/aas.module";
 
 import { SubmodelRegistryInitializer } from "../aas/presentation/submodel-registry-initializer";
 import { BulkImportModule } from "../bulk-import/bulk-import.module";
+import { DatabaseModule } from "../database/database.module";
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
@@ -30,6 +31,7 @@ import { CorrelationIdService } from "../common/middleware/correlation-id.servic
     AasModule,
     AuthModule,
     HttpModule.register({ timeout: 60_000 }),
+    DatabaseModule,
     forwardRef(() => BulkImportModule),
     OrganizationsModule,
     PresentationConfigurationsModule,

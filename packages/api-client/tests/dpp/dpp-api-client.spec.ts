@@ -3,6 +3,7 @@ import {
   DigitalProductDocumentStatusDto,
   InvitationStatusDto,
   MeDtoSchema,
+  PassportEditingModeDto,
   SubmodelElementSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -174,6 +175,13 @@ describe("apiClient", () => {
         DigitalProductDocumentStatusDto.Published,
       );
     });
+
+    it("should set passport editing mode of template", async () => {
+      const response = await sdk.dpp.templates.setPassportEditingMode(template1.id, {
+        mode: "DataOnly",
+      });
+      expect(response.data.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
+    });
   });
 
   describe("passports", () => {
@@ -214,6 +222,13 @@ describe("apiClient", () => {
       expect(response.data.lastStatusChange.currentStatus).toEqual(
         DigitalProductDocumentStatusDto.Published,
       );
+    });
+
+    it("should set editing mode of passport", async () => {
+      const response = await sdk.dpp.passports.setEditingMode(passport1.id, {
+        mode: "Full",
+      });
+      expect(response.data.editingMode).toEqual(PassportEditingModeDto.Full);
     });
   });
 
@@ -559,6 +574,20 @@ describe("apiClient", () => {
         submodelCarbonFootprintElement0.idShort,
         { PCFCalculationMethod: "GHG" },
       );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
+
+    it("should modify value of submodel element with a bare scalar payload (not wrapped in an object)", async () => {
+      // Regression test: a raw string payload (e.g. a Property's value) must still be
+      // sent as valid, correctly quoted JSON — axios does not JSON.stringify a bare
+      // scalar body unless the request explicitly declares a JSON content-type.
+      const response = await sdk.dpp[appIdentifiable].aas.modifyValueOfSubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        "a bare scalar value",
+      );
+      expect(response.status).toEqual(200);
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
     });
   });

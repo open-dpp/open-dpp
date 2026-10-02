@@ -58,6 +58,7 @@ const mocks = vi.hoisted(() => {
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
+    modifyValueOfSubmodelElement: vi.fn(),
     moveSubmodel: vi.fn(),
     moveSubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
@@ -82,6 +83,7 @@ vi.mock("../lib/api-client", () => ({
           createSubmodelElement: mocks.createSubmodelElement,
           createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          modifyValueOfSubmodelElement: mocks.modifyValueOfSubmodelElement,
           moveSubmodelElement: mocks.moveSubmodelElement,
           deleteSubmodelElementById: mocks.deleteSubmodelElementById,
         },
@@ -359,12 +361,14 @@ describe("aasEditor composable", () => {
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
       create: { visible: true, enabled: true, tooltip: "common.add" },
       delete: { visible: true, enabled: true, tooltip: "common.remove" },
+      move: { visible: true, enabled: true, tooltip: "common.move" },
     };
     const actionsOfLeaveNode = {
       read: { visible: true, enabled: true, tooltip: "common.view" },
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
       create: { visible: false, enabled: true, tooltip: "common.add" },
       delete: { visible: true, enabled: true, tooltip: "common.remove" },
+      move: { visible: true, enabled: true, tooltip: "common.move" },
     };
     const missingPermissionsMsg = "aasEditor.security.missingPermission";
     const actionsOfParentWithoutPermissions = {
@@ -380,6 +384,7 @@ describe("aasEditor composable", () => {
       },
       create: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
       delete: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+      move: { visible: false, enabled: false, tooltip: missingPermissionsMsg },
     };
 
     const withoutChildren = (value: any) => omit(value, "children");
@@ -491,6 +496,121 @@ describe("aasEditor composable", () => {
       },
     };
     expect(withoutChildren(actualListProp)).toEqual(expectedListProp);
+  });
+
+  it("hides structural actions (create/delete) but keeps edit reachable when isEditingRestrictedToData is true", async () => {
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
+    mocks.getSubmodels.mockResolvedValue({
+      data: response,
+      status: HTTPCode.OK,
+    });
+    mocks.getShells.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: [assetAdministrationShell1] },
+      status: HTTPCode.OK,
+    });
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
+    const { init, findTreeNodeByKey } = mountHarness({
+      id: aasWrapperId,
+      aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
+      errorHandlingStore,
+      selectedLanguage,
+      openConfirm: mockOpenConfirm,
+      translate,
+      status,
+      isEditingRestrictedToData: true,
+    });
+    await init();
+
+    // submodel1's policy grants full permissions, so any remaining restriction here is
+    // solely the effect of isEditingRestrictedToData, not a permission gap. Create/delete/move
+    // are hidden (not just disabled), so their tooltip value is never actually rendered — it
+    // falls through to the normal label rather than a "restricted" message, since nothing needs
+    // it. Move is structural (like create/delete) even though it shares edit's permission gate.
+    const restrictedActions = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: false, enabled: false, tooltip: "common.add" },
+      delete: { visible: false, enabled: false, tooltip: "common.remove" },
+      move: { visible: false, enabled: false, tooltip: "common.move" },
+    };
+
+    const submodelNode = findTreeNodeByKey(submodel1.id)!;
+    expect(submodelNode.data.actions).toEqual(restrictedActions);
+
+    const leafNode = findTreeNodeByKey("Design_V01.Author.AuthorName")!;
+    expect(leafNode.data.actions).toEqual(restrictedActions);
+  });
+
+  it("routes Property/File value edits through modifyValueOfSubmodelElement when isEditingRestrictedToData is true, but leaves container edits on the full endpoint", async () => {
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
+    mocks.getSubmodels.mockResolvedValue({ data: response, status: HTTPCode.OK });
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
+    const { init, selectTreeNode, editorVNode } = mountHarness({
+      id: aasWrapperId,
+      aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
+      errorHandlingStore,
+      selectedLanguage,
+      openConfirm: mockOpenConfirm,
+      translate,
+      status,
+      isEditingRestrictedToData: true,
+    });
+    await init();
+
+    // Property: only `value` is extracted from the full form submission.
+    selectTreeNode("Design_V01.Author.AuthorName");
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "AuthorName", value: "New Name" });
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel1.id,
+      "Design_V01.Author.AuthorName",
+      "New Name",
+    );
+    expect(mocks.modifySubmodelElement).not.toHaveBeenCalled();
+
+    // File: `value` and `contentType` are extracted, other metadata dropped.
+    selectTreeNode("Design_V01.AdditionalInformation.FileProp");
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({
+      idShort: "FileProp",
+      value: "new/path",
+      contentType: "application/pdf",
+    });
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel1.id,
+      "Design_V01.AdditionalInformation.FileProp",
+      { value: "new/path", contentType: "application/pdf" },
+    );
+
+    // Container (SubmodelElementCollection): no leaf value — stays on the full endpoint.
+    selectTreeNode(`${submodel2.idShort}.ProductCarbonFootprint_A4`);
+    mocks.modifySubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "ProductCarbonFootprint_A4" });
+    expect(mocks.modifySubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel2.id,
+      "ProductCarbonFootprint_A4",
+      { idShort: "ProductCarbonFootprint_A4" },
+    );
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledTimes(2);
   });
 
   it.each([

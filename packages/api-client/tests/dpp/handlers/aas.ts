@@ -329,7 +329,27 @@ export function aasHandlers(basePath: string) {
     ),
     http.patch(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}/$value`,
-      async () => {
+      // Guards against the axios regression where a bare scalar payload (e.g. a
+      // Property's value) is sent unquoted with no JSON content-type — asserting
+      // this here means a real (non-mocked) request would actually be parseable
+      // by the backend's JSON body parser, not just accepted by this handler.
+      async ({ request }) => {
+        const contentType = request.headers.get("content-type") ?? "";
+        if (!contentType.includes("application/json")) {
+          return HttpResponse.json(
+            { message: `Expected a JSON content-type, got "${contentType}"` },
+            { status: 400 },
+          );
+        }
+        const bodyText = await request.text();
+        try {
+          JSON.parse(bodyText);
+        } catch {
+          return HttpResponse.json(
+            { message: `Body is not valid JSON: ${bodyText}` },
+            { status: 400 },
+          );
+        }
         return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
           status: 200,
         });
