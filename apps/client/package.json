@@ -59,7 +59,7 @@
     "@vue/tsconfig": "^0.9.1",
     "autoprefixer": "^10.6.1",
     "fishery": "^2.4.0",
-    "jest-diff": "^30.4.1",
+    "jest-diff": "^30.5.2",
     "jsdom": "^27.4.0",
     "postcss": "^8.5.28",
     "resize-observer-polyfill": "^1.5.1",
