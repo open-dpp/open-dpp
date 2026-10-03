@@ -54,7 +54,7 @@
     "@types/node": "^25.9.3",
     "jest": "^30.4.2",
     "msw": "^2.15.0",
-    "rollup": "^4.61.1",
+    "rollup": "^4.63.5",
     "rollup-plugin-dts": "^6.4.1",
     "ts-jest": "^29.4.14",
     "ts-node": "^10.9.2",
