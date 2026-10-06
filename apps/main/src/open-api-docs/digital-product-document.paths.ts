@@ -652,6 +652,8 @@ function createTemplatePaths() {
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
           StatusQueryParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
