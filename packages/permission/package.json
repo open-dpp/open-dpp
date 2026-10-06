@@ -34,7 +34,7 @@
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
-    "jest": "^30.4.2",
+    "jest": "^30.5.2",
     "typescript": "^5.9.3"
   },
   "jest": {
