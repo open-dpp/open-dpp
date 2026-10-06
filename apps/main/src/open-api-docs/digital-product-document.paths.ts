@@ -62,6 +62,7 @@ import {
   PopulateQueryParamSchema,
   StartDateQueryParamSchema,
   StatusQueryParamSchema,
+  TemplateIdQueryParamSchema,
 } from "../digital-product-document/presentation/digital-product-document-decorators";
 import { HTTPCode } from "./http.codes";
 import { ContentType } from "./content.types";
@@ -818,6 +819,9 @@ function createPassportPaths() {
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
           StatusQueryParamSchema,
+          TemplateIdQueryParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {

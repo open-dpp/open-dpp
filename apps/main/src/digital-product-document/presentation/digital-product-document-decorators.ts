@@ -38,6 +38,19 @@ export const StatusQueryParamSchema = z
 export const StatusQueryParam = () =>
   Query("status", new ZodValidationPipe(StatusQueryParamSchema));
 
+export const TemplateIdQueryParamSchema = z
+  .union([z.string().min(1), z.string().min(1).array()])
+  .transform((val) => (Array.isArray(val) ? val : [val]))
+  .optional()
+  .meta({
+    description: "Filters by the ids of the templates the passports were created from",
+    example: "[templateId1, templateId2]",
+    param: { in: "query", name: "templateId" },
+  });
+
+export const TemplateIdQueryParam = () =>
+  Query("templateId", new ZodValidationPipe(TemplateIdQueryParamSchema));
+
 export const LimitQueryParamSchema = z.coerce
   .number()
   .optional()

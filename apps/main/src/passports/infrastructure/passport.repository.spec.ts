@@ -20,8 +20,9 @@ import {
 import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
 import { Passport } from "../domain/passport";
-import { PassportRepository } from "./passport.repository";
+import { PassportFindOptions, PassportRepository } from "./passport.repository";
 import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
 import { EmailService } from "../../email/email.service";
 
@@ -454,6 +455,71 @@ describe("passportRepository", () => {
     });
     expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);
     expect(secondPage.totalCount).toBe(2);
+  });
+
+  describe("template and period filters", () => {
+    const organizationId = randomUUID();
+    const templateA = randomUUID();
+    const templateB = randomUUID();
+    const createPassport = (createdAt: string, templateId?: string) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        templateId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt: new Date(createdAt),
+      });
+    const a1 = createPassport("2022-01-01T00:00:00.000Z", templateA);
+    const b1 = createPassport("2022-02-01T00:00:00.000Z", templateB);
+    const a2 = createPassport("2022-03-01T00:00:00.000Z", templateA);
+    const noTemplate = createPassport("2022-04-01T00:00:00.000Z");
+
+    beforeAll(async () => {
+      for (const passport of [a1, b1, a2, noTemplate]) {
+        await passportRepository.save(passport);
+      }
+    });
+
+    const findIds = async (filter: PassportFindOptions["filter"]) =>
+      (await passportRepository.findAllByOrganizationId(organizationId, { filter })).items.map(
+        (p) => p.id,
+      );
+
+    it("filters by several template ids", async () => {
+      expect(await findIds({ templateIds: [templateA, templateB] })).toEqual([a2.id, b1.id, a1.id]);
+      expect(await findIds({ templateIds: [templateA] })).toEqual([a2.id, a1.id]);
+    });
+
+    it("does not filter by template when templateIds is empty", async () => {
+      expect(await findIds({ templateIds: [] })).toEqual([noTemplate.id, a2.id, b1.id, a1.id]);
+    });
+
+    it("filters by an open-ended and a closed period on createdAt", async () => {
+      expect(
+        await findIds({ period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }) }),
+      ).toEqual([noTemplate.id, a2.id, b1.id]);
+      expect(
+        await findIds({ period: Period.fromIso({ end: "2022-02-01T00:00:00.000Z" }) }),
+      ).toEqual([b1.id, a1.id]);
+      expect(
+        await findIds({
+          period: Period.fromIso({
+            start: "2022-01-15T00:00:00.000Z",
+            end: "2022-03-15T00:00:00.000Z",
+          }),
+        }),
+      ).toEqual([a2.id, b1.id]);
+    });
+
+    it("combines template, period and status filters", async () => {
+      expect(
+        await findIds({
+          templateIds: [templateA],
+          period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }),
+          status: [DigitalProductDocumentStatus.Draft],
+        }),
+      ).toEqual([a2.id]);
+    });
   });
 
   it("countByOrganizationId — counts only the passports of the given organization", async () => {

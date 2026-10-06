@@ -6,6 +6,7 @@ import { IPersistable } from "../aas/domain/persistable";
 import { DbSessionOptions } from "../database/query-options";
 import { decodeCursor, encodeCursor, Pagination } from "../pagination/pagination";
 import { PagingResult } from "../pagination/paging-result";
+import { Period } from "../time/period";
 import { HasCreatedAt } from "./has-created-at";
 import {
   DigitalProductDocumentStatus,
@@ -94,7 +95,10 @@ export async function findByIds<T extends Document<string>, V>(
 
 export type FindOptions = {
   pagination?: Pagination;
-  filter?: { status?: ReadonlyArray<DigitalProductDocumentStatusType> };
+  filter?: {
+    status?: ReadonlyArray<DigitalProductDocumentStatusType>;
+    period?: Period;
+  };
 };
 
 function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusType>) {
@@ -160,11 +164,21 @@ export async function findAllByOrganizationId<
   fromPlain: (plain: unknown) => Promise<V>,
   organizationId: string,
   options?: FindOptions,
+  extraFilter: Record<string, unknown> = {},
 ) {
-  const statuses = options?.filter?.status;
+  const { status: statuses, period } = options?.filter ?? {};
   const filter = {
     organizationId,
     ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
+    ...(period
+      ? {
+          createdAt: {
+            ...(period.start && { $gte: period.start }),
+            ...(period.end && { $lte: period.end }),
+          },
+        }
+      : {}),
+    ...extraFilter,
   };
   return findPageByCursor<V>(docModel, filter, (d) => convertToDomain(d, fromPlain), {
     pagination: options?.pagination,

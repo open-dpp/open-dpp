@@ -129,6 +129,7 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { Pagination } from "../../pagination/pagination";
+import { Period } from "../../time/period";
 import { PagingResult } from "../../pagination/paging-result";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
@@ -145,6 +146,7 @@ import {
   PopulateQueryParam,
   StartDateQueryParam,
   StatusQueryParam,
+  TemplateIdQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
@@ -176,15 +178,20 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @StatusQueryParam() status: DigitalProductDocumentStatusDtoType[] | undefined,
+    @TemplateIdQueryParam() templateIds: string[] | undefined,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportPaginationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(
       organizationId,
-      { pagination, ...(status ? { filter: { status } } : {}) },
+      { pagination, filter: { status, templateIds, period } },
     );
     if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
