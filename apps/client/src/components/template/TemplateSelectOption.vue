@@ -15,7 +15,7 @@ const popover = useTemplateRef<{ show: (event: Event) => void; hide: () => void 
 
 <template>
   <div class="flex w-full min-w-0 items-center gap-2" data-cy="template-select-option">
-    <span class="max-w-3/4 truncate text-xl">{{ option.label }}</span>
+    <span class="max-w-96 truncate text-xl xl:max-w-3/4">{{ option.label }}</span>
     <i
       class="pi pi-info-circle text-muted-color"
       role="img"
