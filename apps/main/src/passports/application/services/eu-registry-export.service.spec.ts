@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { PermalinkKind } from "@open-dpp/dto";
-import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { gs1DataAttributesPlainFactory, passportsPlainFactory } from "@open-dpp/testing";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 import { Pagination } from "../../../pagination/pagination";
@@ -10,6 +10,7 @@ import { Permalink } from "../../../permalink/domain/permalink";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
 import { Period } from "../../../time/period";
 import { Passport } from "../../domain/passport";
+import { RegistryExportFile } from "../../domain/registry-export-file";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { EuRegistryExportService } from "./eu-registry-export.service";
 
@@ -56,15 +57,25 @@ describe("euRegistryExportService", () => {
     );
   });
 
-  it("throws NotFoundError when no published passport matches", async () => {
+  async function run(filter: any = {}) {
+    const files: RegistryExportFile[] = [];
+    const result = await service.export(organizationId, filter, (file) => {
+      files.push(file);
+    });
+    return { ...result, files };
+  }
+
+  it("throws NotFoundError without calling onFile when no published passport matches", async () => {
     servePassports([]);
-    await expect(service.export(organizationId)).rejects.toThrow(NotFoundError);
+    const onFile = jest.fn<(file: RegistryExportFile) => void | Promise<void>>();
+    await expect(service.export(organizationId, {}, onFile)).rejects.toThrow(NotFoundError);
+    expect(onFile).not.toHaveBeenCalled();
   });
 
   it("queries published passports with template and period filters", async () => {
     servePassports([]);
     const period = Period.fromIso({ start: "2026-01-01T00:00:00.000Z" });
-    await service.export(organizationId, { templateIds: ["t1"], period }).catch(() => undefined);
+    await run({ templateIds: ["t1"], period }).catch(() => undefined);
 
     expect(passportRepository.findAllByOrganizationId).toHaveBeenCalledWith(
       organizationId,
@@ -78,25 +89,26 @@ describe("euRegistryExportService", () => {
     );
   });
 
-  it("exports the published URLs ordered oldest passport first", async () => {
+  it("exports the published URLs newest passport first", async () => {
     const newest = passport();
     const oldest = passport();
     servePassports([newest, oldest]);
-    const oldestLink = publishedOpenDpp(oldest.id);
     const newestLink = publishedOpenDpp(newest.id);
-    permalinksByPassport.set(oldest.id, [oldestLink]);
+    const oldestLink = publishedOpenDpp(oldest.id);
     permalinksByPassport.set(newest.id, [newestLink]);
+    permalinksByPassport.set(oldest.id, [oldestLink]);
 
-    const result = await service.export(organizationId);
+    const result = await run();
 
     expect(result.exportedCount).toBe(2);
+    expect(result.failedPassportIds).toEqual([]);
     expect(result.files.map((f) => f.toPlain())).toEqual([
       {
         schemaVersion: "1.0.0",
         productGroup: "BATTERIES",
         items: [
-          { uniqueProductIdentifier: oldestLink.publishedUrl },
           { uniqueProductIdentifier: newestLink.publishedUrl },
+          { uniqueProductIdentifier: oldestLink.publishedUrl },
         ],
       },
     ]);
@@ -115,14 +127,14 @@ describe("euRegistryExportService", () => {
     }).withPublishedUrl("https://id.gs1.example/01/123");
     permalinksByPassport.set(p.id, [openDpp, gs1]);
 
-    const result = await service.export(organizationId);
+    const result = await run();
 
     expect(result.files[0].toPlain().items).toEqual([
       { uniqueProductIdentifier: "https://id.gs1.example/01/123" },
     ]);
   });
 
-  it("fails the whole export and lists passports without a published permalink", async () => {
+  it("does not fail but reports passports without a published permalink", async () => {
     const ok = passport();
     const noPermalink = passport();
     const unpublished = passport();
@@ -130,27 +142,44 @@ describe("euRegistryExportService", () => {
     permalinksByPassport.set(ok.id, [publishedOpenDpp(ok.id)]);
     permalinksByPassport.set(unpublished.id, [Permalink.create({ passportId: unpublished.id })]);
 
-    const error = await service.export(organizationId).catch((e) => e);
+    const result = await run();
 
-    expect(error).toBeInstanceOf(ValueError);
-    expect(error.message).toContain(noPermalink.id);
-    expect(error.message).toContain(unpublished.id);
-    expect(error.message).not.toContain(ok.id);
+    expect(result.exportedCount).toBe(1);
+    expect(result.files.flatMap((f) => [...f.items])).toHaveLength(1);
+    expect(result.failedPassportIds).toEqual([noPermalink.id, unpublished.id]);
   });
 
-  it("reads all pages and splits into files of 100 items", async () => {
+  it("returns only failed passports when none can be exported", async () => {
+    const p = passport();
+    servePassports([p]);
+
+    const result = await run();
+
+    expect(result.files).toEqual([]);
+    expect(result.exportedCount).toBe(0);
+    expect(result.failedPassportIds).toEqual([p.id]);
+  });
+
+  it("reads all pages, emits full files while reading, and keeps the rest for the end", async () => {
     const passports = Array.from({ length: 101 }, () => passport());
     servePassports(passports, 40);
     for (const p of passports) {
       permalinksByPassport.set(p.id, [publishedOpenDpp(p.id)]);
     }
+    const emittedAtPage: number[] = [];
+    const files: RegistryExportFile[] = [];
 
-    const result = await service.export(organizationId);
+    const result = await service.export(organizationId, {}, (file) => {
+      emittedAtPage.push(passportRepository.findAllByOrganizationId.mock.calls.length);
+      files.push(file);
+    });
 
     expect(result.exportedCount).toBe(101);
-    expect(result.files.map((f) => f.items.length)).toEqual([100, 1]);
-    // oldest first = reverse of the newest-first pages
-    const oldestUrl = permalinksByPassport.get(passports[100].id)![0].publishedUrl;
-    expect(result.files[0].items[0].uniqueProductIdentifier).toBe(oldestUrl);
+    expect(files.map((f) => f.items.length)).toEqual([100, 1]);
+    // the first full file is emitted after the 3rd page (page size is 40), the remainder after the last one
+    expect(emittedAtPage).toEqual([3, 3]);
+    expect(files[0].items[0].uniqueProductIdentifier).toBe(
+      permalinksByPassport.get(passports[0].id)![0].publishedUrl,
+    );
   });
 });
