@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from "vue-i18n";
 import { useTemplateOptions } from "../../composables/template-options.ts";
+import TemplateSelectOption from "./TemplateSelectOption.vue";
 
 const { disabled = false } = defineProps<{
   disabled?: boolean;
@@ -15,10 +16,7 @@ const { selectProps } = useTemplateOptions(() => disabled);
 <template>
   <Select v-model="model" v-bind="selectProps" :placeholder="t('templates.select')">
     <template #option="slotProps">
-      <div class="flex items-center gap-2">
-        <div class="text-xl">{{ slotProps.option.label }}</div>
-        <Tag severity="secondary" :value="slotProps.option.status" />
-      </div>
+      <TemplateSelectOption :option="slotProps.option" />
     </template>
   </Select>
 </template>
