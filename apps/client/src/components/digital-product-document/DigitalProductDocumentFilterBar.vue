@@ -4,8 +4,8 @@ import {
   type DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import type { PeriodRange } from "../../composables/digital-product-document-list-filter.ts";
 import { usePeriodInput } from "../../composables/period-input.ts";
+import type { DayPeriod } from "../../lib/day-period.ts";
 import TemplateMultiSelect from "../template/TemplateMultiSelect.vue";
 
 const {
@@ -22,7 +22,7 @@ const {
 
 const status = defineModel<DigitalProductDocumentStatusDtoType[]>("status", { default: () => [] });
 const templateIds = defineModel<string[]>("templateIds", { default: () => [] });
-const period = defineModel<PeriodRange | null>("period", { default: null });
+const period = defineModel<DayPeriod | null>("period", { default: null });
 
 const emits = defineEmits<{ (e: "reset"): void }>();
 
@@ -69,8 +69,6 @@ const {
     <DatePicker
       :model-value="periodDraft"
       selection-mode="range"
-      show-time
-      hour-format="24"
       show-button-bar
       show-icon
       :manual-input="false"

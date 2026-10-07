@@ -4,13 +4,11 @@ import {
   type DigitalProductDocumentStatusDtoType,
   type PassportFilterParamsDto,
 } from "@open-dpp/dto";
-import { computed, ref } from "vue";
+import { computed, ref, shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { type DayPeriod, makeDayPeriod } from "../lib/day-period.ts";
 
 type QueryValue = LocationQueryValue | LocationQueryValue[] | undefined;
-
-// The PrimeVue range DatePicker models a range as [start, end | null].
-export type PeriodRange = [Date, Date | null];
 
 function toStringArray(value: QueryValue): string[] {
   const values = Array.isArray(value) ? value : [value];
@@ -24,18 +22,11 @@ function parseStatuses(value: QueryValue): DigitalProductDocumentStatusDtoType[]
   });
 }
 
-function parseDate(value: QueryValue): Date | null {
-  const [first] = toStringArray(value);
-  if (!first) return null;
-  const date = new Date(first);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function parsePeriod(startDate: QueryValue, endDate: QueryValue): PeriodRange | null {
-  const start = parseDate(startDate);
-  const end = parseDate(endDate);
-  // Open-ended ranges without a start cannot be shown by the range picker.
-  return start ? [start, end] : null;
+function parsePeriod(startDate: QueryValue, endDate: QueryValue): DayPeriod | null {
+  return makeDayPeriod.fromIso({
+    startDate: toStringArray(startDate)[0],
+    endDate: toStringArray(endDate)[0],
+  });
 }
 
 /**
@@ -51,13 +42,15 @@ export function useDigitalProductDocumentListFilter(options: { withTemplateIds?:
   const templateIds = ref<string[]>(
     options.withTemplateIds ? toStringArray(route.query.templateId) : [],
   );
-  const period = ref<PeriodRange | null>(parsePeriod(route.query.startDate, route.query.endDate));
+  // A period is an immutable object that is replaced as a whole, so it needs no deep reactivity.
+  const period = shallowRef<DayPeriod | null>(
+    parsePeriod(route.query.startDate, route.query.endDate),
+  );
 
   const filter = computed<PassportFilterParamsDto>(() => ({
     ...(status.value.length > 0 && { status: status.value }),
     ...(templateIds.value.length > 0 && { templateIds: templateIds.value }),
-    ...(period.value && { startDate: period.value[0].toISOString() }),
-    ...(period.value?.[1] && { endDate: period.value[1].toISOString() }),
+    ...period.value?.toIsoRange(),
   }));
 
   const hasActiveFilters = computed(() => Object.keys(filter.value).length > 0);
@@ -86,8 +79,8 @@ export function useDigitalProductDocumentListFilter(options: { withTemplateIds?:
     await writeQuery();
   }
 
-  async function setPeriod(newPeriod: PeriodRange | null | undefined) {
-    period.value = newPeriod?.[0] ? [newPeriod[0], newPeriod[1] ?? null] : null;
+  async function setPeriod(newPeriod: DayPeriod | null | undefined) {
+    period.value = newPeriod ?? null;
     await writeQuery();
   }
 
