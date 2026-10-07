@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { defineComponent } from "vue";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { makeDayPeriod } from "../lib/day-period.ts";
 import { useDigitalProductDocumentListFilter } from "./digital-product-document-list-filter.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -13,6 +14,10 @@ vi.mock("vue-router", () => ({
   useRoute: () => ({ query: mocks.query() }),
   useRouter: () => ({ replace: mocks.routerReplace }),
 }));
+
+// Local dates, because the filter covers whole days in the timezone of the user.
+const startOfJan1 = new Date(2022, 0, 1);
+const endOfFeb1 = new Date(2022, 1, 1, 23, 59, 59, 999);
 
 describe("useDigitalProductDocumentListFilter", () => {
   function mountHarness(options?: { withTemplateIds?: boolean }) {
@@ -46,20 +51,17 @@ describe("useDigitalProductDocumentListFilter", () => {
     mocks.query.mockReturnValue({
       status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
       templateId: ["t1", "t2"],
-      startDate: "2022-01-01T00:00:00.000Z",
-      endDate: "2022-02-01T00:00:00.000Z",
+      startDate: startOfJan1.toISOString(),
+      endDate: endOfFeb1.toISOString(),
     });
     const { filter, period, hasActiveFilters } = mountHarness({ withTemplateIds: true });
     expect(filter.value).toEqual({
       status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
       templateIds: ["t1", "t2"],
-      startDate: "2022-01-01T00:00:00.000Z",
-      endDate: "2022-02-01T00:00:00.000Z",
+      startDate: startOfJan1.toISOString(),
+      endDate: endOfFeb1.toISOString(),
     });
-    expect(period.value).toEqual([
-      new Date("2022-01-01T00:00:00.000Z"),
-      new Date("2022-02-01T00:00:00.000Z"),
-    ]);
+    expect(period.value?.toPickerValue()).toEqual([startOfJan1, endOfFeb1]);
     expect(hasActiveFilters.value).toBe(true);
   });
 
@@ -98,24 +100,30 @@ describe("useDigitalProductDocumentListFilter", () => {
     });
   });
 
-  it("converts the period to ISO instants and supports open-ended ranges", async () => {
-    const { setPeriod, filter } = mountHarness();
-    const start = new Date("2022-01-01T10:00:00.000Z");
-    const end = new Date("2022-01-05T10:00:00.000Z");
-    await setPeriod([start, end]);
+  it("covers whole days: from the start of the first to the end of the last day", async () => {
+    const { setPeriod, filter, period } = mountHarness();
+    // the picker emits dates at midnight, times of day are ignored
+    await setPeriod(makeDayPeriod(new Date(2022, 0, 1, 10, 30), new Date(2022, 0, 5)));
+    expect(period.value?.toPickerValue()).toEqual([
+      new Date(2022, 0, 1),
+      new Date(2022, 0, 5, 23, 59, 59, 999),
+    ]);
     expect(filter.value).toEqual({
-      startDate: "2022-01-01T10:00:00.000Z",
-      endDate: "2022-01-05T10:00:00.000Z",
+      startDate: new Date(2022, 0, 1).toISOString(),
+      endDate: new Date(2022, 0, 5, 23, 59, 59, 999).toISOString(),
     });
     expect(mocks.routerReplace).toHaveBeenLastCalledWith({
       query: expect.objectContaining({
-        startDate: "2022-01-01T10:00:00.000Z",
-        endDate: "2022-01-05T10:00:00.000Z",
+        startDate: new Date(2022, 0, 1).toISOString(),
+        endDate: new Date(2022, 0, 5, 23, 59, 59, 999).toISOString(),
       }),
     });
+  });
 
-    await setPeriod([start, null]);
-    expect(filter.value).toEqual({ startDate: "2022-01-01T10:00:00.000Z" });
+  it("supports open-ended ranges and clearing the period", async () => {
+    const { setPeriod, filter } = mountHarness();
+    await setPeriod(makeDayPeriod(new Date(2022, 0, 1)));
+    expect(filter.value).toEqual({ startDate: new Date(2022, 0, 1).toISOString() });
 
     await setPeriod(null);
     expect(filter.value).toEqual({});
