@@ -6,19 +6,25 @@ const { disabled = false } = defineProps<{
   disabled?: boolean;
 }>();
 
-const model = defineModel<string | null>();
+const model = defineModel<string[]>({ default: () => [] });
 
 const { t } = useI18n();
 const { selectProps } = useTemplateOptions(() => disabled);
 </script>
 
 <template>
-  <Select v-model="model" v-bind="selectProps" :placeholder="t('templates.select')">
+  <MultiSelect
+    v-model="model"
+    v-bind="selectProps"
+    display="chip"
+    :show-toggle-all="false"
+    :placeholder="t('templates.selectMultiple')"
+  >
     <template #option="slotProps">
       <div class="flex items-center gap-2">
         <div class="text-xl">{{ slotProps.option.label }}</div>
         <Tag severity="secondary" :value="slotProps.option.status" />
       </div>
     </template>
-  </Select>
+  </MultiSelect>
 </template>
