@@ -718,6 +718,13 @@
     "blank": "Blank",
     "fromTemplate": "From template"
   },
+  "filter": {
+    "status": "Status",
+    "templates": "Templates",
+    "createdBetween": "Created between",
+    "selectPeriod": "Select period",
+    "clear": "Clear filters"
+  },
   "status": {
     "withStatus": "with status",
     "selectStatus": "Select status",
@@ -749,6 +756,7 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",
+    "selectMultiple": "Select templates",
     "errorFetchList": "Failed to load templates",
     "importOfficial": "Import official templates",
     "importOfficialSuccess": "Imported {imported} official template(s).",

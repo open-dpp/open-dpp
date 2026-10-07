@@ -748,6 +748,13 @@
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage"
   },
+  "filter": {
+    "status": "Status",
+    "templates": "Vorlagen",
+    "createdBetween": "Erstellt zwischen",
+    "selectPeriod": "Zeitraum auswählen",
+    "clear": "Filter zurücksetzen"
+  },
   "status": {
     "withStatus": "mit Status",
     "selectStatus": "Status auswählen",
@@ -779,6 +786,7 @@
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "select": "Vorlage auswählen",
+    "selectMultiple": "Vorlagen auswählen",
     "errorFetchList": "Laden der Vorlagen fehlgeschlagen",
     "importOfficial": "Offizielle Vorlagen importieren",
     "importOfficialSuccess": "{imported} offizielle Vorlage(n) importiert.",
