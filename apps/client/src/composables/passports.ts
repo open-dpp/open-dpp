@@ -1,7 +1,7 @@
 import {
-  type FilterParamsDto,
   type LanguageTextDto,
   type PagingParamsDto,
+  type PassportFilterParamsDto,
   type PassportPaginationDto,
   type PassportRequestCreateDto,
   Populates,
@@ -21,7 +21,7 @@ export function usePassports() {
 
   const fetchPassports = async (
     pagingParams: PagingParamsDto,
-    filter: FilterParamsDto | undefined = undefined,
+    filter: PassportFilterParamsDto | undefined = undefined,
   ): Promise<PagingResult> => {
     loading.value = true;
     const response = await apiClient.dpp.passports.getAll({
