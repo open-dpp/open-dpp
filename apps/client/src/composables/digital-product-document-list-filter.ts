@@ -2,11 +2,10 @@ import type { LocationQueryValue } from "vue-router";
 import {
   DigitalProductDocumentStatusDtoEnum,
   type DigitalProductDocumentStatusDtoType,
-  type PassportFilterParamsDto,
 } from "@open-dpp/dto";
-import { computed, ref, shallowRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { type DayPeriod, makeDayPeriod } from "../lib/day-period.ts";
+import { useListFilterState } from "./list-filter-state.ts";
 
 type QueryValue = LocationQueryValue | LocationQueryValue[] | undefined;
 
@@ -38,22 +37,11 @@ export function useDigitalProductDocumentListFilter(options: { withTemplateIds?:
   const route = useRoute();
   const router = useRouter();
 
-  const status = ref<DigitalProductDocumentStatusDtoType[]>(parseStatuses(route.query.status));
-  const templateIds = ref<string[]>(
-    options.withTemplateIds ? toStringArray(route.query.templateId) : [],
-  );
-  // A period is an immutable object that is replaced as a whole, so it needs no deep reactivity.
-  const period = shallowRef<DayPeriod | null>(
-    parsePeriod(route.query.startDate, route.query.endDate),
-  );
-
-  const filter = computed<PassportFilterParamsDto>(() => ({
-    ...(status.value.length > 0 && { status: status.value }),
-    ...(templateIds.value.length > 0 && { templateIds: templateIds.value }),
-    ...period.value?.toIsoRange(),
-  }));
-
-  const hasActiveFilters = computed(() => Object.keys(filter.value).length > 0);
+  const { status, templateIds, period, filter, hasActiveFilters, reset } = useListFilterState({
+    status: parseStatuses(route.query.status),
+    templateIds: options.withTemplateIds ? toStringArray(route.query.templateId) : [],
+    period: parsePeriod(route.query.startDate, route.query.endDate),
+  });
 
   async function writeQuery() {
     // The cursor belongs to the previous filter result, so it is dropped here.
@@ -84,10 +72,8 @@ export function useDigitalProductDocumentListFilter(options: { withTemplateIds?:
     await writeQuery();
   }
 
-  async function reset() {
-    status.value = [];
-    templateIds.value = [];
-    period.value = null;
+  async function resetFilter() {
+    reset();
     await writeQuery();
   }
 
@@ -100,6 +86,6 @@ export function useDigitalProductDocumentListFilter(options: { withTemplateIds?:
     setStatus,
     setTemplateIds,
     setPeriod,
-    reset,
+    reset: resetFilter,
   };
 }
