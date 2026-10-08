@@ -1,13 +1,13 @@
-import { PassportFilterParamsDto, PassportRegistryExportRequestDto } from '@open-dpp/dto';
-import { isAxiosError } from "axios";
-import dayjs from "dayjs";
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import apiClient from "../lib/api-client.ts";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
-import { HTTPCode } from "../stores/http-codes.ts";
-import { useNotificationStore } from "../stores/notification.ts";
-import { useZip } from "./zip.ts";
+import { type PassportRegistryExportRequestDto } from '@open-dpp/dto';
+import { isAxiosError } from 'axios';
+import dayjs from 'dayjs';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import apiClient from '../lib/api-client.ts';
+import { useErrorHandlingStore } from '../stores/error.handling.ts';
+import { HTTPCode } from '../stores/http-codes.ts';
+import { useNotificationStore } from '../stores/notification.ts';
+import { useZip } from './zip.ts';
 
 /**
  * Downloads the published passports matching the filter as ZIP of EU registry files.
