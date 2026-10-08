@@ -1,8 +1,8 @@
-import { mount } from '@vue/test-utils';
-import { AxiosError } from 'axios';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent } from 'vue';
-import { useRegistryExport } from './registry-export.ts';
+import { mount } from "@vue/test-utils";
+import { AxiosError } from "axios";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
+import { useRegistryExport } from "./registry-export.ts";
 
 const mocks = vi.hoisted(() => ({
   exportToRegistry: vi.fn(),
