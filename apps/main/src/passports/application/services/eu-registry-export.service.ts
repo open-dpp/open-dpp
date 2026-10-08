@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { Archiver } from "archiver";
+import { Response } from "express";
 import { NotFoundError } from "@open-dpp/exception";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 import { Pagination } from "../../../pagination/pagination";
@@ -47,7 +49,7 @@ export class EuRegistryExportService {
     const failedPassportIds: string[] = [];
     let exportedCount = 0;
     let buffer: RegistryExportItem[] = [];
-    let seenPassports = 0;
+    let isFirstPage = true;
 
     // Emits complete files; unless `all`, an incomplete last file stays in the buffer.
     const flush = async (all: boolean) => {
@@ -72,10 +74,10 @@ export class EuRegistryExportService {
           templateIds: filter.templateIds,
         },
       });
-      seenPassports += page.items.length;
-      if (seenPassports === 0) {
+      if (isFirstPage && page.items.length === 0) {
         throw new NotFoundError("No published passports match the given filters.");
       }
+      isFirstPage = false;
       for (const passport of page.items) {
         const permalinks = await this.permalinkRepository.findAllByPassportId(passport.id);
         const item = RegistryExportItem.fromPermalinks(permalinks);
@@ -91,5 +93,59 @@ export class EuRegistryExportService {
     await flush(true);
 
     return { exportedCount, failedPassportIds };
+  }
+
+  /**
+   * Streams the export as ZIP into `res`: one `<product-group>-<nnn>.json` per registry file and,
+   * if some passports could not be exported, a `failed-passports.json`.
+   * Errors before the first byte (e.g. no matching passports) are thrown so they become a 4xx;
+   * an error afterwards aborts the response.
+   */
+  async exportToArchive(
+    res: Response,
+    organizationId: string,
+    filter: EuRegistryExportFilter,
+    archive: Archiver,
+    now: Date = new Date(),
+  ): Promise<void> {
+    let fileNumber = 0;
+    let started = false;
+    const ensureStarted = () => {
+      if (started) return;
+      started = true;
+      res.set({
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="eu-registry-export-${now.toISOString().slice(0, 10)}.zip"`,
+      });
+      archive.pipe(res);
+    };
+    try {
+      const result = await this.export(organizationId, filter, (file) => {
+        ensureStarted();
+        fileNumber++;
+        archive.append(JSON.stringify(file.toPlain(), null, 2), {
+          name: `${file.productGroup.toLowerCase()}-${String(fileNumber).padStart(3, "0")}.json`,
+        });
+      });
+      if (result.failedPassportIds.length > 0) {
+        ensureStarted();
+        archive.append(
+          JSON.stringify(
+            result.failedPassportIds.map((passportId) => ({
+              passportId,
+              reason: "No published permalink",
+            })),
+            null,
+            2,
+          ),
+          { name: "failed-passports.json" },
+        );
+      }
+      await archive.finalize();
+    } catch (error) {
+      if (!started) throw error;
+      archive.abort();
+      res.destroy(error instanceof Error ? error : undefined);
+    }
   }
 }
