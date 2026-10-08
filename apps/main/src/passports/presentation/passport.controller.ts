@@ -13,6 +13,7 @@ import type {
   PassportDto,
   ReorderColumnDto,
   PassportPaginationDto,
+  PassportRegistryExportRequestDto,
   PassportRequestCreateDto,
   RemoveEditingRestrictionsDto,
   SubmodelElementListResponseDto,
@@ -33,12 +34,14 @@ import {
   PassportDtoSchema,
   PassportEditingModeDto,
   PassportPaginationDtoSchema,
+  PassportRegistryExportRequestDtoSchema,
   PassportRequestCreateDtoSchema,
   PolicyKeyList,
   Populates,
   RemoveEditingRestrictionsDtoSchema,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import archiver from "archiver";
 import { type Response } from "express";
 
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -134,6 +137,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { EuRegistryExportService } from "../application/services/eu-registry-export.service";
 import { PassportService } from "../application/services/passport.service";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
@@ -170,6 +174,7 @@ export class PassportController
     @Inject(forwardRef(() => PermalinkApplicationService))
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly euRegistryExportService: EuRegistryExportService,
   ) {}
 
   @Get()
@@ -1346,6 +1351,26 @@ export class PassportController
         organizationId,
       );
     return await this.aasSerializationService.exportPassport(passport, subject);
+  }
+
+  // Must stay a POST with a static path: GET ":id" routes must not match it.
+  @Post("/export-to-registry")
+  @HttpCode(HttpStatus.OK)
+  async exportToRegistry(
+    @OrganizationId() organizationId: string,
+    @Body(new ZodValidationPipe(PassportRegistryExportRequestDtoSchema))
+    body: PassportRegistryExportRequestDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { templateIds, startDate, endDate } = body;
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
+    await this.euRegistryExportService.exportToArchive(
+      res,
+      organizationId,
+      { templateIds, period },
+      archiver("zip", { zlib: { level: 9 } }),
+    );
   }
 
   @Post("/import")
