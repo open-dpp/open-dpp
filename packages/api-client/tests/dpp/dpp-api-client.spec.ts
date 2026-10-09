@@ -36,7 +36,7 @@ import {
   bulkImportRun1Interrupted,
   bulkImportRunItem1,
 } from "./handlers/bulk-import";
-import { passport1, passport2 } from "./handlers/passports";
+import { passport1, passport2, passportFilterParams } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
@@ -193,6 +193,14 @@ describe("apiClient", () => {
       const response = await sdk.dpp.passports.getAll({
         pagination: paginationParams,
         filter: filterParams,
+      });
+      expect(response.data.result).toEqual([passport1, passport2]);
+    });
+
+    it("should get all passports with template and period filters", async () => {
+      const response = await sdk.dpp.passports.getAll({
+        pagination: paginationParams,
+        filter: { ...filterParams, ...passportFilterParams },
       });
       expect(response.data.result).toEqual([passport1, passport2]);
     });

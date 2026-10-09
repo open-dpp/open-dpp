@@ -1,10 +1,22 @@
-import type { GetAllParamsDto, GetAllActivitiesParamsDto } from "@open-dpp/dto";
+import type {
+  GetAllActivitiesParamsDto,
+  GetAllParamsDto,
+  GetAllPassportsParamsDto,
+} from "@open-dpp/dto";
 
 export function parseGetAllParams(params: GetAllParamsDto) {
   return {
     ...(params.pagination && { ...params.pagination }),
     ...(params.populate && { populate: params.populate }),
     ...(params.filter && { ...params.filter }),
+  };
+}
+
+export function parseGetAllPassportsParams(params: GetAllPassportsParamsDto) {
+  const { templateIds, ...filter } = params.filter ?? {};
+  return {
+    ...parseGetAllParams({ ...params, filter }),
+    ...(templateIds && { templateId: templateIds }),
   };
 }
 

@@ -1,12 +1,10 @@
 <script lang="ts" setup>
 import {
   type BulkImportConfigDto,
-  type DigitalProductDocumentStatusDtoType,
-  type PagingParamsDto,
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
+  type PagingParamsDto,
 } from "@open-dpp/dto";
-import { AxiosError } from "axios";
 import { useToast } from "primevue/usetoast";
 import { onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
@@ -18,10 +16,9 @@ import PassportCreateDialog from "../../components/passport/PassportCreateDialog
 import { useExportImport } from "../../composables/export-import";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
-import apiClient from "../../lib/api-client";
 import axiosIns from "../../lib/axios";
-import { useErrorHandlingStore } from "../../stores/error.handling";
-import { useDigitalProductDocumentFilter } from "../../composables/digital-product-document-filter.ts";
+import DigitalProductDocumentFilterBar from "../../components/digital-product-document/DigitalProductDocumentFilterBar.vue";
+import { useDigitalProductDocumentListFilter } from "../../composables/digital-product-document-list-filter.ts";
 import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { DigitalProductDocumentType } from "../../lib/digital-product-document.ts";
@@ -46,10 +43,20 @@ const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
   DigitalProductDocumentType.Passport,
 );
 
-const { status, changeStatus } = useDigitalProductDocumentFilter();
+const {
+  status,
+  templateIds,
+  period,
+  filter,
+  hasActiveFilters,
+  setStatus,
+  setTemplateIds,
+  setPeriod,
+  reset,
+} = useDigitalProductDocumentListFilter({ withTemplateIds: true });
 
 function fetchCallback(pagingParams: PagingParamsDto) {
-  return fetchPassports(pagingParams, status.value ? { status: [status.value] } : undefined);
+  return fetchPassports(pagingParams, filter.value);
 }
 
 const {
@@ -69,8 +76,6 @@ const {
 });
 
 const createDialog = useTemplateRef("createDialog");
-
-const errorHandlingStore = useErrorHandlingStore();
 
 const {
   importing,
@@ -127,31 +132,8 @@ async function showQrCode(item: DigitalProductDocumentDto) {
   qrCodeDialogVisible.value = true;
 }
 
-function forwardToPresentationErrorMessage(e: unknown): string {
-  if (e instanceof AxiosError) {
-    if (!e.response) return t("dpp.forwardToPresentationErrorNetwork");
-    if (e.response.status === 404) return t("dpp.forwardToPresentationError404");
-    if (e.response.status === 403) return t("dpp.forwardToPresentationError403");
-  }
-  return t("dpp.forwardToPresentationError");
-}
-
-async function resolvePermalink(item: DigitalProductDocumentDto): Promise<string> {
-  const { data } = await apiClient.dpp.permalinks.getByPassport(item.id);
-  const first = data[0];
-  if (!first) {
-    throw new Error(`No permalink found for passport ${item.id}`);
-  }
-  return first.slug ?? first.id;
-}
-
-async function forwardToPresentationChat(item: DigitalProductDocumentDto) {
-  try {
-    const permalink = await resolvePermalink(item);
-    await router.push(`/p/${permalink}/chat`);
-  } catch (e) {
-    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
-  }
+function isArchived(item: DigitalProductDocumentDto) {
+  return item.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Archived;
 }
 
 async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
@@ -180,8 +162,8 @@ async function onPublishFromQrDialog() {
   }
 }
 
-async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
-  await changeStatus(newStatus);
+async function onFilterChange(applyChange: () => Promise<void>) {
+  await applyChange();
   await resetCursor();
 }
 
@@ -203,9 +185,20 @@ onMounted(async () => {
     @reset-cursor="resetCursor"
     @next-page="nextPage"
     @previous-page="previousPage"
-    :selected-status="status"
-    @update:selected-status="onSelectedStatusChange"
   >
+    <template #filters>
+      <DigitalProductDocumentFilterBar
+        show-templates
+        :status="status"
+        :template-ids="templateIds"
+        :period="period"
+        :has-active-filters="hasActiveFilters"
+        @update:status="(value) => onFilterChange(() => setStatus(value))"
+        @update:template-ids="(value) => onFilterChange(() => setTemplateIds(value))"
+        @update:period="(value) => onFilterChange(() => setPeriod(value))"
+        @reset="onFilterChange(reset)"
+      />
+    </template>
     <template #headerActions>
       <Button :label="t('common.add')" @click="newPassport" />
       <FileUpload
@@ -232,7 +225,7 @@ onMounted(async () => {
         @click="showQrCode(item)"
       />
       <Button
-        v-if="status !== DigitalProductDocumentStatusDto.Archived"
+        v-if="!isArchived(item)"
         icon="pi pi-pencil"
         severity="primary"
         :aria-label="t('common.edit')"
@@ -240,7 +233,7 @@ onMounted(async () => {
         @click="goToItem(item)"
       />
       <Button
-        v-if="status === DigitalProductDocumentStatusDto.Archived"
+        v-if="isArchived(item)"
         icon="pi pi-eye"
         severity="primary"
         :aria-label="t('common.view')"

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import {
-  type DigitalProductDocumentStatusDtoType,
   type PagingParamsDto,
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
@@ -14,7 +13,8 @@ import { useExportImport } from "../../composables/export-import.ts";
 import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
 import { usePagination } from "../../composables/pagination.ts";
-import { useDigitalProductDocumentFilter } from "../../composables/digital-product-document-filter.ts";
+import DigitalProductDocumentFilterBar from "../../components/digital-product-document/DigitalProductDocumentFilterBar.vue";
+import { useDigitalProductDocumentListFilter } from "../../composables/digital-product-document-list-filter.ts";
 import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { DigitalProductDocumentType } from "../../lib/digital-product-document.ts";
@@ -44,10 +44,11 @@ const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
   DigitalProductDocumentType.Template,
 );
 
-const { status, changeStatus } = useDigitalProductDocumentFilter();
+const { status, period, filter, hasActiveFilters, setStatus, setPeriod, reset } =
+  useDigitalProductDocumentListFilter();
 
 function fetchCallback(pagingParams: PagingParamsDto) {
-  return fetchTemplates(pagingParams, status.value ? { status: [status.value] } : undefined);
+  return fetchTemplates(pagingParams, filter.value);
 }
 const {
   resetCursor,
@@ -106,9 +107,13 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
   await reloadCurrentPage();
 }
 
-async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
-  await changeStatus(newStatus);
+async function onFilterChange(applyChange: () => Promise<void>) {
+  await applyChange();
   await resetCursor();
+}
+
+function isArchived(item: DigitalProductDocumentDto) {
+  return item.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Archived;
 }
 
 async function onImportOfficialTemplatesClicked() {
@@ -135,9 +140,17 @@ onMounted(async () => {
     @create="createDialogVisible = true"
     @next-page="nextPage"
     @previous-page="previousPage"
-    :selected-status="status"
-    @update:selected-status="onSelectedStatusChange"
   >
+    <template #filters>
+      <DigitalProductDocumentFilterBar
+        :status="status"
+        :period="period"
+        :has-active-filters="hasActiveFilters"
+        @update:status="(value) => onFilterChange(() => setStatus(value))"
+        @update:period="(value) => onFilterChange(() => setPeriod(value))"
+        @reset="onFilterChange(reset)"
+      />
+    </template>
     <template #headerActions>
       <Button :label="t('common.add')" @click="createDialogVisible = true" />
       <FileUpload
@@ -158,7 +171,7 @@ onMounted(async () => {
     </template>
     <template #actions="{ item, goToItem }">
       <Button
-        v-if="status !== DigitalProductDocumentStatusDto.Archived"
+        v-if="!isArchived(item)"
         icon="pi pi-pencil"
         severity="primary"
         :aria-label="t('common.edit')"
@@ -166,7 +179,7 @@ onMounted(async () => {
         @click="goToItem(item)"
       />
       <Button
-        v-if="status === DigitalProductDocumentStatusDto.Archived"
+        v-if="isArchived(item)"
         icon="pi pi-eye"
         severity="primary"
         :aria-label="t('common.view')"

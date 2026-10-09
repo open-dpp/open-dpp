@@ -14,8 +14,10 @@ import {
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
 import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { FindOptions } from "../../lib/repositories";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateDocVersion, TemplateSchema } from "./template.schema";
@@ -333,6 +335,42 @@ describe("templateRepository", () => {
         totalCount: 4,
       }),
     );
+  });
+
+  it("filters templates by period on createdAt and combines it with status", async () => {
+    const organizationId = randomUUID();
+    const create = (createdAt: string) =>
+      Template.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt: new Date(createdAt),
+      });
+    const t1 = create("2022-01-01T00:00:00.000Z");
+    const t2 = create("2022-02-01T00:00:00.000Z");
+    const t3 = create("2022-03-01T00:00:00.000Z");
+    for (const template of [t1, t2, t3]) {
+      await templateRepository.save(template);
+    }
+
+    const findIds = async (filter: FindOptions["filter"]) =>
+      (await templateRepository.findAllByOrganizationId(organizationId, { filter })).items.map(
+        (t) => t.id,
+      );
+
+    expect(
+      await findIds({ period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }) }),
+    ).toEqual([t3.id, t2.id]);
+    expect(await findIds({ period: Period.fromIso({ end: "2022-02-01T00:00:00.000Z" }) })).toEqual([
+      t2.id,
+      t1.id,
+    ]);
+    expect(
+      await findIds({
+        period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }),
+        status: [DigitalProductDocumentStatus.Published],
+      }),
+    ).toEqual([]);
   });
 
   afterAll(async () => {

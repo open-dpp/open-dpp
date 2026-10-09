@@ -243,6 +243,63 @@ describe("passportController", () => {
     });
   });
 
+  it(`/GET List passports filtered by template and period`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { aas, submodels } = ctx.getAasObjects();
+    const passportRepository = ctx.getModuleRef().get(PassportRepository);
+    const templateA = randomUUID();
+    const templateB = randomUUID();
+
+    const create = async (createdAt: string, templateId?: string) => {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: org.id,
+        templateId,
+        environment: Environment.create({
+          assetAdministrationShells: [aas.id],
+          submodels: submodels.map((s) => s.id),
+          conceptDescriptions: [],
+        }),
+        createdAt: new Date(createdAt),
+        updatedAt: new Date(createdAt),
+      });
+      await passportRepository.save(passport);
+      return passport.id;
+    };
+    const a1 = await create("2022-01-01T00:00:00.000Z", templateA);
+    const b1 = await create("2022-02-01T00:00:00.000Z", templateB);
+    const a2 = await create("2022-03-01T00:00:00.000Z", templateA);
+
+    const getIds = async (query: string) => {
+      const response = await request(app.getHttpServer())
+        .get(`${basePathV2}?${query}`)
+        .set("Cookie", userCookie)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+        .send();
+      expect(response.status).toEqual(200);
+      return response.body.result.map((p: { id: string }) => p.id);
+    };
+
+    const bothTemplates = `templateId=${templateA}&templateId=${templateB}`;
+    expect(await getIds(`templateId=${templateA}`)).toEqual([a2, a1]);
+    expect(await getIds(bothTemplates)).toEqual([a2, b1, a1]);
+    expect(await getIds(`${bothTemplates}&startDate=2022-02-01T00:00:00.000Z`)).toEqual([a2, b1]);
+    expect(await getIds(`${bothTemplates}&endDate=2022-02-01T00:00:00.000Z`)).toEqual([b1, a1]);
+    expect(
+      await getIds(
+        `templateId=${templateA}&startDate=2022-01-15T00:00:00.000Z&endDate=2022-03-15T00:00:00.000Z`,
+      ),
+    ).toEqual([a2]);
+
+    const invalid = await request(app.getHttpServer())
+      .get(`${basePathV2}?startDate=not-a-date`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .send();
+    expect(invalid.status).toEqual(400);
+  });
+
   it(`/GET Get passport by id`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
