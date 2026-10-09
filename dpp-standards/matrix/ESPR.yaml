@@ -433,6 +433,7 @@ criteria:
       - 6
     operationalisedBy:
       - EN18222
+      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -1028,6 +1029,7 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18223
+      - EN18221
   - id: ESPR-Art11(e)
     section: Art11
     clause: Art. 11 first subparagraph (e)
@@ -1080,6 +1082,7 @@ criteria:
       - 10
     operationalisedBy:
       - EN18246
+      - EN18221
   - id: ESPR-Art11(h)
     section: Art11
     clause: Art. 11 first subparagraph (h)
@@ -1091,6 +1094,7 @@ criteria:
     operationalisedBy:
       - EN18239
       - EN18246
+      - EN18221
     assessment:
       date: 2026-10-09
       commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
@@ -1113,15 +1117,11 @@ criteria:
     clause: Art. 11 second subparagraph
     paraphrase: DPP service providers may not sell, reuse or process DPP data beyond what the storage or processing service needs, unless the operator agrees.
     applicability: operator
-    operationalisedBy:
-      - EN18221
   - id: ESPR-Art11-sub3
     section: Art11
     clause: Art. 11 third subparagraph
     paraphrase: The Commission may set requirements for DPP service providers and an optional certification scheme by delegated act.
     applicability: commission
-    operationalisedBy:
-      - EN18221
   - id: ESPR-Art11-sub4
     section: Art11
     clause: Art. 11 fourth subparagraph

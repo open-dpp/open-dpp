@@ -1,0 +1,221 @@
+# Conformance Matrix: EN18221 (EN 18221:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18221-2026.pdf) on 2026-10-09 (ticket #760); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: the subclauses of clause 4 have no numbered points, so "4.2(5)" is the fifth paragraph of 4.2. Paragraphs without a requirement of their own keep their number and are listed here.
+# Not extracted, no requirement of their own: clause 1 (scope), 2 (normative references: EN 18216, EN 18220, EN 18222, EN 18239, EN 18246), 3 (terms: economic operator, DPP, DPP service provider with its main and back-up variants, DPP lifetime = the period regulation requires the DPP to stay available), 4.1(6) (the architecture is decentralised and no storage technology is imposed), 4.1(8) (pointer to EN 18223 for the formats and semantic models used in storage; EN 18223 is in the Bibliography, so informative here), 4.2(1) (describes the archiving function whose rules 4.2(2) to 4.2(9) give) and the Bibliography (EN 18223, ISO 14721:2025 OAIS).
+# Annex ZA (informative) maps two Articles: ESPR Art. 10(4) to 4.3 and 4.5, presumption limited to the technical aspects of the back-up and not its existence; ESPR Art. 11(c) to 4.5; both once the EN is cited in the OJ (cited by Implementing Decision (EU) 2026/1736). The other law rows naming EN18221 in operationalisedBy are rows its clauses address without presumption (map rule of 2026-10-09: Annex ZA plus the links the text supports).
+standard: EN18221
+edition: EN 18221:2026
+extractedFrom: standards/EN18221-2026.pdf
+extractedAt: 2026-10-09
+sections:
+  - id: "4.1"
+    title: 4.1 Requirements for storage of the digital product passport data
+  - id: "4.2"
+    title: 4.2 Archiving and rules for archiving
+  - id: "4.3"
+    title: 4.3 Data persistence and rules for data persistence
+  - id: "4.4"
+    title: 4.4 Additional digital documentation attached to digital product passport
+  - id: "4.5"
+    title: 4.5 Replication between economic operators and back-up digital product passport service providers
+criteria:
+  - id: EN18221-4.1(1)
+    section: "4.1"
+    clause: 4.1(1)
+    paraphrase: "The DPP is stored by the actor that created it or by DPP service providers acting for that actor. Counterpart of ESPR-Art11(c), with the service provider acting on the creator's behalf."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.1(2)
+    section: "4.1"
+    clause: 4.1(2)
+    paraphrase: "The stored DPP data are accurate and complete and carry every relevant change up to the current state. Counterpart of the accuracy limb of ESPR-Art9(1)."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.1(3)
+    section: "4.1"
+    clause: 4.1(3)
+    paraphrase: "For the whole DPP lifetime (the availability period regulation sets), the DPP is reachable online over the exchange protocols of EN 18216."
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+  - id: EN18221-4.1(4)
+    section: "4.1"
+    clause: 4.1(4)
+    paraphrase: "A DPP may refer to other DPPs, but each DPP is stored on its own, independently of the DPPs it refers to."
+    applicability: software
+    areas:
+      - 6
+      - 9
+  - id: EN18221-4.1(5)
+    section: "4.1"
+    clause: 4.1(5)
+    paraphrase: "The data are stored so that the human-readable and machine-readable formats EN 18216 requires can be produced from what is stored."
+    applicability: software
+    areas:
+      - 2
+      - 11
+  - id: EN18221-4.1(7)
+    section: "4.1"
+    clause: 4.1(7)
+    paraphrase: "The storage requirements bind the main and the back-up DPP service provider alike. Both protect the stored data with measures built on proven, reliable technology: availability, integrity and authenticity, and protection against loss, malicious change, unauthorised access and tampering, also as EN 18239 and EN 18246 require."
+    applicability: mixed
+    areas:
+      - 6
+      - 10
+  - id: EN18221-4.1(9)
+    section: "4.1"
+    clause: 4.1(9)
+    paraphrase: "The data are stored in a way that serves what EN 18220 (data carriers) and EN 18222 (the lifecycle and search APIs) need from them."
+    applicability: software
+    areas:
+      - 1
+      - 4
+      - 6
+  - id: EN18221-4.2(2)
+    section: "4.2"
+    clause: 4.2(2)
+    paraphrase: "Archiving begins with the first change made to the DPP as initially created."
+    applicability: software
+    areas:
+      - 6
+  - id: EN18221-4.2(3)
+    section: "4.2"
+    clause: 4.2(3)
+    paraphrase: "The archived versions are kept twice: by the back-up DPP service provider, and by the DPP's creator or the main DPP service provider acting for it."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.2(4)
+    section: "4.2"
+    clause: 4.2(4)
+    paraphrase: "Every archived version is kept for the whole DPP lifetime."
+    applicability: software
+    areas:
+      - 6
+  - id: EN18221-4.2(5)
+    section: "4.2"
+    clause: 4.2(5)
+    paraphrase: "Every change to the DPP is archived; only changes that product-specific rules explicitly exempt (real-time sensor readings, for instance) may be left out."
+    applicability: software
+    areas:
+      - 6
+  - id: EN18221-4.2(6)
+    section: "4.2"
+    clause: 4.2(6)
+    paraphrase: "An attribute of an archived version carries the same access restrictions as that attribute in the current DPP."
+    applicability: software
+    areas:
+      - 5
+      - 6
+  - id: EN18221-4.2(7)
+    section: "4.2"
+    clause: 4.2(7)
+    paraphrase: "An authenticated and authorised actor can retrieve the archived version that was current at a given point in time."
+    applicability: software
+    areas:
+      - 1
+      - 5
+      - 6
+  - id: EN18221-4.2(8)
+    section: "4.2"
+    clause: 4.2(8)
+    paraphrase: "The integrity and originality of the archived versions are ensured as EN 18246 lays down."
+    applicability: software
+    areas:
+      - 6
+      - 10
+  - id: EN18221-4.2(9)
+    section: "4.2"
+    clause: 4.2(9)
+    paraphrase: "Recommendation: main and back-up DPP service providers follow the OAIS reference model (ISO 14721) for archiving, in particular its conformance, information, preservation-objective, mandatory-responsibility, general-model and information-model parts, and look to its archive-interoperability clause for guidance."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.3(1)
+    section: "4.3"
+    clause: 4.3(1)
+    paraphrase: "Where a back-up copy of the DPP must be made available when the product is placed on the market, the DPP service provider holding it stores the most recent version and every required historical version. Annex ZA maps this subclause to ESPR-Art10(4), technical aspects of the back-up only."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.3(2)
+    section: "4.3"
+    clause: 4.3(2)
+    paraphrase: "An attribute of the back-up copy carries the same access restrictions as that attribute in the original DPP."
+    applicability: software
+    areas:
+      - 5
+      - 6
+  - id: EN18221-4.3(3)
+    section: "4.3"
+    clause: 4.3(3)
+    paraphrase: "For the whole DPP lifetime, the back-up DPP service provider makes the DPP available to users who are specifically authorised."
+    applicability: mixed
+    areas:
+      - 5
+      - 6
+  - id: EN18221-4.3(4)
+    section: "4.3"
+    clause: 4.3(4)
+    paraphrase: "Once the economic operator is no longer active on the market, the back-up DPP service provider opens general access to the DPP. Counterpart of the cessation limb of ESPR-Art11(e)."
+    applicability: mixed
+    areas:
+      - 5
+      - 6
+  - id: EN18221-4.4(1)
+    section: "4.4"
+    clause: 4.4(1)
+    paraphrase: "Additional digital documentation is part of the DPP, either embedded or referenced, and can be reached through the DPP."
+    applicability: software
+    areas:
+      - 6
+      - 11
+  - id: EN18221-4.4(2)
+    section: "4.4"
+    clause: 4.4(2)
+    paraphrase: "That documentation comes in a format the user can download and keep on a device, so it stays accessible to them at all times, and it stays reachable online for the whole DPP lifetime."
+    applicability: mixed
+    areas:
+      - 6
+      - 11
+  - id: EN18221-4.4(3)
+    section: "4.4"
+    clause: 4.4(3)
+    paraphrase: "The back-up DPP service provider stores the mandatory digital documentation of the DPP, embedded or referenced, and makes it accessible."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.5(1)
+    section: "4.5"
+    clause: 4.5(1)
+    paraphrase: "The DPP and every change to it are replicated to its back-up DPP service provider, as 4.3 requires. Annex ZA maps this subclause to ESPR-Art10(4) (technical aspects of the back-up only) and ESPR-Art11(c)."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.5(2)
+    section: "4.5"
+    clause: 4.5(2)
+    paraphrase: "After changes, replication runs often enough to keep data loss small, for instance against a maximum recovery point objective (RPO), so the data survive the economic operator leaving the market; product-specific rules may fix the frequency."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18221-4.5(3)
+    section: "4.5"
+    clause: 4.5(3)
+    paraphrase: "Replication between the economic operator and its back-up DPP service provider can run over the standardised DPP lifecycle API of EN 18222; another secure mechanism both parties agree on is also allowed."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: EN18221-4.5(4)
+    section: "4.5"
+    clause: 4.5(4)
+    paraphrase: "That replication travels over a data exchange protocol conforming to EN 18216."
+    applicability: software
+    areas:
+      - 1
+      - 6
