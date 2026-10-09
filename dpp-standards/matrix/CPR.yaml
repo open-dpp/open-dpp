@@ -531,7 +531,7 @@ criteria:
         - type: check
           ref: resolver.redirect-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Software part: a passport reachable electronically by scanning the carrier. Credited: the QR code encodes the permalink or the GS1 Digital Link, the resolver answers a scan with a redirect to the public view (Check resolver.redirect-published) and the public view needs no account. Missing: operator documentation (#828). Displaying the carrier with the CE marking is the manufacturer's act (CPR-Art77(1)(b))."
       gapIssue: 828
   - id: CPR-Art76(2)(d)
@@ -587,7 +587,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Credited: a published passport is served to anyone, without account or payment, through its permalink and the GS1 resolver (Check access.anonymous-reads-published passes), which reaches economic operators, clients, users and authorities alike. Missing: operator documentation on publishing to the public and on the carriers (#828); Met once documented. Per-actor access levels are assessed on CPR-Art76(2)(f); ease of access (accessibility of the public view) is inherited from ESPR-Art11(b) on CPR-Art78(b)."
       gapIssue: 828
   - id: CPR-Art76(2)(f)
@@ -650,11 +650,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "The actors the system specifies may introduce or update passport information (manufacturers, authorised representatives, importers, distributors and DPP service providers per CPR-Art75(2)(d)). Credited: members and owners of the owning organisation introduce and update data through the editor, the AAS routes and API keys (the allow side rests on the create and update route tests), and everyone else is refused (Checks access.anonymous-denied-management and access.foreign-user-denied-management evidence the refusal). Missing: no write right for an actor outside the organisation, e.g. an importer or a DPP service provider completing a manufacturer's passport (#821). Same finding as ESPR-Art9(2)(g)."
       gapIssue: 821
   - id: CPR-Art76(2)(h)
@@ -806,7 +806,7 @@ criteria:
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Art. 79(1) applies ESPR Art. 12 and, through it, the Annex III second-paragraph carrier and identifier standards (the ISO/IEC 15459 series). Credited: the carriers encode GS1 Digital Link URIs that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), and GS1 is an ISO/IEC 15459 issuing agency. Missing: ISO/IEC 15459 conformance is neither asserted nor checked and the standard is unread (#518; same finding as BATT-Art77(3)-sub2), and the QR symbology itself is not verified. An alternative rule in the Art. 75(1) act re-opens this row."
       gapIssue: 518
   - id: CPR-Art77(1)(d)
@@ -837,11 +837,11 @@ criteria:
         - type: check
           ref: api.openapi-document-served
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
         - type: check
           ref: export.aas-environment-verifies
           result: failed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Credited: passport data are structured, machine-readable JSON served over AAS-style REST routes described by an OpenAPI 3.1 document (Check api.openapi-document-served) and searchable through the API. Missing: the export is a proprietary open-dpp:json envelope, not standard AAS JSON (the shell id is omitted), so the export.aas-environment-verifies Check fails and transfer without vendor lock-in is not shown (#823). The technical-reason exemption for the declaration's documents and the technical documentation needs no software: attachments are opaque files by design."
       gapIssue: 823
   - id: CPR-Art77(1)(e)
@@ -905,11 +905,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
         - type: check
           ref: resolver.draft-hidden
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Access regulated by the Art. 78 essential requirements and the system's access levels. Credited: access follows explicit per-element rules with the published-or-member gate (Checks resolver.draft-hidden and access.anonymous-denied-management), so the rules of CPR-Art78(b) and (f) are enforced for the roles that exist. Missing: the system's access levels for external actors (#821), and the attachment routes sit outside the rules: media download and info are anonymous and check neither the passport status nor the element policy (#836), which also touches Art. 78(g). Same shape as ESPR-Art10(1)(g), still unassessed (#758)."
       gapIssue: 821
   - id: CPR-Art77(1)(h)
@@ -1056,11 +1056,33 @@ criteria:
   - id: CPR-Art78(f)
     section: Art78
     clause: Art. 78(f)
-    paraphrase: "The rights to access and to introduce, modify or update DPP information are restricted to the access rights the construction DPP system specifies."
+    paraphrase: "The rights to access and to introduce, modify or update DPP information are restricted to the access rights the construction DPP system specifies. Counterpart of ESPR-Art11(f) with the right to access added (as in BATT-Art78(f)), so an own Criterion, not a Mirror (corrected 2026-10-09 on the review of run 2026-10-09-manual)."
     applicability: software
     areas:
       - 5
-    mirrors: ESPR-Art11(f)
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: per-element Read, Create, Edit, Delete rules
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: reads filtered by the caller's rules
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: create and delete checked per element
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: values readable by the specified subject
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: modification refused for insufficient permissions
+      notes: "Credited: reading and writing are restricted per element by rules for anonymous readers, organisation members and owners, and the instance admin; anonymous and outside callers cannot reach the management routes. Missing: the access rights the construction DPP system will specify (the actor list of CPR-Art75(2)(c)) cannot be expressed, the same finding as BATT-Art78(f) and ESPR-Art11(f) (#821); attachments escape the read rules (#836). The rights themselves wait on the Art. 75(1) delegated act; re-validate when it is adopted."
+      gapIssue: 821
   - id: CPR-Art78(g)
     section: Art78
     clause: Art. 78(g)
@@ -1140,7 +1162,7 @@ criteria:
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "ESPR Art. 12 applied by reference: unique product, operator and facility identifiers and data carriers per the Annex III standards, with operator procedures for missing identifiers (Art. 12(2), (3)) and Commission rules on issuing agencies (Art. 12(4) to (6)). Credited for the product side: GS1 Digital Link identifiers (GS1 is an ISO/IEC 15459 issuing agency) that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid) and a QR carrier with a conformant resolver. Missing: operator and facility identifiers do not exist (#579), ISO/IEC 15459 conformance is not asserted (#518) and the carrier is not print-ready (#489). gapIssue #518 because this row is about the identifier and carrier standards ESPR Art. 12 applies (the ISO/IEC 15459 assertion); the operator and facility identifiers as passport content sit on CPR-Art76(2)(a)(v) under #579. The paragraph-by-paragraph Assessment of ESPR Art. 12 belongs to the identifiers ticket #756 (EN 18219); an alternative rule in the Art. 75(1) act re-opens this row."
       gapIssue: 518
   - id: CPR-Art79(2)

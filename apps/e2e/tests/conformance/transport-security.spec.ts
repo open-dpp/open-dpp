@@ -9,7 +9,7 @@ check(
   {
     id: "transport.hsts-on-public-view",
     title: "the public view answers with Strict-Transport-Security over HTTPS",
-    criteria: ["ESPR-Art11(g)", "BATT-Art78(g)"],
+    criteria: ["ESPR-Art11(g)", "BATT-Art78(g)", "EN18239-6.5.2-sub1"],
   },
   async ({ browser }) => {
     test.skip(

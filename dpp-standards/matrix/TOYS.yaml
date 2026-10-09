@@ -473,7 +473,7 @@ criteria:
         - type: check
           ref: resolver.redirect-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Two limbs folded into one paragraph. Placement: the carrier sits on the toy or an affixed label, else on the packaging or the accompanying documentation as the Art. 49(1) act will provide (it does not exist yet); the software part is a carrier the manufacturer can print. Credited: a QR code is rendered for every permalink and for the GS1 Digital Link. Missing: the QR exists only as an on-screen canvas, with no image download (PNG or SVG), no print layout, no size or quiet-zone guidance and no server endpoint returning the carrier, so the manufacturer regenerates the code from the copied URL with another tool; no GS1 2D code with FNC1 either (#489; same finding as DET-Art21(4)(a) and CPR-Art77(1)(b)). Visibility: clearly visible to consumers before purchase and to market surveillance authorities, including in distance sales (Art. 19(12) gives sellers a digital copy). Credited: the public permalink, the GS1 Digital Link resolved by the built-in resolver (Check resolver.redirect-published, which evidences that the encoded link is reachable, not the carrier's placement or its visibility), a QR code of either and anonymous access once the passport is published; an authority reaches the same public view. Missing: no downloadable carrier image for the distance-sales offer and no operator documentation on sharing a passport before purchase (#828; same finding as DET-Art21(4)(f) and ESPR-Art9(2)(e)). Where the carrier goes on the toy is the manufacturer's act; re-validate when the Art. 49(1) act fixes the placement and the carrier."
       gapIssue: 489
   - id: TOYS-Art19(8)
@@ -700,7 +700,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Consumers are not requested to register or to provide a password to access the passport. A published passport is served at its permalink and through the GS1 resolver to anyone: the public routes carry no authentication requirement, the client's public routes never redirect to sign-in, and there is no account, password, CAPTCHA, cookie or consent gate on the way (verified in the code at d5f8219e, no such mechanism exists). Check access.anonymous-reads-published exercises the API limb against a live Instance from an empty browser context; its second assertion (the public view answers 200) is vacuous because the SPA shell answers 200 for any non-API path, so the view limb rests on the router-guard code and the E2E test rather than the Check (carried over from the DET-Art22(d) adversarial review; a stronger Check asserting a rendered passport element and no sign-in form is a follow-up). Not operational: the property holds for every published passport by construction, the operator does nothing for it (publishing itself is TOYS-Art19(1)). Elements an operator withholds from anonymous readers are withheld from everyone outside the organisation, an access-rights choice under TOYS-Art19(2)(f), not a registration; the page-view counter that fires on the visit is TOYS-Art20(10). Same clause and same evidence as DET-Art22(d), Met; no ESPR counterpart."
   - id: TOYS-Art20(5)
     section: Art20
@@ -821,7 +821,7 @@ criteria:
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "The carriers, the unique product identifiers and the unique operator identifiers follow the standards ESPR applies to them (ESPR Art. 10(1)(c), Art. 12(1) and the Annex III second paragraph: the ISO/IEC 15459 series and the harmonised standards cited in the OJ). Credited for the product side: the carriers encode GS1 Digital Link URIs that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), and GS1 is an ISO/IEC 15459 issuing agency; the QR carrier is a standard symbology. Missing: ISO/IEC 15459 conformance is neither asserted nor checked and the standard is unread (#518; same finding as DET-Art23(1), CPR-Art77(1)(c) and BATT-Art77(3)-sub2), the QR symbology itself is not verified, and unique operator identifiers do not exist at all (no GLN, EORI or other legal-entity scheme on an organisation; #579, recorded as passport content on TOYS-AnnexVI-I(b)). gapIssue #518 because the row is about the identifier and carrier standards; the standards themselves (EN 18219, EN 18220) are the Tier B tickets #756 and #757."
       gapIssue: 518
   - id: TOYS-Art21(2)-sub1

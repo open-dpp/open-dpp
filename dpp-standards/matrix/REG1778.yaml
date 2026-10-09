@@ -357,7 +357,7 @@ criteria:
         - type: check
           ref: export.aas-environment-verifies
           result: failed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Software part: passport content the registry can read by machine. open-dpp serves structured JSON over a documented OpenAPI, but its export is a proprietary open-dpp:json envelope, not standard AAS JSON (the export.aas-environment-verifies Check fails, see BATT-Art77(5)); the format the registry reads is fixed by the semantic repository data models, which are not yet published."
       gapIssue: 823
   - id: REG1778-Art8(7)(a)

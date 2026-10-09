@@ -23,6 +23,7 @@ describe("the committed files", () => {
       "BATT",
       "CPR",
       "DET",
+      "EN18239",
       "ESPR",
       "REG1778",
       "TOYS",

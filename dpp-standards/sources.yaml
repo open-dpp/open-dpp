@@ -195,14 +195,15 @@ sources:
     title: Digital product passport – Access rights management, information system security and business confidentiality
     reference: EN 18239:2026
     publisher: CEN/CENELEC JTC 24
-    edition: Draft DIN EN 18239:2025-09 until the final text is on sale (2026-09-16)
-    stage: Ratified (formal vote closed 2026-07-16); final text available 2026-09-16; OJ citation expected September 2026
+    edition: EN 18239:2026 (approved by CEN 2026-08-17, available 2026-09-16; read in the English SIS edition SS-EN 18239:2026, edition 1)
+    stage: Published 2026-09-16; national adoption and withdrawal of conflicting standards by March 2027; not yet cited in the OJ
     access: gated
-    url: https://www.dinmedia.de/en/draft-standard/din-en-18239/393949301
+    url: https://www.dinmedia.de/en/standard/din-en-18239/405632313
     localFile: standards/EN18239-2026.pdf
+    normativeReferences: [EN18219]
     watch:
-      url: https://www.dinmedia.de/en/draft-standard/din-en-18239/393949301
-      lookFor: The final edition on sale (2026-09-16), then the OJ citation; re-assess the delta to the draft
+      url: https://single-market-economy.ec.europa.eu/single-market/goods/european-standards/harmonised-standards/digital-product-passport-dpp_en
+      lookFor: The second implementing decision citing EN 18239 in the OJ (Annex ZA presumes conformity with ESPR Art. 11(a) through clause 4.2 only), then any amendment or new edition on the JTC 24 work programme
   - id: EN18246
     tier: B
     title: Digital product passport – Data authentication, reliability and integrity
