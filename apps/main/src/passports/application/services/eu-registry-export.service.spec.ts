@@ -188,6 +188,7 @@ describe("euRegistryExportService", () => {
   describe("exportToArchive", () => {
     let res: { set: jest.Mock<any>; destroy: jest.Mock<any> };
     let archive: {
+      on: jest.Mock<any>;
       pipe: jest.Mock<any>;
       append: jest.Mock<any>;
       finalize: any;
@@ -201,6 +202,7 @@ describe("euRegistryExportService", () => {
         append: jest.fn(),
         finalize: jest.fn(async () => undefined),
         abort: jest.fn(),
+        on: jest.fn(),
       };
     });
 
@@ -283,6 +285,25 @@ describe("euRegistryExportService", () => {
 
       expect(archive.abort).toHaveBeenCalled();
       expect(res.destroy).toHaveBeenCalled();
+    });
+
+    it("destroys the response when the archive emits an error event", async () => {
+      const p = passport();
+      servePassports([p]);
+      permalinksByPassport.set(p.id, [publishedOpenDpp(p.id)]);
+
+      await exportToArchive();
+
+      const [event, listener] = archive.on.mock.calls[0] as [string, (error: Error) => void];
+      expect(event).toBe("error");
+      // the listener has to be registered before the archive is piped
+      expect(archive.on.mock.invocationCallOrder[0]).toBeLessThan(
+        archive.pipe.mock.invocationCallOrder[0],
+      );
+      const error = new Error("archive failed");
+      listener(error);
+      expect(archive.abort).toHaveBeenCalled();
+      expect(res.destroy).toHaveBeenCalledWith(error);
     });
   });
 });

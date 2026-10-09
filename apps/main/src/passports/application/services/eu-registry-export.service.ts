@@ -117,6 +117,11 @@ export class EuRegistryExportService {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="eu-registry-export-${now.toISOString().slice(0, 10)}.zip"`,
       });
+      // Archiver reports some failures only as event, which would be thrown uncaught otherwise.
+      archive.on("error", (error) => {
+        archive.abort();
+        res.destroy(error);
+      });
       archive.pipe(res);
     };
     try {

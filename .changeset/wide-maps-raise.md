@@ -10,4 +10,4 @@
 "@open-dpp/docs": minor
 ---
 
-Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+Templates and passports can be filtered by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for the passport creation dialog for long template names.
