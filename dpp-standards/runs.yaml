@@ -794,3 +794,140 @@ runs:
     adversarialReview:
       blockingObjections: 0
       comment: https://github.com/open-dpp/open-dpp/issues/833#issuecomment-5569983292
+  - id: 2026-10-09-en18239
+    date: 2026-10-09
+    trigger:
+      kind: code
+      detail: "first assessment of EN18239 EN 18239:2026 (wayfinder ticket #758)"
+    commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+    sources:
+      - EN18239
+    scope:
+      - id: EN18239-4.1
+        reason: not assessed
+      - id: EN18239-4.2
+        reason: not assessed
+      - id: EN18239-5.2(1)
+        reason: not assessed
+      - id: EN18239-5.2(2)
+        reason: not assessed
+      - id: EN18239-5.2(3)
+        reason: not assessed
+      - id: EN18239-5.2(4)
+        reason: not assessed
+      - id: EN18239-5.2(5)
+        reason: not assessed
+      - id: EN18239-5.2(6)
+        reason: not assessed
+      - id: EN18239-5.2(7)
+        reason: not assessed
+      - id: EN18239-5.2(8)
+        reason: not assessed
+      - id: EN18239-5.2(9)
+        reason: not assessed
+      - id: EN18239-5.2(10)
+        reason: not assessed
+      - id: EN18239-5.2(11)
+        reason: not assessed
+      - id: EN18239-5.2(12)
+        reason: not assessed
+      - id: EN18239-5.2(13)
+        reason: not assessed
+      - id: EN18239-5.2(14)
+        reason: not assessed
+      - id: EN18239-5.2(15)
+        reason: not assessed
+      - id: EN18239-5.2(16)
+        reason: not assessed
+      - id: EN18239-5.2(17)
+        reason: not assessed
+      - id: EN18239-5.2(18)
+        reason: not assessed
+      - id: EN18239-5.2(19)
+        reason: not assessed
+      - id: EN18239-5.2(20)
+        reason: not assessed
+      - id: EN18239-5.2(21)
+        reason: not assessed
+      - id: EN18239-5.2(22)
+        reason: not assessed
+      - id: EN18239-5.2(23)
+        reason: not assessed
+      - id: EN18239-5.2(24)
+        reason: not assessed
+      - id: EN18239-6.1-sub1
+        reason: not assessed
+      - id: EN18239-6.1-sub2
+        reason: not assessed
+      - id: EN18239-6.2(1)
+        reason: not assessed
+      - id: EN18239-6.2(2)
+        reason: not assessed
+      - id: EN18239-6.3
+        reason: not assessed
+      - id: EN18239-6.4.2
+        reason: not assessed
+      - id: EN18239-6.4.3
+        reason: not assessed
+      - id: EN18239-6.5.1
+        reason: not assessed
+      - id: EN18239-6.5.2-sub1
+        reason: not assessed
+      - id: EN18239-6.5.2-sub2
+        reason: not assessed
+      - id: EN18239-6.5.3
+        reason: not assessed
+      - id: EN18239-6.5.4
+        reason: not assessed
+      - id: EN18239-6.5.5
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: pending
+    notes: "Ticket #758, Extract and first Assess of EN 18239:2026 in one session (an 18-page text; the Extract lands in the same PR, ahead of the run). Extract: 39 Criteria from the final text (clauses 4.1, 4.2, the 24 points of 5.2, 6.1 to 6.5); clauses 1 to 3, 5.1, 6.4.1, Annex A (informative) and the Bibliography carry no requirement of their own. Annex ZA maps only clause 4.2, to ESPR Art. 11(a) (organisational interoperability); by the map owner's decision of 2026-10-09 operationalisedBy holds Annex ZA plus the links the text supports: EN18239 added to ESPR-Art11(a), removed from ESPR-Art7(2)(b)(iii) and the 34 BATT Annex XIII content-attribute rows, kept on the access-class chapeaus, BATT Art. 77(2), (6), (9) and 78(b), (f), (h), ESPR Art. 9(2)(f), (g), 10(1)(e), (g), 11(b), (f), (h), 11 fourth subparagraph and 15(4), REG1778 Art. 12(2)(d) and 19(3). sources.yaml: edition moved from the draft to the final text, normative reference EN18219, watch on the OJ citation. Assess against main 272eab96 (273 commits after d5f8219e, the commit of every earlier run): 38 of 39 assessed, 4 Met (5.2(2) public reading without authentication, 5.2(3) no refusal by location, 5.2(10) element-level access rights, 6.2(1) read-only public scheme), 25 Partial, 4 Gap (5.2(1) and 5.2(8) operator identifier, 5.2(12) issuer authentication, 5.2(18) delegation), 5 Not applicable (the operator recommendations 5.2(21), 6.4.2, 6.4.3, 6.5.2-sub2, 6.5.5). EN18239-6.5.1 is left unassessed: it defers availability levels to implementing acts that do not exist; re-validate when one is adopted. The optional clauses 5.2(14) and 5.2(15) are assessed as enablement. Finding: open-dpp has the mechanics of access control (authentication on every non-public route, element-level Create, Read, Edit and Delete rules per role, draft gating, anonymous public reads) but only for the economic operator's own people and the public: no operator identifiers, credentials or external actor roles, no delegation or emergency revocation, a change history that is neither complete nor tamper-evident, no rate limit on public reads, and little hardening. New clusters: #1023 actor identity and authentication (6 rows), #1024 tamper-evident audit log (2), #1025 access rights life cycle and operator guide (5), #1026 rate limiting (3), #1027 hardening and recovery (3); linked #821 (6), #836 (2), #840 (1), #824 (1). Checks run 2026-10-09 against an Instance built from 272eab96 in a git worktree (OPEN_DPP_COMMIT): 9 passed, 1 skipped (HSTS on http), 1 failed (export.aas-environment-verifies, the known standard-AAS finding, still present at 272eab96, on Partial rows of other texts only). Eight EN18239 tags were added to five existing Checks; the fold refreshed the check dates of the BATT, CPR, DET, ESPR, REG1778 and TOYS rows. Two access-control observations went to the private security review (#772); no status rests on them, the rows they touch are Partial for the reasons given."
+  - id: 2026-10-09-manual
+    date: 2026-10-09
+    trigger:
+      kind: manual
+      detail: "first assessment of the ESPR Art. 10 and 11 access and security rows EN 18239 addresses (wayfinder ticket #758)"
+    commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+    sources:
+      - ESPR
+      - CPR
+      - DET
+      - TOYS
+    scope:
+      - id: ESPR-Art10(1)(e)
+        reason: manual
+      - id: ESPR-Art10(1)(g)
+        reason: manual
+      - id: ESPR-Art11(b)
+        reason: manual
+      - id: ESPR-Art11(f)
+        reason: manual
+      - id: ESPR-Art11(h)
+        reason: manual
+      - id: ESPR-Art11-sub4
+        reason: manual
+      - id: CPR-Art77(1)(e)
+        reason: mirror of ESPR-Art10(1)(e)
+      - id: CPR-Art78(b)
+        reason: mirror of ESPR-Art11(b)
+      - id: CPR-Art78(f)
+        reason: mirror of ESPR-Art11(f)
+      - id: CPR-Art78(i)
+        reason: mirror of ESPR-Art11(h)
+      - id: DET-Art22(c)
+        reason: mirror of ESPR-Art11(b)
+      - id: DET-Art22(j)
+        reason: mirror of ESPR-Art11(h)
+      - id: DET-Art23(4)
+        reason: mirror of ESPR-Art11-sub4
+      - id: TOYS-Art20(3)
+        reason: mirror of ESPR-Art11(b)
+      - id: TOYS-Art20(9)
+        reason: mirror of ESPR-Art11(h)
+      - id: TOYS-Art21(4)
+        reason: mirror of ESPR-Art11-sub4
+    validator: agent:conformance-review
+    reviewer: pending
+    notes: "Ticket #758, the ESPR Art. 10 and 11 rows EN 18239 addresses (manual trigger, because matrix:run has no per-article scope), against main 272eab96: 0 Met, 5 Partial, 1 Not applicable (Art. 11 fourth subparagraph, a Commission power). ESPR-Art11(a) stays with the interoperability assessment (#762) although Annex ZA of EN 18239 now names it; Art. 11(b), (f) and (h) are shared with EN 18222 (#759) and EN 18246 (#763), which re-validate them with a manual trigger if their texts add a delta. The ten Mirrors (CPR-Art77(1)(e), 78(b), (f), (i); DET-Art22(c), (j), 23(4); TOYS-Art20(3), (9), 21(4)) still hold: their texts are unchanged since the Extract of 2026-09-07. Gap clusters: #821 (Art. 10(1)(g), 11(b), 11(f)), #1025 (10(1)(e)), #1027 (11(h))."

@@ -1,0 +1,938 @@
+# Conformance Matrix: EN18239 (EN 18239:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18239-2026.pdf) on 2026-10-09 (ticket #758); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Not extracted, no requirement of their own: clause 1 (scope), 2 (normative references: EN 18219 only), 3 (terms), 5.1 (lead-in to 5.2), 6.4.1 (definition of digital operational resilience), Annex A (informative authentication assumptions: identity proofing, multifactor authentication, sole control of the means, protection of exchanged secrets, timely suspension and revocation; 5.2(13) and 5.2(22) point to it as best practice) and the Bibliography (EN ISO/IEC 27000, 27001, EN ISO 22301, ISO/IEC 27031 and the other cited texts are informative here).
+# Annex ZA (informative) maps a single clause: 4.2 confers presumption of conformity with ESPR Art. 11(a), limited to organisational interoperability for end-to-end communication and data transfer, once the EN is cited in the OJ. The other law rows naming EN18239 in operationalisedBy are rows its clauses address without presumption (decided 2026-10-09: Annex ZA plus the links the text supports).
+standard: EN18239
+edition: EN 18239:2026
+extractedFrom: standards/EN18239-2026.pdf
+extractedAt: 2026-10-09
+sections:
+  - id: "4"
+    title: 4 Business transactions and responsibilities related to the DPP
+  - id: "5.2"
+    title: 5.2 Requirements for the protection of business confidentiality
+  - id: "6.1"
+    title: 6.1 General requirements
+  - id: "6.2"
+    title: 6.2 Access management
+  - id: "6.3"
+    title: 6.3 Access revoking policy
+  - id: "6.4"
+    title: 6.4 Digital operational resilience
+  - id: "6.5"
+    title: 6.5 Security management
+criteria:
+  - id: EN18239-4.1
+    section: "4"
+    clause: "4.1"
+    paraphrase: "Access rights management is laid out along the phases and stages of the DPP life cycle (taken from EN ISO 11354-1). Only the phases relevant to the product group apply, and a product-group stage the generic list lacks is still covered when access rights management is implemented."
+    applicability: mixed
+    areas:
+      - 5
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: only a Published passport resolves for non-members; Draft and Archived answer 404
+        - type: test
+          ref: apps/main/src/permalink/application/services/permalink.application.service.spec.ts
+          note: unpublished passport refused to anonymous callers
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element access rules are the same in every status
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: Draft, Published, Archived operations; nothing on who sees which status
+      notes: "Software part: access that follows the passport's life cycle. Credited: the three statuses gate anonymous reading (only Published resolves). Missing: element access rules cannot vary by phase or stage (production, distribution, use, repair, end of life), there are no product-group stages, and the lifecycle page does not say who sees a passport in which status. The product group's stages come with the legislation-defined access model of #821."
+      gapIssue: 821
+  - id: EN18239-4.2
+    section: "4"
+    clause: "4.2"
+    paraphrase: "Names the actors who handle a DPP along the value chain and need access to it: economic operators (manufacturer, authorised representative, importer, distributor, dealer, fulfilment service provider), other value-chain actors (consumers, professional repairers, independent operators, recyclers, market surveillance authorities), customs authorities, and service providers including the main and back-up DPP service providers of EN 18221. The list is open-ended. Annex ZA maps this clause to ESPR-Art11(a), organisational interoperability only."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "access subjects: anonymous, user, organisation member or owner, instance admin"
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/member-role.enum.ts
+        - type: code
+          ref: apps/main/src/identity/users/domain/user-role.enum.ts
+      notes: "Credited: an economic operator is an Organization whose people are owners or members, the public (consumers) is the anonymous subject, and the instance operator hosting passports for organisations acts as main DPP service provider through the admin role. Missing: no actor type for authorised representatives, importers, distributors, dealers, fulfilment service providers, repairers, independent operators, recyclers, market surveillance or customs authorities, or a back-up DPP service provider; an Organization carries no actor type, so none of these can be told apart or given access of their own (#821). Annex ZA ties this clause to ESPR-Art11(a), organisational interoperability only; that row is assessed with EN 18223 (#762)."
+      gapIssue: 821
+  - id: EN18239-5.2(1)
+    section: "5.2"
+    clause: 5.2(1)
+    paraphrase: "Every actor in a DPP system (the actors of 4.2) has a globally unique operator identifier as EN 18219 defines it."
+    applicability: software
+    areas:
+      - 3
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: internal database id only; the slug equals the id
+      notes: "Organizations carry an internal id and users an internal id and an e-mail address; no EN 18219 operator identifier (GLN, EORI, LEI, VAT or registration number, DID) exists on either, in the API, the DTOs or the client. Operator identifiers as passport content are tracked by the content clusters (#837, #841); this row is about the actor's own identity in the DPP system."
+      gapIssue: 1023
+  - id: EN18239-5.2(2)
+    section: "5.2"
+    clause: 5.2(2)
+    paraphrase: "Public DPP data can be read without any authentication (so that nobody is excluded, for instance because of their location)."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GS1 resolver redirects anonymous scans of published passports
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: every new submodel gets an anonymous Read rule by default
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: bundle is anonymous readable
+        - type: test
+          ref: apps/e2e/tests/presentation-bignumber.spec.ts
+          note: an anonymous viewer sees a passport value on the public view
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing opens the permalink to anonymous visitors
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-09
+      notes: "A published passport and the elements anonymous may read are served without authentication through the permalink, the public AAS routes and the GS1 resolver. Not operational: anonymous Read is the default rule of every new submodel, so publishing is all an economic operator does. Attachments are more open than this clause asks (#836, see EN18239-5.2(22))."
+  - id: EN18239-5.2(3)
+    section: "5.2"
+    clause: 5.2(3)
+    paraphrase: "Reading and managing controlled DPP data is never refused merely because of the actor's location or jurisdiction."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: decides on session, API key, bearer token and organisation membership only
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: an access rule is keyed on the role, nothing else
+        - type: manual
+          ref: "Searched apps/main/src, apps/client/src and packages at 272eab96 for geo-IP, country, region and IP allow or deny rules in guards, middleware and access rules: none. The only region setting is the S3 client's storage region."
+          date: 2026-10-09
+      notes: No access decision looks at an actor's location or jurisdiction. Geo-blocking added by an operator at a reverse proxy would break this clause; the software gives no reason to.
+  - id: EN18239-5.2(4)
+    section: "5.2"
+    clause: 5.2(4)
+    paraphrase: "Actors can obtain, and supply on request, everything needed to identify, authorise and account for them, their unique operator identifier included."
+    applicability: software
+    areas:
+      - 3
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/presentation/organizations.controller.ts
+          note: members listed with name, e-mail and role
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: each recorded change carries the user id
+      notes: "Credited: an organisation lists its members with name, e-mail and role through the API, the OAuth id token carries name and e-mail, and the activity history attributes each recorded change to a user. Missing: the unique operator identifier (EN18239-5.2(1)) and any way to present or request it; reads are not accounted to anyone (EN18239-5.2(16))."
+      gapIssue: 1023
+  - id: EN18239-5.2(5)
+    section: "5.2"
+    clause: 5.2(5)
+    paraphrase: "Authenticating the actors who read or manage controlled DPP data makes them accountable, and managing controlled data (creating, modifying and reading it) relies on non-repudiation mechanisms."
+    applicability: software
+    areas:
+      - 5
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every session, API key and token resolves to one user
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: user id and time per change
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: an activity per modifying operation
+      notes: "Credited: every session, API key and OAuth token resolves to one user, and the activity history records which user changed which passport or template element, status or access rule, and when (editor drawer, GET /passports/:id/activities). Missing: non-repudiation: no signature or seal binds a user to a change and the records are ordinary database rows; reads of controlled data are attributed to nobody (the request log has IP and user agent, not the user); creating a passport and changing memberships are not recorded."
+      gapIssue: 1024
+  - id: EN18239-5.2(6)
+    section: "5.2"
+    clause: 5.2(6)
+    paraphrase: "The economic operator can give rights and roles to any notified actor who needs its controlled DPP data, keyed on that actor's globally unique operator identifier; such rights are specific to the product group and follow the relevant legal act."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/presentation/organizations.controller.ts
+          note: owner invites, changes roles, removes members
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: member rule per element
+      notes: "Credited: an owner can invite a person into the organisation, and the member rule of each element limits what members read or edit. Missing: rights cannot go to an actor outside the organisation, to one named actor or by operator identifier; membership is all or nothing across the organisation's passports, and nothing is product-group specific or tied to a legal act (#821; the operator identifier is #1023)."
+      gapIssue: 821
+  - id: EN18239-5.2(7)
+    section: "5.2"
+    clause: 5.2(7)
+    paraphrase: "The roles that open regulated DPP data are fixed per product group by the relevant legal act; the economic operator can grant further privileges on top of them."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed roles only
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: "policy administration: a subject manages rules of subjects below it"
+        - type: code
+          ref: apps/client/src/components/aas/PermissionsForm.vue
+          note: per-element permissions editor
+      notes: "Credited: the economic operator can widen or narrow per element what owners, members and anonymous readers may do, which covers additional privileges for its own people. Missing: no role a product-group legal act defines (authorities, repairers, recyclers and the like) exists, so regulated roles cannot be given their data (#821)."
+      gapIssue: 821
+  - id: EN18239-5.2(8)
+    section: "5.2"
+    clause: 5.2(8)
+    paraphrase: "The globally unique operator identifier is presented during authentication, for instance inside a trustworthy role credential, so that a holder of such a credential reaches controlled DPP data without each economic operator approving it one by one."
+    applicability: software
+    areas:
+      - 3
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: password session, API key or OAuth bearer token; none carries an operator identifier
+      notes: Authentication accepts a password session, an API key or an access token of the optional Trusted Client; none carries an operator identifier, and no role credential (a verifiable credential or similar) is accepted, so an authority or notified actor cannot reach controlled data on the strength of its credential. The credential format awaits the implementing acts of ESPR Art. 11 fourth subparagraph (ESPR-Art11-sub4).
+      gapIssue: 1023
+  - id: EN18239-5.2(9)
+    section: "5.2"
+    clause: 5.2(9)
+    paraphrase: "For additional roles the economic operator defines itself (not fixed by regulation), the economic operator chooses which authentication mechanism applies."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: password sessions and API keys
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/oauth-provider/oauth-provider-plugins.ts
+          note: optional OAuth provider for a Trusted Client
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: section OAuth Provider
+      notes: "Credited: an instance offers password sessions, API keys and, when enabled, OAuth login of a Trusted Client. Missing: an economic operator cannot define roles of its own, so it cannot choose a mechanism per role or per organisation; the choice is the instance operator's, for the whole instance."
+      gapIssue: 1023
+  - id: EN18239-5.2(10)
+    section: "5.2"
+    clause: 5.2(10)
+    paraphrase: "Access rights are expressed at the level of individual data elements; controlled vocabularies such as the EU Vocabularies of the Publications Office may supply the terms."
+    applicability: software
+    areas:
+      - 5
+      - 8
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-permission-rule.ts
+          note: access permission rule per subject
+        - type: code
+          ref: apps/main/src/aas/domain/security/permission-per-object.ts
+          note: object = idShortPath of a submodel or of one element inside it
+        - type: code
+          ref: packages/dto/src/aas/enums/permission-enum.ts
+          note: Create, Read, Edit, Delete
+        - type: test
+          ref: apps/main/src/aas/domain/security/security.spec.ts
+          note: create security schema and check permissions
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: values readable by the specified subject
+      notes: "Access rights are AAS access permission rules: per subject, a set of Create, Read, Edit and Delete permissions on a submodel or on one element path inside it, editable in the permissions form. The terms are the AAS permission vocabulary; the optional controlled vocabulary the clause suggests is not used. Not operational: every submodel receives element-level default rules. Which roles the rules can name is EN18239-5.2(7) and 5.2(23)."
+  - id: EN18239-5.2(11)
+    section: "5.2"
+    clause: 5.2(11)
+    paraphrase: "Access to DPP services is limited so that attacks and unauthorised mass scraping of data are prevented."
+    applicability: software
+    areas:
+      - 5
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: API-key calls limited to 100 a minute
+        - type: code
+          ref: apps/main/src/identity/users/presentation/users.controller.ts
+          note: e-mail change throttled to three an hour
+        - type: code
+          ref: apps/main/src/common/throttler/user-or-ip.throttler-guard.ts
+          note: throttler keyed on user or socket address
+        - type: test
+          ref: apps/main/src/identity/users/presentation/users.controller.spec.ts
+          note: 429 on the fourth e-mail change
+      notes: "Credited: API-key calls are limited to 100 a minute, e-mail changes to three an hour per user or address, and the authentication library limits sign-in and sign-up in production. Missing: every public read (permalink, public AAS routes, GS1 resolver, attachment download, page-view counter) and every session-authenticated route is unthrottled, so mass scraping of public passports is unhindered; the limits are hard-coded and, with no proxy trust setting, behind a reverse proxy all visitors would share one address. A Check can follow once the shape of the limit is decided."
+      gapIssue: 1026
+  - id: EN18239-5.2(12)
+    section: "5.2"
+    clause: 5.2(12)
+    paraphrase: "Against counterfeit passports: where the issuer of a DPP has to be authenticated, the issuing economic operator is identified securely."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: freezing on publish fixes the URL, not the content
+      notes: "Nothing authenticates the issuer of a passport: no signature, seal or certificate binds a passport to its economic operator, and the organisation behind it is known only by its self-chosen name (no verified operator identifier, EN18239-5.2(1)). Signatures and seals are the integrity cluster #824 (EN 18246, ticket #763)."
+      gapIssue: 824
+  - id: EN18239-5.2(13)
+    section: "5.2"
+    clause: 5.2(13)
+    paraphrase: "Where a DPP management service needs authentication (issuing, amending, reading controlled data), authentication follows the relevant legal act; Annex A collects the best practice."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, verification mail on sign-up, API keys
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+      notes: "No legal act fixes the authentication of DPP management yet (the implementing acts on credentials under ESPR Art. 11 fourth subparagraph are not adopted); re-validate when one is. Against the Annex A best practice: credited are password, API-key and OAuth authentication with a verification mail on sign-up and mandatory API-key expiry; missing are multifactor authentication, identity proofing of the person or the organisation, and verification enforced before access."
+      gapIssue: 1023
+  - id: EN18239-5.2(14)
+    section: "5.2"
+    clause: 5.2(14)
+    paraphrase: "Optional: measures may be put in place that detect, counter or mitigate anomalies threatening service availability."
+    applicability: mixed
+    areas:
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: status, duration and correlation id per request; JSON format available
+        - type: code
+          ref: apps/main/src/status/presentation/status.controller.ts
+          note: liveness only, returns the version
+      notes: "Optional measure, assessed as enablement. Credited: every request is logged with status, duration and correlation id for an external monitor, and a status endpoint answers liveness. Missing: no anomaly detection, alerting or automatic countermeasure in the software, the status endpoint checks neither database nor storage, and no guide tells an operator how to monitor an instance."
+      gapIssue: 1026
+  - id: EN18239-5.2(15)
+    section: "5.2"
+    clause: 5.2(15)
+    paraphrase: "Optional: the economic operator may introduce access rate limiting when there is a reasonable, identified risk or a legal requirement, provided legally required information stays available."
+    applicability: mixed
+    areas:
+      - 5
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/users/users.module.ts
+          note: throttler limits hard-coded
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: API-key limit hard-coded
+      notes: "Optional for the economic operator, assessed as enablement. Credited: the two existing limits show the mechanism. Missing: neither an economic operator nor the instance operator can set or tune a rate limit (no setting, no environment variable), so a limit can neither be introduced for an identified risk nor be kept off the legally required information."
+      gapIssue: 1026
+  - id: EN18239-5.2(16)
+    section: "5.2"
+    clause: 5.2(16)
+    paraphrase: "Every access to, and every change of, roles, rights or controlled DPP data is logged and auditable; the log is protected against tampering, forgery and deletion and proves its integrity over time."
+    applicability: software
+    areas:
+      - 6
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: content, status, editing-mode and access-rule changes
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: records deleted with a deleted draft
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: "request log: method, URL, status, IP, user agent"
+        - type: test
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.spec.ts
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: activities of access-rule changes
+      notes: "Credited: changes of passport and template content, status, editing mode and element access rules are recorded with user and time and can be listed and downloaded. Missing: reads of controlled data are not logged with the user; membership and role changes, API-key creation and revocation and passport creation are not logged; the records carry no hash chain or signature, can be altered in the database and are deleted together with a deleted draft."
+      gapIssue: 1024
+  - id: EN18239-5.2(17)
+    section: "5.2"
+    clause: 5.2(17)
+    paraphrase: "A system managing access to controlled DPP data has clear, documented processes for granting, revoking and changing access rights when roles change or actors lose their authorisation."
+    applicability: mixed
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/presentation/organizations.controller.ts
+          note: invite, change role, remove member
+        - type: code
+          ref: apps/main/src/identity/api-keys/presentation/api-keys.controller.ts
+          note: revoke an API key
+        - type: test
+          ref: apps/main/src/identity/organizations/presentation/organizations.controller.spec.ts
+          note: role change and member removal
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: Trusted Client token revocation only
+      notes: "Software part: the operations a granting and revoking process uses. Credited: owners invite members, change their role and remove them (effective on the next request), users revoke their API keys, element access rules are editable. Missing: no operator documentation describes roles, element access rules, member management or revocation (the docs cover Trusted Client token revocation only), and access rights of actors outside the organisation do not exist to be managed (#821)."
+      gapIssue: 1025
+  - id: EN18239-5.2(18)
+    section: "5.2"
+    clause: 5.2(18)
+    paraphrase: "Access roles can be delegated; the actor receiving a delegation carries the legal obligations of that role."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: a rule names a role, never a delegate
+      notes: "No delegation: a role cannot be passed to another actor or organisation for a period or purpose, and nothing records who acts on whose behalf. Inviting someone as a member hands over the organisation's whole member access, not a role."
+      gapIssue: 1025
+  - id: EN18239-5.2(19)
+    section: "5.2"
+    clause: 5.2(19)
+    paraphrase: "A mechanism handles emergency changes of access rights, such as revocation after a breach or non-compliance; the life cycle of access rights to controlled data may also cover issuing, termination, suspension and renewal."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/application/services/members.service.ts
+          note: removal resets the removed user's active organisation on their sessions
+        - type: code
+          ref: apps/main/src/identity/api-keys/presentation/api-keys.controller.ts
+          note: revoke an API key
+        - type: code
+          ref: apps/main/src/identity/auth/domain/trusted-client-access-token.ts
+          note: access token 15 minutes, refresh token 7 days
+        - type: test
+          ref: apps/main/src/identity/organizations/presentation/organizations.controller.spec.ts
+          note: remove member resets the active organisation
+        - type: test
+          ref: apps/main/src/identity/api-keys/presentation/api-keys.controller.spec.ts
+          note: revokes an own key
+      notes: "Credited: removing a member takes effect on the next request, API keys can be revoked one by one, Trusted Client refresh tokens can be revoked. Missing: no emergency path for an instance or organisation to suspend a user or revoke all their sessions and keys at once (banning is not offered, #675), no suspension and renewal of a role, and a Trusted Client access token stays valid up to 15 minutes after revocation."
+      gapIssue: 1025
+  - id: EN18239-5.2(20)
+    section: "5.2"
+    clause: 5.2(20)
+    paraphrase: "Authorisation to read and manage controlled DPP data rests on the role of the requesting entity; for a delegate it also rests on the delegating entity's role towards the data concerned and on how robust and trustworthy the delegation is."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: membership and role per request
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: ability per subject
+        - type: test
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.spec.ts
+          note: membership checks for API keys and OAuth users
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: submodels per subject
+        - type: check
+          ref: access.foreign-user-denied-management
+          result: passed
+          date: 2026-10-09
+      notes: "Credited: authorisation follows the requester's role (instance admin, organisation owner or member, anonymous) through the element access rules and the owner-only management routes. Missing: delegation does not exist, so neither the delegator's role nor the trustworthiness of a delegation can be weighed (EN18239-5.2(18)); regulated roles are #821."
+      gapIssue: 1025
+  - id: EN18239-5.2(21)
+    section: "5.2"
+    clause: 5.2(21)
+    paraphrase: "Recommendation: the security of access management follows EN ISO/IEC 27000:2020 (in particular its controls on organisational policy and access control) and EN ISO/IEC 27001:2023."
+    applicability: operator
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Recommendation to the organisation running the DPP system (its ISMS and access-control policy per EN ISO/IEC 27000 and 27001): organisational, assessed Not applicable by rule. The software side of access control is the other 5.2 rows."
+  - id: EN18239-5.2(22)
+    section: "5.2"
+    clause: 5.2(22)
+    paraphrase: "No controlled DPP data is released before the requester is authenticated and authorised; authentication for DPP management services follows the relevant legal act (Annex A as best practice); least privilege applies."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: "global guard: a session, API key or token unless a route is marked public"
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: elements the caller may not read serialise empty
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: drafts hidden from non-members
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachment routes AllowAnonymous
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: draft passports privacy gate
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: values readable by the specified subject
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-10-09
+        - type: check
+          ref: resolver.draft-hidden
+          result: passed
+          date: 2026-10-09
+      notes: "Credited: every route needs a session, API key or token unless marked public, management routes refuse anonymous and foreign callers (Checks), element content is filtered by the caller's rules, and drafts stay hidden from non-members. Missing: attachments are downloadable by anyone with the link whatever the element rule and the passport status (#836); API keys carry their user's full authority with no scope, against least privilege; no legal act governs the authentication yet (EN18239-5.2(13))."
+      gapIssue: 836
+  - id: EN18239-5.2(23)
+    section: "5.2"
+    clause: 5.2(23)
+    paraphrase: "Access rights can be enforced per controlled data element according to the requesting actor's role, product-group roles included."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: read filtering per element
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: create and delete checked per element
+        - type: code
+          ref: apps/main/src/aas/domain/exportable/aas-exportable.ts
+          note: export filtered by ability
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+        - type: test
+          ref: apps/main/src/aas/domain/environment.spec.ts
+          note: deleting or moving a submodel without permission is rejected
+      notes: "Credited: read, create, edit and delete are enforced per element on the management routes, the public routes and the export, by role. Missing: only the fixed roles exist, so product-group roles cannot be enforced (#821), and attachments escape element enforcement (#836)."
+      gapIssue: 821
+  - id: EN18239-5.2(24)
+    section: "5.2"
+    clause: 5.2(24)
+    paraphrase: "Measures prevent the profiling of users; profiling is permitted only where a specific service strictly requires authentication."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: IP address and user agent of every request
+        - type: code
+          ref: apps/main/src/analytics/presentation/passport-metric.controller.ts
+          note: anonymous page-view counter
+        - type: code
+          ref: apps/client/src/stores/analytics.ts
+          note: the client sends the full page URL
+      notes: "Credited: no third-party tracker, no cookie and no account on the public view; the page-view counter stores no IP or user. Missing: the request log, always on, records the IP address and user agent of every anonymous request, and the counter records the full page URL of each view, with no switch for either, so per-visitor profiles can be built from the logs (#840)."
+      gapIssue: 840
+  - id: EN18239-6.1-sub1
+    section: "6.1"
+    clause: 6.1 first paragraph
+    paraphrase: "Reading public DPP data needs no authentication; reading or amending controlled data needs it. Authentication should be simple, reliable and secure."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public reads OptionalAuth
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachment routes AllowAnonymous
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: draft passports privacy gate
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-09
+      notes: "Credited: public data needs no authentication and management needs it (Checks). Missing: attachments of controlled elements are readable without authentication (#836); authentication has no second factor, which simple but secure authentication would favour (#1027)."
+      gapIssue: 836
+  - id: EN18239-6.1-sub2
+    section: "6.1"
+    clause: 6.1 second paragraph
+    paraphrase: "Where authentication is required, it covers system components (machine clients) as well as actors."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: API keys and bearer tokens
+        - type: code
+          ref: apps/main/src/identity/auth/domain/trusted-client-access-token.ts
+        - type: test
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.spec.ts
+          note: API key authentication; Trusted Client access tokens
+      notes: "Credited: machine clients authenticate with API keys or, with the OAuth provider on, as a Trusted Client. Missing: a machine client has no identity of its own: an API key acts as the user who created it, with that user's full rights and no scope, and no service identity carrying an operator identifier exists."
+      gapIssue: 1023
+  - id: EN18239-6.2(1)
+    section: "6.2"
+    clause: 6.2(1)
+    paraphrase: "Access scheme one: anyone can read the publicly available DPP data without authentication, read-only."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public read routes OptionalAuth
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: anonymous default rule is Read only
+        - type: test
+          ref: apps/e2e/tests/presentation-bignumber.spec.ts
+          note: an anonymous viewer sees a passport value
+        - type: test
+          ref: apps/main/src/aas/domain/environment.spec.ts
+          note: changes without permission are rejected
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-09
+      notes: Anyone reads a published passport's public elements without authentication; anonymous callers hold Read only and every write route needs a session, so public access is read-only.
+  - id: EN18239-6.2(2)
+    section: "6.2"
+    clause: 6.2(2)
+    paraphrase: "Access scheme two: controlled DPP data is reached through authenticated, role-based access under the control of the economic operator liable for the product; each role (authorities, roles defined by regulation) permits its own operations on its own sets of data."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+        - type: test
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.spec.ts
+        - type: check
+          ref: access.foreign-user-denied-management
+          result: passed
+          date: 2026-10-09
+      notes: "Credited: controlled data is reached through authenticated, role-based access (owner, member, admin) under the organisation that owns the passport. Missing: no authority or regulated role exists, so the scheme covers only the economic operator's own people (#821)."
+      gapIssue: 821
+  - id: EN18239-6.3
+    section: "6.3"
+    clause: "6.3"
+    paraphrase: "The DPP system and its services have a policy for revoking access."
+    applicability: mixed
+    areas:
+      - 5
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/application/services/members.service.ts
+          note: member removal
+        - type: code
+          ref: apps/main/src/identity/api-keys/presentation/api-keys.controller.ts
+          note: API-key revocation
+      notes: "Software part: what a revocation policy can rely on. Credited: member removal and API-key and refresh-token revocation. Missing: no revocation policy guidance for operators, no way to revoke everything a user holds at once, and the actors outside the organisation a policy would cover do not exist (#821)."
+      gapIssue: 1025
+  - id: EN18239-6.4.2
+    section: "6.4"
+    clause: 6.4.2
+    paraphrase: "Recommendation: business continuity management against attacks on system availability follows EN ISO 22301:2019 and ISO/IEC 27031:2025, alongside any local regulation."
+    applicability: operator
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Business continuity management of the organisation running the DPP system: organisational, assessed Not applicable by rule. Redundancy and back-up of the software are EN18239-6.5.4."
+  - id: EN18239-6.4.3
+    section: "6.4"
+    clause: 6.4.3
+    paraphrase: "Recommendation: all security measures and policies are improved continuously in support of digital operational resilience."
+    applicability: operator
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Continuous improvement of the organisation's security measures and policies: organisational, assessed Not applicable by rule."
+  - id: EN18239-6.5.1
+    section: "6.5"
+    clause: 6.5.1
+    paraphrase: "Digital product data is available and accessible in time as the implementing acts define; the clause sets no level of its own."
+    applicability: mixed
+    areas:
+      - 6
+  - id: EN18239-6.5.2-sub1
+    section: "6.5"
+    clause: 6.5.2 first paragraph
+    paraphrase: "Services managing DPP data should follow security by design and defence in depth through design, implementation and maintenance; measures that keep the information systems reliable, resilient and secure over the life cycle of critical DPP data are identified and implemented, weighing the quality and resilience of the products and services, the cybersecurity risk measures built into them, and the security practices of suppliers and service providers including secure development."
+    applicability: mixed
+    areas:
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/exception/src/zod-validation.pipeline.ts
+          note: schema validation of inputs
+        - type: code
+          ref: apps/main/src/media/presentation/virus-scan.file-validator.ts
+          note: optional malware scan of uploads
+        - type: code
+          ref: renovate.json5
+          note: vulnerability alerts, minimum release age
+        - type: code
+          ref: apps/main/src/main.ts
+          note: no security headers; CORS origin fixed to the development address
+        - type: doc
+          ref: CONTRIBUTING.md
+          note: security issues via GitHub Security Advisories
+      notes: "Software part: security by design of open-dpp itself. Credited: schema validation of inputs and environment, optional malware scanning of uploads, dependency updates with vulnerability alerts and a minimum release age, mandatory API-key expiry, element-level access rules. Missing: no security headers (CSP, HSTS, frame and content-type options) and a CORS origin fixed to the development address; no code scanning; no SECURITY.md (only a CONTRIBUTING section); no multifactor authentication; no TLS or reverse-proxy guide although the app serves plain HTTP; uploads pass unscanned when ClamAV is not configured. Supplier contracts are EN18239-6.5.2-sub2."
+      gapIssue: 1027
+  - id: EN18239-6.5.2-sub2
+    section: "6.5"
+    clause: 6.5.2 second paragraph
+    paraphrase: "Recommendation: cybersecurity risk-management measures are written into the contracts with direct suppliers and service providers."
+    applicability: operator
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Contracts with suppliers and service providers: organisational, assessed Not applicable by rule."
+  - id: EN18239-6.5.3
+    section: "6.5"
+    clause: 6.5.3
+    paraphrase: "Recommendation: cybersecurity risk management covers critical data flows and their information systems and includes prevention, detection, identification, containment, analysis of and response to incidents."
+    applicability: mixed
+    areas:
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: request log
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: change history
+      notes: "Software part: the signals incident handling needs. Credited: a request log with status, address and correlation id, and the change history of passports. Missing: no security event log (failed sign-ins, denied requests, key use), no alerting hook, no guide on detecting or responding to an incident; the containment tools are those of EN18239-5.2(19)."
+      gapIssue: 1027
+  - id: EN18239-6.5.4
+    section: "6.5"
+    clause: 6.5.4
+    paraphrase: "Recommendation: critical data flows and their information systems have redundant systems and back-up resources for continuity, and resilience mechanisms that mitigate denial-of-service attacks and recover to a stable state afterwards."
+    applicability: mixed
+    areas:
+      - 6
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: MongoDB replica set with a multi-member URI; S3 versioning optional
+        - type: code
+          ref: docker-compose.yml
+          note: single-member replica set, bucket versioning, restart on failure
+        - type: code
+          ref: apps/main/src/status/presentation/status.controller.ts
+          note: health endpoint checks no dependency
+      notes: "Software part. Credited: MongoDB runs as a replica set (a multi-member URI is documented), the example storage enables bucket versioning, containers restart on failure, request bodies and uploads are size-limited. Missing: no backup or restore procedure for database or object storage, a health endpoint that checks no dependency, and no mitigation of request floods on public routes (EN18239-5.2(11), #1026)."
+      gapIssue: 1027
+  - id: EN18239-6.5.5
+    section: "6.5"
+    clause: 6.5.5
+    paraphrase: "Recommendation: DPP systems and services run continuous-improvement processes for an information security management system, for instance per EN ISO/IEC 27001:2023 along a plan-do-check-act cycle (objectives and risk assessment, controls and training, monitoring with indicators, corrective action)."
+    applicability: operator
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Continuous improvement of the organisation's information security management system: organisational, assessed Not applicable by rule."

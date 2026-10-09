@@ -15,7 +15,7 @@ check(
   {
     id: "access.anonymous-reads-published",
     title: "anyone reads a published passport through its public view and the public API",
-    criteria: ["ESPR-Art11(b)", "ESPR-Art9(2)(f)", "BATT-AnnexXIII-1", "CPR-Art76(2)(e)", "DET-Art22(d)", "TOYS-Art20(4)"],
+    criteria: ["ESPR-Art11(b)", "ESPR-Art9(2)(f)", "BATT-AnnexXIII-1", "CPR-Art76(2)(e)", "DET-Art22(d)", "TOYS-Art20(4)", "EN18239-5.2(2)", "EN18239-6.1-sub1", "EN18239-6.2(1)"],
   },
   async ({ browser }) => {
     const subject = readSubject();
@@ -33,7 +33,7 @@ check(
   {
     id: "access.anonymous-denied-management",
     title: "anonymous requests to the management API of a passport are refused",
-    criteria: ["ESPR-Art10(1)(g)", "ESPR-Art11(f)", "ESPR-Art9(2)(g)", "CPR-Art77(1)(g)", "CPR-Art76(2)(g)"],
+    criteria: ["ESPR-Art10(1)(g)", "ESPR-Art11(f)", "ESPR-Art9(2)(g)", "CPR-Art77(1)(g)", "CPR-Art76(2)(g)", "EN18239-5.2(22)"],
   },
   async ({ browser }) => {
     const subject = readSubject();
@@ -50,7 +50,7 @@ check(
   {
     id: "access.foreign-user-denied-management",
     title: "a signed-in user outside the owning organisation cannot read or modify the passport",
-    criteria: ["ESPR-Art11(f)", "ESPR-Art9(2)(g)", "CPR-Art76(2)(g)"],
+    criteria: ["ESPR-Art11(f)", "ESPR-Art9(2)(g)", "CPR-Art76(2)(g)", "EN18239-5.2(20)", "EN18239-6.2(2)"],
   },
   async ({ playwright }) => {
     const subject = readSubject();

@@ -92,8 +92,6 @@ criteria:
     areas:
       - 8
       - 5
-    operationalisedBy:
-      - EN18239
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -604,7 +602,7 @@ criteria:
         - type: check
           ref: resolver.redirect-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Software part: a link a seller can show before the sale, online or in the shop. Credited: the public permalink /p/<id>, the GS1 Digital Link URI resolved by the built-in resolver, a QR code of either, and anonymous access once the passport is published (E2E tests cover both routes). Missing: no operator documentation of permalinks, the Digital Link, the QR code or anonymous access exists under docs/, so an operator has no guide to sharing the passport before purchase (#828). The digital copy of the carrier for dealers and marketplaces is Art. 10(3)(a) (#757)."
       gapIssue: 828
   - id: ESPR-Art9(2)(f)
@@ -635,7 +633,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Software part: give each actor class access to the data meant for it. AAS access-control rules allow per-submodel and per-element visibility for the roles anonymous, organisation member, organisation owner and instance admin, and published passports are public by default; the delegated acts will name external classes (customers, repairers, recyclers, market surveillance, customs) that cannot be expressed (#821, same finding as BATT Art. 77(2))."
       gapIssue: 821
   - id: ESPR-Art9(2)(g)
@@ -670,11 +668,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Software part: let the named actors create a passport or update named data. Creation and updates are open to members and owners of the owning organisation (session or API key) and refused to anyone else; per-element write rights for external actors, e.g. a repairer adding a repair record, cannot be granted (#821)."
       gapIssue: 821
   - id: ESPR-Art9(2)(h)
@@ -864,6 +862,21 @@ criteria:
       - 10
     operationalisedBy:
       - EN18239
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element Read rules
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachments ignore element rules
+      notes: "Software part: open-dpp never writes customer data into a passport (no customer field, no purchase link; the page-view counter and the request log stay outside the passport), and an element can be kept from anonymous readers by its access rule. Missing: nothing marks an element as personal data or records a consent, attachments ignore element rules (#836), and no operator guidance explains keeping personal data restricted (#1025). The consent itself is the economic operator's GDPR duty."
+      gapIssue: 1025
   - id: ESPR-Art10(1)(f)
     section: Art10
     clause: Art. 10(1)(f)
@@ -883,6 +896,33 @@ criteria:
       - 5
     operationalisedBy:
       - EN18239
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element access rules
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: drafts hidden from non-members
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: draft passports privacy gate
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-10-09
+        - type: check
+          ref: resolver.draft-hidden
+          result: passed
+          date: 2026-10-09
+      notes: "Access is regulated: public reading for anonymous callers, management for the owning organisation's members, per-element rules, drafts hidden; EN 18239 details this in EN18239-5.2(22), 5.2(23) and 6.2. Missing: the delegated-act access rights (actor classes and their data) cannot be expressed (#821), and attachments bypass the element rules (#836)."
+      gapIssue: 821
   - id: ESPR-Art10(1)-sub2
     section: Art10
     clause: Art. 10(1) second subparagraph
@@ -933,6 +973,7 @@ criteria:
     operationalisedBy:
       - EN18223
       - EN18216
+      - EN18239
   - id: ESPR-Art11(b)
     section: Art11
     clause: Art. 11 first subparagraph (b)
@@ -944,6 +985,28 @@ criteria:
     operationalisedBy:
       - EN18239
       - EN18222
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+        - type: check
+          ref: a11y.public-view-no-serious-violations
+          result: passed
+          date: 2026-10-09
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-09
+      notes: "Free and easy access for the public: no fee, no account, a resolver behind the data carrier, an accessible public view (Check). Missing: the other actors the article names (repairers, refurbishers, recyclers, market surveillance and customs authorities, civil society, trade unions) get nothing beyond the public view, because no access class exists for them (#821)."
+      gapIssue: 821
   - id: ESPR-Art11(c)
     section: Art11
     clause: Art. 11 first subparagraph (c)
@@ -983,6 +1046,30 @@ criteria:
     operationalisedBy:
       - EN18239
       - EN18222
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: create and delete checked per element
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: modification refused for insufficient permissions
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-10-09
+        - type: check
+          ref: access.foreign-user-denied-management
+          result: passed
+          date: 2026-10-09
+      notes: "Introducing and changing data is restricted to the owning organisation's owners and members and to the element rules; anonymous and foreign callers are refused (Checks). Missing: write rights for actors a delegated act names (a repairer adding repair data, for instance) cannot be granted (#821)."
+      gapIssue: 821
   - id: ESPR-Art11(g)
     section: Art11
     clause: Art. 11 first subparagraph (g)
@@ -1003,6 +1090,23 @@ criteria:
     operationalisedBy:
       - EN18239
       - EN18246
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+        - type: code
+          ref: apps/main/src/main.ts
+          note: no security headers
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: change history
+      notes: "Security and privacy are partly built in; run 2026-10-09-en18239 gives the detail per EN 18239 clause: authentication on every non-public route, element rules, input validation, a change history. Missing: hardening (#1027), a tamper-evident log (#1024), issuer authentication against fraud (#824, EN 18246 under #763), rate limiting (#1026), and usage tracking that cannot be switched off (#840)."
+      gapIssue: 1027
   - id: ESPR-Art11-sub2
     section: Art11
     clause: Art. 11 second subparagraph
@@ -1026,6 +1130,12 @@ criteria:
       - 5
     operationalisedBy:
       - EN18239
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: Commission power to adopt implementing acts on issuing and verifying the digital credentials of actors with access rights; none is adopted. The software side is EN18239-5.2(8) and 5.2(13).
   - id: ESPR-Art12(1)
     section: Art12
     clause: Art. 12(1)

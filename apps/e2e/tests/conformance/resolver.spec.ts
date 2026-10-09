@@ -34,7 +34,7 @@ check(
   {
     id: "resolver.draft-hidden",
     title: "a scanned key of a draft passport is not resolvable anonymously",
-    criteria: ["ESPR-Art10(1)(g)", "CPR-Art77(1)(g)"],
+    criteria: ["ESPR-Art10(1)(g)", "CPR-Art77(1)(g)", "EN18239-5.2(22)"],
   },
   async ({ browser }) => {
     const { gtin, draft } = readSubject();

@@ -447,7 +447,7 @@ criteria:
         - type: check
           ref: resolver.redirect-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Pre-purchase reachability fixed in the law, with visibility to market surveillance authorities added and distance sales covered (Art. 20: the offer shows a digital copy of the carrier or the unique product identifier). Software part: a link or code a seller can show before the sale, online or in the shop, that an authority can use too. Credited: the public permalink, the GS1 Digital Link resolved by the built-in resolver (Check resolver.redirect-published), a QR code of either and anonymous access once the passport is published; an authority reaches the same public view. Missing: no downloadable carrier image for the distance-sales offer (#489, on DET-Art21(4)(a)) and no operator documentation on sharing a passport before purchase (#828). Same finding as ESPR-Art9(2)(e)."
       gapIssue: 828
   - id: DET-Art21(5)
@@ -752,7 +752,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "Consumers and other end-users are not required to register or to provide a password to access the passport. A published passport is served at its permalink and through the GS1 resolver to anyone: the public routes carry no authentication requirement, the client's public routes never redirect to sign-in, and there is no account, password, CAPTCHA, cookie or consent gate on the way (verified in the code at d5f8219e, no such mechanism exists). Check access.anonymous-reads-published exercises the API limb against a live Instance from an empty browser context; its second assertion (the public view answers 200) is vacuous because the SPA shell answers 200 for any non-API path, so the view limb rests on the router-guard code and the E2E test rather than the Check (adversarial review, remark 1; a stronger Check asserting a rendered passport element and no sign-in form is a follow-up). Not operational: the property holds for every published passport by construction, the operator does nothing for it (publishing itself is DET-Art21(1)). Elements an operator withholds from anonymous readers are withheld from everyone outside the organisation, an access-rights choice under DET-Art21(2)(f), not a registration; the page-view counter that fires on the visit is DET-Art22(h). No ESPR counterpart; the same clause returns in the Toy Safety Regulation Art. 20(d)."
   - id: DET-Art22(e)
     section: Art22
@@ -873,7 +873,7 @@ criteria:
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
-          date: 2026-09-07
+          date: 2026-10-09
       notes: "The carrier, the unique product identifiers and the unique operator identifiers follow the standards ESPR applies to them (ESPR Art. 10(1)(c), Art. 12(1) and the Annex III second paragraph: the ISO/IEC 15459 series and the harmonised standards cited in the OJ). Credited for the product side: the carriers encode GS1 Digital Link URIs that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), and GS1 is an ISO/IEC 15459 issuing agency; the QR carrier is a standard symbology. Missing: ISO/IEC 15459 conformance is neither asserted nor checked and the standard is unread (#518; same finding as CPR-Art77(1)(c) and BATT-Art77(3)-sub2), the QR symbology itself is not verified, and unique operator identifiers do not exist at all (no GLN, EORI or other legal-entity scheme on an organisation; #579, recorded as passport content on DET-AnnexVI-A(b)). gapIssue #518 because the row is about the identifier and carrier standards; the standards themselves (EN 18219, EN 18220) are the Tier B tickets #756 and #757."
       gapIssue: 518
   - id: DET-Art23(2)
