@@ -116,10 +116,10 @@ describe("euRegistryExportService", () => {
     ]);
   });
 
-  it("uses the GS1 permalink when a passport has one", async () => {
+  it("uses the oldest permalink of a passport with several", async () => {
     const p = passport();
     servePassports([p]);
-    const openDpp = publishedOpenDpp(p.id, new Date("2026-01-01"));
+    const oldest = publishedOpenDpp(p.id, new Date("2026-01-01"));
     const gs1 = Permalink.create({
       passportId: p.id,
       kind: PermalinkKind.GS1_LINK,
@@ -127,12 +127,12 @@ describe("euRegistryExportService", () => {
       gs1DataAttributes: gs1DataAttributesPlainFactory.build(),
       createdAt: new Date("2026-02-01"),
     }).withPublishedUrl("https://id.gs1.example/01/123");
-    permalinksByPassport.set(p.id, [openDpp, gs1]);
+    permalinksByPassport.set(p.id, [gs1, oldest]);
 
     const result = await run();
 
     expect(result.files[0].toPlain().items).toEqual([
-      { uniqueProductIdentifier: "https://id.gs1.example/01/123" },
+      { uniqueProductIdentifier: oldest.publishedUrl },
     ]);
   });
 

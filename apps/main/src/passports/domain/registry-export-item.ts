@@ -1,4 +1,3 @@
-import { PermalinkKind } from "@open-dpp/dto";
 import { Permalink } from "../../permalink/domain/permalink";
 
 export class RegistryExportItem {
@@ -10,15 +9,14 @@ export class RegistryExportItem {
 
   /**
    * Builds the item of one passport from its permalinks. The identifier is the published URL of
-   * the oldest GS1 permalink if there is one, otherwise of the oldest open-dpp permalink.
-   * Returns undefined if there is no such permalink or it has no published URL.
+   * the oldest permalink (by createdAt), so repeated exports always choose the same one.
+   * Temporary heuristic until permalinks have an official flag marking the one for the EU.
+   * Returns undefined if there is no permalink or the oldest one has no published URL.
    */
   static fromPermalinks(permalinks: ReadonlyArray<Permalink>): RegistryExportItem | undefined {
-    const oldestFirst = [...permalinks].sort(
+    const [permalink] = [...permalinks].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
     );
-    const permalink =
-      oldestFirst.find((candidate) => candidate.kind === PermalinkKind.GS1_LINK) ?? oldestFirst[0];
     return permalink?.publishedUrl
       ? RegistryExportItem.create({ uniqueProductIdentifier: permalink.publishedUrl })
       : undefined;

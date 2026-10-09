@@ -26,7 +26,7 @@ describe("registryExportItem.fromPermalinks", () => {
     expect(RegistryExportItem.fromPermalinks([])).toBeUndefined();
   });
 
-  it("uses the oldest open-dpp permalink", () => {
+  it("uses the oldest permalink", () => {
     const oldest = openDpp(new Date("2026-01-01"), "https://a.example/1");
     const newer = openDpp(new Date("2026-02-01"), "https://a.example/2");
     expect(RegistryExportItem.fromPermalinks([newer, oldest])?.uniqueProductIdentifier).toBe(
@@ -34,24 +34,37 @@ describe("registryExportItem.fromPermalinks", () => {
     );
   });
 
-  it("prefers a GS1 permalink even if an open-dpp permalink is older", () => {
-    const item = RegistryExportItem.fromPermalinks([
-      openDpp(new Date("2026-01-01")),
+  it("does not prefer a kind of permalink, only the age counts", () => {
+    const openDppOlder = RegistryExportItem.fromPermalinks([
       gs1(new Date("2026-03-01"), "https://gs1.example/x"),
+      openDpp(new Date("2026-01-01"), "https://a.example/old"),
     ]);
-    expect(item?.uniqueProductIdentifier).toBe("https://gs1.example/x");
-  });
+    expect(openDppOlder?.uniqueProductIdentifier).toBe("https://a.example/old");
 
-  it("uses the oldest GS1 permalink", () => {
-    const item = RegistryExportItem.fromPermalinks([
-      gs1(new Date("2026-02-01"), "https://gs1.example/new"),
+    const gs1Older = RegistryExportItem.fromPermalinks([
+      openDpp(new Date("2026-03-01"), "https://a.example/new"),
       gs1(new Date("2026-01-01"), "https://gs1.example/old"),
     ]);
-    expect(item?.uniqueProductIdentifier).toBe("https://gs1.example/old");
+    expect(gs1Older?.uniqueProductIdentifier).toBe("https://gs1.example/old");
   });
 
-  it("returns undefined when the selected permalink is not published", () => {
-    expect(RegistryExportItem.fromPermalinks([openDpp(new Date(), null)])).toBeUndefined();
+  it("chooses the same permalink when a newer permalink is added later", () => {
+    const first = openDpp(new Date("2026-01-01"), "https://a.example/first");
+    const before = RegistryExportItem.fromPermalinks([first]);
+    const after = RegistryExportItem.fromPermalinks([
+      gs1(new Date("2026-06-01"), "https://gs1.example/later"),
+      first,
+    ]);
+    expect(after).toEqual(before);
+  });
+
+  it("returns undefined when the oldest permalink is not published, without falling back", () => {
+    expect(
+      RegistryExportItem.fromPermalinks([
+        openDpp(new Date("2026-01-01"), null),
+        openDpp(new Date("2026-02-01"), "https://a.example/newer"),
+      ]),
+    ).toBeUndefined();
   });
 
   it("serializes to the registry item shape", () => {
