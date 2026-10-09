@@ -46,3 +46,5 @@ minimumReleaseAgeExclude:
   - sharp@0.35.4
   # Renovate security update: handlebars@4.7.10
   - handlebars@4.7.10
+  # Renovate security update: mongoose@9.7.2
+  - mongoose@9.7.2
