@@ -43,7 +43,7 @@
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.25",
     "@types/supertest": "^6.0.3",
-    "jest": "^30.4.2",
+    "jest": "^30.5.2",
     "typescript": "^5.9.3"
   },
   "jest": {
