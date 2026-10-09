@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "6.1.4",
+  "version": "6.2.0",
   "private": true,
   "type": "module",
   "scripts": {
