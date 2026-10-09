@@ -120,16 +120,19 @@ criteria:
           ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
           note: bundle is anonymous readable
         - type: test
-          ref: apps/e2e/tests/presentation-bignumber.spec.ts
-          note: an anonymous viewer sees a passport value on the public view
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: an anonymous subject with a Read rule receives the element value
         - type: test
           ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
           note: publishing opens the permalink to anonymous visitors
+        - type: manual
+          ref: "Against an Instance built from 272eab96 (port 3001): added a submodel with one Property to the published conformance passport as its owner, then without any credential GET /api/v2/p/<permalink>/submodels listed the submodel with the value and GET .../submodel-elements/<idShort>/$value answered 200 with the value; anonymous POST of an element answered 404 on the public route and 403 on the management route."
+          date: 2026-10-09
         - type: check
           ref: access.anonymous-reads-published
           result: passed
           date: 2026-10-09
-      notes: "A published passport and the elements anonymous may read are served without authentication through the permalink, the public AAS routes and the GS1 resolver. Not operational: anonymous Read is the default rule of every new submodel, so publishing is all an economic operator does. Attachments are more open than this clause asks (#836, see EN18239-5.2(22))."
+      notes: "A published passport and the elements anonymous may read are served without authentication through the permalink, the public AAS routes and the GS1 resolver. The claim rests on the API: the Check's view assertion passes for any path (the SPA shell answers 200) and the public-view E2E tests are fixme at 272eab96, so the rendering of the view is not evidenced here. Not operational: anonymous Read is the default rule of every new submodel, so publishing is all an economic operator does. Attachments are more open than this clause asks (#836, see EN18239-5.2(22))."
   - id: EN18239-5.2(3)
     section: "5.2"
     clause: 5.2(3)
@@ -300,7 +303,7 @@ criteria:
       date: 2026-10-09
       commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       evidence:
         - type: code
           ref: apps/main/src/aas/domain/security/access-permission-rule.ts
@@ -311,13 +314,17 @@ criteria:
         - type: code
           ref: packages/dto/src/aas/enums/permission-enum.ts
           note: Create, Read, Edit, Delete
+        - type: code
+          ref: apps/main/src/aas/domain/security/submodel-security-context.ts
+          note: a rule on an element inside a table is rejected
         - type: test
           ref: apps/main/src/aas/domain/security/security.spec.ts
-          note: create security schema and check permissions
+          note: rules per element; a rule targeting an element inside a table is rejected
         - type: test
           ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
           note: values readable by the specified subject
-      notes: "Access rights are AAS access permission rules: per subject, a set of Create, Read, Edit and Delete permissions on a submodel or on one element path inside it, editable in the permissions form. The terms are the AAS permission vocabulary; the optional controlled vocabulary the clause suggests is not used. Not operational: every submodel receives element-level default rules. Which roles the rules can name is EN18239-5.2(7) and 5.2(23)."
+      notes: "Credited: access rights are AAS access permission rules: per subject, a set of Create, Read, Edit and Delete permissions on a submodel or on one element path inside it, editable in the permissions form; every submodel receives element-level default rules. The terms are the AAS permission vocabulary; the optional controlled vocabulary the clause suggests is not used. Missing: an element inside a table (SubmodelElementList) cannot carry a rule of its own, so a table is one access unit, and attachments follow no rule at all (both in #836). Which roles the rules can name is EN18239-5.2(7) and 5.2(23)."
+      gapIssue: 836
   - id: EN18239-5.2(11)
     section: "5.2"
     clause: 5.2(11)
@@ -648,7 +655,7 @@ criteria:
         - type: test
           ref: apps/main/src/aas/domain/environment.spec.ts
           note: deleting or moving a submodel without permission is rejected
-      notes: "Credited: read, create, edit and delete are enforced per element on the management routes, the public routes and the export, by role. Missing: only the fixed roles exist, so product-group roles cannot be enforced (#821), and attachments escape element enforcement (#836)."
+      notes: "Credited: read, create, edit and delete are enforced per element on the management routes, the public routes and the export, by role. Missing: only the fixed roles exist, so product-group roles cannot be enforced (#821); elements inside a table cannot carry a rule of their own and attachments escape element enforcement (both #836)."
       gapIssue: 821
   - id: EN18239-5.2(24)
     section: "5.2"
@@ -744,21 +751,27 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public read routes OptionalAuth
+          note: public read routes OptionalAuth; the only public write (slug change) needs a member
         - type: code
           ref: apps/main/src/aas/domain/security/security.ts
           note: anonymous default rule is Read only
         - type: test
-          ref: apps/e2e/tests/presentation-bignumber.spec.ts
-          note: an anonymous viewer sees a passport value
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: an anonymous PATCH of a public permalink answers 401 or 403
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: an anonymous subject with a Read rule receives the element value
         - type: test
           ref: apps/main/src/aas/domain/environment.spec.ts
           note: changes without permission are rejected
+        - type: manual
+          ref: "Against an Instance built from 272eab96 (port 3001): added a submodel with one Property to the published conformance passport as its owner, then without any credential GET /api/v2/p/<permalink>/submodels listed the submodel with the value and GET .../submodel-elements/<idShort>/$value answered 200 with the value; anonymous POST of an element answered 404 on the public route and 403 on the management route."
+          date: 2026-10-09
         - type: check
           ref: access.anonymous-reads-published
           result: passed
           date: 2026-10-09
-      notes: Anyone reads a published passport's public elements without authentication; anonymous callers hold Read only and every write route needs a session, so public access is read-only.
+      notes: Anyone reads a published passport's public elements without authentication; anonymous callers hold Read only, and the write routes refuse them (tested on the public permalink, verified by hand on the element routes), so public access is read-only.
   - id: EN18239-6.2(2)
     section: "6.2"
     clause: 6.2(2)

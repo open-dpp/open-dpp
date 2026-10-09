@@ -1056,11 +1056,33 @@ criteria:
   - id: CPR-Art78(f)
     section: Art78
     clause: Art. 78(f)
-    paraphrase: "The rights to access and to introduce, modify or update DPP information are restricted to the access rights the construction DPP system specifies."
+    paraphrase: "The rights to access and to introduce, modify or update DPP information are restricted to the access rights the construction DPP system specifies. Counterpart of ESPR-Art11(f) with the right to access added (as in BATT-Art78(f)), so an own Criterion, not a Mirror (corrected 2026-10-09 on the review of run 2026-10-09-manual)."
     applicability: software
     areas:
       - 5
-    mirrors: ESPR-Art11(f)
+    assessment:
+      date: 2026-10-09
+      commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: per-element Read, Create, Edit, Delete rules
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: reads filtered by the caller's rules
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: create and delete checked per element
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: values readable by the specified subject
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: modification refused for insufficient permissions
+      notes: "Credited: reading and writing are restricted per element by rules for anonymous readers, organisation members and owners, and the instance admin; anonymous and outside callers cannot reach the management routes. Missing: the access rights the construction DPP system will specify (the actor list of CPR-Art75(2)(c)) cannot be expressed, the same finding as BATT-Art78(f) and ESPR-Art11(f) (#821); attachments escape the read rules (#836). The rights themselves wait on the Art. 75(1) delegated act; re-validate when it is adopted."
+      gapIssue: 821
   - id: CPR-Art78(g)
     section: Art78
     clause: Art. 78(g)
