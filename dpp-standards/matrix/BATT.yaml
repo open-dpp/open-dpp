@@ -422,6 +422,7 @@ criteria:
       - EN18216
       - EN18222
       - EN18223
+      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

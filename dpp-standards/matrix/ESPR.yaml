@@ -853,6 +853,7 @@ criteria:
       - EN18216
       - EN18222
       - EN18223
+      - EN18221
   - id: ESPR-Art10(1)(e)
     section: Art10
     clause: Art. 10(1)(e)
@@ -1034,20 +1035,31 @@ criteria:
       date: 2026-10-09
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
       validator: agent:conformance-review
-      status: Partial
+      status: Met
       operational: true
       evidence:
         - type: code
           ref: apps/main/src/passports/infrastructure/passport.schema.ts
           note: every passport bound to its organization
+        - type: code
+          ref: apps/main/src/digital-product-document/application/digital-product-document.service.ts
+          note: only members of the owning organization reach a passport
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: createPassportFromTemplate rejects a template from another organization
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: a member of a different organization gets 404 for a draft passport and 403 for another organization's passport
         - type: doc
           ref: docs/home/getting-started.md
           note: self-hosted setup
         - type: doc
           ref: docs/guides/production-setup.md
           note: production deployment
-      notes: "Software part: the passport is stored by the economic operator or by DPP service providers. Credited: open-dpp supports both, self-hosted by the operator or hosted for several operators by a provider on one multi-tenant instance (EN18221-4.1(1), Met). Missing: the harmonised standard gives presumption of conformity with this point only through EN 18221 4.5, replication between the operator and its back-up DPP service provider, which open-dpp lacks (EN18221-4.5(1), #596); a passport also records neither the provider that hosts it nor the one holding its back-up (ESPR-AnnexIII(l))."
-      gapIssue: 596
+        - type: doc
+          ref: docs/reference/configuration.md
+          note: an instance hosts several organizations
+      notes: "Software part: the passport is stored by the economic operator responsible for its creation or by DPP service providers. Credited: open-dpp supports both, self-hosted by the operator or hosted for several operators by a provider on one multi-tenant instance, each passport bound to its organization and managed only by its members (EN18221-4.1(1), Met). Graded on the article. The harmonised route to presumption of conformity is narrower: EN 18221 Annex ZA maps this point only to 4.5, replication to the back-up DPP service provider, which open-dpp lacks (EN18221-4.5(1), Gap, #596); an operator relying on the presumption therefore cannot claim it with open-dpp today. The same obligation is BATT-Art78(c), Partial on a stricter reading and assessed without this text (text trigger, #768)."
   - id: ESPR-Art11(d)
     section: Art11
     clause: Art. 11 first subparagraph (d)
@@ -1172,7 +1184,7 @@ criteria:
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
       validator: agent:conformance-review
       status: Not applicable
-      notes: "Operator duty by rule: a DPP service provider may not sell, reuse or process the data it stores beyond the service unless the operator agrees; that is the provider's contractual conduct. Nothing in open-dpp prevents it either way; supportive fact: the instance admin has no implicit access to an organization's passports (access needs membership of that organization)."
+      notes: "Operator duty by rule: a DPP service provider may not sell, reuse or process the data it stores beyond the service unless the operator agrees; that is the provider's contractual conduct. Nothing in open-dpp prevents or enforces it."
   - id: ESPR-Art11-sub3
     section: Art11
     clause: Art. 11 third subparagraph
@@ -1775,6 +1787,7 @@ criteria:
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
       validator: agent:conformance-review
       status: Partial
+      operational: true
       evidence:
         - type: code
           ref: apps/main/src/templates/domain/template.ts
@@ -1782,7 +1795,7 @@ criteria:
         - type: code
           ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
           note: Property and other element types any template can carry
-      notes: "Software part: the passport carries the reference of the DPP service provider hosting its back-up copy. Credited: as every Annex III element, it can be entered by hand as a Property of a generic submodel (no ESPR template, #827). Missing: open-dpp offers no back-up and so never fills or keeps the reference current (#596); same finding as REG1778-Art8(7)(e)."
+      notes: "Software part: the passport carries the reference of the DPP service provider hosting its back-up copy. Credited: as every Annex III element, it can be entered by hand as a Property of a generic submodel (no ESPR template, #827). Missing: open-dpp offers no back-up and so never fills or keeps the reference current (#596). The registry counterpart REG1778-Art8(7)(e) is a Gap because there the link must lead to a back-up that exists."
       gapIssue: 596
   - id: ESPR-AnnexIII-para2
     section: AnnexIII

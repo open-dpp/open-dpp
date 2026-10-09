@@ -23,7 +23,7 @@ criteria:
   - id: EN18221-4.1(1)
     section: "4.1"
     clause: 4.1(1)
-    paraphrase: "The DPP is stored by the actor that created it or by DPP service providers acting for that actor. Counterpart of ESPR-Art11(c), with the service provider acting on the creator's behalf."
+    paraphrase: "The DPP is stored by the actor responsible for creating it or by DPP service providers acting for that actor. Counterpart of ESPR-Art11(c), with the service provider acting on the responsible actor's behalf."
     applicability: mixed
     areas:
       - 6
@@ -58,7 +58,7 @@ criteria:
         - type: doc
           ref: docs/reference/configuration.md
           note: "OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: an instance hosts several organizations"
-      notes: "Software part: the passport can be stored by the economic operator itself or by a DPP service provider for it. Credited: open-dpp is self-hostable (the operator stores its own passports) and multi-tenant (a service provider runs one instance and hosts the passports of several organizations, each passport bound to its organization and reachable for management only by that organization's members; the instance admin has no implicit access). Which arrangement applies is the operator's choice of deployment, hence operational, and both are documented. Not part of this clause: the back-up provider's copy (4.3, 4.5, #596) and an operator identifier for the responsible economic operator (#1023). Earlier runs graded the same obligation in BATT-Art78(c) and CPR-Art78(c) Partial on a stricter reading (the deployment choice is not enforced, written delegation is not modelled); those rows wait for the text trigger of #768."
+      notes: "Software part: the passport can be stored by the economic operator itself or by a DPP service provider for it. Credited: open-dpp is self-hostable (the operator stores its own passports) and multi-tenant (a service provider runs one instance and hosts the passports of several organizations, each passport bound to its organization and reachable for management only by that organization's members). Which arrangement applies is the operator's choice of deployment, hence operational, and both are documented. Not part of this clause: the back-up provider's copy (4.3, 4.5, #596) and an operator identifier for the responsible economic operator (#1023). BATT-Art78(c), the same obligation assessed without this text, is Partial on a stricter reading (the deployment choice is not enforced, written delegation is not modelled); CPR-Art78(c) differs by its delta (storage as the construction DPP system specifies). Both wait for the text trigger of #768."
   - id: EN18221-4.1(2)
     section: "4.1"
     clause: 4.1(2)
@@ -70,7 +70,7 @@ criteria:
       date: 2026-10-09
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       operational: true
       evidence:
         - type: code
@@ -79,16 +79,20 @@ criteria:
         - type: code
           ref: apps/main/src/lib/repositories.ts
           note: save validates the plain object against the schema and writes the current state
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: updatedAt is set at creation and never changed
         - type: test
           ref: apps/main/src/aas/presentation/aas.test.context.ts
-          note: "assertModifySubmodelElementValue and assertModifySubmodelElement: a change is persisted and returned"
+          note: "assertModifySubmodelElementValue: the PATCH response carries the new value"
         - type: manual
-          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: added a Property (10 kg) to a submodel, changed it twice through PATCH (11 kg, 12 kg); the anonymous GET .../submodel-elements/Weight/$value on the public route answered 12 kg."
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: added a Property (10 kg) to a submodel, changed it twice through PATCH (11 kg, 12 kg); the anonymous GET .../submodel-elements/Weight/$value on the public route then answered 12 kg, while the public bundle still served updatedAt equal to createdAt. A File element whose library file a member deleted kept pointing at it (download 404, see EN18221-4.4(2))."
           date: 2026-10-09
         - type: doc
           ref: docs/guides/passports.md
           note: editing a passport, including after publication (lifecycle page)
-      notes: "Software part: what is stored reflects every change up to the current state. Credited: every edit (also of a published passport) is validated and persisted in a transaction and the public and member reads serve the stored current state. The accuracy and completeness of the content are the economic operator's duty (operational); completeness against a delegated act's data model cannot be checked yet (#826, on ESPR-Art9(1)). Not part of this clause: the passport's own updatedAt stays at its creation time (no code path updates it), which matters for replication (4.5(2)), not for the stored data."
+      notes: "Credited: every edit (also of a published passport) is validated and persisted in a transaction, and the public and member reads serve the stored current state. Missing: completeness can only be judged against the delegated act's data model, which open-dpp can neither import nor validate against (#826, as on ESPR-Art9(1), the counterpart row); the stored passport does not carry when it last changed (updatedAt stays at creation time); and stored references can go stale, as when a library file a published passport uses is deleted (#825, EN18221-4.4(2)). Accuracy of the content is the economic operator's duty (operational)."
+      gapIssue: 826
   - id: EN18221-4.1(3)
     section: "4.1"
     clause: 4.1(3)
@@ -153,7 +157,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/aas/PropertyValue.vue
           note: an xs:anyURI Property renders as a link, the way to refer to another passport
-      notes: "Credited: each passport is its own record with its own copies of the template's shell and submodels, and a passport can refer to another passport through an xs:anyURI Property or a ReferenceElement value (no editor for the latter). Missing: concept descriptions are not copied; the template and all passports created from it share the same concept-description records, and deleting a draft passport deletes them for the others, published passports included (code reading at 3e00ddab, not reproduced; concept descriptions enter only by import) (#1030). A typed passport-to-passport link is the linking clauses' matter (#835, #825)."
+      notes: "Credited: each passport is its own record with its own copies of the template's shell and submodels, and a passport can refer to another passport through an xs:anyURI Property or a ReferenceElement value (no editor for the latter). Missing: concept descriptions are not copied; the template and all passports created from it share the same concept-description records, and deleting a draft passport, or the draft template itself (a draft template can already seed passports), deletes them for all the others, published passports included (code reading at 3e00ddab, not reproduced; concept descriptions enter only by import) (#1030). A typed passport-to-passport link is the linking clauses' matter (#835, #825)."
       gapIssue: 1030
   - id: EN18221-4.1(5)
     section: "4.1"
@@ -184,7 +188,7 @@ criteria:
           ref: export.aas-environment-verifies
           result: failed
           date: 2026-10-09
-      notes: "Credited: the human-readable public view and the machine-readable AAS JSON reads and export are all generated from the stored data at request time. Missing: the export is not a standard AAS environment (the shell id is missing, Check export.aas-environment-verifies fails), there is no AASX, XML, JSON-LD or printable output, and whether these are the formats EN 18216 names is assessed in #761. Same finding as ESPR-Art10(1)(d) and BATT-Art77(5) (#823)."
+      notes: "Credited: the human-readable public view and the machine-readable AAS JSON reads and export are all generated from the stored data at request time, and the stored model is AAS (shells with their ids, submodels), so what a standard AAS serialisation needs is stored. Missing: what is generated today is not standard AAS (the export drops the stored shell id, Check export.aas-environment-verifies fails), and no AASX, XML, JSON-LD or printable output is generated; an AASX package would also need the attachment files, which the export leaves behind. Which formats EN 18216 requires, and so whether the stored data cover them all, is assessed in #761. Same finding as ESPR-Art10(1)(d) and BATT-Art77(5) (#823)."
       gapIssue: 823
   - id: EN18221-4.1(7)
     section: "4.1"
@@ -332,7 +336,7 @@ criteria:
         - type: manual
           ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: two PATCHes of a Property were recorded with old and new value (10 kg -> 11 kg -> 12 kg); publish, archive and restore of the same passport were not recorded."
           date: 2026-10-09
-      notes: "Credited: value, structure and access-rule changes are recorded with old and new value, in the same transaction as the change, also on published passports. Missing: status changes (publish, archive, restore) are not recorded at 3e00ddab (a defect: the tracker is never started on that path; the same holds for templates), nor are creation, import, permalink, identifier, presentation-configuration and media-library changes; there is no mechanism to exempt changes product rules allow to drop (#1029)."
+      notes: "Credited: value, structure and access-rule changes are recorded with old and new value, in the same transaction as the change, also on published passports. Missing: status changes (publish, archive, restore) are not recorded at 3e00ddab (a defect, #1032: the tracker is never started on that path; the same holds for templates), nor are creation, import, permalink, identifier, presentation-configuration and media-library changes; there is no mechanism to exempt changes product rules allow to drop (#1029)."
       gapIssue: 1029
   - id: EN18221-4.2(6)
     section: "4.2"
@@ -482,7 +486,7 @@ criteria:
   - id: EN18221-4.3(4)
     section: "4.3"
     clause: 4.3(4)
-    paraphrase: "Once the economic operator is no longer active on the market, the back-up DPP service provider opens general access to the DPP. Counterpart of the cessation limb of ESPR-Art11(e)."
+    paraphrase: "When the economic operator has left the market, anyone may reach the DPP at the back-up DPP service provider. Counterpart of the cessation limb of ESPR-Art11(e)."
     applicability: mixed
     areas:
       - 5
@@ -519,8 +523,9 @@ criteria:
         - type: code
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: the public view links the file with a download attribute
-        - type: test
-          ref: apps/main/src/media/infrastructure/media.service.spec.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: "File element: content type plus the media id as value"
         - type: manual
           ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: uploaded a PDF (POST /api/v2/media/upload), added a File element pointing at it to a submodel of the published passport, then without credentials read the element through /api/v2/p/<permalink>/submodels/.../submodel-elements/UserManual/$value (media id and content type) and downloaded it from /api/v2/media/<id>/download (200, application/pdf, bytes identical to the upload)."
           date: 2026-10-09
@@ -608,7 +613,7 @@ criteria:
   - id: EN18221-4.5(3)
     section: "4.5"
     clause: 4.5(3)
-    paraphrase: "Replication between the economic operator and its back-up DPP service provider can run over the standardised DPP lifecycle API of EN 18222; another secure mechanism both parties agree on is also allowed."
+    paraphrase: "The operator and its back-up DPP service provider must be able to replicate over the standardised DPP lifecycle API of EN 18222; a different secure mechanism both sides agree on may be used instead."
     applicability: software
     areas:
       - 1
@@ -628,7 +633,7 @@ criteria:
         - type: test
           ref: apps/main/src/passports/presentation/passport.controller.spec.ts
           note: list and create passports with an API key
-      notes: "Credited: a documented lifecycle API (OpenAPI) reads and writes passports for machine clients with an API key or Trusted-Client token, which a replication mechanism could be built on. Missing: no replication runs over it (#596); a back-up provider would need a member's credentials (no read-only replication role); the export-import round trip changes identity; whether the API is EN 18222's lifecycle API is assessed in #759."
+      notes: "Credited: a documented lifecycle API (OpenAPI) reads and writes passports for machine clients with an API key or Trusted-Client token, which a replication mechanism could be built on. Missing: no replication runs over it (#596); a back-up provider would need a member's credentials (no read-only replication role); the export-import round trip changes identity; whether the API is EN 18222's lifecycle API is assessed in #759. Partial, unlike the Gap rows on the provider's copy (4.3(1) to 4.3(3), 4.4(3)): this clause is about the channel, and a provider holding a member's key could already pull every passport and its files over it, while the copy those rows describe does not exist."
       gapIssue: 596
   - id: EN18221-4.5(4)
     section: "4.5"
@@ -647,5 +652,5 @@ criteria:
         - type: code
           ref: apps/main/src/passports/presentation/passport.controller.ts
           note: HTTP(S) JSON API
-      notes: "Credited: anything built on the API travels over HTTP(S) with JSON. Missing: no replication exists (#596); whether the protocol is one EN 18216 names is assessed in #761."
+      notes: "Credited: anything built on the API travels over HTTP(S) with JSON, the channel a pull-based replication would use (see 4.5(3)). Missing: no replication exists (#596); whether the protocol is one EN 18216 names is assessed in #761."
       gapIssue: 596
