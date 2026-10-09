@@ -16,3 +16,12 @@ export const PassportFilterParamsDtoSchema = FilterParamsDtoSchema.extend({
 });
 
 export type PassportFilterParamsDto = z.infer<typeof PassportFilterParamsDtoSchema>;
+
+// Body of the EU registry export: the passport filters without status (only Published are exported).
+export const PassportRegistryExportRequestDtoSchema = PassportFilterParamsDtoSchema.omit({
+  status: true,
+});
+
+export type PassportRegistryExportRequestDto = z.infer<
+  typeof PassportRegistryExportRequestDtoSchema
+>;

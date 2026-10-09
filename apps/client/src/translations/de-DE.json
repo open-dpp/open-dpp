@@ -746,7 +746,20 @@
     "removeEditingRestrictionsConfirmAccept": "Einschränkung entfernen",
     "restrictedEditingTag": "Beschränkte Bearbeitung",
     "blank": "Leer",
-    "fromTemplate": "Aus Produktpassvorlage"
+    "fromTemplate": "Aus Produktpassvorlage",
+    "registryExport": {
+      "button": "In EU-Register exportieren",
+      "title": "In EU-Register exportieren",
+      "description": "Exportiert die veröffentlichten Produktpässe als ZIP mit Dateien für das EU-Register (max. 100 Produktpässe pro Datei). Produktpässe, die nicht exportiert werden können, stehen in der Datei failed-passports.json im ZIP.",
+      "productGroup": "Produktgruppe",
+      "batteries": "Batterien",
+      "filters": "Produktpässe",
+      "onlyStatus": "Es werden nur Produktpässe mit dem Status „{status}“ exportiert.",
+      "export": "Exportieren",
+      "success": "Der Export wurde heruntergeladen. Prüfe failed-passports.json im ZIP, falls vorhanden.",
+      "noMatch": "Keine veröffentlichten Produktpässe entsprechen diesen Filtern.",
+      "error": "Der Export ist fehlgeschlagen."
+    }
   },
   "filter": {
     "status": "Status",

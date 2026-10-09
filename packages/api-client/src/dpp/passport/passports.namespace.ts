@@ -5,6 +5,7 @@ import type {
   GetAllPassportsParamsDto,
   PassportDto,
   PassportPaginationDto,
+  PassportRegistryExportRequestDto,
   PassportRequestCreateDto,
   PermalinkPaginationDto,
   RemoveEditingRestrictionsDto,
@@ -52,6 +53,15 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
 
   public async create(data: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data);
+  }
+
+  /** Published passports as ZIP of EU registry files, see POST /passports/export-to-registry. */
+  public async exportToRegistry(
+    data: PassportRegistryExportRequestDto,
+  ): Promise<AxiosResponse<Blob>> {
+    return await this.axiosInstance.post(`${this.passportEndpoint}/export-to-registry`, data, {
+      responseType: "blob",
+    });
   }
 
   public async getPermalinks(passportId: string, params?: CursorListParams) {

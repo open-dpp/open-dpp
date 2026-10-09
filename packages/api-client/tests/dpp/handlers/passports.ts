@@ -63,6 +63,19 @@ export function passportsHandlers() {
         )
       );
     }),
+    http.post(`${passportsEndpointUrl}/export-to-registry`, async ({ request }) => {
+      const body = await request.json();
+      if (JSON.stringify(body) !== JSON.stringify(passportFilterParams)) {
+        return HttpResponse.json({ message: "unexpected body" }, { status: 400 });
+      }
+      return HttpResponse.arrayBuffer(new ArrayBuffer(0), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Disposition": 'attachment; filename="eu-registry-export.zip"',
+        },
+      });
+    }),
     http.delete(`${passportsEndpointUrl}/${passport1.id}`, async () => {
       return HttpResponse.json(undefined, { status: 204 });
     }),

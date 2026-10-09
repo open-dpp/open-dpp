@@ -218,6 +218,15 @@ describe("apiClient", () => {
       expect(response.data).toEqual(passport1);
     });
 
+    it("should export passports to registry as zip", async () => {
+      const response = await sdk.dpp.passports.exportToRegistry(passportFilterParams);
+      expect(response.status).toEqual(200);
+      expect(response.headers["content-type"]).toEqual("application/zip");
+      expect(response.headers["content-disposition"]).toEqual(
+        'attachment; filename="eu-registry-export.zip"',
+      );
+    });
+
     it("should delete passport", async () => {
       const response = await sdk.dpp.passports.deleteById(passport1.id);
       expect(response.status).toEqual(204);

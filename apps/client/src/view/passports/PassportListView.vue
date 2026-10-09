@@ -13,6 +13,7 @@ import BulkImportLaunchDialog from "../../components/bulk-import/BulkImportLaunc
 import BulkImportWizard from "../../components/bulk-import/BulkImportWizard.vue";
 import DigitalProductDocumentTable from "../../components/digital-product-document/DigitalProductDocumentTable.vue";
 import PassportCreateDialog from "../../components/passport/PassportCreateDialog.vue";
+import PassportRegistryExportDialog from "../../components/passport/PassportRegistryExportDialog.vue";
 import { useExportImport } from "../../composables/export-import";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
@@ -76,6 +77,7 @@ const {
 });
 
 const createDialog = useTemplateRef("createDialog");
+const registryExportDialog = useTemplateRef("registryExportDialog");
 
 const {
   importing,
@@ -103,6 +105,10 @@ const {
 
 function newPassport() {
   createDialog.value?.open();
+}
+
+function openRegistryExport() {
+  registryExportDialog.value?.open();
 }
 
 const bulkImportLaunchDialog = useTemplateRef("bulkImportLaunchDialog");
@@ -215,6 +221,12 @@ onMounted(async () => {
         severity="secondary"
         @click="openBulkImportLaunch"
       />
+      <Button
+        :label="t('passports.registryExport.button')"
+        severity="secondary"
+        data-cy="registry-export-open"
+        @click="openRegistryExport"
+      />
     </template>
     <template #actions="{ item, goToItem }">
       <Button
@@ -257,6 +269,7 @@ onMounted(async () => {
     </template>
   </DigitalProductDocumentTable>
   <PassportCreateDialog ref="createDialog" />
+  <PassportRegistryExportDialog ref="registryExportDialog" />
   <BulkImportLaunchDialog
     ref="bulkImportLaunchDialog"
     @use-existing="onUseExistingBulkImportConfig"
