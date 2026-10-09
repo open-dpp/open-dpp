@@ -882,7 +882,7 @@ runs:
       - id: EN18239-6.5.5
         reason: not assessed
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     pr: 1028
     adversarialReview:
       blockingObjections: 4
@@ -931,7 +931,7 @@ runs:
       - id: TOYS-Art21(4)
         reason: mirror of ESPR-Art11-sub4
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     pr: 1028
     adversarialReview:
       blockingObjections: 4
@@ -949,6 +949,6 @@ runs:
       - id: CPR-Art78(f)
         reason: manual
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     pr: 1028
     notes: "Ticket #758, follow-up of objection 3 of the adversarial review of PR #1028: CPR-Art78(f) restates ESPR-Art11(f) and adds the right to access, so the Mirror did not hold; an Extract correction in this PR made it an own Criterion and this run assesses it against main 272eab96: Partial (#821), the same finding as BATT-Art78(f) and ESPR-Art11(f). Created after the review comment was posted, so no adversarial review of its own; the reviewer of record checks it with the rest of the PR."
