@@ -962,6 +962,18 @@ criteria:
       - 2
     operationalisedBy:
       - EN18221
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: one-passport export, the only copy function
+      notes: "Software part (EN 18221 Annex ZA: the technical aspects of the back-up, through 4.3 and 4.5; the back-up's existence is the operator's act): make a back-up copy available through a DPP service provider and keep it current. Missing: no back-up or replication function, the export is a manual copy in open-dpp's own JSON format without files, history or identifiers whose import creates a different passport, and open-dpp cannot act as a back-up provider for another operator's passport (EN18221-4.3(1), 4.5(1), #596). Same finding as REG1778-Art8(7)(e) and CPR-Art75(2)(f)."
+      gapIssue: 596
   - id: ESPR-Art11(a)
     section: Art11
     clause: Art. 11 first subparagraph (a)
@@ -1018,6 +1030,24 @@ criteria:
       - 6
     operationalisedBy:
       - EN18221
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/infrastructure/passport.schema.ts
+          note: every passport bound to its organization
+        - type: doc
+          ref: docs/home/getting-started.md
+          note: self-hosted setup
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: production deployment
+      notes: "Software part: the passport is stored by the economic operator or by DPP service providers. Credited: open-dpp supports both, self-hosted by the operator or hosted for several operators by a provider on one multi-tenant instance (EN18221-4.1(1), Met). Missing: the harmonised standard gives presumption of conformity with this point only through EN 18221 4.5, replication between the operator and its back-up DPP service provider, which open-dpp lacks (EN18221-4.5(1), #596); a passport also records neither the provider that hosts it nor the one holding its back-up (ESPR-AnnexIII(l))."
+      gapIssue: 596
   - id: ESPR-Art11(d)
     section: Art11
     clause: Art. 11 first subparagraph (d)
@@ -1039,6 +1069,26 @@ criteria:
       - 6
     operationalisedBy:
       - EN18221
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: only a Draft can be deleted
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: an archived passport is no longer served publicly
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+      notes: "Software part: keep the passport available for the delegated-act period, also after the operator's insolvency, liquidation or cessation. Credited: a published passport cannot be deleted, so it stays online as long as the instance runs. Missing: no availability period on a passport, archiving ends public access, and nothing keeps the passport available once the operator or its instance is gone: no back-up provider with general access after cessation (EN18221-4.3(4), #596), no handover or escrow (#825). Same reading as CPR-Art78(e); BATT-Art78(e) is the cessation limb alone (Gap)."
+      gapIssue: 825
   - id: ESPR-Art11(f)
     section: Art11
     clause: Art. 11 first subparagraph (f)
@@ -1117,11 +1167,23 @@ criteria:
     clause: Art. 11 second subparagraph
     paraphrase: DPP service providers may not sell, reuse or process DPP data beyond what the storage or processing service needs, unless the operator agrees.
     applicability: operator
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Operator duty by rule: a DPP service provider may not sell, reuse or process the data it stores beyond the service unless the operator agrees; that is the provider's contractual conduct. Nothing in open-dpp prevents it either way; supportive fact: the instance admin has no implicit access to an organization's passports (access needs membership of that organization)."
   - id: ESPR-Art11-sub3
     section: Art11
     clause: Art. 11 third subparagraph
     paraphrase: The Commission may set requirements for DPP service providers and an optional certification scheme by delegated act.
     applicability: commission
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Not applicable
+      notes: "Commission power: delegated acts on requirements for DPP service providers and an optional certification scheme. None adopted (watch: ESPR delegated acts); a future act joins the scope on adoption."
   - id: ESPR-Art11-sub4
     section: Art11
     clause: Art. 11 fourth subparagraph
@@ -1708,6 +1770,20 @@ criteria:
       - 8
     operationalisedBy:
       - EN18221
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: generic templates the operator defines
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: Property and other element types any template can carry
+      notes: "Software part: the passport carries the reference of the DPP service provider hosting its back-up copy. Credited: as every Annex III element, it can be entered by hand as a Property of a generic submodel (no ESPR template, #827). Missing: open-dpp offers no back-up and so never fills or keeps the reference current (#596); same finding as REG1778-Art8(7)(e)."
+      gapIssue: 596
   - id: ESPR-AnnexIII-para2
     section: AnnexIII
     clause: Annex III second paragraph

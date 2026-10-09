@@ -10,7 +10,7 @@ check(
     id: "export.aas-environment-verifies",
     title:
       "the JSON export holds an AAS environment that deserialises and verifies against IEC 63278-1 (V3.0)",
-    criteria: ["ESPR-Art10(1)(d)", "BATT-Art77(5)", "REG1778-Art8(7)", "CPR-Art77(1)(d)"],
+    criteria: ["ESPR-Art10(1)(d)", "BATT-Art77(5)", "REG1778-Art8(7)", "CPR-Art77(1)(d)", "EN18221-4.1(5)"],
   },
   async ({ request }) => {
     const subject = readSubject();
