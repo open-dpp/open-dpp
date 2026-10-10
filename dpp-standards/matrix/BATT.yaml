@@ -422,6 +422,7 @@ criteria:
       - EN18216
       - EN18222
       - EN18223
+      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -477,6 +478,7 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18223
+      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -684,8 +686,6 @@ criteria:
     clause: Art. 78(d)
     paraphrase: Authorised operators may not sell, re-use or process the data beyond what the storage or processing service needs.
     applicability: operator
-    operationalisedBy:
-      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -742,6 +742,7 @@ criteria:
       - 10
     operationalisedBy:
       - EN18246
+      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -762,6 +763,7 @@ criteria:
     operationalisedBy:
       - EN18239
       - EN18246
+      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

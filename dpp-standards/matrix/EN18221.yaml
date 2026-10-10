@@ -1,0 +1,656 @@
+# Conformance Matrix: EN18221 (EN 18221:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18221-2026.pdf) on 2026-10-09 (ticket #760); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: the subclauses of clause 4 have no numbered points, so "4.2(5)" is the fifth paragraph of 4.2. Paragraphs without a requirement of their own keep their number and are listed here.
+# Not extracted, no requirement of their own: clause 1 (scope), 2 (normative references: EN 18216, EN 18220, EN 18222, EN 18239, EN 18246), 3 (terms: economic operator, DPP, DPP service provider with its main and back-up variants, DPP lifetime = the period regulation requires the DPP to stay available), 4.1(6) (the architecture is decentralised and no storage technology is imposed), 4.1(8) (pointer to EN 18223 for the formats and semantic models used in storage; EN 18223 is in the Bibliography, so informative here), 4.2(1) (describes the archiving function whose rules 4.2(2) to 4.2(9) give) and the Bibliography (EN 18223, ISO 14721:2025 OAIS).
+# Annex ZA (informative) maps two Articles: ESPR Art. 10(4) to 4.3 and 4.5, presumption limited to the technical aspects of the back-up and not its existence; ESPR Art. 11(c) to 4.5; both once the EN is cited in the OJ (cited by Implementing Decision (EU) 2026/1736). The other law rows naming EN18221 in operationalisedBy are rows its clauses address without presumption (map rule of 2026-10-09: Annex ZA plus the links the text supports).
+standard: EN18221
+edition: EN 18221:2026
+extractedFrom: standards/EN18221-2026.pdf
+extractedAt: 2026-10-09
+sections:
+  - id: "4.1"
+    title: 4.1 Requirements for storage of the digital product passport data
+  - id: "4.2"
+    title: 4.2 Archiving and rules for archiving
+  - id: "4.3"
+    title: 4.3 Data persistence and rules for data persistence
+  - id: "4.4"
+    title: 4.4 Additional digital documentation attached to digital product passport
+  - id: "4.5"
+    title: 4.5 Replication between economic operators and back-up digital product passport service providers
+criteria:
+  - id: EN18221-4.1(1)
+    section: "4.1"
+    clause: 4.1(1)
+    paraphrase: "The DPP is stored by the actor responsible for creating it or by DPP service providers acting for that actor. Counterpart of ESPR-Art11(c), with the service provider acting on the responsible actor's behalf."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Met
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/infrastructure/passport.schema.ts
+          note: every passport carries the organizationId of the economic operator it belongs to
+        - type: code
+          ref: apps/main/src/digital-product-document/application/digital-product-document.service.ts
+          note: "loadDigitalProductDocumentAndCheckOwnership: only members of the owning organization reach a passport"
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+          note: rejects an API-key user who is not a member of the organization
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: a member of a different organization gets 404 for a draft passport and 403 for another organization's passport
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: createPassportFromTemplate rejects a template from another organization
+        - type: doc
+          ref: docs/home/getting-started.md
+          note: "self-hosted setup: the economic operator stores its passports on its own instance"
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: production deployment with the operator's own MongoDB replica set and object storage
+        - type: doc
+          ref: docs/reference/configuration.md
+          note: "OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: an instance hosts several organizations"
+      notes: "Software part: the passport can be stored by the economic operator itself or by a DPP service provider for it. Credited: open-dpp is self-hostable (the operator stores its own passports) and multi-tenant (a service provider runs one instance and hosts the passports of several organizations, each passport bound to its organization and reachable for management only by that organization's members). Which arrangement applies is the operator's choice of deployment, hence operational, and both are documented. Not part of this clause: the back-up provider's copy (4.3, 4.5, #596) and an operator identifier for the responsible economic operator (#1023). BATT-Art78(c), the same obligation assessed without this text, is Partial on a stricter reading (the deployment choice is not enforced, written delegation is not modelled); CPR-Art78(c) differs by its delta (storage as the construction DPP system specifies). Both wait for the text trigger of #768."
+  - id: EN18221-4.1(2)
+    section: "4.1"
+    clause: 4.1(2)
+    paraphrase: "The stored DPP data are accurate and complete and carry every relevant change up to the current state. Counterpart of the accuracy limb of ESPR-Art9(1)."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: every modification is validated and persisted inside a MongoDB transaction
+        - type: code
+          ref: apps/main/src/lib/repositories.ts
+          note: save validates the plain object against the schema and writes the current state
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: updatedAt is set at creation and never changed
+        - type: test
+          ref: apps/main/src/aas/presentation/aas.test.context.ts
+          note: "assertModifySubmodelElementValue: the PATCH response carries the new value"
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: added a Property (10 kg) to a submodel, changed it twice through PATCH (11 kg, 12 kg); the anonymous GET .../submodel-elements/Weight/$value on the public route then answered 12 kg, while the public bundle still served updatedAt equal to createdAt. A File element whose library file a member deleted kept pointing at it (download 404, see EN18221-4.4(2))."
+          date: 2026-10-09
+        - type: doc
+          ref: docs/guides/passports.md
+          note: editing a passport, including after publication (lifecycle page)
+      notes: "Credited: every edit (also of a published passport) is validated and persisted in a transaction, and the public and member reads serve the stored current state. Missing: completeness can only be judged against the delegated act's data model, which open-dpp can neither import nor validate against (#826, as on ESPR-Art9(1), the counterpart row); the stored passport does not carry when it last changed (updatedAt stays at creation time); and stored references can go stale, as when a library file a published passport uses is deleted (#825, EN18221-4.4(2)). Accuracy of the content is the economic operator's duty (operational)."
+      gapIssue: 826
+  - id: EN18221-4.1(3)
+    section: "4.1"
+    clause: 4.1(3)
+    paraphrase: "For the whole DPP lifetime (the availability period regulation sets), the DPP is reachable online over the exchange protocols of EN 18216."
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport bundle and AAS read routes, OptionalAuth
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GS1 Digital Link resolver redirects to the published passport
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: resolveToPassport answers 404 unless the passport is Published or the caller is a member
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+        - type: manual
+          ref: 'Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: anonymous GET /api/v2/p/<permalink> answered 200 while Published, 404 (also .../submodels) after PUT .../status {"method":"Archive"}, and 200 again after Restore; while Archived, an added submodel was refused ("Cannot modify an archived digital product document").'
+          date: 2026-10-09
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: Draft, Published, Archived; nothing on availability periods
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-09
+      notes: "Credited: a published passport is reachable online without an account through the permalink, the public AAS JSON routes and the GS1 resolver (Check access.anonymous-reads-published). Missing: no DPP lifetime (no availability period on a passport, nothing that keeps a passport online until a date); archiving ends public access, so archiving is not a way to retire a passport while keeping it available; nothing keeps it reachable once the instance goes away (the back-up provider of 4.3, #596). Whether the routes are the exchange protocols of EN 18216 is assessed in #761. The lifetime belongs with the availability-period rows ESPR-Art9(2)(i) and CPR-Art75(2)(i) under #825."
+      gapIssue: 825
+  - id: EN18221-4.1(4)
+    section: "4.1"
+    clause: 4.1(4)
+    paraphrase: "A DPP may refer to other DPPs, but each DPP is stored on its own, independently of the DPPs it refers to."
+    applicability: software
+    areas:
+      - 6
+      - 9
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: copyEnvironment copies shell and submodels with new ids but keeps the template's concept-description ids; deleteEnvironment deletes them by id
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: createPassportFromTemplate; deletePassport cascades through deleteEnvironment (Draft only)
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: createPassportFromTemplate copies the template's environment
+        - type: code
+          ref: apps/client/src/components/aas/PropertyValue.vue
+          note: an xs:anyURI Property renders as a link, the way to refer to another passport
+      notes: "Credited: each passport is its own record with its own copies of the template's shell and submodels, and a passport can refer to another passport through an xs:anyURI Property or a ReferenceElement value (no editor for the latter). Missing: concept descriptions are not copied; the template and all passports created from it share the same concept-description records, and deleting a draft passport, or the draft template itself (a draft template can already seed passports), deletes them for all the others, published passports included (code reading at 3e00ddab, not reproduced; concept descriptions enter only by import) (#1030). A typed passport-to-passport link is the linking clauses' matter (#835, #825)."
+      gapIssue: 1030
+  - id: EN18221-4.1(5)
+    section: "4.1"
+    clause: 4.1(5)
+    paraphrase: "The data are stored so that the human-readable and machine-readable formats EN 18216 requires can be produced from what is stored."
+    applicability: software
+    areas:
+      - 2
+      - 11
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: human-readable public view rendered from the stored passport
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: machine-readable AAS JSON reads of the stored passport
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: open-dpp JSON export of the stored passport
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+        - type: check
+          ref: export.aas-environment-verifies
+          result: failed
+          date: 2026-10-09
+      notes: "Credited: the human-readable public view and the machine-readable AAS JSON reads and export are all generated from the stored data at request time, and the stored model is AAS (shells with their ids, submodels), so what a standard AAS serialisation needs is stored. Missing: what is generated today is not standard AAS (the export drops the stored shell id, Check export.aas-environment-verifies fails), and no AASX, XML, JSON-LD or printable output is generated; an AASX package would also need the attachment files, which the export leaves behind. Which formats EN 18216 requires, and so whether the stored data cover them all, is assessed in #761. Same finding as ESPR-Art10(1)(d) and BATT-Art77(5) (#823)."
+      gapIssue: 823
+  - id: EN18221-4.1(7)
+    section: "4.1"
+    clause: 4.1(7)
+    paraphrase: "The storage requirements bind the main and the back-up DPP service provider alike. Both protect the stored data with measures built on proven, reliable technology: availability, integrity and authenticity, and protection against loss, malicious change, unauthorised access and tampering, also as EN 18239 and EN 18246 require."
+    applicability: mixed
+    areas:
+      - 6
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/database/config.ts
+          note: MongoDB replica set required
+        - type: code
+          ref: apps/main/src/database/transaction.service.ts
+          note: multi-document transactions around every write
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element access rules guard reads and writes
+        - type: code
+          ref: apps/main/src/media/presentation/virus-scan.file-validator.ts
+          note: optional ClamAV scan of uploads, fail-closed when configured
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: replica set, object storage with optional bucket versioning, ClamAV; no backup or restore section
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-10-09
+        - type: check
+          ref: access.foreign-user-denied-management
+          result: passed
+          date: 2026-10-09
+      notes: "Software part: storage measures for availability, integrity, authenticity and protection against loss, malicious change and unauthorised access. Credited: a MongoDB replica set is required and documented, writes run in transactions and are schema-validated, management routes refuse anonymous and foreign users (Checks access.anonymous-denied-management, access.foreign-user-denied-management), uploads can be virus-scanned, buckets can be versioned. Missing: no backup and restore tooling or procedure and nothing on disaster recovery in the operator docs, no checksum, hash or signature over passport data or media (the stored eTag is never checked, #824), deleting a library file does not check whether a published passport still uses it, no back-up provider (#596). The authentication and integrity measures of EN 18239 and EN 18246 are assessed with those texts. Primary cluster: hardening and recovery (#1027, backup and restore)."
+      gapIssue: 1027
+  - id: EN18221-4.1(9)
+    section: "4.1"
+    clause: 4.1(9)
+    paraphrase: "The data are stored in a way that serves what EN 18220 (data carriers) and EN 18222 (the lifecycle and search APIs) need from them."
+    applicability: software
+    areas:
+      - 1
+      - 4
+      - 6
+  - id: EN18221-4.2(2)
+    section: "4.2"
+    clause: 4.2(2)
+    paraphrase: "Archiving begins with the first change made to the DPP as initially created."
+    applicability: software
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/change-tracker.ts
+          note: changes are tracked only after withTracking() starts the tracker
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: createAndPersistPassport records no activity; modifyPassportStatus never starts the tracker
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: after create, publish, archive and restore the activities collection of the Instance's database held no document; the first activity appeared with the first submodel change."
+          date: 2026-10-09
+      notes: "Credited: the activity history starts with the first tracked change after creation. Missing: it is a list of changes, not archived versions, and the passport as first created is not recorded (creation and import write no activity), so the initial version cannot be rebuilt (#1029)."
+      gapIssue: 1029
+  - id: EN18221-4.2(3)
+    section: "4.2"
+    clause: 4.2(3)
+    paraphrase: "The archived versions are kept twice: by the back-up DPP service provider, and by the DPP's creator or the main DPP service provider acting for it."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: the change history lives in the same database as the passport
+      notes: "Software part: archived versions held by the creator or main provider and by the back-up provider. Missing on both sides: the creator's instance keeps a change history but no versions (#1029), and there is no back-up provider copy at all (#596)."
+      gapIssue: 596
+  - id: EN18221-4.2(4)
+    section: "4.2"
+    clause: 4.2(4)
+    paraphrase: "Every archived version is kept for the whole DPP lifetime."
+    applicability: software
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: deleteByAggregateId is the only deletion of history entries
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: deletes a passport, with its history, only while Draft
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+        - type: test
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.spec.ts
+      notes: "Credited: change records of a published or archived passport are never deleted by the application (only a draft is deleted, together with its history). Missing: what is kept is not archived versions (#1029), nothing protects the records in the database, and the DPP lifetime is not represented (#825)."
+      gapIssue: 1029
+  - id: EN18221-4.2(5)
+    section: "4.2"
+    clause: 4.2(5)
+    paraphrase: "Every change to the DPP is archived; only changes that product-specific rules explicitly exempt (real-time sensor readings, for instance) may be left out."
+    applicability: software
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: the 24 recorded activity types
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: content changes write their activity in the same transaction
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: modifyPassportStatus builds the status-change activity from a tracker that was never started, so it is always empty and dropped
+        - type: test
+          ref: apps/main/src/aas/presentation/aas.test.context.ts
+          note: assertGetActivities, assertDownloadActivities
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: two PATCHes of a Property were recorded with old and new value (10 kg -> 11 kg -> 12 kg); publish, archive and restore of the same passport were not recorded."
+          date: 2026-10-09
+      notes: "Credited: value, structure and access-rule changes are recorded with old and new value, in the same transaction as the change, also on published passports. Missing: status changes (publish, archive, restore) are not recorded at 3e00ddab (a defect, #1032: the tracker is never started on that path; the same holds for templates), nor are creation, import, permalink, identifier, presentation-configuration and media-library changes; there is no mechanism to exempt changes product rules allow to drop (#1029)."
+      gapIssue: 1029
+  - id: EN18221-4.2(6)
+    section: "4.2"
+    clause: 4.2(6)
+    paraphrase: "An attribute of an archived version carries the same access restrictions as that attribute in the current DPP."
+    applicability: software
+    areas:
+      - 5
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/shared.activity.ts
+          note: "filterChangesByAbility: a change is shown only if the caller may read its path"
+        - type: code
+          ref: apps/main/src/digital-product-document/application/digital-product-document.service.ts
+          note: getActivities requires membership of the owning organization
+        - type: test
+          ref: apps/main/src/activity-history/domain/activities/shared.activity.spec.ts
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: GET /api/v2/passports/<id>/activities answered 200 for the owner and 403 without credentials; the public route has no history."
+          date: 2026-10-09
+      notes: "Credited: members see a change only when their current rules let them read its element path. Missing: no non-member actor sees any archived attribute, also where the current passport grants read access to them (the public, external roles), so the archive is not under the same restrictions as the current passport, only under stricter ones; it holds changes, not versions (#1029)."
+      gapIssue: 1029
+  - id: EN18221-4.2(7)
+    section: "4.2"
+    clause: 4.2(7)
+    paraphrase: "An authenticated and authorised actor can retrieve the archived version that was current at a given point in time."
+    applicability: software
+    areas:
+      - 1
+      - 5
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: lists changes by period; no state at a point in time
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: the member history lists the changes with their dates; no route or view returns the passport as it was at a given time."
+          date: 2026-10-09
+      notes: "Missing: no route, view or export returns the passport as of a point in time; the change list cannot rebuild one without a recorded baseline (#1029)."
+      gapIssue: 1029
+  - id: EN18221-4.2(8)
+    section: "4.2"
+    clause: 4.2(8)
+    paraphrase: "The integrity and originality of the archived versions are ensured as EN 18246 lays down."
+    applicability: software
+    areas:
+      - 6
+      - 10
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: plain documents; no hash chain or signature
+      notes: "Missing: there are no archived versions, and the change records carry no hash chain, signature or other protection of integrity and originality; they can be changed in the database. The mechanism is EN 18246's matter (#824, #1024); the archive it would protect is #1029."
+      gapIssue: 1029
+  - id: EN18221-4.2(9)
+    section: "4.2"
+    clause: 4.2(9)
+    paraphrase: "Recommendation: main and back-up DPP service providers follow the OAIS reference model (ISO 14721) for archiving, in particular its conformance, information, preservation-objective, mandatory-responsibility, general-model and information-model parts, and look to its archive-interoperability clause for guidance."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: the only record of the past
+      notes: "Recommendation. Software part: an archive whose information model and functions follow OAIS (ISO 14721). Missing: no archive exists to follow it (#1029)."
+      gapIssue: 1029
+  - id: EN18221-4.3(1)
+    section: "4.3"
+    clause: 4.3(1)
+    paraphrase: "Where a back-up copy of the DPP must be made available when the product is placed on the market, the DPP service provider holding it stores the most recent version and every required historical version. Annex ZA maps this subclause to ESPR-Art10(4), technical aspects of the back-up only."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: one-passport export; import creates a new passport
+        - type: test
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.spec.ts
+          note: import assigns new ids, resets the status to Draft and nullifies media unknown to the instance
+      notes: "Software part: hand a back-up copy (latest version and the required historical versions) to a DPP service provider, or let open-dpp act as that provider. Missing: no back-up function; the one-passport export is a manual copy in open-dpp's own JSON format without media files, history, identifiers or permalinks, and importing it creates a different passport (new ids, Draft, attachments dropped when unknown), so a provider cannot hold the operator's passport as such (#596). Annex ZA presumes conformity with ESPR-Art10(4) through this subclause and 4.5."
+      gapIssue: 596
+  - id: EN18221-4.3(2)
+    section: "4.3"
+    clause: 4.3(2)
+    paraphrase: "An attribute of the back-up copy carries the same access restrictions as that attribute in the original DPP."
+    applicability: software
+    areas:
+      - 5
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/exportable/aas-exportable.ts
+          note: the export is filtered by the caller's read rights
+      notes: "Missing: no back-up copy exists (#596). The export, the closest thing, drops what the exporting member may not read and does not tell a receiving provider which rule applies to which attribute in a form another system enforces."
+      gapIssue: 596
+  - id: EN18221-4.3(3)
+    section: "4.3"
+    clause: 4.3(3)
+    paraphrase: "For the whole DPP lifetime, the back-up DPP service provider makes the DPP available to users who are specifically authorised."
+    applicability: mixed
+    areas:
+      - 5
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: a back-up provider serving the DPP to specifically authorised users. Missing: no back-up copy (#596) and no actors beyond members and the public to authorise (#821, #1023)."
+      gapIssue: 596
+  - id: EN18221-4.3(4)
+    section: "4.3"
+    clause: 4.3(4)
+    paraphrase: "When the economic operator has left the market, anyone may reach the DPP at the back-up DPP service provider. Counterpart of the cessation limb of ESPR-Art11(e)."
+    applicability: mixed
+    areas:
+      - 5
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: open general access at the back-up provider once the economic operator has left the market. Missing: no back-up copy (#596), no notion of an operator that is no longer active (organizations cannot be deactivated, there is no policy for what happens to their passports when an organization ends), no handover or escrow. Same finding as BATT-Art78(e) (#825)."
+      gapIssue: 825
+  - id: EN18221-4.4(1)
+    section: "4.4"
+    clause: 4.4(1)
+    paraphrase: "Additional digital documentation is part of the DPP, either embedded or referenced, and can be reached through the DPP."
+    applicability: software
+    areas:
+      - 6
+      - 11
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/extract-media-ids.ts
+          note: "a File element or thumbnail carries the media id: documentation included by reference"
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: GET /media/:id/download serves the file
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: the public view links the file with a download attribute
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: "File element: content type plus the media id as value"
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: uploaded a PDF (POST /api/v2/media/upload), added a File element pointing at it to a submodel of the published passport, then without credentials read the element through /api/v2/p/<permalink>/submodels/.../submodel-elements/UserManual/$value (media id and content type) and downloaded it from /api/v2/media/<id>/download (200, application/pdf, bytes identical to the upload)."
+          date: 2026-10-09
+      notes: "Credited: additional documentation is included by reference (a File element holding the media id) and reachable through the passport, on the public view and the public API. Not part of this clause: attachments are more open than the passport's rules (#836, EN18239-5.2(22)); availability for the lifetime is 4.4(2)."
+  - id: EN18221-4.4(2)
+    section: "4.4"
+    clause: 4.4(2)
+    paraphrase: "That documentation comes in a format the user can download and keep on a device, so it stays accessible to them at all times, and it stays reachable online for the whole DPP lifetime."
+    applicability: mixed
+    areas:
+      - 6
+      - 11
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/media/infrastructure/media.service.ts
+          note: PDFs kept as uploaded; images re-encoded to WebP; deleteFileById removes object and record
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: download link
+        - type: manual
+          ref: "Against an Instance built from 3e00ddab (port 3001), as owner of the published conformance passport: after the download above, DELETE /api/v2/media/<id> by a member answered 200 while the published passport's File element still pointed at it; the element kept the id and the anonymous download answered 404."
+          date: 2026-10-09
+      notes: "Credited: documentation can be downloaded and kept (PDF unchanged, images as WebP). Missing: deleting a library file does not check whether a published passport uses it, so an attachment can disappear while the passport is on the market (the deletion is not recorded either); no DPP lifetime and no back-up provider to keep it online once the instance goes away (#825, #596)."
+      gapIssue: 825
+  - id: EN18221-4.4(3)
+    section: "4.4"
+    clause: 4.4(3)
+    paraphrase: "The back-up DPP service provider stores the mandatory digital documentation of the DPP, embedded or referenced, and makes it accessible."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: the export carries media ids, not the files; import drops ids unknown to the instance
+      notes: "Missing: no back-up copy (#596), and the export that comes closest leaves the files themselves behind."
+      gapIssue: 596
+  - id: EN18221-4.5(1)
+    section: "4.5"
+    clause: 4.5(1)
+    paraphrase: "The DPP and every change to it are replicated to its back-up DPP service provider, as 4.3 requires. Annex ZA maps this subclause to ESPR-Art10(4) (technical aspects of the back-up only) and ESPR-Art11(c)."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: replicate the DPP and every change to the back-up provider. Missing: no replication of any kind, no change feed or webhook (#596). Annex ZA presumes conformity with ESPR-Art10(4) (technical aspects) and ESPR-Art11(c) through this subclause."
+      gapIssue: 596
+  - id: EN18221-4.5(2)
+    section: "4.5"
+    clause: 4.5(2)
+    paraphrase: "After changes, replication runs often enough to keep data loss small, for instance against a maximum recovery point objective (RPO), so the data survive the economic operator leaving the market; product-specific rules may fix the frequency."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: updatedAt is set at creation and never changed
+      notes: "Missing: no replication, so no frequency or recovery point objective to set; nothing an incremental replication could key on either (the passport's updatedAt never moves, the passport list filters by creation date only, no change feed) (#596)."
+      gapIssue: 596
+  - id: EN18221-4.5(3)
+    section: "4.5"
+    clause: 4.5(3)
+    paraphrase: "The operator and its back-up DPP service provider must be able to replicate over the standardised DPP lifecycle API of EN 18222; a different secure mechanism both sides agree on may be used instead."
+    applicability: software
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "passport lifecycle API: create, read, update, status, export, import"
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: API keys and Trusted-Client tokens for machine access
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+          note: list and create passports with an API key
+      notes: "Credited: a documented lifecycle API (OpenAPI) reads and writes passports for machine clients with an API key or Trusted-Client token, which a replication mechanism could be built on. Missing: no replication runs over it (#596); a back-up provider would need a member's credentials (no read-only replication role); the export-import round trip changes identity; whether the API is EN 18222's lifecycle API is assessed in #759. Partial, unlike the Gap rows on the provider's copy (4.3(1) to 4.3(3), 4.4(3)): this clause is about the channel, and a provider holding a member's key could already pull every passport and its files over it, while the copy those rows describe does not exist."
+      gapIssue: 596
+  - id: EN18221-4.5(4)
+    section: "4.5"
+    clause: 4.5(4)
+    paraphrase: "That replication travels over a data exchange protocol conforming to EN 18216."
+    applicability: software
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-10-09
+      commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: HTTP(S) JSON API
+      notes: "Credited: anything built on the API travels over HTTP(S) with JSON, the channel a pull-based replication would use (see 4.5(3)). Missing: no replication exists (#596); whether the protocol is one EN 18216 names is assessed in #761."
+      gapIssue: 596
