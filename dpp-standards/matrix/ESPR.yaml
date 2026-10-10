@@ -1032,10 +1032,10 @@ criteria:
     operationalisedBy:
       - EN18221
     assessment:
-      date: 2026-10-09
+      date: 2026-10-10
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       operational: true
       evidence:
         - type: code
@@ -1059,7 +1059,8 @@ criteria:
         - type: doc
           ref: docs/reference/configuration.md
           note: an instance hosts several organizations
-      notes: "Software part: the passport is stored by the economic operator responsible for its creation or by DPP service providers. Credited: open-dpp supports both, self-hosted by the operator or hosted for several operators by a provider on one multi-tenant instance, each passport bound to its organization and managed only by its members (EN18221-4.1(1), Met). Graded on the article. The harmonised route to presumption of conformity is narrower: EN 18221 Annex ZA maps this point only to 4.5, replication to the back-up DPP service provider, which open-dpp lacks (EN18221-4.5(1), Gap, #596); an operator relying on the presumption therefore cannot claim it with open-dpp today. The same obligation is BATT-Art78(c), Partial on a stricter reading and assessed without this text (text trigger, #768)."
+      notes: "Software part: the passport is stored by the economic operator responsible for its creation or by DPP service providers. Credited: open-dpp supports both, self-hosted by the operator or hosted for several operators by a provider on one multi-tenant instance, each passport bound to its organization and managed only by its members (EN18221-4.1(1), Met). Capped at Partial by the Annex ZA rule (map owner decision 2026-10-10, #749 Notes): EN 18221 Annex ZA routes the presumption of conformity with this point through 4.5 alone, replication between the operator and its back-up DPP service provider, which open-dpp does not meet (EN18221-4.5(1), 4.5(2) Gap; 4.5(3), 4.5(4) Partial; #596). Re-assessed on 2026-10-10 from Met; the evidence is unchanged."
+      gapIssue: 596
   - id: ESPR-Art11(d)
     section: Art11
     clause: Art. 11 first subparagraph (d)
