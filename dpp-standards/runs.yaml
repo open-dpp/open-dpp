@@ -1014,7 +1014,7 @@ runs:
       - id: EN18221-4.5(4)
         reason: not assessed
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     pr: 1031
     adversarialReview:
       blockingObjections: 3
@@ -1067,7 +1067,7 @@ runs:
       - id: TOYS-AnnexVI-I(n)
         reason: mirror of ESPR-AnnexIII(l)
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     pr: 1031
     adversarialReview:
       blockingObjections: 3
