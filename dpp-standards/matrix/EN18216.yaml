@@ -1,0 +1,101 @@
+# Conformance Matrix: EN18216 (EN 18216:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18216-2026.pdf) on 2026-10-11 (ticket #761); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: clause 4 has no numbered points, so "4(5)" is its fifth paragraph (the two list items under the HTTPS heading count as paragraphs 4 and 5). Clause 5 keeps the letters a) to d) of its four formats; its unlettered paragraphs are counted, so "5-para3" is the accessibility paragraph and "5-para5" the second limb of the HTML paragraph whose first limb, with item d), is 5(d). Paragraphs without a requirement of their own keep their number and are listed here.
+# Not extracted, no requirement of their own: clause 1 (scope, with its five aims: secure communication, interoperability, ease of use, data integrity, documentation and discoverability), 2 (normative references: ISO/IEC 21778:2017 and EN 301 549:2021, assessed as ISO21778 and EN301549), 3 (terms: identifier, data exchange, identification, authentication, data integrity, secure communication, DPP, controlled DPP data), 4(3) (the HTTPS heading and the line describing HTTPS, which names the protocol 4(1) requires), 4(7) (pointer to EN 18222, which specifies how the API is used over HTTPS; EN 18222 is in the Bibliography, so informative here), 5-para6 (pointer to EN 18221 for the internal storage of DPP data, also a Bibliography entry), Annex A (informative introduction to data exchange protocols), Annex B (informative: security and access control, Table B.1 on ease of use of HTTPS and RESTful APIs for consumers, SMEs and large organisations, and how TLS and RESTful APIs preserve integrity), Annex C (informative: secure communication through TLS key pairs, statelessness, rate limiting, DDoS protection and status codes of RESTful APIs; rate limiting and hardening are assessed under EN 18239, clusters #1026 and #1027), Annex D (informative examples of adaptable systems: AS4 profile of ebMS 3.0, the Asset Administration Shell, EDI) and the Bibliography (RFC 7540, 5246, 8446, 9114, 9110 content negotiation, XML 1.0, JSON-LD 1.1, EN 18221, EN 18222).
+# Annex ZA (informative) maps three Articles: ESPR Art. 10(1)(d) to clauses 4 and 5; ESPR Art. 11(a) to clauses 4 and 5, presumption limited to the technical exchange protocol and data formats; ESPR Art. 11(h) to clause 4; all once the EN is cited in the OJ (cited by Implementing Decision (EU) 2026/1736). The other law rows naming EN18216 in operationalisedBy (BATT-Art77(5), BATT-Art78(a)) are rows its clauses address without presumption (map rule of 2026-10-09: Annex ZA plus the links the text supports).
+# Normative references: EN 301 549 is cited only by 5-para3, for the human-readable rendering of DPP content; its matrix file holds clause 9 (web content) alone (scope decided by the map owner on 2026-10-11 in #761). ISO/IEC 21778 is cited by 5(a) and is extracted in full.
+standard: EN18216
+edition: EN 18216:2026
+extractedFrom: standards/EN18216-2026.pdf
+extractedAt: 2026-10-11
+sections:
+  - id: "4"
+    title: 4 Data exchange protocols for technical interoperability
+  - id: "5"
+    title: 5 Data formats
+criteria:
+  - id: EN18216-4(1)
+    section: "4"
+    clause: 4(1)
+    paraphrase: "Standardised access to a DPP runs over the exchange protocol this clause names: HTTP secured by TLS (HTTPS)."
+    applicability: mixed
+    areas:
+      - 1
+      - 10
+  - id: EN18216-4(2)
+    section: "4"
+    clause: 4(2)
+    paraphrase: "The exchange protocols keep DPP data confidential and unaltered while they are exchanged."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18216-4(4)
+    section: "4"
+    clause: 4(4)
+    paraphrase: "TLS 1.2 is the lowest version a DPP endpoint supports; TLS 1.3 or newer is strongly recommended; TLS 1.0, TLS 1.1 and every SSL version are forbidden."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18216-4(5)
+    section: "4"
+    clause: 4(5)
+    paraphrase: "HTTP/2 is the lowest HTTP version a DPP endpoint supports and versions older than HTTP/2 are not used; HTTP/3 is recommended."
+    applicability: mixed
+    areas:
+      - 1
+      - 10
+  - id: EN18216-4(6)
+    section: "4"
+    clause: 4(6)
+    paraphrase: "Recommendation: an API specified on top of the exchange protocol follows the RESTful architectural style."
+    applicability: software
+    areas:
+      - 1
+      - 13
+  - id: EN18216-5(a)
+    section: "5"
+    clause: 5(a)
+    paraphrase: "JSON (ISO/IEC 21778:2017) is the data format used for syntactic interoperability, the format every DPP exchange between server and client can rely on."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: EN18216-5(b)
+    section: "5"
+    clause: 5(b)
+    paraphrase: "Optional: XML may be offered as an additional message format, selected through HTTP content negotiation."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18216-5(c)
+    section: "5"
+    clause: 5(c)
+    paraphrase: "Optional: JSON-LD may be offered as an additional message format, selected through HTTP content negotiation; when it is offered, an ordinary JSON parser can process it, and a linked-data context may be included for semantic processing."
+    applicability: software
+    areas:
+      - 2
+      - 8
+  - id: EN18216-5-para3
+    section: "5"
+    clause: 5, third paragraph
+    paraphrase: "Wherever DPP content is represented, rendered or delivered for humans, it meets the applicable accessibility requirements of EN 301 549:2021 (assessed through EN301549, clause 9 for web content)."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18216-5(d)
+    section: "5"
+    clause: 5, fourth and fifth paragraphs, item d)
+    paraphrase: "DPP content is provided, selected through HTTP content negotiation, as HTML rendered according to the W3C HTML standards."
+    applicability: software
+    areas:
+      - 2
+      - 11
+  - id: EN18216-5-para5
+    section: "5"
+    clause: 5, fifth paragraph, second limb
+    paraphrase: "Recommendation: the HTML rendering of DPP content is checked in several browsers and on several platforms."
+    applicability: software
+    areas:
+      - 11
+      - 12

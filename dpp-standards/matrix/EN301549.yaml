@@ -1,0 +1,396 @@
+# Conformance Matrix: EN301549 (ETSI EN 301 549 V3.2.1 (2021-03), clause 9 Web). Rules: dpp-standards/README.md.
+# Criteria extracted on 2026-10-11 (ticket #761) from the free ETSI text V3.2.1, the edition EN 18216:2026 cites (dated reference EN 301 549:2021); assessments are added in place, one per Criterion.
+# Normative reference of EN 18216, cited once (EN18216-5-para3): the human-readable representation, rendering or delivery of DPP content meets the relevant accessibility requirements of EN 301 549. Extract scope, decided by the map owner on 2026-10-11 in #761: clause 9 (web content), because open-dpp renders DPP content to humans only as web pages; each clause 9.1.1.1 to 9.4.1.3 requires a web page to satisfy one WCAG 2.1 Level A or AA success criterion, and 9.6 adds the five WCAG conformance requirements.
+# Not extracted: clauses 1 to 3 (scope, references, definitions), 4 (functional performance statements: user needs that clauses 5 to 13 meet, no own pass criterion), 5 to 8 and 10 to 13 (generic and closed functionality, two-way voice, video, hardware, non-web documents, non-web software, documentation and support services, relay and emergency services: outside the reach of EN 18216, which cites the standard for the rendering of DPP content only; documents an operator attaches to a passport, clause 10, are the operator's content), 9.0 (informative overview), the void clauses 9.1.4.6 to 9.1.4.9 and 9.2.1.3 (placeholders for WCAG Level AAA numbers), 9.5 (informative list of Level AAA criteria) and the annexes (A: relationship with Directive (EU) 2016/2102, B: mapping to functional performance, C: test procedures that restate each clause, D to F informative).
+# Pages assessed: the passport presentation view a GS1 Digital Link or permalink resolves to (anonymous and signed-in visitors, with its language switcher, media and the optional AI chat). The editor and the organisation back office render DPP content to the operator's own members while authoring it; they are not the representation of DPP content to the passport's users and are not assessed here.
+standard: EN301549
+edition: ETSI EN 301 549 V3.2.1 (2021-03)
+extractedFrom: https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf
+extractedAt: 2026-10-11
+sections:
+  - id: "9.1.1"
+    title: 9.1.1 Text alternatives
+  - id: "9.1.2"
+    title: 9.1.2 Time-based media
+  - id: "9.1.3"
+    title: 9.1.3 Adaptable
+  - id: "9.1.4"
+    title: 9.1.4 Distinguishable
+  - id: "9.2.1"
+    title: 9.2.1 Keyboard accessible
+  - id: "9.2.2"
+    title: 9.2.2 Enough time
+  - id: "9.2.3"
+    title: 9.2.3 Seizures and physical reactions
+  - id: "9.2.4"
+    title: 9.2.4 Navigable
+  - id: "9.2.5"
+    title: 9.2.5 Input modalities
+  - id: "9.3.1"
+    title: 9.3.1 Readable
+  - id: "9.3.2"
+    title: 9.3.2 Predictable
+  - id: "9.3.3"
+    title: 9.3.3 Input assistance
+  - id: "9.4.1"
+    title: 9.4.1 Compatible
+  - id: "9.6"
+    title: 9.6 WCAG conformance requirements
+criteria:
+  - id: EN301549-9.1.1.1
+    section: "9.1.1"
+    clause: "9.1.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.1.1 Non-text content: Every non-text item shown (images, icons, controls, media) has a text alternative serving the same purpose; purely decorative items are hidden from assistive technology."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.2.1
+    section: "9.1.2"
+    clause: "9.1.2.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.1 Audio-only and video-only (prerecorded): Prerecorded audio-only content has a text transcript and prerecorded video-only content has a transcript or an audio track, unless it is itself a labelled alternative for text."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.2.2
+    section: "9.1.2"
+    clause: "9.1.2.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.2 Captions (prerecorded): Prerecorded audio in synchronised media carries captions, unless the media is a labelled alternative for text."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.2.3
+    section: "9.1.2"
+    clause: "9.1.2.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.3 Audio description or media alternative (prerecorded): Prerecorded video in synchronised media has an audio description or a full text alternative."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.2.4
+    section: "9.1.2"
+    clause: "9.1.2.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.4 Captions (live): Live audio in synchronised media carries captions."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.2.5
+    section: "9.1.2"
+    clause: "9.1.2.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.5 Audio description (prerecorded): Prerecorded video in synchronised media has an audio description."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.3.1
+    section: "9.1.3"
+    clause: "9.1.3.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.1 Info and relationships: Structure and relationships conveyed visually (headings, lists, tables, labels, groups) are also available programmatically or in text."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.3.2
+    section: "9.1.3"
+    clause: "9.1.3.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.2 Meaningful sequence: Where the reading order carries meaning, the DOM order gives that order to assistive technology."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.3.3
+    section: "9.1.3"
+    clause: "9.1.3.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.3 Sensory characteristics: Instructions never rely only on shape, colour, size, visual position, orientation or sound."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.3.4
+    section: "9.1.3"
+    clause: "9.1.3.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.4 Orientation: Content works in portrait and landscape and is not locked to one orientation unless that is essential."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.3.5
+    section: "9.1.3"
+    clause: "9.1.3.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.5 Identify input purpose: Input fields that collect information about the user expose their purpose programmatically (autocomplete tokens)."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.1
+    section: "9.1.4"
+    clause: "9.1.4.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.1 Use of colour: Colour is never the only means of conveying information, indicating an action, prompting a response or distinguishing an element."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.2
+    section: "9.1.4"
+    clause: "9.1.4.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.2 Audio control: Audio that plays automatically for more than three seconds can be paused or stopped, or its volume controlled independently of the system volume."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.3
+    section: "9.1.4"
+    clause: "9.1.4.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.3 Contrast (minimum): Text and images of text have a contrast ratio of at least 4.5:1, or 3:1 for large text; logos and incidental text are exempt."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.4
+    section: "9.1.4"
+    clause: "9.1.4.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.4 Resize text: Text can be enlarged to 200 percent without assistive technology and without losing content or function."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.5
+    section: "9.1.4"
+    clause: "9.1.4.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.5 Images of text: Text is presented as text, not as an image of text, unless customisable or essential (logos)."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.10
+    section: "9.1.4"
+    clause: "9.1.4.10"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.10 Reflow: Content reflows at a width of 320 CSS pixels (or a height of 256 for horizontal content) without two-dimensional scrolling and without loss of content or function, except where two-dimensional layout is essential (data tables, maps)."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.11
+    section: "9.1.4"
+    clause: "9.1.4.11"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.11 Non-text contrast: Boundaries and states of user interface components and the graphical objects needed to understand content have a contrast ratio of at least 3:1 against adjacent colours."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.12
+    section: "9.1.4"
+    clause: "9.1.4.12"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.12 Text spacing: Content and function survive the user widening line height to 1.5, paragraph spacing to 2, letter spacing to 0.12 and word spacing to 0.16 times the font size."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.1.4.13
+    section: "9.1.4"
+    clause: "9.1.4.13"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.13 Content on hover or focus: Content that appears on pointer hover or keyboard focus can be dismissed without moving focus, can be hovered itself, and stays until dismissed or no longer relevant."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.1.1
+    section: "9.2.1"
+    clause: "9.2.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.1.1 Keyboard: All functionality is operable through a keyboard interface without timing for individual keystrokes, except where the path of the movement is essential."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.1.2
+    section: "9.2.1"
+    clause: "9.2.1.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.1.2 No keyboard trap: Keyboard focus that enters a component can leave it with the keyboard alone, using standard keys or keys the user is told about."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.1.4
+    section: "9.2.1"
+    clause: "9.2.1.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.1.4 Character key shortcuts: Single-character keyboard shortcuts can be turned off, remapped, or act only while their component has focus."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.2.1
+    section: "9.2.2"
+    clause: "9.2.2.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.2.1 Timing adjustable: Every time limit the content sets can be turned off, adjusted or extended, unless real-time, essential or longer than 20 hours."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.2.2
+    section: "9.2.2"
+    clause: "9.2.2.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.2.2 Pause, stop, hide: Moving, blinking, scrolling or auto-updating information that starts automatically and runs alongside other content can be paused, stopped or hidden."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.3.1
+    section: "9.2.3"
+    clause: "9.2.3.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.3.1 Three flashes or below threshold: Nothing flashes more than three times in any one second, or the flashes stay below the general and red flash thresholds."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.1
+    section: "9.2.4"
+    clause: "9.2.4.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.1 Bypass blocks: A mechanism lets users skip blocks of content repeated on several pages (skip link, landmarks, headings)."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.2
+    section: "9.2.4"
+    clause: "9.2.4.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.2 Page titled: Each page has a title that describes its topic or purpose."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.3
+    section: "9.2.4"
+    clause: "9.2.4.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.3 Focus order: When sequential focus navigation matters, focus moves in an order that preserves meaning and operability."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.4
+    section: "9.2.4"
+    clause: "9.2.4.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.4 Link purpose (in context): The purpose of each link can be told from its text, alone or with its programmatically determined context."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.5
+    section: "9.2.4"
+    clause: "9.2.4.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.5 Multiple ways: More than one way leads to a page within a set of pages, except for a page that is a step in a process or its result."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.6
+    section: "9.2.4"
+    clause: "9.2.4.6"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.6 Headings and labels: Headings and labels describe the topic or purpose of what they introduce."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.4.7
+    section: "9.2.4"
+    clause: "9.2.4.7"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.7 Focus visible: Every keyboard-operable interface shows where keyboard focus is."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.5.1
+    section: "9.2.5"
+    clause: "9.2.5.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.1 Pointer gestures: Functions operated by multipoint or path-based gestures also work with a single pointer without a path, unless the gesture is essential."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.5.2
+    section: "9.2.5"
+    clause: "9.2.5.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.2 Pointer cancellation: Single-pointer functions do not complete on the down-event, or the completion can be aborted or undone, or the up-event reverses it."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.5.3
+    section: "9.2.5"
+    clause: "9.2.5.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.3 Label in name: The accessible name of a control that has a visible text label contains that visible text."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.2.5.4
+    section: "9.2.5"
+    clause: "9.2.5.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.4 Motion actuation: Functions triggered by device or user motion also work through interface controls, and the motion response can be disabled."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.1.1
+    section: "9.3.1"
+    clause: "9.3.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.1.1 Language of page: The default human language of each page is programmatically determined."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.1.2
+    section: "9.3.1"
+    clause: "9.3.1.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.1.2 Language of parts: The human language of each passage or phrase that differs from the page language is programmatically determined."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.2.1
+    section: "9.3.2"
+    clause: "9.3.2.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.1 On focus: Receiving focus does not by itself change the context."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.2.2
+    section: "9.3.2"
+    clause: "9.3.2.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.2 On input: Changing the setting of a control does not change the context automatically unless the user was told beforehand."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.2.3
+    section: "9.3.2"
+    clause: "9.3.2.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.3 Consistent navigation: Navigation repeated on several pages of a set keeps the same relative order unless the user changes it."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.2.4
+    section: "9.3.2"
+    clause: "9.3.2.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.4 Consistent identification: Components with the same function within a set of pages are identified consistently."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.3.1
+    section: "9.3.3"
+    clause: "9.3.3.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.1 Error identification: An input error that is detected automatically is identified and described to the user in text."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.3.2
+    section: "9.3.3"
+    clause: "9.3.3.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.2 Labels or instructions: Labels or instructions are given wherever content asks for user input."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.3.3
+    section: "9.3.3"
+    clause: "9.3.3.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.3 Error suggestion: When an input error is detected and a correction is known, the correction is suggested, unless that would endanger security or purpose."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.3.3.4
+    section: "9.3.3"
+    clause: "9.3.3.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.4 Error prevention (legal, financial, data): Submissions with legal or financial effect, or that change or delete user-controllable data, are reversible, checked for errors with a chance to correct, or confirmed before they complete."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.4.1.1
+    section: "9.4.1"
+    clause: "9.4.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 4.1.1 Parsing: Markup has complete start and end tags, correct nesting, no duplicate attributes and unique ids, except where a specification allows otherwise."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.4.1.2
+    section: "9.4.1"
+    clause: "9.4.1.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 4.1.2 Name, role, value: Every user interface component exposes its name and role programmatically, its states, properties and values can be set programmatically where users can set them, and changes are notified to assistive technology."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.4.1.3
+    section: "9.4.1"
+    clause: "9.4.1.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 4.1.3 Status messages: Status messages are announced to assistive technology through roles or properties without receiving focus."
+    applicability: software
+    areas:
+      - 11
+  - id: EN301549-9.6
+    section: "9.6"
+    clause: "9.6"
+    paraphrase: "A web page rendering DPP content meets the five WCAG 2.1 conformance requirements at Level AA: the conformance level (every criterion of 9.1 to 9.4, or a conforming alternate version), full pages, complete processes, only accessibility-supported ways of using technologies, and non-interference (content not relied on still passes 9.1.4.2, 9.2.1.2, 9.2.2.2 and 9.2.3.1)."
+    applicability: software
+    areas:
+      - 11

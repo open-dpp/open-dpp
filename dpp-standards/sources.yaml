@@ -136,7 +136,7 @@ sources:
     title: Digital product passport – Data exchange protocols
     reference: EN 18216:2026
     publisher: CEN/CENELEC JTC 24
-    edition: EN 18216:2026 (available 2026-05-27)
+    edition: EN 18216:2026 (approved by CEN 2026-05-03, available 2026-05-27; read in the English SIS edition SS-EN 18216:2026, edition 1)
     stage: Published; date of withdrawal of conflicting national standards 2026-11-30
     access: gated
     url: https://www.nen.nl/nen-en-18216-2026-en-352718
@@ -145,7 +145,7 @@ sources:
     normativeReferences: [EN301549, ISO21778]
     watch:
       url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
-      lookFor: An amendment updating the dated EN 301 549 V3.2.1 reference, or a new edition
+      lookFor: An amendment updating the dated EN 301 549 V3.2.1 reference, or a new edition (Annex ZA presumes conformity with ESPR Art. 10(1)(d) through clauses 4 and 5, with Art. 11(a) through 4 and 5, limited to the technical exchange protocol and data formats, and with Art. 11(h) through 4)
   - id: EN18222
     tier: B
     title: Digital product passport – APIs for the product passport lifecycle management and searchability
@@ -301,7 +301,7 @@ sources:
     title: Accessibility requirements for ICT products and services
     reference: ETSI EN 301 549 V3.2.1 (2021-03), as cited by EN 18216
     publisher: ETSI
-    edition: V3.2.1 (the dated reference in EN 18216); V4.1.1 (2026-09) is the current version
+    edition: V3.2.1 (the dated reference in EN 18216); V4.1.1 (2026-09) is the current version. The matrix file holds clause 9 (web content) only, decided 2026-10-11 in #761
     stage: Published, free
     access: public
     url: https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf

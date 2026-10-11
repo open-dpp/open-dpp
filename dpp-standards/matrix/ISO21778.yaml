@@ -1,0 +1,73 @@
+# Conformance Matrix: ISO21778 (ISO/IEC 21778:2017, the JSON data interchange syntax). Rules: dpp-standards/README.md.
+# Criteria extracted on 2026-10-11 (ticket #761) from the free ECMA-404 2nd edition (December 2017), the text ISO/IEC 21778:2017 adopts with identical clause numbering; assessments are added in place, one per Criterion.
+# Normative reference of EN 18216 (clause 5(a): JSON is the format for syntactic interoperability). The text defines syntax only; meaning, name uniqueness and member order are left to the specifications that use JSON.
+# How a clause binds open-dpp: clause 2 states the two conformance targets, a JSON text and a processor of JSON texts. Clauses 4 to 9 are the grammar a conforming text follows; each is one Criterion on the JSON open-dpp emits (API responses, the passport export) and, through 2(2), on the JSON it accepts (request bodies, the passport import).
+# Not extracted, no requirement of their own: clause 1 (scope: syntax only, no semantics or language mapping), 3 (normative references: ISO/IEC 10646, the Unicode Standard, RFC 8259, whose semantic restrictions are not normative here), the figures (railroad diagrams of clauses 5 to 9) and the Bibliography (ECMA-262, RFC 8259).
+standard: ISO21778
+edition: ISO/IEC 21778:2017 (ECMA-404 2nd edition, December 2017)
+extractedFrom: https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf
+extractedAt: 2026-10-11
+sections:
+  - id: "2"
+    title: 2 Conformance
+  - id: "4-9"
+    title: 4 to 9 JSON text, values, objects, arrays, numbers, strings
+criteria:
+  - id: ISO21778-2(1)
+    section: "2"
+    clause: 2, first paragraph
+    paraphrase: "A JSON text is a sequence of Unicode code points that follows the JSON grammar of this text exactly; every JSON document open-dpp emits is such a text."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: ISO21778-2(2)
+    section: "2"
+    clause: 2, second paragraph
+    paraphrase: "Recommendation: a processor of JSON texts refuses input that is not a conforming JSON text; it may narrow the conforming texts it processes by semantic restrictions of its own."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: ISO21778-4
+    section: "4-9"
+    clause: "4"
+    paraphrase: "A JSON text is a sequence of tokens (the six structural characters, strings, numbers and the literal names true, false and null) forming one value; whitespace (tab, line feed, carriage return, space) may surround tokens but never splits one, except spaces inside strings."
+    applicability: software
+    areas:
+      - 2
+  - id: ISO21778-5
+    section: "4-9"
+    clause: "5"
+    paraphrase: "A JSON value is an object, an array, a number, a string, or one of true, false and null; nothing else."
+    applicability: software
+    areas:
+      - 2
+  - id: ISO21778-6
+    section: "4-9"
+    clause: "6"
+    paraphrase: "An object is a pair of curly brackets around zero or more name/value pairs, each name a string followed by a colon and its value, pairs separated by commas; the syntax neither requires unique names nor gives the order of pairs a meaning."
+    applicability: software
+    areas:
+      - 2
+  - id: ISO21778-7
+    section: "4-9"
+    clause: "7"
+    paraphrase: "An array is a pair of square brackets around zero or more values separated by commas; the syntax gives the order of values no meaning."
+    applicability: software
+    areas:
+      - 2
+  - id: ISO21778-8
+    section: "4-9"
+    clause: "8"
+    paraphrase: "A number is decimal digits without a superfluous leading zero, optionally signed with a minus, with an optional fraction and an optional exponent (e or E, optional sign); values such as Infinity and NaN that digits cannot express are not allowed."
+    applicability: software
+    areas:
+      - 2
+  - id: ISO21778-9
+    section: "4-9"
+    clause: "9"
+    paraphrase: "A string is code points between quotation marks; the quotation mark, the reverse solidus and the control characters U+0000 to U+001F are escaped (two-character escapes or \\u followed by four hex digits, surrogate pairs for code points beyond the Basic Multilingual Plane)."
+    applicability: software
+    areas:
+      - 2
