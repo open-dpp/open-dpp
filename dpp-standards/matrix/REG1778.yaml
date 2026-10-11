@@ -109,8 +109,6 @@ criteria:
     applicability: commission
     areas:
       - 6
-    operationalisedBy:
-      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -521,8 +519,6 @@ criteria:
     applicability: commission
     areas:
       - 6
-    operationalisedBy:
-      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -741,7 +737,6 @@ criteria:
     areas:
       - 6
     operationalisedBy:
-      - EN18221
       - EN18222
     assessment:
       date: 2026-09-06
@@ -770,8 +765,6 @@ criteria:
     applicability: commission
     areas:
       - 6
-    operationalisedBy:
-      - EN18221
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

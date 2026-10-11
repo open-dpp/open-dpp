@@ -181,15 +181,16 @@ sources:
     title: Digital product passport – Data storage, archiving and data persistence
     reference: EN 18221:2026
     publisher: CEN/CENELEC JTC 24
-    edition: EN 18221:2026 (available 2026-05-27)
+    edition: EN 18221:2026 (approved by CEN 2026-05-03, available 2026-05-27; read in the English SIS edition SS-EN 18221:2026, edition 1)
     stage: Published; date of withdrawal of conflicting national standards 2026-11-30
     access: gated
     url: https://www.nen.nl/nen-en-18221-2026-en-352703
     citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
     localFile: standards/EN18221-2026.pdf
+    normativeReferences: [EN18216, EN18220, EN18222, EN18239, EN18246]
     watch:
       url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
-      lookFor: An amendment or new edition on the JTC 24 work programme
+      lookFor: An amendment or new edition on the JTC 24 work programme (Annex ZA presumes conformity with ESPR Art. 10(4), technical aspects of the back-up only, through 4.3 and 4.5, and with Art. 11(c) through 4.5); a delegated act fixing a product group's DPP lifetime or exempting changes from archiving (4.2(5))
   - id: EN18239
     tier: B
     title: Digital product passport – Access rights management, information system security and business confidentiality
