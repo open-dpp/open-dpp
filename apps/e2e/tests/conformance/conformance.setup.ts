@@ -13,6 +13,7 @@ import {
   uniqueSerial,
 } from "../helpers/passport";
 import { writeSubject } from "./subject";
+import { addSubjectContent } from "./subject-content";
 
 const withGs1Identity = async (page: Page, serial: string): Promise<PassportIds> => {
   const ids = await createBlankPassport(page);
@@ -27,6 +28,7 @@ const withGs1Identity = async (page: Page, serial: string): Promise<PassportIds>
 setup("create the conformance subject", async ({ page }) => {
   const serial = uniqueSerial("conf");
   const ids = await withGs1Identity(page, serial);
+  await addSubjectContent(page.request, ids);
   await publishPassport(page, ids);
 
   const scan = await page.request.get(
