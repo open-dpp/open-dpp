@@ -128,7 +128,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Credited: a published passport is reachable online without an account through the permalink, the public AAS JSON routes and the GS1 resolver (Check access.anonymous-reads-published). Missing: no DPP lifetime (no availability period on a passport, nothing that keeps a passport online until a date); archiving ends public access, so archiving is not a way to retire a passport while keeping it available; nothing keeps it reachable once the instance goes away (the back-up provider of 4.3, #596). Whether the routes are the exchange protocols of EN 18216 is assessed in #761. The lifetime belongs with the availability-period rows ESPR-Art9(2)(i) and CPR-Art75(2)(i) under #825."
       gapIssue: 825
   - id: EN18221-4.1(4)
@@ -187,7 +187,7 @@ criteria:
         - type: check
           ref: export.aas-environment-verifies
           result: failed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Credited: the human-readable public view and the machine-readable AAS JSON reads and export are all generated from the stored data at request time, and the stored model is AAS (shells with their ids, submodels), so what a standard AAS serialisation needs is stored. Missing: what is generated today is not standard AAS (the export drops the stored shell id, Check export.aas-environment-verifies fails), and no AASX, XML, JSON-LD or printable output is generated; an AASX package would also need the attachment files, which the export leaves behind. Which formats EN 18216 requires, and so whether the stored data cover them all, is assessed in #761. Same finding as ESPR-Art10(1)(d) and BATT-Art77(5) (#823)."
       gapIssue: 823
   - id: EN18221-4.1(7)
@@ -223,11 +223,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Software part: storage measures for availability, integrity, authenticity and protection against loss, malicious change and unauthorised access. Credited: a MongoDB replica set is required and documented, writes run in transactions and are schema-validated, management routes refuse anonymous and foreign users (Checks access.anonymous-denied-management, access.foreign-user-denied-management), uploads can be virus-scanned, buckets can be versioned. Missing: no backup and restore tooling or procedure and nothing on disaster recovery in the operator docs, no checksum, hash or signature over passport data or media (the stored eTag is never checked, #824), deleting a library file does not check whether a published passport still uses it, no back-up provider (#596). The authentication and integrity measures of EN 18239 and EN 18246 are assessed with those texts. Primary cluster: hardening and recovery (#1027, backup and restore)."
       gapIssue: 1027
   - id: EN18221-4.1(9)

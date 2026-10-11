@@ -349,7 +349,7 @@ criteria:
         - type: check
           ref: resolver.redirect-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: The passport is reached through a GS1 Digital Link QR resolving to a unique product identifier the operator attributes (GTIN/batch/serial, item-level granularity supported). The resolver.redirect-published Check evidences the redirect.
   - id: BATT-Art77(3)-sub2
     section: Art77
@@ -378,7 +378,7 @@ criteria:
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "GS1 Digital Link identifiers are used and validate in the GS1 Syntax Engine (GS1 is an ISO/IEC 15459 issuing scheme); ISO/IEC 15459 conformance is not explicitly asserted and the standard is gated/unread. Tracked by #518."
       gapIssue: 518
   - id: BATT-Art77(3)-sub3
@@ -439,11 +439,11 @@ criteria:
         - type: check
           ref: api.openapi-document-served
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
         - type: check
           ref: export.aas-environment-verifies
           result: failed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: Passport data are machine-readable structured JSON over a documented OpenAPI and searchable via the API, but the export is a proprietary open-dpp:json envelope, not standard AAS JSON (it omits the AAS-required shell id); the export.aas-environment-verifies Check fails. Interoperability without vendor lock-in is therefore not met.
       gapIssue: 823
   - id: BATT-Art77(6)
@@ -805,7 +805,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
       gapIssue: 522
   - id: BATT-AnnexXIII-1(a)

@@ -131,7 +131,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "A published passport and the elements anonymous may read are served without authentication through the permalink, the public AAS routes and the GS1 resolver. The claim rests on the API: the Check's view assertion passes for any path (the SPA shell answers 200) and the public-view E2E tests are fixme at 272eab96, so the rendering of the view is not evidenced here. Not operational: anonymous Read is the default rule of every new submodel, so publishing is all an economic operator does. Attachments are more open than this clause asks (#836, see EN18239-5.2(22))."
   - id: EN18239-5.2(3)
     section: "5.2"
@@ -571,7 +571,7 @@ criteria:
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Credited: authorisation follows the requester's role (instance admin, organisation owner or member, anonymous) through the element access rules and the owner-only management routes. Missing: delegation does not exist, so neither the delegator's role nor the trustworthiness of a delegation can be weighed (EN18239-5.2(18)); regulated roles are #821."
       gapIssue: 1025
   - id: EN18239-5.2(21)
@@ -619,11 +619,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
         - type: check
           ref: resolver.draft-hidden
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Credited: every route needs a session, API key or token unless marked public, management routes refuse anonymous and foreign callers (Checks), element content is filtered by the caller's rules, and drafts stay hidden from non-members. Missing: attachments are downloadable by anyone with the link whatever the element rule and the passport status (#836); API keys carry their user's full authority with no scope, against least privilege; no legal act governs the authentication yet (EN18239-5.2(13))."
       gapIssue: 836
   - id: EN18239-5.2(23)
@@ -709,7 +709,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Credited: public data needs no authentication and management needs it (Checks). Missing: attachments of controlled elements are readable without authentication (#836); authentication has no second factor, which simple but secure authentication would favour (#1027)."
       gapIssue: 836
   - id: EN18239-6.1-sub2
@@ -770,7 +770,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: Anyone reads a published passport's public elements without authentication; anonymous callers hold Read only, and the write routes refuse them (tested on the public permalink, verified by hand on the element routes), so public access is read-only.
   - id: EN18239-6.2(2)
     section: "6.2"
@@ -794,7 +794,7 @@ criteria:
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-11
       notes: "Credited: controlled data is reached through authenticated, role-based access (owner, member, admin) under the organisation that owns the passport. Missing: no authority or regulated role exists, so the scheme covers only the economic operator's own people (#821)."
       gapIssue: 821
   - id: EN18239-6.3
