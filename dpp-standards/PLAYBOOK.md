@@ -26,13 +26,13 @@ main` and use `origin/main` (the scripts default to the local `main`, which may 
 
 ## Choose the procedure
 
-| Situation                                                                     | Procedure                                       |
-| ----------------------------------------------------------------------------- | ----------------------------------------------- |
-| A text is not in `sources.yaml`, or has no `matrix/<ID>.yaml`                 | Extract                                         |
-| A registered text got a new edition, consolidation or final version           | Extract, then Re-validate with a `text` trigger |
-| A matrix file exists and its Criteria are Not assessed                        | Assess                                          |
-| A new open-dpp release, a check regression, a watch hit, or a named Criterion | Re-validate                                     |
-| A "Validation Run requested" issue exists                                     | Re-validate, `--requested-by` its number        |
+| Situation                                                                     | Procedure                                                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| A text is not in `sources.yaml`, or has no `matrix/<ID>.yaml`                 | Extract                                                                              |
+| A registered text got a new edition, consolidation or final version           | Extract, then Re-validate with a `text` trigger                                      |
+| A matrix file exists and its Criteria are Not assessed                        | Assess                                                                               |
+| A new open-dpp release, a check regression, a watch hit, or a named Criterion | Re-validate                                                                          |
+| A "Validation Run requested" issue exists                                     | Re-validate, `--requested-by` its number                                             |
 | A "Standards watch" issue exists (the weekly query found unseen acts)         | Re-validate (its Watch step classifies them), or Extract when an act joins the scope |
 
 ## Scope
@@ -47,7 +47,7 @@ never enter a scope.
 | `code`   | `--commit <sha>` (default `main`), `--sources` | every unassessed Criterion: `not assessed`; every Criterion whose `code`, `test` or `doc` evidence path changed since its assessed commit: `evidence changed`; every Partial or Gap: `open gap` |
 | `check`  | `--check <check ids>`                          | every Criterion carrying that check id as evidence: `check regression` (ids from `conformance-report.json`, status `failed`)                                                                    |
 | `manual` | `--criteria <ids>`                             | exactly those: `manual`; a Mirror named here resolves to its target                                                                                                                             |
-| any      |                                                | every active Mirror of a Criterion in scope, after the base entries: `mirror of <target id>` (derived, see below)                                                                                |
+| any      |                                                | every active Mirror of a Criterion in scope, after the base entries: `mirror of <target id>` (derived, see below)                                                                               |
 
 A first Assess of a text is a `code` trigger with `--sources <ID>`: every Criterion is `not
 assessed`. A second `matrix:run` on the same day and scope gets a numeric suffix.
@@ -133,6 +133,8 @@ gated text.
    The report records the commit of the Instance under test: the checkout's `HEAD`, or
    `OPEN_DPP_COMMIT=<sha>` when the Instance was built elsewhere (a `git worktree` at the assessed
    commit, the reliable way to test the commit the run records while the branch is behind `main`).
+   A run opened from a "Validation Run requested" issue may fold that workflow run's
+   `validation-run-checks` artefact instead, when the report's commit is the assessed commit.
 
    A failing Check on a Met row makes `matrix:check` fail until the Criterion is re-assessed; the
    fold prints which tagged Criteria are still unassessed so they can be assessed in this run. A
@@ -191,7 +193,14 @@ requirement per Check, the id never changes once folded. Tag the target of a Mir
 Mirror (`matrix:fold` rejects that too); the Mirror shows the check through its target. Not checkable and left manual: the EU
 registry (no exercisable API), data carriers (QR rendered client-side), organisational duties.
 Registry, carrier and EN-clause Criteria get their tags in the assessment sessions once the texts are
-extracted. Running the Checks in CI is a follow-up ticket; v1 runs locally.
+extracted.
+
+**In CI** (decided in #820): the on-demand workflow's `checks` job boots an Instance from its
+`instance` input (default `main`) with the composite action `.github/actions/start-instance`, runs
+the Checks of the workflow's own checkout against it, attaches the Check table to the "Validation
+Run requested" issue and keeps the report as the `validation-run-checks` artefact. The Checks never
+run per PR: many fail by design, as the evidence of known Gaps, so a red result is a finding, not a
+broken build; failing Checks never fail the job, only a missing report does.
 
 ## Watch
 

@@ -48,8 +48,10 @@ All run as `pnpm --filter @open-dpp/dpp-standards <script>`.
 
 The Checks live in `apps/e2e/tests/conformance/` (Playwright projects `conformance-setup` and
 `conformance`, run with `pnpm --filter e2e conformance` against a live Instance). The on-demand
-GitHub Actions workflow `conformance-validation-run.yml` runs the matrix check and the watch query and
-opens a "Validation Run requested" issue; running the Checks in CI is a follow-up. The same workflow
+GitHub Actions workflow `conformance-validation-run.yml` runs the matrix check, the watch query and the
+Checks (against an Instance built from its `instance` input, default `main`) and opens a "Validation
+Run requested" issue carrying the Check table; the report is the run's `validation-run-checks`
+artefact. The Checks never run per PR. The same workflow
 runs the watch query every Monday and opens or updates one "Standards watch" issue when an act is
 unseen by `watch-state.yaml` (a quiet week leaves no issue); GitHub fires the schedule from `main`
 only, so it is live once this folder lands there. It never writes a matrix file; the local playbook
