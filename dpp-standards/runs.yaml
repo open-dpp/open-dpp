@@ -1225,7 +1225,7 @@ runs:
       - id: ISO21778-9
         reason: not assessed
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     pr: 1036
     adversarialReview:
       blockingObjections: 2
