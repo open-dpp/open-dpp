@@ -22,6 +22,7 @@ check(
       "ISO21778-9",
       "ESPR-Art10(1)(d)",
       "ESPR-Art11(a)",
+      "EN18223-5.2.1(1)",
     ],
   },
   async ({ browser }) => {
