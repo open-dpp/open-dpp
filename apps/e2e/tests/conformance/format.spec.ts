@@ -20,6 +20,8 @@ check(
       "ISO21778-7",
       "ISO21778-8",
       "ISO21778-9",
+      "ESPR-Art10(1)(d)",
+      "ESPR-Art11(a)",
     ],
   },
   async ({ browser }) => {
@@ -72,7 +74,7 @@ check(
     id: "format.digital-link-negotiates-representation",
     title:
       "the passport's Digital Link answers HTML to a browser and JSON to a machine (content negotiation)",
-    criteria: ["EN18216-5(d)"],
+    criteria: ["EN18216-5(d)", "EN18222-4.1(9)", "EN18222-4.3"],
   },
   async ({ browser }) => {
     const subject = readSubject();

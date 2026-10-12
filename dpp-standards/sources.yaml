@@ -151,16 +151,16 @@ sources:
     title: Digital product passport – APIs for the product passport lifecycle management and searchability
     reference: EN 18222:2026
     publisher: CEN/CENELEC JTC 24
-    edition: EN 18222:2026 (available 2026-05-27)
+    edition: EN 18222:2026 (approved by CEN 2026-05-03, available 2026-05-27; read in the English SIS edition SS-EN 18222:2026, edition 1)
     stage: Published; date of withdrawal of conflicting national standards 2026-11-30
     access: gated
     url: https://www.nen.nl/nen-en-18222-2026-en-352705
     citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
     localFile: standards/EN18222-2026.pdf
-    normativeReferences: [IEC63278, IDTAAAS]
+    normativeReferences: [EN18221, RFC9535, EN18216, EN18219, EN18223, EN18246]
     watch:
       url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
-      lookFor: An amendment citing IEC 63278-4 or -5, or a new edition
+      lookFor: An amendment or new edition on the JTC 24 work programme (Annex ZA presumes conformity with ESPR Art. 10(1)(d), (f), 10(3)(a), (b) and 11(b) through 4.5, and with 11(a) through clause 4 and 4.5); a corrigendum specifying ReadDPPVersionByProductIdAndDate (named in 4.1, specified nowhere) or fixing the Bibliography numbers 8.1 cites
   - id: EN18223
     tier: B
     title: Digital product passport – System interoperability
@@ -369,6 +369,18 @@ sources:
     watch:
       url: https://www.rfc-editor.org/rfc/rfc3986
       lookFor: An RFC obsoleting STD 66
+  - id: RFC9535
+    tier: C
+    title: "JSONPath: Query Expressions for JSON"
+    reference: IETF RFC 9535, February 2024
+    publisher: IETF
+    edition: RFC 9535, February 2024 (undated in EN 18222, whose 8.1 binds element paths to it with "shall"; a read-through of EN 18222, no matrix file)
+    stage: Proposed Standard
+    access: public
+    url: https://www.rfc-editor.org/rfc/rfc9535
+    watch:
+      url: https://www.rfc-editor.org/rfc/rfc9535
+      lookFor: An RFC updating or obsoleting RFC 9535, or errata on Normalized Paths (2.7)
   - id: ISO15418
     tier: C
     title: Information technology – AIDC techniques – GS1 Application Identifiers and ASC MH10 Data Identifiers and maintenance

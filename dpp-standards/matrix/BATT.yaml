@@ -156,8 +156,6 @@ criteria:
     applicability: mixed
     areas:
       - 6
-    operationalisedBy:
-      - EN18222
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -655,6 +653,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18223
+      - EN18222
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

@@ -67,3 +67,54 @@ entries:
         date: 2026-10-12
     notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met; that restricted circulation numbers pass is graded under 4.1.2(2)). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023); the carrier half waits for EN 18220 (#757). Parts 1 and 5 are not relevant to products."
     gapIssue: 518
+  - criterion: ESPR-Art10(1)(f)
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    status: Partial
+    evidence:
+      - type: code
+        ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+        note: level implied by the GS1 keys only
+    notes: "Annex ZA maps Art. 10(1)(f) to EN18219-4.4.2, Partial in all three points. Credited: a GS1 identity implies model, batch or item. Missing: the passport has no level of its own, can mix identities of several levels, and UUID identifiers express none, so the data cannot be said to refer to the level a delegated act fixes (#597, as ESPR-Art9(2)(d))."
+    gapIssue: 597
+  - criterion: ESPR-Art10(3)(a)
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    operational: true
+    status: Partial
+    gapIssue: 828
+    evidence:
+      - type: code
+        ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+        note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+      - type: code
+        ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+        note: presentation-mode QR of the newest permalink; copy button for the URL
+      - type: code
+        ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+        note: members list identifiers through the API
+    notes: "Software part: a digital copy of the carrier or of the unique product identifier for dealers and online marketplaces. Credited: the identifier's URL and the Digital Link can be copied in the back office and listed through the API, which the point accepts in place of the carrier. Missing: no image of the carrier to hand over (EN18220-5.4.5(2), #489), no bulk export of identifiers meant for retailers, and no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing. Capped at Partial by Annex ZA through EN18219-4.5.2: 4.5.2(1), (2) and (4) are Partial (#828)."
+  - criterion: ESPR-Art11(b)
+    date: 2026-10-09
+    commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
+    validator: agent:conformance-review
+    status: Partial
+    evidence:
+      - type: code
+        ref: apps/main/src/permalink/presentation/permalink.controller.ts
+      - type: code
+        ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+      - type: test
+        ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+      - type: check
+        ref: a11y.public-view-no-serious-violations
+        result: failed
+        date: 2026-10-12
+      - type: check
+        ref: access.anonymous-reads-published
+        result: passed
+        date: 2026-10-12
+    notes: "Free and easy access for the public: no fee, no account, a resolver behind the data carrier, an accessible public view (Check). Missing: the other actors the article names (repairers, refurbishers, recyclers, market surveillance and customs authorities, civil society, trade unions) get nothing beyond the public view, because no access class exists for them (#821)."
+    gapIssue: 821

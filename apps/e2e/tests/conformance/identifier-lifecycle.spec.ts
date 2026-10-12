@@ -237,6 +237,7 @@ check(
       "ESPR-Art10(1)(a)",
       "BATT-Art13(6)(a)",
       "BATT-Art77(3)-sub1",
+      "EN18221-4.1(9)",
     ],
   },
   async ({ request, browser }) => {

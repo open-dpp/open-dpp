@@ -104,6 +104,7 @@ check(
       "BATT-Art13(6)",
       "BATT-Art13(6)(a)",
       "BATT-Art77(3)-sub1",
+      "EN18221-4.1(9)",
     ],
   },
   async ({ page, request, browser }) => {
