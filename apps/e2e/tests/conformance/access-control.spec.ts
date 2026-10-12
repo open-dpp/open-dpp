@@ -1,4 +1,5 @@
 /** Access control: who can read what, observed through the API and the public view. */
+import { devices } from "@playwright/test";
 import { ApiBase, AuthBase, EnvConfig } from "../config";
 import { newAnonymousContext } from "../helpers/anonymous";
 import { DEFAULT_PASSWORD, uniqueEmail } from "../helpers/disposable-user";
@@ -15,7 +16,18 @@ check(
   {
     id: "access.anonymous-reads-published",
     title: "anyone reads a published passport through its public view and the public API",
-    criteria: ["ESPR-Art11(b)", "ESPR-Art9(2)(f)", "BATT-AnnexXIII-1", "CPR-Art76(2)(e)", "DET-Art22(d)", "TOYS-Art20(4)", "EN18239-5.2(2)", "EN18239-6.1-sub1", "EN18239-6.2(1)", "EN18221-4.1(3)"],
+    criteria: [
+      "ESPR-Art11(b)",
+      "ESPR-Art9(2)(f)",
+      "BATT-AnnexXIII-1",
+      "CPR-Art76(2)(e)",
+      "DET-Art22(d)",
+      "TOYS-Art20(4)",
+      "EN18239-5.2(2)",
+      "EN18239-6.1-sub1",
+      "EN18239-6.2(1)",
+      "EN18221-4.1(3)",
+    ],
   },
   async ({ browser }) => {
     const subject = readSubject();
@@ -29,11 +41,63 @@ check(
   },
 );
 
+/** A value of the subject's content submodel (subject-content.ts) that the public view renders. */
+const TRADE_NAME = "Conformance Kettle";
+
+check(
+  {
+    id: "access.public-view-renders-in-plain-browser",
+    title:
+      "a stock browser without extensions or apps shows an anonymous visitor the passport content",
+    criteria: ["EN18246-4.3(d)", "EN18246-4.3(e)", "EN18246-5.4.2(2)"],
+  },
+  async ({ browser }) => {
+    const subject = readSubject();
+    const anonymous = await newAnonymousContext(browser);
+    const page = await anonymous.newPage();
+    await page.goto(`${subject.publicUrl}?lang=en`);
+    await expect(page.getByText(TRADE_NAME).first()).toBeVisible();
+    await anonymous.close();
+  },
+);
+
+check(
+  {
+    id: "access.public-view-renders-on-phone",
+    title: "a phone's browser shows the passport content without horizontal scrolling",
+    criteria: ["EN18246-5.4.2(1)"],
+  },
+  async ({ browser }) => {
+    const subject = readSubject();
+    const phone = await browser.newContext({
+      ...devices["Pixel 7"],
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await phone.newPage();
+    await page.goto(`${subject.publicUrl}?lang=en`);
+    await expect(page.getByText(TRADE_NAME).first()).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, "pixels the page is wider than the screen").toBeLessThanOrEqual(0);
+    await phone.close();
+  },
+);
+
 check(
   {
     id: "access.anonymous-denied-management",
     title: "anonymous requests to the management API of a passport are refused",
-    criteria: ["ESPR-Art10(1)(g)", "ESPR-Art11(f)", "ESPR-Art9(2)(g)", "CPR-Art77(1)(g)", "CPR-Art76(2)(g)", "EN18239-5.2(22)", "EN18221-4.1(7)"],
+    criteria: [
+      "ESPR-Art10(1)(g)",
+      "ESPR-Art11(f)",
+      "ESPR-Art9(2)(g)",
+      "CPR-Art77(1)(g)",
+      "CPR-Art76(2)(g)",
+      "EN18239-5.2(22)",
+      "EN18221-4.1(7)",
+      "EN18246-4.1(2)",
+    ],
   },
   async ({ browser }) => {
     const subject = readSubject();
@@ -50,7 +114,15 @@ check(
   {
     id: "access.foreign-user-denied-management",
     title: "a signed-in user outside the owning organisation cannot read or modify the passport",
-    criteria: ["ESPR-Art11(f)", "ESPR-Art9(2)(g)", "CPR-Art76(2)(g)", "EN18239-5.2(20)", "EN18239-6.2(2)", "EN18221-4.1(7)"],
+    criteria: [
+      "ESPR-Art11(f)",
+      "ESPR-Art9(2)(g)",
+      "CPR-Art76(2)(g)",
+      "EN18239-5.2(20)",
+      "EN18239-6.2(2)",
+      "EN18221-4.1(7)",
+      "EN18246-4.1(2)",
+    ],
   },
   async ({ playwright }) => {
     const subject = readSubject();

@@ -54,7 +54,7 @@ check(
   {
     id: "transport.tls-1-2-minimum",
     title: "the instance negotiates TLS 1.2 or newer and refuses TLS 1.0 and 1.1",
-    criteria: ["EN18216-4(4)"],
+    criteria: ["EN18216-4(4)", "EN18246-4.4(2)"],
   },
   async () => {
     skipOnPlainHttp("the TLS version floor");
