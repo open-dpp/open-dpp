@@ -28,6 +28,7 @@ describe("the committed files", () => {
       "EN18220",
       "EN18221",
       "EN18222",
+      "EN18223",
       "EN18239",
       "EN18246",
       "EN301549",

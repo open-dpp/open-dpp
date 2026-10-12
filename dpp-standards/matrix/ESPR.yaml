@@ -1,5 +1,6 @@
 # Conformance Matrix: ESPR (02024R1781-20240628). Rules: dpp-standards/README.md.
 # Criteria extracted from research/criteria-tier-a.md on 2026-09-03; assessments are added in place, one per Criterion.
+# ESPR-Art7(8) added on 2026-10-12 by the EN 18223 Extract (ticket #762): Annex ZA of EN 18223 maps it to the multi-language classes, and the Tier A extraction had taken only Art. 7(2)(b) and 7(5) of Article 7. Edition unchanged.
 standard: ESPR
 edition: 02024R1781-20240628
 extractedFrom: dpp-standards/research/criteria-tier-a.md
@@ -423,6 +424,16 @@ criteria:
       operational: false
       evidence: []
       notes: "Commission duty, assessed Not applicable by rule: thresholds below which the substances-of-concern requirement does not apply are set by the Commission in the delegated acts."
+  - id: ESPR-Art7(8)
+    section: Art7
+    clause: Art. 7(8)
+    paraphrase: Information supplied under information requirements, the DPP included (Art. 7(7)), is given in a language customers can easily understand, as decided by the Member State where the product is made available or put into service.
+    applicability: mixed
+    areas:
+      - 8
+      - 11
+    operationalisedBy:
+      - EN18223
   - id: ESPR-Art9(1)
     section: Art9
     clause: Art. 9(1)
@@ -553,6 +564,7 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18220
+      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -1034,6 +1046,7 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18222
+      - EN18223
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
@@ -1756,7 +1769,6 @@ criteria:
       - 7
       - 3
     operationalisedBy:
-      - EN18223
       - EN18222
     assessment:
       date: 2026-09-06
@@ -1778,7 +1790,6 @@ criteria:
     areas:
       - 7
     operationalisedBy:
-      - EN18223
       - EN18222
     assessment:
       date: 2026-09-06
@@ -1957,6 +1968,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+      - EN18223
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
@@ -2060,6 +2072,8 @@ criteria:
           note: uploads are virus-scanned
       notes: "Compliance documentation: File elements with uploaded attachments (virus-scanned, stored in S3) can hold a declaration of conformity, technical documentation or certificates. There is no document type, no link to a conformity assessment or notified body, and technical documentation cannot be restricted to authorities (#821). Attachments credited; structure missing (#827)."
       gapIssue: 827
+    operationalisedBy:
+      - EN18223
   - id: ESPR-AnnexIII(f)
     section: AnnexIII
     clause: Annex III (f)
@@ -2095,6 +2109,8 @@ criteria:
           note: attachment upload with virus scan
       notes: "User manuals, instructions, warnings and safety information: attached documents and multilingual text; File elements reference uploads served by the media endpoint. No manual, warning or safety-information structure ships (#827)."
       gapIssue: 827
+    operationalisedBy:
+      - EN18223
   - id: ESPR-AnnexIII(g)
     section: AnnexIII
     clause: Annex III (g)
@@ -2105,6 +2121,7 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+      - EN18223
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
@@ -2125,6 +2142,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+      - EN18223
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
@@ -2145,6 +2163,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+      - EN18223
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f

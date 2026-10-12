@@ -1,0 +1,385 @@
+# Conformance Matrix: EN18223 (EN 18223:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18223-2026.pdf) on 2026-10-12 (ticket #762); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: one Criterion per paragraph that carries a requirement (shall, should or may), numbered as the PDF sets the paragraphs apart ("4.1.2.1(6)"); EXAMPLEs are not paragraphs. Table 1, the attributes a DPP instance publishes (4.1.2.1(5)), gives one Criterion per attribute ("4.1.2.1(5)(dppStatus)"), because each attribute has its own counterpart in open-dpp or none; the enumeration of 4.1.2.2 is graded with the granularity row, and {DataElement} through the rows of 4.1.2.3 to 4.1.2.8.2. Table 2 gives one Criterion per attribute, elementId split into its two mandatory uniqueness rules (-sub1) and the recommendation (-sub2). The class clauses 4.1.2.4 to 4.1.2.8.2 define, without a modal verb of their own, what 4.1.2.1(5) and 5.2.1(1) oblige, so each is one Criterion under its bare clause number; a clause of several paragraphs numbers them ("4.1.2.4(2)", "5.2.4(1)"), a clause of one paragraph keeps its bare number ("5.2.7") and splits two requirements into -sub1 and -sub2 ("5.2.3-sub1"). A list item with a modal verb of its own is lettered in printed order: 4.1.2.1(4)(d), the one-type rule of a MultiValuedDataElement and the only item of the principles of 4.1.2.1(4) with a "shall" (the other items describe the classes graded in 4.1.2.3 to 4.1.2.8.2, the abstract DataElement among them), and 4.1.2.9(a) to (d) after its lead recommendation. 4.3(2) holds four requirements, -sub1 to -sub4. The serialisation clauses 5.2.2 to 5.2.9 and Annexes A and B are obliged by 5.2.1(2).
+# Not extracted, no requirement of their own: the Foreword and Introduction (0.2 to 0.4 name the organisational, semantic and technical layers), clauses 1 (scope), 2 (normative references, forms below), 3 (terms; 3.5 the DPP ID), 4.1.1 (the UML diagrams illustrate; where diagram, prose and JSON disagree, the prose and tables of clause 4 prevail), 4.1.2.1(1) to (3) (Figure 1 and the DPP as a container of zero or more data elements), the descriptive items of 4.1.2.1(4) (the five concrete classes under an abstract DataElement that never appears itself, graded through the class rows), 4.1.2.4(1) (says what 4.1.2.4(2) requires, without a modal verb), the EXAMPLE of dppStatus values (graded with the dppStatus row), 4.1.2.1(7) ({DataElement} stands for further content, ESPR Annex III points beyond Table 1 included), the placeholder sentence of 4.1.2.6, the closing sentence of 4.1.2.7 (legal acts may add attributes), 4.3(3) (what the decoupled approach brings; dictionaryReference ties an element to its definition, graded with 4.1.2.3(dictionaryReference)), 5.1, the EXAMPLEs of 5.2.4 to 5.2.9, Annex ZA (below) and the Bibliography.
+# Mirrors: none. 4.2(2) is close to EN18221-4.2(5) (every change to the DPP is archived as EN 18221 lays down, delegated acts setting the extent), which EN18222-4.7(4) mirrors, but it also asks for each change to be logged, so it is an own Criterion. 4.2(1) is an own recommendation on what each change record holds (identifiers, time, actor, changed properties).
+# References (forms decided in #1021, confirmed by this Extract). Clause 2 names three: ISO 8601-1:2019 as amended by Amd 1:2022 (dated), read through Table 7, which spells out the date and date-time patterns the text uses, and RFC 3339, its free Internet profile, not bought (registered as ISO8601); EN 18219 (undated), graded by pointing at its rows (the identifier formats of Table 1); EN 18221 (undated), graded by pointing at its rows (4.2(2) mirrors EN18221-4.2(5)). Bound by the body though listed only in the Bibliography, read through and graded on this file's rows: RFC 3986 (the url of Table 5 and the anyURI pattern of Table 7; registered by EN 18219), ISO 639:2023 and EN ISO 3166-1:2020 (the two-letter language and country codes of the language tags of Tables 5 and 6; registered as ISO639 and ISO3166), W3C XML Schema 1.0 Part 2 (the built-in data types 4.1.2.9 admits and excludes; registered as XSD2). The IANA media type registry named by the contentType of Table 5 is a registry, not a standard: graded on 4.1.2.7, no entry. Graded by pointing at other files: ISO/IEC 21778:2017 (the native JSON types of 5.2.3(1), a recommendation; its matrix file is ISO21778), EN 18216 (the data syntaxes 5.2.1(1) names) and EN 18239 (the actor of 4.2(1), a recommendation). No requirement: ISO 18435-1 and ISO 18308 (sources of the terms), ISO/IEC 19505-2 (the UML notation of the diagrams), ESPR (the law). Listed in the Bibliography but cited nowhere in the text: EN ISO 11354-1, EN 18220, EN 18222 and EN 18246. The text cites neither IEC 63278 nor the Asset Administration Shell, which the EN18223 source entry wrongly named.
+# Findings: The compressed JSON cannot be read back on its own: it keys elements by elementId and drops dictionaryReference, valueDataType and the class (5.2.2(2)), list items lose the elementId Table 2 makes mandatory (5.2.7), a multi-language element or a related resource looks like an ordinary list or collection, the string-plus-valueDataType fallback of 5.2.3 has no place in it, and header attributes and top-level elementIds share one object with nothing preventing a clash (the XML of Annex B separates them by namespace). The text never says which serialisation is mandatory, nor defines "compressed" and "full", which EN 18222 8.1 uses. EN 18222 Table 11 types Identifier and Timestamp as EN 18223 defines them, but EN 18223 defines no such types (identifiers are strings, the one timestamp is lastUpdated), and EN 18222's registry entry calls itself a DPP header with other attributes than Table 1. Table 4 allows a MultiValuedDataElement zero items where 4.1.2.6 and Figure 1 ask for at least one. Table 7 gives a JSON form for ten XSD types only, leaving duration, time, the g types, hexBinary and the integer subtypes without one, and the valueDataType prefix "xsd:" is shown only by example. The language tags of Tables 5 and 6 are no BCP 47 tags, their case differs between the tables and it stays open whether the country part is mandatory. The instance carries no version of its own, though EN 18221 archives versions and EN 18222 reads one by date. Clause 1 promises a model of data dictionaries and organisational interoperability; the body has three paragraphs on repositories (4.3) and no organisational clause. Annexes A and B are normative but hold examples only. Annex A's Example 2 is no valid JSON (objects listed without keys or array), its Example 4 calls the item list "value" where Example 1 calls it "elements", gives the numbers as strings and repeats the elementId efficiencyRating2 (against the uniqueness rule of Table 2), its dictionary references carry a single slash after "https:" and stray spaces, Example 5 ends an object with a comma, Example 6 tags Greek "gr" (ISO 639 has "el") and Example 5 a bare "en", where Tables 5 and 6 ask for a language and a country code. Annex B's examples are no well-formed XML (a space after "<", an escaped "<" before closing tags, dashes in the date, broken comments), and Annex B is the compressed XML serialisation although EN 18222 8.1 points the full representation to Annexes A and B. The header examples write the granularity "Model" and the status "Active" where 4.1.2.2 and the status examples are lower case, and their dppSchemaVersion differs between 5.2.4 and Annex B. The class names appear as SingleValueDataElement and MultiValueDataElement beside SingleValuedDataElement and MultiValuedDataElement; the principles of 4.1.2.1 send DataElementCollection to 4.1.2.3 and MultiValuedDataElement to 4.1.2.4 (meant: 4.1.2.4 and 4.1.2.6); 4.1.2.4's list of what a collection holds leaves out MultiLanguageDataElement. 4.2 cites "EN 182391" (EN 18239 with its footnote marker run in). Annex ZA maps ESPR Art. 11(d) (a new DPP linked to the original one) to RelatedResource, which the text defines for documents and certificates; no class or header attribute links one DPP to another. It maps Art. 7(8) (a language customers understand) to the multi-language classes, which make language-tagged values possible but require none. The footnotes still call EN 18239 and EN 18246 under preparation, as in EN 18219, EN 18220 and EN 18222.
+# Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736, and no remark limiting any row: Art. 7(8) through 4.1.2.8 and 4.1.2.8.2; Art. 10(1)(d) through 4.1; Art. 10(1)(f) through 4.1.2; Art. 11(a) through clauses 4 and 5; Art. 11(d) through 4.1.2.7. The rows that never cap a law row: the recommendations 4.1.2.1(6)-sub2, 4.1.2.3(elementId)-sub2, 4.1.2.9, 4.2(1), 4.3(2)-sub1 and 5.2.3-sub1; the options 4.1.2.9(d), 5.2.3-sub2 and 5.2.6-sub2; the optional attributes facilityId, contentSpecificationIds and dictionaryReference; Annex B, which binds only an XML serialisation, optional under EN 18216 5(b); and the repository and Commission duties 4.3(2)-sub2 to -sub4 and 5.2.5-sub2. Every other row caps. This Extract added ESPR-Art7(8) to the ESPR file (Annex ZA maps it; the Tier A extraction had taken Art. 7(2)(b) and 7(5) only) and EN18223 to operationalisedBy of ESPR-Art7(8) and 10(1)(f), and, as rows the text addresses without presumption (map rule of 2026-10-09), of ESPR-Art9(2)(d) and REG1778-Art8(7)(c) (the granularity of Table 1), ESPR-AnnexIII(b), (g), (h) and (i) (the identifiers of Table 1) and ESPR-AnnexIII(e) and (f) (documents as RelatedResource). It dropped EN18223 from the registry rows the text never mentions: ESPR-Art13(4), 13(5), REG1778-Art3(b), 8(1), 8(2), 8(6), 8(10), 9(4), 19(2) and BATT-Art77(10), and from REG1778-Art12(6) (the repository's APIs, which 4.3 does not touch). The other law rows naming EN18223 stay: ESPR-Art10(1)(d), 11(a) and 11(d) (Annex ZA), BATT-Art77(5), 78(a) and 77(7)-sub1 (their battery counterparts), REG1778-Art3(g), 12(2)(a), (b) and (e) (the semantic repository of 4.3), REG1778-Art11(3) and 8(7)(a) (data structured by and conforming to the repository's definitions), 11(4) (versioned data models: dppSchemaVersion and contentSpecificationIds), 8(7) (a DPP the registry can read: clause 5) and 8(7)(b) (registry data matching the DPP's header).
+
+standard: EN18223
+edition: EN 18223:2026
+extractedFrom: standards/EN18223-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4.1.2.1"
+    title: 4.1.2.1 and 4.1.2.2 The DPP and its header
+  - id: "4.1.2.3"
+    title: 4.1.2.3 to 4.1.2.8 Data elements
+  - id: "4.1.2.9"
+    title: 4.1.2.9 Value data types
+  - id: "4.2"
+    title: 4.2 Changes to the DPP
+  - id: "4.3"
+    title: 4.3 Repositories for the data dictionaries
+  - id: "5.2"
+    title: 5.2 Serialisation
+  - id: "A"
+    title: Annexes A and B Expanded JSON and compressed XML
+criteria:
+  - id: EN18223-4.1.2.1(4)(d)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(4), fourth item"
+    paraphrase: "The data elements a MultiValuedDataElement holds are all of one and the same type (only numbers, say, or only collections of one shape)."
+    applicability: software
+    areas:
+      - 8
+      - 2
+  - id: EN18223-4.1.2.1(5)(digitalProductPassportId)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: digitalProductPassportId"
+    paraphrase: "Mandatory attribute: the DPP instance publishes its DPP identifier, a string, as digitalProductPassportId."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18223-4.1.2.1(5)(uniqueProductIdentifier)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: uniqueProductIdentifier"
+    paraphrase: "Mandatory attribute: the instance publishes the product's unique identifier as uniqueProductIdentifier, a string in an EN 18219 format that also gives a web link to the DPP."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18223-4.1.2.1(5)(granularity)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: granularity, with 4.1.2.2"
+    paraphrase: "Mandatory attribute: the instance publishes the granularity of its unique product identifier as granularity, one of the enumeration values model, batch or item (4.1.2.2)."
+    applicability: software
+    areas:
+      - 3
+      - 8
+  - id: EN18223-4.1.2.1(5)(dppSchemaVersion)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: dppSchemaVersion"
+    paraphrase: "Mandatory attribute: the instance publishes dppSchemaVersion, a string naming the reference standard its schema follows."
+    applicability: software
+    areas:
+      - 8
+      - 2
+  - id: EN18223-4.1.2.1(5)(dppStatus)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: dppStatus"
+    paraphrase: "Mandatory attribute: the instance publishes dppStatus, its status as a digital resource; the text gives active, inactive, archived and invalid as example values and lets legal acts add others."
+    applicability: software
+    areas:
+      - 6
+  - id: EN18223-4.1.2.1(5)(lastUpdated)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: lastUpdated"
+    paraphrase: "Mandatory attribute: the instance publishes lastUpdated, the date and time of its latest update, as a UTC timestamp in ISO 8601-1:2019."
+    applicability: software
+    areas:
+      - 6
+  - id: EN18223-4.1.2.1(5)(economicOperatorId)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: economicOperatorId"
+    paraphrase: "Mandatory attribute: the instance publishes economicOperatorId, the identifier of an actor in the product's life cycle, in an EN 18219 format."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18223-4.1.2.1(5)(facilityId)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: facilityId"
+    paraphrase: "Optional attribute (zero or one): the instance may publish facilityId, the identifier of a location or building in the product's value chain or used by a life-cycle actor, in an EN 18219 format."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18223-4.1.2.1(5)(contentSpecificationIds)
+    section: "4.1.2.1"
+    clause: "4.1.2.1(5), Table 1: contentSpecificationIds"
+    paraphrase: "Optional attribute (zero or more): the instance may publish contentSpecificationIds, references to the horizontal or product-type content specifications it follows."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.1(6)-sub1
+    section: "4.1.2.1"
+    clause: "4.1.2.1(6), first requirement"
+    paraphrase: "The DPP identifier (digitalProductPassportId) is globally unique."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18223-4.1.2.1(6)-sub2
+    section: "4.1.2.1"
+    clause: "4.1.2.1(6), second requirement"
+    paraphrase: "Recommendation: the DPP identifier is built on a URI or URL structure."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18223-4.1.2.3(elementId)-sub1
+    section: "4.1.2.3"
+    clause: "4.1.2.3, Table 2: elementId, mandatory part"
+    paraphrase: "Every data element carries an elementId, a string unique within its location (the DPP itself, or the collection or list holding the element), and the element's absolute path is unique within the DPP instance."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.3(elementId)-sub2
+    section: "4.1.2.3"
+    clause: "4.1.2.3, Table 2: elementId, recommendation"
+    paraphrase: "Recommendation: the elementId is unique within the whole DPP instance, not only within its location."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.3(dictionaryReference)
+    section: "4.1.2.3"
+    clause: "4.1.2.3, Table 2: dictionaryReference"
+    paraphrase: "Optional attribute (zero or one): a data element may carry dictionaryReference, a string referring to the unique identifier of the data point's definition in a repository or data dictionary (4.3)."
+    applicability: software
+    areas:
+      - 8
+      - 7
+  - id: EN18223-4.1.2.4(2)
+    section: "4.1.2.3"
+    clause: "4.1.2.4(2)"
+    paraphrase: "A DataElementCollection, with its elementId and dictionaryReference, holds at least one data element of a concrete kind, nested collections included."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.5
+    section: "4.1.2.3"
+    clause: "4.1.2.5, Table 3"
+    paraphrase: "A SingleValuedDataElement holds exactly one value, of any JSON data type as clause 5 describes, and optionally a valueDataType string (4.1.2.9) needed to interpret the value."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.6
+    section: "4.1.2.3"
+    clause: "4.1.2.6, Table 4"
+    paraphrase: "A MultiValuedDataElement is an ordered list of at least one data element, with an optional valueDataType for the values it holds; its items share one type (4.1.2.1(4)(d))."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.7
+    section: "4.1.2.3"
+    clause: "4.1.2.7, Table 5"
+    paraphrase: "A RelatedResource represents a document or certificate a DPP may have to include: contentType (an IANA media type) and url (a URL to the resource, RFC 3986) are mandatory; language (a language-and-country tag, ISO 639 and ISO 3166-1) and resourceTitle (a human-readable title) are optional."
+    applicability: software
+    areas:
+      - 8
+      - 11
+  - id: EN18223-4.1.2.8.1
+    section: "4.1.2.3"
+    clause: "4.1.2.8.1"
+    paraphrase: "A MultiLanguageDataElement is a data point whose value depends on the language; it holds one or more MultiLanguageValues."
+    applicability: software
+    areas:
+      - 8
+      - 11
+  - id: EN18223-4.1.2.8.2
+    section: "4.1.2.3"
+    clause: "4.1.2.8.2, Table 6"
+    paraphrase: "Each MultiLanguageValue holds a string value and a mandatory language, written as a localised tag joining a two-letter ISO 639 language code and a two-letter ISO 3166-1 country code (en-GB, de-AT)."
+    applicability: software
+    areas:
+      - 8
+      - 11
+  - id: EN18223-4.1.2.9
+    section: "4.1.2.9"
+    clause: "4.1.2.9, lead"
+    paraphrase: "Recommendation: valueDataType admits the built-in data types of W3C XML Schema Part 2, apart from the exclusions (a) to (c)."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.9(a)
+    section: "4.1.2.9"
+    clause: "4.1.2.9, first item"
+    paraphrase: "The list types that pack several values into one whitespace-separated string (ENTITIES, IDREFS, NMTOKENS) are not supported."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.9(b)
+    section: "4.1.2.9"
+    clause: "4.1.2.9, second item"
+    paraphrase: "The built-in types derived from string (normalizedString, token, language, Name, NCName, ID and the rest) are not supported."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.9(c)
+    section: "4.1.2.9"
+    clause: "4.1.2.9, third item"
+    paraphrase: "The primitive types NOTATION and QName are not supported."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.1.2.9(d)
+    section: "4.1.2.9"
+    clause: "4.1.2.9, fourth item"
+    paraphrase: "Optional: base64Binary may be supported."
+    applicability: software
+    areas:
+      - 8
+  - id: EN18223-4.2(1)
+    section: "4.2"
+    clause: "4.2(1)"
+    paraphrase: "Recommendation: every lifetime event that changes a DPP (a changed property or document, an added property) is tracked so that the change can be archived, recording at least the identifiers (DPP and product), when it happened, the actor as EN 18239 defines it, and which properties changed."
+    applicability: software
+    areas:
+      - 6
+      - 10
+  - id: EN18223-4.2(2)
+    section: "4.2"
+    clause: "4.2(2)"
+    paraphrase: "Every change to the DPP is logged and archived as EN 18221 requires; delegated acts may set how far. Close to EN18221-4.2(5), which archives every change, but it adds the log, so an own Criterion."
+    applicability: software
+    areas:
+      - 6
+      - 10
+  - id: EN18223-4.3(1)
+    section: "4.3"
+    clause: "4.3(1)"
+    paraphrase: "Data points and their definitions are managed apart from each other (a decoupled approach), so that semantics work across sectors without tying DPP content to one technology."
+    applicability: software
+    areas:
+      - 8
+      - 7
+  - id: EN18223-4.3(2)-sub1
+    section: "4.3"
+    clause: "4.3(2), first requirement"
+    paraphrase: "Recommendation: each data point is linked to a machine-readable semantic definition kept in a repository."
+    applicability: software
+    areas:
+      - 8
+      - 7
+  - id: EN18223-4.3(2)-sub2
+    section: "4.3"
+    clause: "4.3(2), second requirement"
+    paraphrase: "Recommendation: the governance of such a repository rests on regulation."
+    applicability: commission
+    areas:
+      - 7
+  - id: EN18223-4.3(2)-sub3
+    section: "4.3"
+    clause: "4.3(2), third requirement"
+    paraphrase: "The repository admits definitions beyond what regulation requires, where appropriate."
+    applicability: commission
+    areas:
+      - 7
+  - id: EN18223-4.3(2)-sub4
+    section: "4.3"
+    clause: "4.3(2), fourth requirement"
+    paraphrase: "Each definition in a repository has a unique identifier and appears there only once, so that it can be referenced without ambiguity and mapped to definitions in other repositories."
+    applicability: commission
+    areas:
+      - 7
+  - id: EN18223-5.2.1(1)
+    section: "5.2"
+    clause: "5.2.1(1)"
+    paraphrase: "Serialised DPP data follow the model of Clause 4, in the data syntaxes EN 18216 defines."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.1(2)
+    section: "5.2"
+    clause: "5.2.1(2)"
+    paraphrase: "Clause 4 entities are serialised by the guidelines of this clause: compressed JSON as in 5.2, expanded full JSON as in Annex A, XML as in Annex B."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.2(1)
+    section: "5.2"
+    clause: "5.2.2(1)"
+    paraphrase: "Naming: class names are written in PascalCase and attribute names in camelCase, in JSON, XML and UML alike."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.2(2)
+    section: "5.2"
+    clause: "5.2.2(2)"
+    paraphrase: "In the optimised (compressed) representation each data element is a JSON member keyed by its elementId; dictionaryReference and valueDataType belong to the external dictionaries (4.3) and are left out of the operational payload."
+    applicability: software
+    areas:
+      - 2
+      - 8
+  - id: EN18223-5.2.3-sub1
+    section: "5.2"
+    clause: "5.2.3, first requirement, with Table 7"
+    paraphrase: "Recommendation: where a data dictionary or semantic repository specifies a value's data type, the value takes the native JSON type (ISO/IEC 21778) Table 7 maps it to: booleans as true or false; decimals, integers and floating-point values as JSON numbers (a string allowed for high-precision decimals); dates as YYYY-MM-DD and date-times as YYYY-MM-DDThh:mm:ssZ (ISO 8601-1); URIs per RFC 3986; base64 data as a string."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.3-sub2
+    section: "5.2"
+    clause: "5.2.3, second requirement"
+    paraphrase: "Optional: where no dictionary specifies the type, the value may be a JSON string accompanied by valueDataType."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.4(1)
+    section: "5.2"
+    clause: "5.2.4(1)"
+    paraphrase: "For operational data exchange the DigitalProductPassport is serialised in JSON as one object: the header attributes of Table 1 followed by the data elements."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.5-sub1
+    section: "5.2"
+    clause: "5.2.5, first paragraph, first part"
+    paraphrase: "A DataElementCollection is serialised as a JSON object whose members may mix any data types."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.5-sub2
+    section: "5.2"
+    clause: "5.2.5, first paragraph, second part"
+    paraphrase: "Recommendation to those who write DPP requirements: weigh complex nesting carefully."
+    applicability: commission
+    areas:
+      - 2
+  - id: EN18223-5.2.6-sub1
+    section: "5.2"
+    clause: "5.2.6, first requirement"
+    paraphrase: "A SingleValuedDataElement is serialised as a JSON key-value pair."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.6-sub2
+    section: "5.2"
+    clause: "5.2.6, second requirement"
+    paraphrase: "Optional: inside a MultiValuedDataElement it may be reduced to a bare value of a native JSON type."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.7
+    section: "5.2"
+    clause: "5.2.7"
+    paraphrase: "A MultiValuedDataElement is serialised as a JSON array whose items share one JSON type, simple or object; an item carries no key and is identified by its index."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.8
+    section: "5.2"
+    clause: "5.2.8"
+    paraphrase: "A RelatedResource is serialised as a JSON object carrying its attributes (resourceTitle, contentType, url, language)."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-5.2.9
+    section: "5.2"
+    clause: "5.2.9"
+    paraphrase: "A MultiLanguageDataElement is serialised as a JSON array of objects, one per MultiLanguageValue, each holding the value and its language."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-A
+    section: "A"
+    clause: Annex A (normative)
+    paraphrase: "Expanded full JSON: the DPP's data elements sit in an elements array after the header, and every element is an object carrying elementId, objectType (its class name), dictionaryReference, valueDataType where it applies, and its value or, for collections and lists, its nested elements."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18223-B
+    section: "A"
+    clause: Annex B (normative)
+    paraphrase: "Compressed XML: the DPP is a DigitalProductPassport element in the EN 18223 schema namespace with the header attributes as child elements; data elements are elements named by their elementId in the namespace of their content specification, list items are item elements, and each multi-language value is a MultiLanguageValue element holding value and language."
+    applicability: software
+    areas:
+      - 2
