@@ -5,6 +5,7 @@
  * that write create a blank draft passport and delete it again. Added in wayfinder ticket #1044.
  */
 import fs from "node:fs";
+import type { APIRequestContext } from "@playwright/test";
 import path from "node:path";
 import Ajv2019 from "ajv/dist/2019";
 import { ApiBase } from "../config";
@@ -35,7 +36,7 @@ const qualifier = (type: string, extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-/** Posts each element to a fresh draft and returns the statuses that were not 400. */
+/** Posts each element to the draft and returns the ones that were not refused with 400. */
 const acceptedOf = async (
   draft: Draft,
   elements: Record<string, unknown>[],
@@ -46,6 +47,35 @@ const acceptedOf = async (
     if (response.status() !== 400) accepted.push({ idShort: element.idShort, status: response.status() });
   }
   return accepted;
+};
+
+/**
+ * Posts a conforming control, which must be accepted, then the probe that breaks the rule, which
+ * must be refused; the control keeps a 400 caused by a malformed probe from passing the Check.
+ */
+const expectRefusedAgainstControl = async (
+  draft: Draft,
+  control: Record<string, unknown>,
+  probe: Record<string, unknown>,
+  what: string,
+): Promise<void> => {
+  const accepted = await draft.addElement(control);
+  expect(accepted.status(), `control: ${what}, without the breach`).toBe(201);
+  const refused = await draft.addElement(probe);
+  expect(refused.status(), what).toBe(400);
+};
+
+/** Reads one element of the draft's probe submodel by its idShort. */
+const readElement = async (
+  request: APIRequestContext,
+  draft: Draft,
+  idShort: string,
+): Promise<Record<string, unknown>> => {
+  const response = await request.get(`${draft.submodelUrl}/submodel-elements/${idShort}`, {
+    headers: orgHeaders(readSubject().orgId),
+  });
+  expect(response.status(), `read ${idShort}`).toBe(200);
+  return (await response.json()) as Record<string, unknown>;
 };
 
 check(
@@ -80,6 +110,8 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
+      const control = await draft.addElement(property("Valid_Id-1x"));
+      expect(control.status(), "control: an idShort that fits AASd-002").toBe(201);
       const accepted = await acceptedOf(draft, [
         property("1Leading"),
         property("a"),
@@ -133,12 +165,16 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement(
-        property("SupplementalOnly", {
-          supplementalSemanticIds: [globalReference("https://example.org/supplemental")],
+      const supplemental = [globalReference("https://example.org/supplemental")];
+      await expectRefusedAgainstControl(
+        draft,
+        property("SupplementalWithMain", {
+          semanticId: globalReference("https://example.org/main"),
+          supplementalSemanticIds: supplemental,
         }),
+        property("SupplementalOnly", { supplementalSemanticIds: supplemental }),
+        "supplementalSemanticIds without semanticId",
       );
-      expect(response.status(), "supplementalSemanticIds without semanticId").toBe(400);
     }),
 );
 
@@ -150,10 +186,12 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement(
+      await expectRefusedAgainstControl(
+        draft,
+        property("DistinctQualifiers", { qualifiers: [qualifier("Cardinality"), qualifier("Limit")] }),
         property("TwinQualifiers", { qualifiers: [qualifier("Cardinality"), qualifier("Cardinality")] }),
+        "two qualifiers of one type",
       );
-      expect(response.status(), "two qualifiers of one type").toBe(400);
     }),
 );
 
@@ -165,10 +203,12 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement(
+      await expectRefusedAgainstControl(
+        draft,
+        property("FittingQualifier", { qualifiers: [qualifier("Limit", { valueType: "Int", value: "5" })] }),
         property("TypedQualifier", { qualifiers: [qualifier("Limit", { valueType: "Int", value: "abc" })] }),
+        "qualifier Int value abc",
       );
-      expect(response.status(), "qualifier Int value abc").toBe(400);
     }),
 );
 
@@ -194,15 +234,13 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement(
-        property("TwinExtensions", {
-          extensions: [
-            { name: "Origin", valueType: "String", value: "a" },
-            { name: "Origin", valueType: "String", value: "b" },
-          ],
-        }),
+      const extension = (name: string) => ({ name, valueType: "String", value: name });
+      await expectRefusedAgainstControl(
+        draft,
+        property("DistinctExtensions", { extensions: [extension("Origin"), extension("Source")] }),
+        property("TwinExtensions", { extensions: [extension("Origin"), extension("Origin")] }),
+        "two extensions of one name",
       );
-      expect(response.status(), "two extensions of one name").toBe(400);
     }),
 );
 
@@ -214,12 +252,12 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement({
-        modelType: "ReferenceElement",
-        idShort: "KeylessReference",
-        value: { type: "ExternalReference", keys: [] },
-      });
-      expect(response.status(), "reference with no key").toBe(400);
+      await expectRefusedAgainstControl(
+        draft,
+        { modelType: "ReferenceElement", idShort: "KeyedReference", value: globalReference("https://example.org/a") },
+        { modelType: "ReferenceElement", idShort: "KeylessReference", value: { type: "ExternalReference", keys: [] } },
+        "reference with no key",
+      );
     }),
 );
 
@@ -227,16 +265,30 @@ check(
   {
     id: "metamodel.model-reference-starts-with-identifiable",
     title: "a model reference whose first key is no identifiable is refused (AASd-123)",
-    criteria: ["IDTA01001-AASd-123"],
+    criteria: ["IDTA01001-AASd-121", "IDTA01001-AASd-123"],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement({
-        modelType: "ReferenceElement",
-        idShort: "RootlessReference",
-        value: { type: "ModelReference", keys: [{ type: "Property", value: "Temperature" }] },
-      });
-      expect(response.status(), "model reference starting with a Property key").toBe(400);
+      await expectRefusedAgainstControl(
+        draft,
+        {
+          modelType: "ReferenceElement",
+          idShort: "RootedReference",
+          value: {
+            type: "ModelReference",
+            keys: [
+              { type: "Submodel", value: "urn:example:submodel" },
+              { type: "Property", value: "Temperature" },
+            ],
+          },
+        },
+        {
+          modelType: "ReferenceElement",
+          idShort: "RootlessReference",
+          value: { type: "ModelReference", keys: [{ type: "Property", value: "Temperature" }] },
+        },
+        "model reference starting with a Property key",
+      );
     }),
 );
 
@@ -248,13 +300,19 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement({
+      const entity = (idShort: string, extra: Record<string, unknown> = {}) => ({
         modelType: "Entity",
-        idShort: "AnonymousEntity",
+        idShort,
         entityType: "SelfManagedEntity",
         statements: [],
+        ...extra,
       });
-      expect(response.status(), "self-managed entity without asset id").toBe(400);
+      await expectRefusedAgainstControl(
+        draft,
+        entity("IdentifiedEntity", { globalAssetId: "urn:example:asset" }),
+        entity("AnonymousEntity"),
+        "self-managed entity without asset id",
+      );
     }),
 );
 
@@ -266,15 +324,20 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement({
+      const list = (idShort: string, itemSemantics: string) => ({
         modelType: "SubmodelElementList",
-        idShort: "MismatchedSemantics",
+        idShort,
         typeValueListElement: "Property",
         valueTypeListElement: "String",
         semanticIdListElement: globalReference("https://example.org/expected"),
-        value: [property("Item0", { semanticId: globalReference("https://example.org/other") })],
+        value: [property("Item0", { semanticId: globalReference(itemSemantics) })],
       });
-      expect(response.status(), "list item with a foreign semantic id").toBe(400);
+      await expectRefusedAgainstControl(
+        draft,
+        list("MatchingSemantics", "https://example.org/expected"),
+        list("MismatchedSemantics", "https://example.org/other"),
+        "list item with a foreign semantic id",
+      );
     }),
 );
 
@@ -286,13 +349,23 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement({
-        modelType: "SubmodelElementList",
-        idShort: "UntypedList",
-        typeValueListElement: "Property",
-        value: [property("Item0")],
-      });
-      expect(response.status(), "property list without valueTypeListElement").toBe(400);
+      await expectRefusedAgainstControl(
+        draft,
+        {
+          modelType: "SubmodelElementList",
+          idShort: "TypedList",
+          typeValueListElement: "Property",
+          valueTypeListElement: "String",
+          value: [property("Item0")],
+        },
+        {
+          modelType: "SubmodelElementList",
+          idShort: "UntypedList",
+          typeValueListElement: "Property",
+          value: [property("Item0")],
+        },
+        "property list without valueTypeListElement",
+      );
     }),
 );
 
@@ -304,8 +377,12 @@ check(
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
-      const response = await draft.addElement(property("ControlCharacter", { value: "bell\u0007" }));
-      expect(response.status(), "value with U+0007").toBe(400);
+      await expectRefusedAgainstControl(
+        draft,
+        property("PlainCharacters", { value: "bell" }),
+        property("ControlCharacter", { value: "bell\u0007" }),
+        "value with U+0007",
+      );
     }),
 );
 
@@ -387,5 +464,123 @@ check(
         idShort: "OpenRelationship",
       });
       expect(response.status(), "relationship element without ends").toBe(201);
+    }),
+);
+
+check(
+  {
+    id: "metamodel.extension-refers-to-model-reference",
+    title: "an extension whose refersTo is an external reference is refused (refersTo is a model reference)",
+    criteria: ["IDTA01001-HasExtensions"],
+  },
+  async ({ request }) =>
+    withDraft(request, async (draft) => {
+      const extension = (refersTo: Record<string, unknown>) => ({
+        name: "Pointer",
+        valueType: "String",
+        value: "x",
+        refersTo: [refersTo],
+      });
+      await expectRefusedAgainstControl(
+        draft,
+        property("ModelPointer", {
+          extensions: [extension({ type: "ModelReference", keys: [{ type: "Submodel", value: "urn:example:submodel" }] })],
+        }),
+        property("ExternalPointer", { extensions: [extension(globalReference("https://example.org/elsewhere"))] }),
+        "extension refersTo an external reference",
+      );
+    }),
+);
+
+check(
+  {
+    id: "metamodel.element-shared-attributes-held",
+    title: "an element keeps the attributes every SubmodelElement shares (semantics, qualifier, data specification, names)",
+    criteria: ["IDTA01001-SubmodelElement"],
+  },
+  async ({ request }) =>
+    withDraft(request, async (draft) => {
+      const dataSpecification = globalReference(
+        "https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIEC61360/3",
+      );
+      const created = await draft.addElement(
+        property("SharedAttributes", {
+          category: "PARAMETER",
+          displayName: [{ language: "en", text: "Shared attributes" }],
+          description: [{ language: "en", text: "Probe of the inherited attributes" }],
+          semanticId: globalReference("https://example.org/semantics"),
+          supplementalSemanticIds: [globalReference("https://example.org/supplemental")],
+          qualifiers: [qualifier("Limit", { semanticId: globalReference("https://example.org/qualifier") })],
+          embeddedDataSpecifications: [{ dataSpecification }],
+        }),
+      );
+      expect(created.status()).toBe(201);
+      const read = await readElement(request, draft, "SharedAttributes");
+      expect(read).toMatchObject({
+        category: "PARAMETER",
+        displayName: [{ language: "en", text: "Shared attributes" }],
+        description: [{ language: "en", text: "Probe of the inherited attributes" }],
+        semanticId: { keys: [{ value: "https://example.org/semantics" }] },
+        supplementalSemanticIds: [{ keys: [{ value: "https://example.org/supplemental" }] }],
+        qualifiers: [{ type: "Limit", semanticId: { keys: [{ value: "https://example.org/qualifier" }] } }],
+        embeddedDataSpecifications: [{ dataSpecification }],
+      });
+    }),
+);
+
+check(
+  {
+    id: "metamodel.specific-asset-id-attributes-held",
+    title: "a specific asset id keeps its name, value, semantic ids and externalSubjectId",
+    criteria: ["IDTA01001-SpecificAssetId"],
+  },
+  async ({ request }) =>
+    withDraft(request, async (draft) => {
+      const specificAssetId = {
+        name: "SerialNumber",
+        value: "SN-0001",
+        semanticId: globalReference("https://example.org/serial"),
+        supplementalSemanticIds: [globalReference("https://example.org/serial-supplemental")],
+        externalSubjectId: globalReference("https://example.org/subject"),
+      };
+      const created = await draft.addElement({
+        modelType: "Entity",
+        idShort: "IdentifiedPart",
+        entityType: "SelfManagedEntity",
+        globalAssetId: "urn:example:part",
+        specificAssetIds: [specificAssetId],
+        statements: [],
+      });
+      expect(created.status()).toBe(201);
+      const read = await readElement(request, draft, "IdentifiedPart");
+      expect(read.specificAssetIds).toMatchObject([
+        {
+          name: "SerialNumber",
+          value: "SN-0001",
+          semanticId: { keys: [{ value: "https://example.org/serial" }] },
+          supplementalSemanticIds: [{ keys: [{ value: "https://example.org/serial-supplemental" }] }],
+          externalSubjectId: { type: "ExternalReference", keys: [{ value: "https://example.org/subject" }] },
+        },
+      ]);
+    }),
+);
+
+check(
+  {
+    id: "metamodel.revision-needs-version",
+    title: "administrative information with a revision but no version is refused (AASd-005)",
+    criteria: ["IDTA01001-AASd-005"],
+  },
+  async ({ request }) =>
+    withDraft(request, async (draft) => {
+      const submodel = (idShort: string, administration: Record<string, unknown>) => ({
+        idShort,
+        administration,
+        submodelElements: [],
+      });
+      const control = await draft.addSubmodel(submodel("Versioned", { version: "1", revision: "0" }));
+      expect(control.status(), "control: version and revision").toBe(201);
+      const probe = await draft.addSubmodel(submodel("RevisionOnly", { revision: "1" }));
+      expect(probe.status(), "revision without version").toBe(400);
     }),
 );

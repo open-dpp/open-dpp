@@ -309,7 +309,6 @@ check(
       "EN18223-5.2.5-sub1",
       "EN18223-5.2.6-sub1",
       "EN18223-5.2.7",
-      "IDTA01001-ValueOnly",
     ],
   },
   async ({ browser }) => {
