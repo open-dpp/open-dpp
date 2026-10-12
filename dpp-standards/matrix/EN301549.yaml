@@ -1,0 +1,1186 @@
+# Conformance Matrix: EN301549 (ETSI EN 301 549 V3.2.1 (2021-03), clause 9 Web). Rules: dpp-standards/README.md.
+# Criteria extracted on 2026-10-11 (ticket #761) from the free ETSI text V3.2.1, the edition EN 18216:2026 cites (dated reference EN 301 549:2021); assessments are added in place, one per Criterion.
+# Normative reference of EN 18216, cited once (EN18216-5-para3), for the accessibility of DPP content wherever people read it. Extract scope, decided by the map owner on 2026-10-11 in #761: clause 9 (web content), because open-dpp shows DPP content to people only as web pages; each clause 9.1.1.1 to 9.4.1.3 requires a web page to satisfy one WCAG 2.1 Level A or AA success criterion, and 9.6 adds the five WCAG conformance requirements.
+# Not extracted: clauses 1 to 3 (scope, references, definitions), 4 (functional performance statements: user needs that clauses 5 to 13 meet, no own pass criterion), 5 to 8 and 10 to 13 (generic and closed functionality, two-way voice, video, hardware, non-web documents, non-web software, documentation and support services, relay and emergency services: outside the reach of EN 18216, which cites the standard for the rendering of DPP content only; documents an operator attaches to a passport, clause 10, are the operator's content), 9.0 (informative overview), the void clauses 9.1.4.6 to 9.1.4.9 and 9.2.1.3 (placeholders for WCAG Level AAA numbers), 9.5 (informative list of Level AAA criteria) and the annexes (A: relationship with Directive (EU) 2016/2102, B: mapping to functional performance, C: test procedures that restate each clause, D to F informative).
+# Pages assessed: the passport presentation view a GS1 Digital Link or permalink resolves to (anonymous and signed-in visitors, with its language switcher, media and the optional AI chat). The editor and the organisation back office render DPP content to the operator's own members while authoring it; they are not the representation of DPP content to the passport's users and are not assessed here.
+standard: EN301549
+edition: ETSI EN 301 549 V3.2.1 (2021-03)
+extractedFrom: https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf
+extractedAt: 2026-10-11
+sections:
+  - id: "9.1.1"
+    title: 9.1.1 Text alternatives
+  - id: "9.1.2"
+    title: 9.1.2 Time-based media
+  - id: "9.1.3"
+    title: 9.1.3 Adaptable
+  - id: "9.1.4"
+    title: 9.1.4 Distinguishable
+  - id: "9.2.1"
+    title: 9.2.1 Keyboard accessible
+  - id: "9.2.2"
+    title: 9.2.2 Enough time
+  - id: "9.2.3"
+    title: 9.2.3 Seizures and physical reactions
+  - id: "9.2.4"
+    title: 9.2.4 Navigable
+  - id: "9.2.5"
+    title: 9.2.5 Input modalities
+  - id: "9.3.1"
+    title: 9.3.1 Readable
+  - id: "9.3.2"
+    title: 9.3.2 Predictable
+  - id: "9.3.3"
+    title: 9.3.3 Input assistance
+  - id: "9.4.1"
+    title: 9.4.1 Compatible
+  - id: "9.6"
+    title: 9.6 WCAG conformance requirements
+criteria:
+  - id: EN301549-9.1.1.1
+    section: "9.1.1"
+    clause: "9.1.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.1.1 Non-text content: Every non-text item shown (images, icons, controls, media) has a text alternative serving the same purpose; purely decorative items are hidden from assistive technology."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/media/MediaPreview.vue
+          note: alt is the media title, which upload sets to the file name
+        - type: code
+          ref: apps/main/src/media/infrastructure/media.service.ts
+          note: title and description of an upload are both set to the original file name; no route edits them
+        - type: code
+          ref: apps/client/src/components/media/ProductImageGalleria.vue
+          note: carousel images have the fixed alt Image
+        - type: code
+          ref: apps/client/src/components/media/BrandingLogo.vue
+          note: logo alt brand-image
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the product image's alt text was its file name, the logo's brand-image; the image and PDF download links (icon only) had no accessible name, the tree's expand button none, and the boolean value's checkbox no label (axe link-name, button-name, label)."
+          date: 2026-10-11
+      notes: "Missing: an operator cannot give an image a text alternative (no alt field; the File element's description is not used), so images expose a file name or a fixed word; icon-only controls (download links, tree toggles) have no name; the boolean value is a checkbox without a label. Credited: icons of the navigation carry visible text, and every img has an alt attribute. Operational: the operator would supply the alternatives once a field exists."
+      gapIssue: 1035
+  - id: EN301549-9.1.2.1
+    section: "9.1.2"
+    clause: "9.1.2.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.1 Audio-only and video-only (prerecorded): Prerecorded audio-only content has a text transcript and prerecorded video-only content has a transcript or an audio track, unless it is itself a labelled alternative for text."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads accept only JPEG, PNG, HEIC, WebP and PDF (FileTypeValidator)
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: renders an image or a file icon with a download link; no audio or video player
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          date: 2026-10-11
+      notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
+  - id: EN301549-9.1.2.2
+    section: "9.1.2"
+    clause: "9.1.2.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.2 Captions (prerecorded): Prerecorded audio in synchronised media carries captions, unless the media is a labelled alternative for text."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads accept only JPEG, PNG, HEIC, WebP and PDF (FileTypeValidator)
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: renders an image or a file icon with a download link; no audio or video player
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          date: 2026-10-11
+      notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
+  - id: EN301549-9.1.2.3
+    section: "9.1.2"
+    clause: "9.1.2.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.3 Audio description or media alternative (prerecorded): Prerecorded video in synchronised media has an audio description or a full text alternative."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads accept only JPEG, PNG, HEIC, WebP and PDF (FileTypeValidator)
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: renders an image or a file icon with a download link; no audio or video player
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          date: 2026-10-11
+      notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
+  - id: EN301549-9.1.2.4
+    section: "9.1.2"
+    clause: "9.1.2.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.4 Captions (live): Live audio in synchronised media carries captions."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads accept only JPEG, PNG, HEIC, WebP and PDF (FileTypeValidator)
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: renders an image or a file icon with a download link; no audio or video player
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          date: 2026-10-11
+      notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
+  - id: EN301549-9.1.2.5
+    section: "9.1.2"
+    clause: "9.1.2.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.2.5 Audio description (prerecorded): Prerecorded video in synchronised media has an audio description."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads accept only JPEG, PNG, HEIC, WebP and PDF (FileTypeValidator)
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: renders an image or a file icon with a download link; no audio or video player
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          date: 2026-10-11
+      notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
+  - id: EN301549-9.1.3.1
+    section: "9.1.3"
+    clause: "9.1.3.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.1 Info and relationships: Structure and relationships conveyed visually (headings, lists, tables, labels, groups) are also available programmatically or in text."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: values in dd; booleans as a disabled checkbox; lists through Table.vue
+        - type: code
+          ref: apps/client/src/components/presentation/Table.vue
+          note: lists as tables with column headers
+        - type: code
+          ref: apps/client/src/components/presentation/Passport.vue
+          note: h2 for the passport, h3 per submodel
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): structure exposed: headings, term and definition pairs, table headers, a tree; axe definition-list and dlitem: dd elements inside table cells without a dl; the boolean checkbox has no programmatic label; the multilingual description rendered nothing (term without value) and the range (bounds 0 and 100) was shown as Value is missing."
+          date: 2026-10-11
+      notes: "Credited: headings, description lists of term and value, data tables with column headers and an ARIA tree convey the structure. Missing: table cells wrap their values in dd elements outside any dl, the boolean checkbox is not tied to its term, a multilingual-text value is not rendered at all (the MultiLanguageProperty rendering is #838), and a range is reported missing although its bounds are set."
+      gapIssue: 1035
+  - id: EN301549-9.1.3.2
+    section: "9.1.3"
+    clause: "9.1.3.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.2 Meaningful sequence: Where the reading order carries meaning, the DOM order gives that order to assistive technology."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Passport.vue
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElement.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the DOM order of the passport presentation view (General information and every submodel), a collection's details page and the chat view (accessibility snapshot) matches the visual order: navigation, language select, chat button, tree, then each card with its terms followed by their values."
+          date: 2026-10-11
+      notes: Reading order follows the layout; no CSS reordering of content.
+  - id: EN301549-9.1.3.3
+    section: "9.1.3"
+    clause: "9.1.3.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.3 Sensory characteristics: Instructions never rely only on shape, colour, size, visual position, orientation or sound."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no instruction in the passport presentation view (General information and every submodel), a collection's details page and the chat view refers to shape, colour, size, position or sound; the only instruction is the chat field's placeholder."
+          date: 2026-10-11
+      notes: Passport content that an operator writes could add instructions; none of the software's do.
+  - id: EN301549-9.1.3.4
+    section: "9.1.3"
+    clause: "9.1.3.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.4 Orientation: Content works in portrait and landscape and is not locked to one orientation unless that is essential."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+          note: responsive layout, no orientation lock
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view rendered completely at 320 by 640 (portrait) and 640 by 450 (landscape); no orientation media query in the loaded style sheets and no screen.orientation.lock call in the client."
+          date: 2026-10-11
+      notes: Content is not restricted to one orientation.
+  - id: EN301549-9.1.3.5
+    section: "9.1.3"
+    clause: "9.1.3.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.3.5 Identify input purpose: Input fields that collect information about the user expose their purpose programmatically (autocomplete tokens)."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+        - type: code
+          ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the only inputs in the passport presentation view (General information and every submodel), a collection's details page and the chat view are the chat question and the language select; neither collects information about the visitor."
+          date: 2026-10-11
+      notes: No field asks for the user's own data (name, e-mail, address), so there is no purpose to expose.
+  - id: EN301549-9.1.4.1
+    section: "9.1.4"
+    clause: "9.1.4.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.1 Use of colour: Colour is never the only means of conveying information, indicating an action, prompting a response or distinguishing an element."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: missing values say so in text; booleans show a check mark; link values stand alone
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+          note: replies rendered from Markdown (marked, DOMPurify) into gray text, no link styling
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): information on the passport view is never colour-only: a missing value is shown as text, a true boolean as a check mark, link values stand alone in their value cell."
+          date: 2026-10-11
+        - type: manual
+          ref: "Same Instance, chat view: a reply paragraph with a link, as marked renders it, placed into the reply list: the link had the same colour, weight and decoration (none) as the text around it (verified by the adversarial reviewer on 2026-10-11 and again here)."
+          date: 2026-10-12
+      notes: "Credited: the passport view conveys nothing by colour alone. Missing: a link inside a chat reply is not distinguishable from the surrounding text at all (Tailwind's base styles leave it unstyled), so a visitor cannot tell it is a link."
+      gapIssue: 1035
+  - id: EN301549-9.1.4.2
+    section: "9.1.4"
+    clause: "9.1.4.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.2 Audio control: Audio that plays automatically for more than three seconds can be paused or stopped, or its volume controlled independently of the system volume."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads accept only JPEG, PNG, HEIC, WebP and PDF (FileTypeValidator)
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: renders an image or a file icon with a download link; no audio or video player
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          date: 2026-10-11
+      notes: No audio can be added to a passport or play on the view, so no audio starts automatically.
+  - id: EN301549-9.1.4.3
+    section: "9.1.4"
+    clause: "9.1.4.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.3 Contrast (minimum): Text and images of text have a contrast ratio of at least 4.5:1, or 3:1 for large text; logos and incidental text are exempt."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: anyURI values as links in text-primary-500
+        - type: code
+          ref: apps/client/src/composables/branding.ts
+          note: an organisation's primary colour replaces the theme colour
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): axe color-contrast: the link colour #518367 on #fcfdfd measures 4.3:1 at 14 px (4.5:1 needed); all other text passed."
+          date: 2026-10-11
+      notes: "Missing: the default primary colour, used for links, falls just below 4.5:1 on the card background; an operator's own primary colour (branding) is applied without a contrast check. Operational for the brand colour."
+      gapIssue: 1035
+  - id: EN301549-9.1.4.4
+    section: "9.1.4"
+    clause: "9.1.4.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.4 Resize text: Text can be enlarged to 200 percent without assistive technology and without losing content or function."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+          note: Tailwind layout in rem units
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): at a 640 pixel wide viewport (1280 at 200 percent) every value and control remained visible and usable, no horizontal scrolling, no clipping."
+          date: 2026-10-11
+      notes: Text scales with browser zoom without loss of content or function.
+  - id: EN301549-9.1.4.5
+    section: "9.1.4"
+    clause: "9.1.4.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.5 Images of text: Text is presented as text, not as an image of text, unless customisable or essential (logos)."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: values rendered as text
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): all interface text and every value of the view is real text; images are those the operator uploads."
+          date: 2026-10-11
+      notes: "Credited: the software renders text as text. Missing: the operator's own images (product images, scanned documents shown as images) can be images of text, and no guidance tells operators to avoid them or to carry the text as values (operational, no operator documentation)."
+      gapIssue: 1035
+  - id: EN301549-9.1.4.10
+    section: "9.1.4"
+    clause: "9.1.4.10"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.10 Reflow: Content reflows at a width of 320 CSS pixels (or a height of 256 for horizontal content) without two-dimensional scrolling and without loss of content or function, except where two-dimensional layout is essential (data tables, maps)."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: values in dd without word breaking
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): at 320 pixels the page scrolled horizontally by 2 pixels because a link value (https://example.com/manual) does not wrap; longer unbroken values (URLs, identifiers) widen it further; the rest reflows into one column, the navigation into a drawer."
+          date: 2026-10-11
+      notes: "Missing: unbroken values (URLs, identifiers, hashes) are not allowed to wrap, so a narrow screen scrolls in two dimensions. Data tables are exempt and fitted here."
+      gapIssue: 1035
+  - id: EN301549-9.1.4.11
+    section: "9.1.4"
+    clause: "9.1.4.11"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.11 Non-text contrast: Boundaries and states of user interface components and the graphical objects needed to understand content have a contrast ratio of at least 3:1 against adjacent colours."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+          note: PrimeVue menubar for the navigation links
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): measured: focus on a navigation item shows only a background of rgb(241,245,249) on white (about 1.1:1); the language select's border rgb(203,213,225) on white is about 1.5:1 (its text and chevron still identify it); the boolean check mark is 3.9:1 against its box."
+          date: 2026-10-11
+      notes: "Missing: the focus state of the navigation items is not perceivable at 3:1. Credited: other focus rings (links, buttons, tree items, dialog buttons) and the check mark meet 3:1."
+      gapIssue: 1035
+  - id: EN301549-9.1.4.12
+    section: "9.1.4"
+    clause: "9.1.4.12"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.12 Text spacing: Content and function survive the user widening line height to 1.5, paragraph spacing to 2, letter spacing to 0.12 and word spacing to 0.16 times the font size."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): with line height 1.5, letter spacing 0.12 em, word spacing 0.16 em and paragraph spacing 2 em forced on every element, no text was clipped or overlapped (no element with hidden overflow exceeded its box)."
+          date: 2026-10-11
+      notes: Containers grow with text; no fixed-height text boxes.
+  - id: EN301549-9.1.4.13
+    section: "9.1.4"
+    clause: "9.1.4.13"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 1.4.13 Content on hover or focus: Content that appears on pointer hover or keyboard focus can be dismissed without moving focus, can be hovered itself, and stays until dismissed or no longer relevant."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/TableColumnHeader.vue
+          note: column description in a v-tooltip on an icon
+        - type: code
+          ref: apps/client/src/components/presentation/NestedTableCell.vue
+          note: v-tooltip on the nested-table button
+      notes: "Missing: PrimeVue tooltips (column descriptions of list tables, the nested-table button) close as soon as the pointer leaves the trigger (autoHide), so they cannot be hovered; Escape closes them. Code reading; the subject's columns carry no description."
+      gapIssue: 1035
+  - id: EN301549-9.2.1.1
+    section: "9.2.1"
+    clause: "9.2.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.1.1 Keyboard: All functionality is operable through a keyboard interface without timing for individual keystrokes, except where the path of the movement is essential."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/TableColumnHeader.vue
+          note: description tooltip on a non-focusable span
+        - type: code
+          ref: apps/client/src/components/presentation/NavigationTree.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): Tab reached the navigation, language select, chat button, tree (arrow keys expand and Enter opens a node), links, the image zoom button and its dialog (rotate, zoom, close), the download links and the details links; the chat field sends with Enter."
+          date: 2026-10-11
+      notes: "Credited: every control of the view works from the keyboard. Missing: a list column's description is shown only on mouse hover over an icon that cannot take focus."
+      gapIssue: 1035
+  - id: EN301549-9.2.1.2
+    section: "9.2.1"
+    clause: "9.2.1.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.1.2 No keyboard trap: Keyboard focus that enters a component can leave it with the keyboard alone, using standard keys or keys the user is told about."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: PrimeVue Image preview dialog
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the image zoom dialog keeps focus inside while open and closes with Escape, returning focus to the zoom button; Tab cycles through the whole page without getting stuck."
+          date: 2026-10-11
+      notes: No keyboard trap.
+  - id: EN301549-9.2.1.4
+    section: "9.2.1"
+    clause: "9.2.1.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.1.4 Character key shortcuts: Single-character keyboard shortcuts can be turned off, remapped, or act only while their component has focus."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+          note: Enter sends, Shift+Enter adds a line, only inside the chat field
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): pressing every letter, digit and the keys ? / . , with focus on the page changed neither the URL nor the content and opened no dialog."
+          date: 2026-10-11
+      notes: No single-character shortcuts exist; the only key handlers are Enter and Shift+Enter inside the chat field.
+  - id: EN301549-9.2.2.1
+    section: "9.2.2"
+    clause: "9.2.2.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.2.1 Timing adjustable: Every time limit the content sets can be turned off, adjusted or extended, unless real-time, essential or longer than 20 hours."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view and the chat set no time limit for anonymous visitors."
+          date: 2026-10-11
+      notes: No time limit applies to reading a passport; a signed-in member's session lasts longer than 20 hours (exception).
+  - id: EN301549-9.2.2.2
+    section: "9.2.2"
+    clause: "9.2.2.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.2.2 Pause, stop, hide: Moving, blinking, scrolling or auto-updating information that starts automatically and runs alongside other content can be paused, stopped or hidden."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/PassportHeader.vue
+          note: autoPlay when the passport has more than one thumbnail
+        - type: code
+          ref: apps/client/src/components/media/ProductImageGalleria.vue
+          note: PrimeVue Galleria, transition interval 2000 ms, no pause control
+      notes: "Missing: with several product thumbnails the header carousel advances every two seconds next to the passport data and offers no pause or stop control; it stops only once the visitor operates an indicator or a navigator. Code reading; the subject has a single thumbnail-free shell."
+      gapIssue: 1035
+  - id: EN301549-9.2.3.1
+    section: "9.2.3"
+    clause: "9.2.3.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.3.1 Three flashes or below threshold: Nothing flashes more than three times in any one second, or the flashes stay below the general and red flash thresholds."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/media/ProductImageGalleria.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): nothing in the view flashes; the only motion is the carousel's slide every two seconds."
+          date: 2026-10-11
+      notes: No flashing content.
+  - id: EN301549-9.2.4.1
+    section: "9.2.4"
+    clause: "9.2.4.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.1 Bypass blocks: A mechanism lets users skip blocks of content repeated on several pages (skip link, landmarks, headings)."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+          note: content inside a main landmark
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the repeated header holds three tab stops (navigation, language select, chat button); the content is a main landmark that assistive technology can jump to."
+          date: 2026-10-11
+      notes: "Met by landmarks (WCAG technique ARIA11). Remarks: no skip link for keyboard users without assistive technology, and the navigation is a menubar rather than a nav landmark."
+  - id: EN301549-9.2.4.2
+    section: "9.2.4"
+    clause: "9.2.4.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.2 Page titled: Each page has a title that describes its topic or purpose."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/index.html
+          note: static title open-dpp; nothing sets document.title
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the title was open-dpp on the passport presentation view (General information and every submodel), a collection's details page and the chat view alike, in both languages."
+          date: 2026-10-11
+        - type: check
+          ref: a11y.page-title-names-passport
+          result: failed
+          date: 2026-10-12
+      notes: "Missing: pages have a title, but it names the application, not the passport or the page (Check a11y.page-title-names-passport fails)."
+      gapIssue: 1035
+  - id: EN301549-9.2.4.3
+    section: "9.2.4"
+    clause: "9.2.4.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.3 Focus order: When sequential focus navigation matters, focus moves in an order that preserves meaning and operability."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Passport.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): Tab order: navigation, language select, chat button, tree, then the values in reading order (link, image zoom, image download, PDF download, details link)."
+          date: 2026-10-11
+      notes: Focus order follows the meaning of the page.
+  - id: EN301549-9.2.4.4
+    section: "9.2.4"
+    clause: "9.2.4.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.4 Link purpose (in context): The purpose of each link can be told from its text, alone or with its programmatically determined context."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: icon-only download link
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the image and PDF download links had no accessible name (axe link-name); each details link reads View details, its term above it giving the context."
+          date: 2026-10-11
+      notes: "Missing: the download links have no text at all. The repeated View details links depend on the term in the preceding dt for context."
+      gapIssue: 1035
+  - id: EN301549-9.2.4.5
+    section: "9.2.4"
+    clause: "9.2.4.5"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.5 Multiple ways: More than one way leads to a page within a set of pages, except for a page that is a step in a process or its result."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/NavigationTree.vue
+          note: tree of submodels and collections
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): each page of the passport is reachable through the tree and through the in-content details links; the chat through the navigation and the floating button."
+          date: 2026-10-11
+      notes: Two ways to every page of the passport's set.
+  - id: EN301549-9.2.4.6
+    section: "9.2.4"
+    clause: "9.2.4.6"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.6 Headings and labels: Headings and labels describe the topic or purpose of what they introduce."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Submodel.vue
+          note: submodel headings from display names
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): headings and terms were descriptive for the subject, which carries display names; elements without a display name fall back to their idShort."
+          date: 2026-10-11
+      notes: "Credited: headings and terms come from the elements' display names. Missing: whether they describe the content is the operator's naming, with idShort (a technical key) as fallback, and no operator guidance covers it (operational, no documentation)."
+      gapIssue: 1035
+  - id: EN301549-9.2.4.7
+    section: "9.2.4"
+    clause: "9.2.4.7"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.4.7 Focus visible: Every keyboard-operable interface shows where keyboard focus is."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): each focus stop shows a visible indicator (focus screenshots of all nine stops): ring or border on links, buttons, tree items and the select, a background on navigation items."
+          date: 2026-10-11
+      notes: Focus is always visible. The navigation items show it only as a faint background (about 1.1:1 against white), visible but weak; that contrast is assessed under EN301549-9.1.4.11.
+  - id: EN301549-9.2.5.1
+    section: "9.2.5"
+    clause: "9.2.5.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.1 Pointer gestures: Functions operated by multipoint or path-based gestures also work with a single pointer without a path, unless the gesture is essential."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/media/ProductImageGalleria.vue
+          note: navigators and indicators are buttons
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): zooming and rotating an image use buttons in the preview dialog; no function needs a path or multipoint gesture."
+          date: 2026-10-11
+      notes: Single-pointer operation throughout.
+  - id: EN301549-9.2.5.2
+    section: "9.2.5"
+    clause: "9.2.5.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.2 Pointer cancellation: Single-pointer functions do not complete on the down-event, or the completion can be aborted or undone, or the up-event reverses it."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): all controls act on click (pointer up), none on pointer down."
+          date: 2026-10-11
+      notes: Native and PrimeVue controls fire on the up-event.
+  - id: EN301549-9.2.5.3
+    section: "9.2.5"
+    clause: "9.2.5.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.3 Label in name: The accessible name of a control that has a visible text label contains that visible text."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): accessible names contain the visible labels: To pass view, Chat with AI, View details, English."
+          date: 2026-10-11
+      notes: Unnamed controls are EN301549-9.4.1.2.
+  - id: EN301549-9.2.5.4
+    section: "9.2.5"
+    clause: "9.2.5.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 2.5.4 Motion actuation: Functions triggered by device or user motion also work through interface controls, and the motion response can be disabled."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no function reacts to device motion or orientation events."
+          date: 2026-10-11
+      notes: No motion actuation.
+  - id: EN301549-9.3.1.1
+    section: "9.3.1"
+    clause: "9.3.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.1.1 Language of page: The default human language of each page is programmatically determined."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/index.html
+          note: html lang en, static
+        - type: code
+          ref: apps/client/src/composables/presentation-language.ts
+          note: the ?lang= choice switches vue-i18n only
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): after selecting German, the interface and headings were German while the html element still declared lang en."
+          date: 2026-10-11
+        - type: check
+          ref: a11y.page-language-follows-selection
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: English pages declare English. Missing: the page language does not follow the visitor's selection (Check a11y.page-language-follows-selection fails)."
+      gapIssue: 1035
+  - id: EN301549-9.3.1.2
+    section: "9.3.1"
+    clause: "9.3.1.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.1.2 Language of parts: The human language of each passage or phrase that differs from the page language is programmatically determined."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: no MultiLanguageProperty branch; values carry no lang attribute
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): values in another language than the page are not marked; the multilingual description rendered nothing in either language."
+          date: 2026-10-11
+      notes: "Missing: a value whose language differs from the page's is never marked, and the one element type that knows its language (MultiLanguageProperty) is not rendered at all. Cluster #838 (languages); the Property type itself carries no language."
+      gapIssue: 838
+  - id: EN301549-9.3.2.1
+    section: "9.3.2"
+    clause: "9.3.2.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.1 On focus: Receiving focus does not by itself change the context."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): tabbing through every control changed no page, window or content."
+          date: 2026-10-11
+      notes: Focus alone never changes the context.
+  - id: EN301549-9.3.2.2
+    section: "9.3.2"
+    clause: "9.3.2.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.2 On input: Changing the setting of a control does not change the context automatically unless the user was told beforehand."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): choosing a language re-renders the same page in that language (?lang= in the URL) without moving focus or opening a window; no other control acts on input."
+          date: 2026-10-11
+      notes: Translating the page in place is a change of content, not of context.
+  - id: EN301549-9.3.2.3
+    section: "9.3.2"
+    clause: "9.3.2.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.3 Consistent navigation: Navigation repeated on several pages of a set keeps the same relative order unless the user changes it."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+          note: one header for every presentation page
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the passport page, a collection's details page and the chat view showed the same header (logo, navigation, language select, chat button) in the same order."
+          date: 2026-10-11
+      notes: The navigation sits in the same place and order on the passport, details and chat pages.
+  - id: EN301549-9.3.2.4
+    section: "9.3.2"
+    clause: "9.3.2.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.2.4 Consistent identification: Components with the same function within a set of pages are identified consistently."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the same icons and labels identify the same functions on every page."
+          date: 2026-10-11
+      notes: Consistent identification.
+  - id: EN301549-9.3.3.1
+    section: "9.3.3"
+    clause: "9.3.3.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.1 Error identification: An input error that is detected automatically is identified and described to the user in text."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): sending a chat question while AI is disabled answers with the text AI is not enabled in the message list; no other input is validated."
+          date: 2026-10-11
+      notes: The only automatic refusal on the view is described in text. That it is not announced is EN301549-9.4.1.3.
+  - id: EN301549-9.3.3.2
+    section: "9.3.3"
+    clause: "9.3.3.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.2 Labels or instructions: Labels or instructions are given wherever content asks for user input."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+          note: textarea with placeholder only
+        - type: code
+          ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
+          note: Select without label or aria-label
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the chat field's only label is its placeholder, gone once typing starts; the language select has no label, its name being the selected value."
+          date: 2026-10-11
+      notes: "Missing: visible labels for the chat question and the language choice."
+      gapIssue: 1035
+  - id: EN301549-9.3.3.3
+    section: "9.3.3"
+    clause: "9.3.3.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.3 Error suggestion: When an input error is detected and a correction is known, the correction is suggested, unless that would endanger security or purpose."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view's inputs (chat question, language select) have no format or value constraint that could produce a correctable error."
+          date: 2026-10-11
+      notes: No input on the view has a detectable error with a known correction to suggest.
+  - id: EN301549-9.3.3.4
+    section: "9.3.3"
+    clause: "9.3.3.4"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 3.3.4 Error prevention (legal, financial, data): Submissions with legal or financial effect, or that change or delete user-controllable data, are reversible, checked for errors with a chance to correct, or confirmed before they complete."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view submits nothing with legal or financial effect and changes no stored data (only the chat question and the page-view counter are sent)."
+          date: 2026-10-11
+      notes: Not triggered by the presentation view; the editor is outside this file's scope.
+  - id: EN301549-9.4.1.1
+    section: "9.4.1"
+    clause: "9.4.1.1"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 4.1.1 Parsing: Markup has complete start and end tags, correct nesting, no duplicate attributes and unique ids, except where a specification allows otherwise."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/index.html
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no duplicate id on the view; the DOM is produced by Vue, so tags are complete and attributes unique."
+          date: 2026-10-11
+      notes: W3C notes that 4.1.1 is always satisfied for HTML content (errata to WCAG 2.1). The content-model error (dd outside dl) is assessed under EN301549-9.1.3.1 and EN18216-5(d).
+  - id: EN301549-9.4.1.2
+    section: "9.4.1"
+    clause: "9.4.1.2"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 4.1.2 Name, role, value: Every user interface component exposes its name and role programmatically, its states, properties and values can be set programmatically where users can set them, and changes are notified to assistive technology."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/components/presentation/NavigationTree.vue
+          note: PrimeVue tree, toggle button without a name
+        - type: code
+          ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
+        - type: code
+          ref: apps/client/src/components/presentation/Navbar.vue
+          note: menubar role for two links
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): axe button-name (tree toggle), label (boolean checkbox), link-name (two download links); the image preview dialog has no accessible name; the language select's name is its value; the navigation links are exposed as menu items of a menubar."
+          date: 2026-10-11
+      notes: "Missing: names for the tree toggle, the download links, the boolean checkbox, the preview dialog and the language select; navigation links carry menu semantics. Credited: links, buttons with text, the tree and its items, tables and the chat button expose correct roles and names."
+      gapIssue: 1035
+  - id: EN301549-9.4.1.3
+    section: "9.4.1"
+    clause: "9.4.1.3"
+    paraphrase: "A web page rendering DPP content satisfies WCAG 2.1 success criterion 4.1.3 Status messages: Status messages are announced to assistive technology through roles or properties without receiving focus."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+          note: replies appended to a plain list
+        - type: code
+          ref: apps/client/src/components/notifications/NotificationHandler.vue
+          note: the app's live region is mounted in the Main layout only, not the presentation layout
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no element with aria-live, role status, log or alert existed on the view; chat replies and the AI-disabled message appeared without announcement."
+          date: 2026-10-11
+      notes: "Missing: status messages (chat replies and errors, loading) are not exposed to assistive technology; the presentation layout has no live region."
+      gapIssue: 1035
+  - id: EN301549-9.6
+    section: "9.6"
+    clause: "9.6"
+    paraphrase: "A web page rendering DPP content meets the five WCAG 2.1 conformance requirements at Level AA: the conformance level (every criterion of 9.1 to 9.4, or a conforming alternate version), full pages, complete processes, only accessibility-supported ways of using technologies, and non-interference (content not relied on still passes 9.1.4.2, 9.2.1.2, 9.2.2.2 and 9.2.3.1)."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the passport presentation view (General information and every submodel), a collection's details page and the chat view assessed as full pages; the visitor's processes are reading, navigating, switching language, downloading and asking the chat."
+          date: 2026-10-11
+        - type: check
+          ref: a11y.public-view-no-serious-violations
+          result: failed
+          date: 2026-10-12
+      notes: "Missing: the conformance level (every 9.1 to 9.4 criterion) is not reached (18 Partial, 1 Gap), and non-interference fails through EN301549-9.2.2.2 (the carousel). Full pages and complete processes are assessed; only accessibility-supported technologies (HTML, CSS, WAI-ARIA) are relied on. Check a11y.public-view-no-serious-violations (critical and serious axe violations only) fails, which evidences the miss; its passing would not by itself show the level."
+      gapIssue: 1035

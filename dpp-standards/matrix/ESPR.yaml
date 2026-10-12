@@ -603,7 +603,7 @@ criteria:
         - type: check
           ref: resolver.redirect-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
       notes: "Software part: a link a seller can show before the sale, online or in the shop. Credited: the public permalink /p/<id>, the GS1 Digital Link URI resolved by the built-in resolver, a QR code of either, and anonymous access once the passport is published (E2E tests cover both routes). Missing: no operator documentation of permalinks, the Digital Link, the QR code or anonymous access exists under docs/, so an operator has no guide to sharing the passport before purchase (#828). The digital copy of the carrier for dealers and marketplaces is Art. 10(3)(a) (#757)."
       gapIssue: 828
   - id: ESPR-Art9(2)(f)
@@ -634,7 +634,7 @@ criteria:
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
       notes: "Software part: give each actor class access to the data meant for it. AAS access-control rules allow per-submodel and per-element visibility for the roles anonymous, organisation member, organisation owner and instance admin, and published passports are public by default; the delegated acts will name external classes (customers, repairers, recyclers, market surveillance, customs) that cannot be expressed (#821, same finding as BATT Art. 77(2))."
       gapIssue: 821
   - id: ESPR-Art9(2)(g)
@@ -669,11 +669,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
       notes: "Software part: let the named actors create a passport or update named data. Creation and updates are open to members and owners of the owning organisation (session or API key) and refused to anyone else; per-element write rights for external actors, e.g. a repairer adding a repair record, cannot be granted (#821)."
       gapIssue: 821
   - id: ESPR-Art9(2)(h)
@@ -919,11 +919,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
         - type: check
           ref: resolver.draft-hidden
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
       notes: "Access is regulated: public reading for anonymous callers, management for the owning organisation's members, per-element rules, drafts hidden; EN 18239 details this in EN18239-5.2(22), 5.2(23) and 6.2. Missing: the delegated-act access rights (actor classes and their data) cannot be expressed (#821), and attachments bypass the element rules (#836)."
       gapIssue: 821
   - id: ESPR-Art10(1)-sub2
@@ -1014,12 +1014,12 @@ criteria:
           ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
         - type: check
           ref: a11y.public-view-no-serious-violations
-          result: passed
-          date: 2026-10-09
+          result: failed
+          date: 2026-10-12
         - type: check
           ref: access.anonymous-reads-published
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
       notes: "Free and easy access for the public: no fee, no account, a resolver behind the data carrier, an accessible public view (Check). Missing: the other actors the article names (repairers, refurbishers, recyclers, market surveillance and customs authorities, civil society, trade unions) get nothing beyond the public view, because no access class exists for them (#821)."
       gapIssue: 821
   - id: ESPR-Art11(c)
@@ -1129,11 +1129,11 @@ criteria:
         - type: check
           ref: access.anonymous-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
         - type: check
           ref: access.foreign-user-denied-management
           result: passed
-          date: 2026-10-09
+          date: 2026-10-12
       notes: "Introducing and changing data is restricted to the owning organisation's owners and members and to the element rules: the management routes refuse anonymous callers (every write route needs a session; the Check covers the read, an anonymous element write was refused by hand on 2026-10-09) and a signed-in outsider (Check). Missing: write rights for actors a delegated act names (a repairer adding repair data, for instance) cannot be granted (#821)."
       gapIssue: 821
   - id: ESPR-Art11(g)
@@ -1158,6 +1158,7 @@ criteria:
       - EN18239
       - EN18246
       - EN18221
+      - EN18216
     assessment:
       date: 2026-10-09
       commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4

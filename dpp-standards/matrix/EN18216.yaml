@@ -1,0 +1,331 @@
+# Conformance Matrix: EN18216 (EN 18216:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18216-2026.pdf) on 2026-10-11 (ticket #761); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: clause 4 has no numbered points, so "4(5)" is its fifth paragraph (the two list items under the HTTPS heading count as paragraphs 4 and 5). Clause 5 keeps the letters a) to d) of its four formats; its unlettered paragraphs are counted, so "5-para3" is the accessibility paragraph and "5-para5" the second limb of the HTML paragraph whose first limb, with item d), is 5(d). Paragraphs without a requirement of their own keep their number and are listed here.
+# Not extracted, no requirement of their own: clause 1 (scope, with its five aims: secure communication, interoperability, ease of use, data integrity, documentation and discoverability), 2 (normative references: ISO/IEC 21778:2017 and EN 301 549:2021, assessed as ISO21778 and EN301549), 3 (terms: identifier, data exchange, identification, authentication, data integrity, secure communication, DPP, controlled DPP data), 4(3) (the HTTPS heading and the line describing HTTPS, which names the protocol 4(1) requires), 4(7) (pointer to EN 18222, which specifies how the API is used over HTTPS; EN 18222 is in the Bibliography, so informative here), 5-para6 (pointer to EN 18221 for the internal storage of DPP data, also a Bibliography entry), Annex A (informative introduction to data exchange protocols), Annex B (informative: security and access control, Table B.1 on ease of use of HTTPS and RESTful APIs for consumers, SMEs and large organisations, and how TLS and RESTful APIs preserve integrity), Annex C (informative: secure communication through TLS key pairs, statelessness, rate limiting, DDoS protection and status codes of RESTful APIs; rate limiting and hardening are assessed under EN 18239, clusters #1026 and #1027), Annex D (informative examples of adaptable systems: AS4 profile of ebMS 3.0, the Asset Administration Shell, EDI) and the Bibliography (RFC 7540, 5246, 8446, 9114, 9110 content negotiation, XML 1.0, JSON-LD 1.1, EN 18221, EN 18222).
+# Annex ZA (informative) maps three Articles: ESPR Art. 10(1)(d) to clauses 4 and 5; ESPR Art. 11(a) to clauses 4 and 5, presumption limited to the technical exchange protocol and data formats; ESPR Art. 11(h) to clause 4; all once the EN is cited in the OJ (cited by Implementing Decision (EU) 2026/1736). The other law rows naming EN18216 in operationalisedBy (BATT-Art77(5), BATT-Art78(a)) are rows its clauses address without presumption (map rule of 2026-10-09: Annex ZA plus the links the text supports).
+# Normative references: EN 301 549 is cited only by 5-para3, for the human-readable rendering of DPP content; its matrix file holds clause 9 (web content) alone (scope decided by the map owner on 2026-10-11 in #761). ISO/IEC 21778 is cited by 5(a) and is extracted in full.
+standard: EN18216
+edition: EN 18216:2026
+extractedFrom: standards/EN18216-2026.pdf
+extractedAt: 2026-10-11
+sections:
+  - id: "4"
+    title: 4 Data exchange protocols for technical interoperability
+  - id: "5"
+    title: 5 Data formats
+criteria:
+  - id: EN18216-4(1)
+    section: "4"
+    clause: 4(1)
+    paraphrase: "Standardised access to a DPP runs over the exchange protocol this clause names: HTTP secured by TLS (HTTPS)."
+    applicability: mixed
+    areas:
+      - 1
+      - 10
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: "NestFactory.create with the Express adapter and app.listen(port): plain HTTP/1.1, no httpsOptions, no HTTP/2"
+        - type: code
+          ref: docker-compose.yml
+          note: example deployment publishes the app on port 3000 over plain HTTP, no proxy service
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: states that the compose file includes no TLS termination; no reverse-proxy, TLS version or HTTP version guidance
+        - type: code
+          ref: packages/env/src/env.ts
+          note: OPEN_DPP_URL must be https only when the OAuth provider is enabled (loopback excepted)
+        - type: manual
+          ref: "Context, not evidence of the software: the open-dpp GmbH hosted instance cloud.open-dpp.de runs behind Caddy; on 2026-10-11 it refused TLS 1.0 and 1.1, negotiated TLS 1.3 with ALPN h2 (and advertised h3), still answered a forced HTTP/1.1 request, and redirected plain http to https with 308. Its proxy configuration is not part of the repository."
+          date: 2026-10-11
+      notes: "Software part (mixed: the operator terminates TLS): every DPP access route (permalink bundle, public AAS reads, GS1 resolver, management API) is an HTTP route that works unchanged behind a TLS-terminating reverse proxy, and the hosted instance shows that it does. Missing: open-dpp itself serves plain HTTP only, the example deployment publishes it over plain HTTP, nothing redirects to HTTPS or refuses plain HTTP (HTTPS is enforced only for OPEN_DPP_URL when the OAuth provider is on), and the operator docs say TLS termination is not included without saying how to add it. Cluster #1027 (its TLS and reverse-proxy guide); the transport Checks transport.tls-1-2-minimum and transport.http2-offered run only against an HTTPS Instance and were skipped on this plain-http one."
+      gapIssue: 1027
+  - id: EN18216-4(2)
+    section: "4"
+    clause: 4(2)
+    paraphrase: "The exchange protocols keep DPP data confidential and unaltered while they are exchanged."
+    applicability: mixed
+    areas:
+      - 10
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: "NestFactory.create with the Express adapter and app.listen(port): plain HTTP/1.1, no httpsOptions, no HTTP/2"
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: states that the compose file includes no TLS termination; no reverse-proxy, TLS version or HTTP version guidance
+        - type: manual
+          ref: "Context, not evidence of the software: the open-dpp GmbH hosted instance cloud.open-dpp.de runs behind Caddy; on 2026-10-11 it refused TLS 1.0 and 1.1, negotiated TLS 1.3 with ALPN h2 (and advertised h3), still answered a forced HTTP/1.1 request, and redirected plain http to https with 308. Its proxy configuration is not part of the repository."
+          date: 2026-10-11
+      notes: "Software part (mixed): confidentiality and integrity in transit come from TLS, which open-dpp leaves to the operator's proxy (see EN18216-4(1)). Credited: nothing in open-dpp prevents running every route over TLS. Missing: no TLS in the shipped deployment, no guide, no HSTS or other transport header (#1027, Check transport.hsts-on-public-view skipped on plain http). Integrity and authenticity of the data itself (signatures, hashes) are EN 18246's subject (#824)."
+      gapIssue: 1027
+  - id: EN18216-4(4)
+    section: "4"
+    clause: 4(4)
+    paraphrase: "TLS 1.2 is the lowest version a DPP endpoint supports; TLS 1.3 or newer is strongly recommended; TLS 1.0, TLS 1.1 and every SSL version are forbidden."
+    applicability: mixed
+    areas:
+      - 10
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: "NestFactory.create with the Express adapter and app.listen(port): plain HTTP/1.1, no httpsOptions, no HTTP/2"
+        - type: code
+          ref: docker-compose.yml
+          note: example deployment publishes the app on port 3000 over plain HTTP, no proxy service
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: states that the compose file includes no TLS termination; no reverse-proxy, TLS version or HTTP version guidance
+        - type: manual
+          ref: "Context, not evidence of the software: the open-dpp GmbH hosted instance cloud.open-dpp.de runs behind Caddy; on 2026-10-11 it refused TLS 1.0 and 1.1, negotiated TLS 1.3 with ALPN h2 (and advertised h3), still answered a forced HTTP/1.1 request, and redirected plain http to https with 308. Its proxy configuration is not part of the repository."
+          date: 2026-10-11
+      notes: "Software part (mixed): the TLS versions an endpoint accepts are set where TLS terminates, which for open-dpp is always the operator's proxy. Credited: open-dpp runs behind any proxy, and a default modern proxy meets the floor (the hosted instance refuses TLS 1.0 and 1.1). Missing: no shipped proxy configuration and no documentation of the TLS 1.2 floor, the TLS 1.3 recommendation or the ban on older versions, so the operator gets no help to meet or verify it (#1027). New Check transport.tls-1-2-minimum asserts the floor against an HTTPS Instance; skipped here (plain http)."
+      gapIssue: 1027
+  - id: EN18216-4(5)
+    section: "4"
+    clause: 4(5)
+    paraphrase: "HTTP/2 is the lowest HTTP version a DPP endpoint supports and versions older than HTTP/2 are not used; HTTP/3 is recommended."
+    applicability: mixed
+    areas:
+      - 1
+      - 10
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: "NestFactory.create with the Express adapter and app.listen(port): plain HTTP/1.1, no httpsOptions, no HTTP/2"
+        - type: code
+          ref: docker-compose.yml
+          note: example deployment publishes the app on port 3000 over plain HTTP, no proxy service
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: states that the compose file includes no TLS termination; no reverse-proxy, TLS version or HTTP version guidance
+        - type: manual
+          ref: "Context, not evidence of the software: the open-dpp GmbH hosted instance cloud.open-dpp.de runs behind Caddy; on 2026-10-11 it refused TLS 1.0 and 1.1, negotiated TLS 1.3 with ALPN h2 (and advertised h3), still answered a forced HTTP/1.1 request, and redirected plain http to https with 308. Its proxy configuration is not part of the repository."
+          date: 2026-10-11
+      notes: "Software part (mixed). Credited: a proxy in front of open-dpp can offer HTTP/2 and HTTP/3 to clients (the hosted instance does). Missing: the application speaks HTTP/1.1 only (Express adapter, no HTTP/2 server), the shipped deployment serves HTTP/1.1, and nothing documents offering HTTP/2 or retiring HTTP/1.1, which the clause no longer allows (the hosted instance still answers HTTP/1.1). Cluster #1027. New Check transport.http2-offered asserts h2 over TLS; skipped here (plain http); refusing HTTP/1.1 stays a manual verification."
+      gapIssue: 1027
+  - id: EN18216-4(6)
+    section: "4"
+    clause: 4(6)
+    paraphrase: "Recommendation: an API specified on top of the exchange protocol follows the RESTful architectural style."
+    applicability: software
+    areas:
+      - 1
+      - 13
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public bundle and AAS read routes under /api/v{1,2}/p/:id, OptionalAuth
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: resource paths of the AAS read and modify surface (shells, submodels, submodel elements, values) with GET, POST, PATCH, PUT, DELETE
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: OpenAPI 3.1 document of the REST API, served at /api.json when OPEN_DPP_BUILD_API_DOC is set
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: bundle by UUID and slug, shells, submodels, submodel elements and values parsed as JSON
+        - type: test
+          ref: apps/main/src/open-api-docs/permalink.paths.spec.ts
+          note: the OpenAPI document carries GET /p/{id} and the AAS read surface
+      notes: "Recommendation, met: the API is resource-oriented REST over HTTP (nouns in paths, HTTP methods for reads and changes, status codes for outcomes, stateless requests carrying session cookie or API key), described by an OpenAPI 3.1 document (Check api.openapi-document-served). Remarks for EN 18222 (#759): the document is served only when OPEN_DPP_BUILD_API_DOC is set, which the configuration reference does not list; the GS1 resolver routes are not in it; and it describes the export and import bodies with the 1.0 export schema while the export is version 6.0."
+  - id: EN18216-5(a)
+    section: "5"
+    clause: 5(a)
+    paraphrase: "JSON (ISO/IEC 21778:2017) is the data format used for syntactic interoperability, the format every DPP exchange between server and client can rely on."
+    applicability: software
+    areas:
+      - 1
+      - 2
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/body-handler.ts
+          note: express.json (JSON.parse) on every route except the unversioned /api/auth routes (the versioned ones are parsed too); malformed input answers 400 Invalid JSON payload; top level object or array except on /$value
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public bundle and AAS read routes under /api/v{1,2}/p/:id, OptionalAuth
+        - type: test
+          ref: apps/main/src/body-handler.spec.ts
+          note: rejects malformed JSON with Invalid JSON payload; rejects a bare scalar body outside /$value
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: bundle by UUID and slug, shells, submodels, submodel elements and values parsed as JSON
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements answered application/json; a malformed body (NaN, trailing comma) to the anonymous page-view counter answered 400 Invalid JSON payload."
+          date: 2026-10-11
+        - type: check
+          ref: format.public-reads-are-json
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: JSON is the format of every request and response of the API, public and member routes alike, the export and import, and the bulk import (Check format.public-reads-are-json on the public reads). Missing: one value-only read route does not answer a JSON text for every element type; the details sit in a related private finding until it is fixed. There is no other format, so nothing else is offered by negotiation (EN18216-5(b) to 5(d))."
+      gapIssue: 1034
+  - id: EN18216-5(b)
+    section: "5"
+    clause: 5(b)
+    paraphrase: "Optional: XML may be offered as an additional message format, selected through HTTP content negotiation."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: export and import in open-dpp's own JSON envelope only
+      notes: Optional format, assessed as enablement. open-dpp offers no XML representation of a passport (no AAS XML serialisation, no XML media type, no Accept handling), so a client cannot negotiate one. Not needed to conform to the EN; recorded so the cluster lists the full negotiation picture. Under the map rule of 2026-10-12 only mandatory clauses cap a law row, so this optional Gap does not cap ESPR Art. 10(1)(d) or 11(a).
+      gapIssue: 1034
+  - id: EN18216-5(c)
+    section: "5"
+    clause: 5(c)
+    paraphrase: "Optional: JSON-LD may be offered as an additional message format, selected through HTTP content negotiation; when it is offered, an ordinary JSON parser can process it, and a linked-data context may be included for semantic processing."
+    applicability: software
+    areas:
+      - 2
+      - 8
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: export and import in open-dpp's own JSON envelope only
+      notes: "Optional format, assessed as enablement. No JSON-LD representation exists (no @context on any passport document, no application/ld+json), so the condition that JSON-LD stays readable by a plain JSON parser has nothing to bind. Related: the UNTP data model, which is JSON-LD based, is #189. Not needed to conform to the EN; under the map rule of 2026-10-12 only mandatory clauses cap a law row, so this optional Gap does not cap ESPR Art. 10(1)(d) or 11(a)."
+      gapIssue: 1034
+  - id: EN18216-5-para3
+    section: "5"
+    clause: 5, third paragraph
+    paraphrase: "Wherever DPP content is represented, rendered or delivered for humans, it meets the applicable accessibility requirements of EN 301 549:2021 (assessed through EN301549, clause 9 for web content)."
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: presentation view of a passport, SPA route /p/:permalink
+        - type: code
+          ref: apps/client/src/layout/Presentation.vue
+          note: presentation layout with the main landmark
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): WCAG 2.1 audit of the presentation view, its details pages and its chat view (axe-core 4.13 all A and AA rules at 1280 and 320 pixels, keyboard walk, focus screenshots, reflow at 320 and 640 pixels, text-spacing override, language switch, colour measurements); per-criterion results in EN301549."
+          date: 2026-10-11
+        - type: check
+          ref: a11y.public-view-no-serious-violations
+          result: failed
+          date: 2026-10-12
+      notes: "The rendering of DPP content for humans is the passport presentation view, so the applicable requirements are EN 301 549 clause 9 (web content, the 50 WCAG 2.1 A and AA success criteria plus the conformance requirements); assessed in EN301549 in this run: 32 Met, 18 Partial, 1 Gap. Main misses: no text alternatives an operator can set (images carry their file name), unnamed download links and tree toggles, an unlabelled boolean checkbox and language select, a fixed page language and page title, link contrast 4.3:1, links in chat replies told apart by nothing, an auto-advancing image carousel without pause control, no live region for the chat, and no accessibility statement or operator guidance. Check a11y.public-view-no-serious-violations fails on the content-bearing subject (6 violations)."
+      gapIssue: 1035
+  - id: EN18216-5(d)
+    section: "5"
+    clause: 5, fourth and fifth paragraphs, item d)
+    paraphrase: "DPP content is provided, selected through HTTP content negotiation, as HTML rendered according to the W3C HTML standards."
+    applicability: software
+    areas:
+      - 2
+      - 11
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: a scanned Digital Link always answers 302 to the HTML view, whatever the Accept header
+        - type: code
+          ref: apps/main/src/app.module.ts
+          note: ServeStaticModule serves the SPA shell for every non-API path
+        - type: code
+          ref: apps/client/index.html
+          note: doctype html, static lang and title
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: presentation view of a passport, SPA route /p/:permalink
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+          note: 302 to the presentation URL with the query string forwarded
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the Digital Link answered 302 to /p/<permalink> for Accept application/json, text/html, application/ld+json and application/xml alike; /p/<permalink> answers the SPA shell (text/html), the JSON lives at /api/v2/p/<permalink>; axe flagged dd elements inside table cells without a dl (definition-list, dlitem)."
+          date: 2026-10-11
+        - type: check
+          ref: format.digital-link-negotiates-representation
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: DPP content is provided as an HTML page for browsers (the presentation view), with a doctype and the HTML5 elements a browser expects. Missing: the HTML is not chosen by HTTP content negotiation: HTML and JSON live at different URLs, the Digital Link and the permalink ignore the Accept header (Check format.digital-link-negotiates-representation fails), and the server sends only the SPA shell, the passport being rendered client-side from the JSON API. Markup outside the HTML content model: dd elements in table cells without a dl parent."
+      gapIssue: 1034
+  - id: EN18216-5-para5
+    section: "5"
+    clause: 5, fifth paragraph, second limb
+    paraphrase: "Recommendation: the HTML rendering of DPP content is checked in several browsers and on several platforms."
+    applicability: software
+    areas:
+      - 11
+      - 12
+    assessment:
+      date: 2026-10-11
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/e2e/playwright.config.ts
+          note: projects chromium, firefox and webkit (desktop); mobile emulation commented out; the conformance projects run Chromium only
+        - type: code
+          ref: .github/workflows/e2e.yml
+          note: CI runs the setup, chromium and account projects only
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view rendered and worked in Chromium at 1280, 640 and 320 pixel widths (Playwright); no other engine was exercised in this run."
+          date: 2026-10-11
+      notes: "Recommendation. Credited: the end-to-end suite has Chromium, Firefox and WebKit projects, and specs that open the presentation view run in all three locally. Missing: CI runs Chromium only, no project emulates a mobile viewport or device, and the conformance Checks run in Chromium only. Under the map rule of 2026-10-12 a recommendation does not cap a law row."
+      gapIssue: 1035
