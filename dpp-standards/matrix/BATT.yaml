@@ -643,6 +643,7 @@ criteria:
       - 11
     operationalisedBy:
       - EN18239
+      - EN18246
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -721,6 +722,7 @@ criteria:
       - 5
     operationalisedBy:
       - EN18239
+      - EN18246
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

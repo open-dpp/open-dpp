@@ -8,7 +8,13 @@ check(
   {
     id: "a11y.public-view-no-serious-violations",
     title: "the public passport view has no critical or serious axe-core violations",
-    criteria: ["ESPR-Art11(b)", "EN18216-5-para3", "EN301549-9.6"],
+    criteria: [
+      "ESPR-Art11(b)",
+      "EN18216-5-para3",
+      "EN301549-9.6",
+      "EN18246-5.4.1-sub1",
+      "EN18246-5.4.3(1)",
+    ],
   },
   async ({ browser }) => {
     const subject = readSubject();

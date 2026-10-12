@@ -13,7 +13,8 @@ schema: `README.md`, read it first. Design decisions: wayfinder ticket #754.
    `main`; either way the procedure's changes go on a new branch `conformance/<run id>` (Extract:
    `conformance/extract-<source id>`) and land by PR. Done when `git status` is clean on that branch.
 2. **Commit under assessment.** Every Assessment records a commit on `main`: run `git fetch origin
-main` and use `origin/main` (the scripts default to `main`). Done when the SHA is noted.
+main` and use `origin/main` (the scripts default to the local `main`, which may be stale; pass
+   `--commit <sha>` to `matrix:run` for every trigger). Done when the SHA is noted.
 3. **Texts.** Every source in scope with `access: gated` has its `localFile` from `sources.yaml`
    present under `standards/` (git-ignored, never committed). A missing text blocks the Criteria of
    that source: leave them Not assessed, note it in the run, and point at ticket #750, which

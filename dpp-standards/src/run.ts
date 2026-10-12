@@ -40,7 +40,9 @@ if (!values.detail) {
 try {
   const request = parseScopeRequest(values, () => gitRevParse(REPO_DIR, "main"));
   const scope = computeScope(data.standards, request, gitChangedFiles(REPO_DIR));
-  const commit = request.kind === "code" ? request.commit : gitRevParse(REPO_DIR, "main");
+  // `--commit` names the commit under assessment for every trigger; the local `main` can be stale.
+  const commit =
+    request.kind === "code" ? request.commit : (values.commit ?? gitRevParse(REPO_DIR, "main"));
   const sources = request.kind === "text" ? [...request.sources] : sourcesOf(scope);
   const requestedBy = values["requested-by"] ? Number(values["requested-by"]) : undefined;
   const run: Run = RunSchema.parse({
