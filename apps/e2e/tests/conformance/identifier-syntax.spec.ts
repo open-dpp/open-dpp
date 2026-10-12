@@ -14,7 +14,19 @@ check(
     id: "identifiers.gs1-syntax-valid",
     title:
       "the GTIN, the Digital Link URI and every GS1-link permalink validate in the GS1 Syntax Engine",
-    criteria: ["ESPR-Art10(1)(a)", "ESPR-AnnexIII-para2", "BATT-Art77(3)-sub2", "CPR-Art77(1)(c)", "CPR-Art79(1)", "DET-Art23(1)", "TOYS-Art21(1)"],
+    criteria: [
+      "ESPR-Art10(1)(a)",
+      "ESPR-AnnexIII-para2",
+      "BATT-Art77(3)-sub2",
+      "CPR-Art77(1)(c)",
+      "CPR-Art79(1)",
+      "DET-Art23(1)",
+      "TOYS-Art21(1)",
+      "EN18219-5.2.2.1(b)",
+      "EN18219-4.5.2(3)",
+      "EN18219-4.3.3(1)",
+      "EN18219-4.4.3(3)",
+    ],
   },
   async ({ request }) => {
     const subject = readSubject();

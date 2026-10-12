@@ -27,6 +27,7 @@ check(
       "EN18239-6.1-sub1",
       "EN18239-6.2(1)",
       "EN18221-4.1(3)",
+      "EN18219-4.6.2(2)",
     ],
   },
   async ({ browser }) => {
@@ -49,7 +50,13 @@ check(
     id: "access.public-view-renders-in-plain-browser",
     title:
       "a stock browser without extensions or apps shows an anonymous visitor the passport content",
-    criteria: ["EN18246-4.3(d)", "EN18246-4.3(e)", "EN18246-5.4.2(2)"],
+    criteria: [
+      "EN18246-4.3(d)",
+      "EN18246-4.3(e)",
+      "EN18246-5.4.2(2)",
+      "EN18219-4.6.2(2)",
+      "EN18219-4.5.3(1)",
+    ],
   },
   async ({ browser }) => {
     const subject = readSubject();
@@ -65,7 +72,7 @@ check(
   {
     id: "access.public-view-renders-on-phone",
     title: "a phone's browser shows the passport content without horizontal scrolling",
-    criteria: ["EN18246-5.4.2(1)"],
+    criteria: ["EN18246-5.4.2(1)", "EN18219-4.5.3(1)"],
   },
   async ({ browser }) => {
     const subject = readSubject();
