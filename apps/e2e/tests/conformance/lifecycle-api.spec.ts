@@ -20,7 +20,7 @@ check(
   {
     id: "api.read-dpp-by-id",
     title: "anyone reads a published passport by its id at the EN 18222 path v1/dpps/{dppId}",
-    criteria: ["EN18222-4.1(2)", "EN18222-4.2", "EN18222-8.2"],
+    criteria: ["EN18222-4.1(2)", "EN18222-4.2", "EN18222-8.2", "ESPR-Art11(a)"],
   },
   async ({ browser }) => {
     const subject = readSubject();
@@ -40,7 +40,14 @@ check(
     id: "api.read-dpp-ids-by-product-ids",
     title:
       "a set of product identifiers posted to v1/dppsByProductIds returns the ids of the matching passports",
-    criteria: ["EN18222-4.1(2)", "EN18222-4.5(1)", "EN18222-8.2"],
+    criteria: [
+      "EN18222-4.1(2)",
+      "EN18222-4.5(1)",
+      "EN18222-8.2",
+      "ESPR-Art10(1)(d)",
+      "ESPR-Art11(a)",
+      "ESPR-Art11(b)",
+    ],
   },
   async ({ browser }) => {
     const subject = readSubject();

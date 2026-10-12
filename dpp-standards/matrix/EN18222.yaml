@@ -51,7 +51,7 @@ criteria:
           note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
           note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
@@ -86,7 +86,7 @@ criteria:
           note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
       notes: "Recommendation, graded as enablement; it never caps a law row. Credited: one element of a passport can be read by submodel id and idShort path, by members and, for a published passport, by anyone (6.2). Missing: no ReadDataElement at the EN 18222 path with a JSONPath (8.1(5), 8.4), and no back-up DPP service provider that offers it (#596)."
   - id: EN18222-4.1(4)
     section: "4.1"
@@ -202,7 +202,7 @@ criteria:
           note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
         - type: code
           ref: apps/main/src/aas/presentation/environment.service.ts
           note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
@@ -233,7 +233,7 @@ criteria:
         - anyone reads a published passport's content through AAS routes keyed by its permalink (Check access.anonymous-reads-published);
         - element-level rules per role decide what a reader sees, and an element they may not read is left out or refused.
         Missing:
-        - no read by DPP id at v1/dpps/{dppId} (Check api.read-dpp-by-id answers 404), and no public read by the passport's id at all;
+        - no read by DPP id at v1/dpps/{dppId} (Check api.read-dpp-by-id answers 404). The public reaches a published passport by its id only in two steps: GET /p?passportId=<id> lists its permalinks, and the content is then read through a permalink;
         - the answer is an AAS environment or open-dpp's export, not EN 18223's DigitalProductPassport (the payload types are EN 18223's, assessed in #762);
         - the status codes and result object of 7.2 are not met (7.2(3), 7.2(6)).
   - id: EN18222-4.3
@@ -257,7 +257,7 @@ criteria:
           note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
-          note: members map one identifier uuid to its passport (referenceId)
+          note: members list the organisation's identifiers (paginated) or read one, each with its passport id (referenceId)
         - type: test
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
         - type: check
@@ -318,7 +318,7 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
-          note: members map one identifier uuid to its passport (referenceId)
+          note: members list the organisation's identifiers (paginated) or read one, each with its passport id (referenceId)
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
           note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
@@ -332,7 +332,7 @@ criteria:
         - type: manual
           ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET /api/v1/dpps/<passport id> and /api/v2/v1/dpps/<passport id> answered 404; POST /api/v1/dppsByProductIds answered 404 (Checks api.read-dpp-by-id, api.read-dpp-ids-by-product-ids); the served OpenAPI document (110 paths) names no dpps path."
           date: 2026-10-12
-      notes: "Mandatory through 4.1(2). No route takes a set of product identifiers and returns the passports behind them: Check api.read-dpp-ids-by-product-ids answers 404, and the passport list filters by status, template and creation date only. One identifier at a time, a member can read an identifier's passport id (GET /unique-product-identifiers/:id), and anyone can follow a GS1 key through the resolver to a published passport's view. Annex ZA maps 4.5 (and clause 4 for ESPR-Art11(a)) to ESPR Art. 10(1)(d), (f), 10(3)(a), (b), 11(a) and (b); this Gap keeps all six at most Partial."
+      notes: "Mandatory through 4.1(2). No route takes a set of product identifiers and returns the passports behind them: Check api.read-dpp-ids-by-product-ids answers 404, and the passport list filters by status, template and creation date only. A member can page through the organisation's identifiers, each with its passport id (GET /unique-product-identifiers), or read one identifier's passport id, and anyone can follow a GS1 key through the resolver to a published passport's view; matching a set of identifiers is left to the client. Annex ZA maps 4.5 (and clause 4 for ESPR-Art11(a)) to ESPR Art. 10(1)(d), (f), 10(3)(a), (b), 11(a) and (b); this Gap keeps the five of them that bind software at most Partial (10(3)(b) is an operator duty)."
   - id: EN18222-4.5(2)
     section: "4.2"
     clause: "4.5(2)"
@@ -551,7 +551,7 @@ criteria:
           note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
       notes: "Optional, graded as enablement; it never caps a law row. Credited: open-dpp, as custodian, offers element-level read and update in its own shape (6.2, 6.3). Missing: the EN 18222 methods and paths (8.4), and an archiving-service role, which open-dpp does not have (EN 18221, #1029, #596)."
   - id: EN18222-6.2
     section: "6"
@@ -572,7 +572,7 @@ criteria:
           note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
         - type: code
           ref: apps/main/src/aas/presentation/environment.service.ts
           note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
@@ -675,7 +675,8 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
+      status: Partial
+      gapIssue: 1052
       evidence:
         - type: code
           ref: packages/exception/src/exception.handler.ts
@@ -690,7 +691,7 @@ criteria:
         - type: manual
           ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): an unknown passport id answered 404 {statusCode, timestamp, path, message}; an unknown route 404 {message, error, statusCode}; a request without credentials to GET /api/v2/passports/<id> 403 "Forbidden resource"; GET /api/v2/passports?limit=1&cursor= answered 200 with the first page.'
           date: 2026-10-12
-      notes: Option, graded as enablement. A failed request is answered with an error object alone, without any payload of the method (Check api.error-answer-error-only).
+      notes: "Option, graded as enablement; it never caps a law row. Read with Tables 12 and 15, the error object is the result object of 7.2(3). Credited: a failed request is answered with an error body alone, without any payload of the method (Check api.error-answer-error-only). Missing: that body is not the result object of Tables 12 to 14 (7.2(3), Gap). Met before the adversarial review of PR #1053, which read the error object this way."
   - id: EN18222-7.2(3)
     section: "7"
     clause: "7.2(3)"
@@ -801,7 +802,7 @@ criteria:
         - type: manual
           ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET .../submodels/<base64 id>/submodel-elements/Weight answered 200 with the element; the same element addressed as the RFC 9535 Normalized Path $['Weight'] answered 404 \"Submodel element with idShortPath $['Weight'] not found\"."
           date: 2026-10-12
-      notes: "Mandatory for the element paths, a clause Annex ZA does not map. RFC 9535 (February 2024) is read through: a path takes the form of a Normalized Path (2.7: bracket notation from the root $, names in single quotes, array indexes). open-dpp addresses an element by submodel id plus a dot-separated idShort path, in which brackets are literal characters. No JSONPath is parsed anywhere on the server, and $['Weight'] answers 404 (manual check)."
+      notes: "Mandatory for the element paths, a clause Annex ZA does not map. RFC 9535 (February 2024) is read through. The text asks for a unique path to one element (6.2); we read that as a JSONPath that selects one node, at its plainest a Normalized Path (2.7: bracket notation from the root $, names in single quotes, array indexes). open-dpp addresses an element by submodel id plus a dot-separated idShort path, in which brackets are literal characters. No JSONPath is parsed anywhere on the server, and $['Weight'] answers 404 (manual check)."
   - id: EN18222-8.1(6)
     section: "8.1"
     clause: "8.1(6)"
@@ -852,7 +853,7 @@ criteria:
           note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
       notes: "No route takes a representation parameter. Reads answer AAS JSON or open-dpp's export, neither of them the compressed or full representation of EN 18223 (the payload types are EN 18223's, assessed in #762)."
   - id: EN18222-8.2
     section: "8.2"

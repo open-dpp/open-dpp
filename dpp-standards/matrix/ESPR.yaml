@@ -963,7 +963,7 @@ criteria:
           note: export in open-dpp's own JSON format 6.0
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
         - type: code
           ref: apps/main/src/open-api-docs/index.ts
           note: OpenAPI 3.1 document, served only when OPEN_DPP_BUILD_API_DOC is set
@@ -1046,7 +1046,7 @@ criteria:
           note: level implied by the GS1 keys only
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
-          note: members map one identifier uuid to its passport (referenceId)
+          note: members list the organisation's identifiers (paginated) or read one, each with its passport id (referenceId)
       notes: "Annex ZA maps Art. 10(1)(f) to EN18219-4.4.2, Partial in all three points, and to EN18222-4.5, Gap (no lookup from product identifiers to passports, cluster #1052). Credited: a GS1 identity implies model, batch or item. Missing: the passport has no level of its own, can mix identities of several levels, and UUID identifiers express none, so the data cannot be said to refer to the level a delegated act fixes (#597, as ESPR-Art9(2)(d))."
   - id: ESPR-Art10(1)(g)
     section: Art10
@@ -1125,7 +1125,7 @@ criteria:
           note: presentation-mode QR of the newest permalink; copy button for the URL
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
-          note: members map one identifier uuid to its passport (referenceId)
+          note: members list the organisation's identifiers (paginated) or read one, each with its passport id (referenceId)
       notes: "Software part: a digital copy of the carrier or of the unique product identifier for dealers and online marketplaces. Credited: the identifier's URL and the Digital Link can be copied in the back office and listed through the API; the article accepts these in place of the carrier. Missing: no image of the carrier to hand over (EN18220-5.4.5(2), #489); no bulk export of identifiers meant for retailers; and no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing. Capped at Partial by Annex ZA through EN18219-4.5.2 (4.5.2(1), (2) and (4) Partial) and EN18222-4.5 (no lookup from product identifiers to passports, Gap, cluster #1052) (#828)."
   - id: ESPR-Art10(3)(b)
     section: Art10
@@ -1140,7 +1140,7 @@ criteria:
       validator: agent:conformance-review
       status: Not applicable
       evidence: []
-      notes: "Operator duty: handing the digital copy or web link over free of charge, promptly and within five working days of a request is the economic operator's. Annex ZA maps it to EN18222-4.5. The software part, a copy or link to hand over, is graded on ESPR-Art10(3)(a)."
+      notes: "Operator duty: handing the digital copy or web link over free of charge, promptly and within five working days of a request is the economic operator's. Annex ZA maps it to EN18222-4.5, which suggests a software precondition (finding the passports of a retailer's identifiers); the software part, a copy or link to hand over, is graded on ESPR-Art10(3)(a). Whether the row should be mixed is left to the next ESPR Extract (adversarial review of PR #1053)."
   - id: ESPR-Art10(4)
     section: Art10
     clause: Art. 10(4)
@@ -1193,7 +1193,7 @@ criteria:
           note: global prefix /api; URI versions v1 and v2 for every controller; unversioned /api paths answer 308 to v1
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
         - type: check
           ref: format.public-reads-are-json
           result: passed
@@ -1211,7 +1211,7 @@ criteria:
           result: failed
           date: 2026-10-12
       notes: |-
-        Software part, read as Annex ZA limits it for EN 18222: the technical interoperability of end-to-end communication and data transfer. Credited: published passports are readable by anyone over HTTP as JSON through a REST API (EN18216-4(6) Met). Missing:
+        Software part: interoperability in the technical, semantic and organisational aspects of communication and data transfer between the ends. EN 18222's presumption covers the technical side only; the semantic side rests on the data model, which EN 18223 governs (#762). Credited: published passports are readable by anyone over HTTP as JSON through a REST API (EN18216-4(6) Met). Missing:
         - no standard interface: neither the EN 18222 Life Cycle API (clause 4, 4.5(1) Gap; cluster #1052) nor a standard AAS export (#823);
         - HTTPS and HTTP/2 are left to a proxy open-dpp neither ships nor documents (#1027);
         - no content negotiation (#1034).
@@ -1244,7 +1244,7 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+          note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
           note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
@@ -1268,8 +1268,8 @@ criteria:
         - the other actors the article names (repairers, refurbishers, recyclers, market surveillance and customs authorities, civil society, trade unions) get nothing beyond the public view, because no access class exists for them (#821).
         Capped at Partial by Annex ZA through:
         - EN18222-4.5 (no lookup from product identifiers to passports, Gap, cluster #1052);
-        - EN18219-4.6.2 (Partial);
-        - EN18239-4.2 (Partial, #821).
+        - EN18219-4.6.2 (Partial).
+        EN 18239's Annex ZA maps 4.2 to Art. 11(a) only, so it does not cap this row.
   - id: ESPR-Art11(c)
     section: Art11
     clause: Art. 11 first subparagraph (c)
