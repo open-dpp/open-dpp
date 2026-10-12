@@ -255,6 +255,14 @@ criteria:
           ref: identifiers.published-permalink-locked
           result: passed
           date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
       notes: "Credited: at publication every permalink's public URL is frozen (later changes to the organisation's or the instance's base URL do not alter it) and the GS1 identity is locked, so the identifier stays the same and keeps resolving to the same passport (Checks identifiers.published-identity-locked, identifiers.published-permalink-locked); archiving and restoring never move it. Missing: the item key does not keep referring to one passport without ambiguity, because the same GTIN and serial can be given to a second passport under a batch, and the link with the batch then opens that passport (bug #1046) (#518). Not graded here: whether the identifier outlives the instance or follows the passport to another platform (4.2.2(3), 4.5.3(2))."
       gapIssue: 518
   - id: EN18219-4.2.2(2)
@@ -573,6 +581,40 @@ criteria:
     areas:
       - 3
       - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "decodes batch and serial a second time after the router (bug #1049)"
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
+      notes: "Graded by pointing at EN 18220 (run 2026-10-12-en18220). Credited: the identifier is read back from the QR Code by an independent decoder and leads to the passport (EN18220-5.2.1-sub1, Check carriers.qr-decodes-to-passport-link). Missing: the carrier is no conforming EN 18220 carrier, an on-screen canvas with a quiet zone of one module and no print output (EN18220-5.1, 5.6.1, 6.2.3, #489), and two defects break the tie from carrier to passport for some identifiers (bugs #1049, #1050, EN18220-5.2.1-sub1, #518)."
   - id: EN18219-4.5.2(2)
     section: "4.5"
     clause: 4.5.2(2)
