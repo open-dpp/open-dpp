@@ -128,6 +128,9 @@ jobs:
       OPEN_DPP_AUTH_CLOUD_ENABLED: "false"
       OPEN_DPP_INSTANCE_SIGNUP_ENABLED: "true"
       OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: "true"
+      # Off by default; the Assessments grade the OpenAPI document an operator switches on (Check
+      # api.openapi-document-served).
+      OPEN_DPP_BUILD_API_DOC: "true"
       VITE_API_ROOT: "http://localhost:3000/api"
     steps:
       # This checkout holds the Checks and the action; instance/ holds the code under test, the same
