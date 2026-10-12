@@ -820,6 +820,39 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18220
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: scanned Digital Link -> passport's public view
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of the identifier URL
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: identities locked once published
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.head-like-get
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-10-12
+      notes: "Software part credited: every passport gets a unique product identifier and a public URL that a QR code carries; with a GS1 identity the QR holds a Digital Link the built-in resolver redirects to the passport, and identifiers are locked once the passport is published (EN18219-4.1.2(1) and 4.2.2(1) Met). Capped at Partial by Annex ZA (map rule of 2026-10-10): of the mapped EN 18219 clauses, 4.1.2(2), (3) and (4), 4.2.2(2) and (3), 4.5.2(2) and (4) are Partial (#518, #825, #828), 4.5.2(1) waits for EN 18220 (#757) and 5.1 for the scheme texts (#1043). Graded with EN 18219 alone; the data-carrier assessment re-grades it with EN 18220."
+      gapIssue: 518
   - id: ESPR-Art10(1)(b)
     section: Art10
     clause: Art. 10(1)(b)
@@ -840,6 +873,19 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18220
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GS1 AI syntax, GTIN check digit
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+      notes: "The cited harmonised standards now stand for the Annex III standards. Credited: GS1 identities use GS1 Application Identifiers as ISO/IEC 15418 requires (EN18219-5.2.2.1(b) Met) under GS1's registered Issuing Agency Code. Capped at Partial: Annex ZA maps Art. 10(1)(c) to EN18219-5.1 (and the definition 3.1.25), and 5.1 stays unassessed until GS1 Digital Link, ISO/IEC 18975 and ISO/IEC 15459 are read (#1042, #1043); restricted circulation numbers pass (5.2.2.1(g), #518); the carrier half waits for EN 18220 (#757)."
+      gapIssue: 518
   - id: ESPR-Art10(1)(d)
     section: Art10
     clause: Art. 10(1)(d) (as corrected by C2)
@@ -891,6 +937,17 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: level implied by the GS1 keys only
+      notes: "Annex ZA maps Art. 10(1)(f) to EN18219-4.4.2, Partial in all three points. Credited: a GS1 identity implies model, batch or item. Missing: the passport has no level of its own, can mix identities of several levels, and UUID identifiers express none, so the data cannot be said to refer to the level a delegated act fixes (#597, as ESPR-Art9(2)(d))."
+      gapIssue: 597
   - id: ESPR-Art10(1)(g)
     section: Art10
     clause: Art. 10(1)(g)
@@ -1244,6 +1301,17 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Annex ZA maps Art. 12(1) to EN18219-6.1, which is Gap: open-dpp holds no operator or facility identifier in any recognised scheme; a value typed into a passport property is unvalidated text (#1023)."
+      gapIssue: 1023
   - id: ESPR-Art12(2)
     section: Art12
     clause: Art. 12(2) incl. second subparagraph
@@ -1253,6 +1321,13 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty (confirm that no identifier exists, request one on the actor's behalf, pass on the details). Annex ZA maps it to EN18219-6.1 (Gap, #1023), which the software would need to record the identifier once obtained."
   - id: ESPR-Art12(3)
     section: Art12
     clause: Art. 12(3) incl. second subparagraph
@@ -1262,11 +1337,25 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty (confirm that no identifier exists, request one on the actor's behalf, pass on the details). Annex ZA maps it to EN18219-6.1 (Gap, #1023), which the software would need to record the identifier once obtained."
   - id: ESPR-Art12(4)(a)
     section: Art12
     clause: Art. 12(4)(a)
     paraphrase: Delegated acts set rules for organisations wishing to become an issuing agency for unique identifiers and data carriers.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(4)(b)
     section: Art12
     clause: Art. 12(4)(b)
@@ -1274,16 +1363,37 @@ criteria:
     applicability: commission
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(5)(a)
     section: Art12
     clause: Art. 12(5)(a)
     paraphrase: Those acts set the criteria to become an issuing agency.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(5)(b)
     section: Art12
     clause: Art. 12(5)(b)
     paraphrase: They set the role of an issuing agency.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(5)(c)
     section: Art12
     clause: Art. 12(5)(c)
@@ -1291,6 +1401,13 @@ criteria:
     applicability: commission
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(5)(d)
     section: Art12
     clause: Art. 12(5)(d)
@@ -1298,26 +1415,61 @@ criteria:
     applicability: commission
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(5)(e)
     section: Art12
     clause: Art. 12(5)(e)
     paraphrase: They set rules on data management.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(6)(a)
     section: Art12
     clause: Art. 12(6)(a)
     paraphrase: In doing so the Commission seeks interoperability between different approaches.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(6)(b)
     section: Art12
     clause: Art. 12(6)(b)
     paraphrase: It takes existing technical solutions and standards into account.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art12(6)(c)
     section: Art12
     clause: Art. 12(6)(c)
     paraphrase: It keeps the rules as technologically neutral as possible.
     applicability: commission
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
   - id: ESPR-Art13(1)
     section: Art13
     clause: Art. 13(1) (four subparagraphs)
@@ -1612,6 +1764,21 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: AAS globalAssetId is a random UUID, not the product identifier
+      notes: "Credited: each passport carries unique product identifiers (an internal one from creation, GS1 identities on demand), listed through the API and shown as URL and QR code. Missing: the identifier is not part of the passport data itself (the AAS asset id is a random UUID and the export carries no identifier, #823), and its level is implied only by GS1 keys, so the level a delegated act sets cannot be expressed (#597)."
+      gapIssue: 597
   - id: ESPR-AnnexIII(c)
     section: AnnexIII
     clause: Annex III (c)
@@ -1621,6 +1788,22 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GTIN normalised to GTIN-14 with check digit
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
+          date: 2026-10-12
+      notes: "Credited: a passport can carry the product's GTIN as its GS1 identity, validated and normalised to GTIN-14. Missing: GTINs of parts can only be typed into generic properties and nothing validates them; conformance with ISO/IEC 15459-6 is unassessed until the text is bought (#1042, #1043); restricted circulation numbers pass as GTINs (#518)."
+      gapIssue: 518
   - id: ESPR-AnnexIII(d)
     section: AnnexIII
     clause: Annex III (d)
@@ -1729,6 +1912,17 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: no operator identifier on an organisation
+      notes: "Manufacturer information can be modelled in a passport with the generic AAS template, but no ESPR template provides it (#827), and the manufacturer's unique operator identifier has no home: organisations carry none and a typed value is unvalidated (#1023)."
+      gapIssue: 827
   - id: ESPR-AnnexIII(h)
     section: AnnexIII
     clause: Annex III (h)
@@ -1738,6 +1932,17 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: no operator identifier on an organisation
+      notes: "Other operators' identifiers can only be typed into generic properties: no template provides the element (#827) and open-dpp has no operator identifier to validate or fill in (#1023)."
+      gapIssue: 827
   - id: ESPR-AnnexIII(i)
     section: AnnexIII
     clause: Annex III (i)
@@ -1747,6 +1952,17 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: no operator identifier on an organisation
+      notes: "Facility identifiers can only be typed into generic properties: no template provides the element (#827) and open-dpp has no facility identifier to validate or fill in (#1023)."
+      gapIssue: 827
   - id: ESPR-AnnexIII(j)
     section: AnnexIII
     clause: Annex III (j)
@@ -1782,6 +1998,17 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: no operator identifier on an organisation
+      notes: Name, contact details and operator identifier of the responsible economic operator can be modelled with the generic template, but no template provides them (#827) and the operator identifier has no home in open-dpp (#1023).
+      gapIssue: 827
   - id: ESPR-AnnexIII(l)
     section: AnnexIII
     clause: Annex III (l)
@@ -1818,6 +2045,25 @@ criteria:
     operationalisedBy:
       - EN18219
       - EN18220
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Partial, because restricted circulation numbers pass). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023); the carrier half waits for EN 18220 (#757). Parts 1 and 5 are not relevant to products."
+      gapIssue: 518
   - id: ESPR-AnnexIII-para3
     section: AnnexIII
     clause: Annex III third paragraph
