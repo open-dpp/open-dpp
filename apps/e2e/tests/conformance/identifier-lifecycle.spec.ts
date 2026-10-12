@@ -5,6 +5,7 @@
  */
 import type { APIRequestContext } from "@playwright/test";
 import { ApiBase } from "../config";
+import { newAnonymousContext } from "../helpers/anonymous";
 import { ORG_ID_HEADER, uniqueSerial } from "../helpers/passport";
 import { check, expect } from "./checks";
 import { readSubject } from "./subject";
@@ -220,6 +221,53 @@ check(
       expect(decodeURIComponent(segment)).toBe(batch);
     } finally {
       await draft.remove();
+    }
+  },
+);
+
+check(
+  {
+    id: "identifiers.published-permalink-survives-config-deletion",
+    title:
+      "a published permalink keeps answering after the presentation configuration it names is deleted",
+    criteria: ["EN18220-5.2.1-sub1", "EN18219-4.5.2(1)", "EN18219-4.2.2(1)", "ESPR-Art10(1)(a)"],
+  },
+  async ({ request, browser }) => {
+    // A published passport cannot be deleted: the Check archives its own passport at the end.
+    const { orgId } = readSubject();
+    const { passportId } = await draftPassport(request, orgId);
+    const published = await request.put(`${ApiBase}/passports/${passportId}/status`, {
+      headers: orgHeaders(orgId),
+      data: { method: "Publish" },
+    });
+    expect(published.ok(), "the throwaway passport should be published").toBeTruthy();
+    const anonymous = await newAnonymousContext(browser);
+    try {
+      const list = await request.get(`${ApiBase}/passports/${passportId}/permalinks`, {
+        headers: orgHeaders(orgId),
+      });
+      const permalink = items(
+        (await list.json()) as Listed<Permalink & { presentationConfigurationId?: string | null }>,
+      ).find((p) => p.presentationConfigurationId);
+      expect(permalink, "a new passport's permalink names its presentation configuration").toBeDefined();
+      const before = await anonymous.request.get(`${ApiBase}/p/${permalink!.id}`);
+      expect(before.status(), "the frozen permalink answers once published").toBe(200);
+
+      const removed = await request.delete(
+        `${ApiBase}/passports/${passportId}/presentation-configurations/${permalink!.presentationConfigurationId}`,
+        { headers: orgHeaders(orgId) },
+      );
+      // Refusing the deletion keeps the permalink alive too; only a broken permalink fails the Check.
+      if (removed.ok()) {
+        const after = await anonymous.request.get(`${ApiBase}/p/${permalink!.id}`);
+        expect(after.status(), `${permalink!.publicUrl} still answers`).toBe(200);
+      }
+    } finally {
+      await anonymous.close();
+      await request.put(`${ApiBase}/passports/${passportId}/status`, {
+        headers: orgHeaders(orgId),
+        data: { method: "Archive" },
+      });
     }
   },
 );
