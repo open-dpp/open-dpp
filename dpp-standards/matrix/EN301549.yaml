@@ -1,6 +1,6 @@
 # Conformance Matrix: EN301549 (ETSI EN 301 549 V3.2.1 (2021-03), clause 9 Web). Rules: dpp-standards/README.md.
 # Criteria extracted on 2026-10-11 (ticket #761) from the free ETSI text V3.2.1, the edition EN 18216:2026 cites (dated reference EN 301 549:2021); assessments are added in place, one per Criterion.
-# Normative reference of EN 18216, cited once (EN18216-5-para3): the human-readable representation, rendering or delivery of DPP content meets the relevant accessibility requirements of EN 301 549. Extract scope, decided by the map owner on 2026-10-11 in #761: clause 9 (web content), because open-dpp renders DPP content to humans only as web pages; each clause 9.1.1.1 to 9.4.1.3 requires a web page to satisfy one WCAG 2.1 Level A or AA success criterion, and 9.6 adds the five WCAG conformance requirements.
+# Normative reference of EN 18216, cited once (EN18216-5-para3), for the accessibility of DPP content wherever people read it. Extract scope, decided by the map owner on 2026-10-11 in #761: clause 9 (web content), because open-dpp shows DPP content to people only as web pages; each clause 9.1.1.1 to 9.4.1.3 requires a web page to satisfy one WCAG 2.1 Level A or AA success criterion, and 9.6 adds the five WCAG conformance requirements.
 # Not extracted: clauses 1 to 3 (scope, references, definitions), 4 (functional performance statements: user needs that clauses 5 to 13 meet, no own pass criterion), 5 to 8 and 10 to 13 (generic and closed functionality, two-way voice, video, hardware, non-web documents, non-web software, documentation and support services, relay and emergency services: outside the reach of EN 18216, which cites the standard for the rendering of DPP content only; documents an operator attaches to a passport, clause 10, are the operator's content), 9.0 (informative overview), the void clauses 9.1.4.6 to 9.1.4.9 and 9.2.1.3 (placeholders for WCAG Level AAA numbers), 9.5 (informative list of Level AAA criteria) and the annexes (A: relationship with Directive (EU) 2016/2102, B: mapping to functional performance, C: test procedures that restate each clause, D to F informative).
 # Pages assessed: the passport presentation view a GS1 Digital Link or permalink resolves to (anonymous and signed-in visitors, with its language switcher, media and the optional AI chat). The editor and the organisation back office render DPP content to the operator's own members while authoring it; they are not the representation of DPP content to the passport's users and are not assessed here.
 standard: EN301549
@@ -64,7 +64,7 @@ criteria:
           ref: apps/client/src/components/media/BrandingLogo.vue
           note: logo alt brand-image
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the product image's alt text was its file name, the logo's brand-image; the image and PDF download links (icon only) had no accessible name, the tree's expand button none, and the boolean value's checkbox no label (axe link-name, button-name, label)."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the product image's alt text was its file name, the logo's brand-image; the image and PDF download links (icon only) had no accessible name, the tree's expand button none, and the boolean value's checkbox no label (axe link-name, button-name, label)."
           date: 2026-10-11
       notes: "Missing: an operator cannot give an image a text alternative (no alt field; the File element's description is not used), so images expose a file name or a fixed word; icon-only controls (download links, tree toggles) have no name; the boolean value is a checkbox without a label. Credited: icons of the navigation carry visible text, and every img has an alt attribute. Operational: the operator would supply the alternatives once a field exists."
       gapIssue: 1035
@@ -89,7 +89,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: renders an image or a file icon with a download link; no audio or video player
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
           date: 2026-10-11
       notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
   - id: EN301549-9.1.2.2
@@ -113,7 +113,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: renders an image or a file icon with a download link; no audio or video player
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
           date: 2026-10-11
       notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
   - id: EN301549-9.1.2.3
@@ -137,7 +137,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: renders an image or a file icon with a download link; no audio or video player
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
           date: 2026-10-11
       notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
   - id: EN301549-9.1.2.4
@@ -161,7 +161,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: renders an image or a file icon with a download link; no audio or video player
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
           date: 2026-10-11
       notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
   - id: EN301549-9.1.2.5
@@ -185,7 +185,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: renders an image or a file icon with a download link; no audio or video player
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
           date: 2026-10-11
       notes: "No audio or video can reach a passport: uploads take images and PDFs only and the view has no media player, and an anyURI value is rendered as a link to another page. Per EN 301 549 clause 9.0, a page without such content satisfies the criterion."
   - id: EN301549-9.1.3.1
@@ -212,9 +212,9 @@ criteria:
           ref: apps/client/src/components/presentation/Passport.vue
           note: h2 for the passport, h3 per submodel
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): structure exposed: headings, term and definition pairs, table headers, a tree; axe definition-list and dlitem: dd elements inside table cells without a dl; the boolean checkbox has no programmatic label; the multilingual text and the range value render nothing (term without value)."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): structure exposed: headings, term and definition pairs, table headers, a tree; axe definition-list and dlitem: dd elements inside table cells without a dl; the boolean checkbox has no programmatic label; the multilingual description rendered nothing (term without value) and the range (bounds 0 and 100) was shown as Value is missing."
           date: 2026-10-11
-      notes: "Credited: headings, description lists of term and value, data tables with column headers and an ARIA tree convey the structure. Missing: table cells wrap their values in dd elements outside any dl, the boolean checkbox is not tied to its term, and the multilingual-text and range values are not rendered at all, so the term stands without its value (the MultiLanguageProperty rendering is #838)."
+      notes: "Credited: headings, description lists of term and value, data tables with column headers and an ARIA tree convey the structure. Missing: table cells wrap their values in dd elements outside any dl, the boolean checkbox is not tied to its term, a multilingual-text value is not rendered at all (the MultiLanguageProperty rendering is #838), and a range is reported missing although its bounds are set."
       gapIssue: 1035
   - id: EN301549-9.1.3.2
     section: "9.1.3"
@@ -235,7 +235,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/SubmodelElement.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the DOM order of the passport presentation view (General information and every submodel), a collection's details page and the chat view (accessibility snapshot) matches the visual order: navigation, language select, chat button, tree, then each card with its terms followed by their values."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the DOM order of the passport presentation view (General information and every submodel), a collection's details page and the chat view (accessibility snapshot) matches the visual order: navigation, language select, chat button, tree, then each card with its terms followed by their values."
           date: 2026-10-11
       notes: Reading order follows the layout; no CSS reordering of content.
   - id: EN301549-9.1.3.3
@@ -255,7 +255,7 @@ criteria:
         - type: code
           ref: apps/client/src/view/presentation/Chat.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no instruction in the passport presentation view (General information and every submodel), a collection's details page and the chat view refers to shape, colour, size, position or sound; the only instruction is the chat field's placeholder."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no instruction in the passport presentation view (General information and every submodel), a collection's details page and the chat view refers to shape, colour, size, position or sound; the only instruction is the chat field's placeholder."
           date: 2026-10-11
       notes: Passport content that an operator writes could add instructions; none of the software's do.
   - id: EN301549-9.1.3.4
@@ -276,7 +276,7 @@ criteria:
           ref: apps/client/src/layout/Presentation.vue
           note: responsive layout, no orientation lock
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view rendered completely at 320 by 640 (portrait) and 640 by 450 (landscape); no orientation media query in the loaded style sheets and no screen.orientation.lock call in the client."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view rendered completely at 320 by 640 (portrait) and 640 by 450 (landscape); no orientation media query in the loaded style sheets and no screen.orientation.lock call in the client."
           date: 2026-10-11
       notes: Content is not restricted to one orientation.
   - id: EN301549-9.1.3.5
@@ -298,7 +298,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the only inputs in the passport presentation view (General information and every submodel), a collection's details page and the chat view are the chat question and the language select; neither collects information about the visitor."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the only inputs in the passport presentation view (General information and every submodel), a collection's details page and the chat view are the chat question and the language select; neither collects information about the visitor."
           date: 2026-10-11
       notes: No field asks for the user's own data (name, e-mail, address), so there is no purpose to expose.
   - id: EN301549-9.1.4.1
@@ -312,16 +312,23 @@ criteria:
       date: 2026-10-11
       commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       operational: false
       evidence:
         - type: code
           ref: apps/client/src/components/presentation/SubmodelElementValue.vue
-          note: missing values say so in text; booleans show a check mark
+          note: missing values say so in text; booleans show a check mark; link values stand alone
+        - type: code
+          ref: apps/client/src/view/presentation/Chat.vue
+          note: replies rendered from Markdown (marked, DOMPurify) into gray text, no link styling
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): information is never colour-only: a missing value is shown as text, a true boolean as a check mark, links stand alone in their value cell rather than inside running text."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): information on the passport view is never colour-only: a missing value is shown as text, a true boolean as a check mark, link values stand alone in their value cell."
           date: 2026-10-11
-      notes: Links are distinguished by colour only on hover underline, but none sits inside a block of text.
+        - type: manual
+          ref: "Same Instance, chat view: a reply paragraph with a link, as marked renders it, placed into the reply list: the link had the same colour, weight and decoration (none) as the text around it (verified by the adversarial reviewer on 2026-10-11 and again here)."
+          date: 2026-10-12
+      notes: "Credited: the passport view conveys nothing by colour alone. Missing: a link inside a chat reply is not distinguishable from the surrounding text at all (Tailwind's base styles leave it unstyled), so a visitor cannot tell it is a link."
+      gapIssue: 1035
   - id: EN301549-9.1.4.2
     section: "9.1.4"
     clause: "9.1.4.2"
@@ -343,7 +350,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: renders an image or a file icon with a download link; no audio or video player
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): uploading an MP4 and an MP3 file was refused with 400 (file type not accepted); no presentation component renders audio or video."
           date: 2026-10-11
       notes: No audio can be added to a passport or play on the view, so no audio starts automatically.
   - id: EN301549-9.1.4.3
@@ -367,7 +374,7 @@ criteria:
           ref: apps/client/src/composables/branding.ts
           note: an organisation's primary colour replaces the theme colour
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): axe color-contrast: the link colour #518367 on #fcfdfd measures 4.3:1 at 14 px (4.5:1 needed); all other text passed."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): axe color-contrast: the link colour #518367 on #fcfdfd measures 4.3:1 at 14 px (4.5:1 needed); all other text passed."
           date: 2026-10-11
       notes: "Missing: the default primary colour, used for links, falls just below 4.5:1 on the card background; an operator's own primary colour (branding) is applied without a contrast check. Operational for the brand colour."
       gapIssue: 1035
@@ -389,7 +396,7 @@ criteria:
           ref: apps/client/src/layout/Presentation.vue
           note: Tailwind layout in rem units
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): at a 640 pixel wide viewport (1280 at 200 percent) every value and control remained visible and usable, no horizontal scrolling, no clipping."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): at a 640 pixel wide viewport (1280 at 200 percent) every value and control remained visible and usable, no horizontal scrolling, no clipping."
           date: 2026-10-11
       notes: Text scales with browser zoom without loss of content or function.
   - id: EN301549-9.1.4.5
@@ -410,7 +417,7 @@ criteria:
           ref: apps/client/src/components/presentation/SubmodelElementValue.vue
           note: values rendered as text
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): all interface text and every value of the view is real text; images are those the operator uploads."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): all interface text and every value of the view is real text; images are those the operator uploads."
           date: 2026-10-11
       notes: "Credited: the software renders text as text. Missing: the operator's own images (product images, scanned documents shown as images) can be images of text, and no guidance tells operators to avoid them or to carry the text as values (operational, no operator documentation)."
       gapIssue: 1035
@@ -432,7 +439,7 @@ criteria:
           ref: apps/client/src/components/presentation/SubmodelElementValue.vue
           note: values in dd without word breaking
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): at 320 pixels the page scrolled horizontally by 2 pixels because a link value (https://example.com/manual) does not wrap; longer unbroken values (URLs, identifiers) widen it further; the rest reflows into one column, the navigation into a drawer."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): at 320 pixels the page scrolled horizontally by 2 pixels because a link value (https://example.com/manual) does not wrap; longer unbroken values (URLs, identifiers) widen it further; the rest reflows into one column, the navigation into a drawer."
           date: 2026-10-11
       notes: "Missing: unbroken values (URLs, identifiers, hashes) are not allowed to wrap, so a narrow screen scrolls in two dimensions. Data tables are exempt and fitted here."
       gapIssue: 1035
@@ -454,7 +461,7 @@ criteria:
           ref: apps/client/src/components/presentation/Navbar.vue
           note: PrimeVue menubar for the navigation links
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): measured: focus on a navigation item shows only a background of rgb(241,245,249) on white (about 1.1:1); the language select's border rgb(203,213,225) on white is about 1.5:1 (its text and chevron still identify it); the boolean check mark is 3.9:1 against its box."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): measured: focus on a navigation item shows only a background of rgb(241,245,249) on white (about 1.1:1); the language select's border rgb(203,213,225) on white is about 1.5:1 (its text and chevron still identify it); the boolean check mark is 3.9:1 against its box."
           date: 2026-10-11
       notes: "Missing: the focus state of the navigation items is not perceivable at 3:1. Credited: other focus rings (links, buttons, tree items, dialog buttons) and the check mark meet 3:1."
       gapIssue: 1035
@@ -475,7 +482,7 @@ criteria:
         - type: code
           ref: apps/client/src/layout/Presentation.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): with line height 1.5, letter spacing 0.12 em, word spacing 0.16 em and paragraph spacing 2 em forced on every element, no text was clipped or overlapped (no element with hidden overflow exceeded its box)."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): with line height 1.5, letter spacing 0.12 em, word spacing 0.16 em and paragraph spacing 2 em forced on every element, no text was clipped or overlapped (no element with hidden overflow exceeded its box)."
           date: 2026-10-11
       notes: Containers grow with text; no fixed-height text boxes.
   - id: EN301549-9.1.4.13
@@ -520,7 +527,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/NavigationTree.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): Tab reached the navigation, language select, chat button, tree (arrow keys expand and Enter opens a node), links, the image zoom button and its dialog (rotate, zoom, close), the download links and the details links; the chat field sends with Enter."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): Tab reached the navigation, language select, chat button, tree (arrow keys expand and Enter opens a node), links, the image zoom button and its dialog (rotate, zoom, close), the download links and the details links; the chat field sends with Enter."
           date: 2026-10-11
       notes: "Credited: every control of the view works from the keyboard. Missing: a list column's description is shown only on mouse hover over an icon that cannot take focus."
       gapIssue: 1035
@@ -542,7 +549,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: PrimeVue Image preview dialog
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the image zoom dialog keeps focus inside while open and closes with Escape, returning focus to the zoom button; Tab cycles through the whole page without getting stuck."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the image zoom dialog keeps focus inside while open and closes with Escape, returning focus to the zoom button; Tab cycles through the whole page without getting stuck."
           date: 2026-10-11
       notes: No keyboard trap.
   - id: EN301549-9.2.1.4
@@ -563,7 +570,7 @@ criteria:
           ref: apps/client/src/view/presentation/Chat.vue
           note: Enter sends, Shift+Enter adds a line, only inside the chat field
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): pressing every letter, digit and the keys ? / . , with focus on the page changed neither the URL nor the content and opened no dialog."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): pressing every letter, digit and the keys ? / . , with focus on the page changed neither the URL nor the content and opened no dialog."
           date: 2026-10-11
       notes: No single-character shortcuts exist; the only key handlers are Enter and Shift+Enter inside the chat field.
   - id: EN301549-9.2.2.1
@@ -583,7 +590,7 @@ criteria:
         - type: code
           ref: apps/client/src/view/presentation/View.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view and the chat set no time limit for anonymous visitors."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view and the chat set no time limit for anonymous visitors."
           date: 2026-10-11
       notes: No time limit applies to reading a passport; a signed-in member's session lasts longer than 20 hours (exception).
   - id: EN301549-9.2.2.2
@@ -625,7 +632,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/media/ProductImageGalleria.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): nothing in the view flashes; the only motion is the carousel's slide every two seconds."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): nothing in the view flashes; the only motion is the carousel's slide every two seconds."
           date: 2026-10-11
       notes: No flashing content.
   - id: EN301549-9.2.4.1
@@ -646,7 +653,7 @@ criteria:
           ref: apps/client/src/layout/Presentation.vue
           note: content inside a main landmark
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the repeated header holds three tab stops (navigation, language select, chat button); the content is a main landmark that assistive technology can jump to."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the repeated header holds three tab stops (navigation, language select, chat button); the content is a main landmark that assistive technology can jump to."
           date: 2026-10-11
       notes: "Met by landmarks (WCAG technique ARIA11). Remarks: no skip link for keyboard users without assistive technology, and the navigation is a menubar rather than a nav landmark."
   - id: EN301549-9.2.4.2
@@ -667,12 +674,12 @@ criteria:
           ref: apps/client/index.html
           note: static title open-dpp; nothing sets document.title
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the title was open-dpp on the passport presentation view (General information and every submodel), a collection's details page and the chat view alike, in both languages."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the title was open-dpp on the passport presentation view (General information and every submodel), a collection's details page and the chat view alike, in both languages."
           date: 2026-10-11
         - type: check
           ref: a11y.page-title-names-passport
           result: failed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: "Missing: pages have a title, but it names the application, not the passport or the page (Check a11y.page-title-names-passport fails)."
       gapIssue: 1035
   - id: EN301549-9.2.4.3
@@ -692,7 +699,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Passport.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): Tab order: navigation, language select, chat button, tree, then the values in reading order (link, image zoom, image download, PDF download, details link)."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): Tab order: navigation, language select, chat button, tree, then the values in reading order (link, image zoom, image download, PDF download, details link)."
           date: 2026-10-11
       notes: Focus order follows the meaning of the page.
   - id: EN301549-9.2.4.4
@@ -713,7 +720,7 @@ criteria:
           ref: apps/client/src/components/media/MediaFieldView.vue
           note: icon-only download link
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the image and PDF download links had no accessible name (axe link-name); each details link reads View details, its term above it giving the context."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the image and PDF download links had no accessible name (axe link-name); each details link reads View details, its term above it giving the context."
           date: 2026-10-11
       notes: "Missing: the download links have no text at all. The repeated View details links depend on the term in the preceding dt for context."
       gapIssue: 1035
@@ -737,7 +744,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Navbar.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): each page of the passport is reachable through the tree and through the in-content details links; the chat through the navigation and the floating button."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): each page of the passport is reachable through the tree and through the in-content details links; the chat through the navigation and the floating button."
           date: 2026-10-11
       notes: Two ways to every page of the passport's set.
   - id: EN301549-9.2.4.6
@@ -758,7 +765,7 @@ criteria:
           ref: apps/client/src/components/presentation/Submodel.vue
           note: submodel headings from display names
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): headings and terms were descriptive for the subject, which carries display names; elements without a display name fall back to their idShort."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): headings and terms were descriptive for the subject, which carries display names; elements without a display name fall back to their idShort."
           date: 2026-10-11
       notes: "Credited: headings and terms come from the elements' display names. Missing: whether they describe the content is the operator's naming, with idShort (a technical key) as fallback, and no operator guidance covers it (operational, no documentation)."
       gapIssue: 1035
@@ -779,9 +786,9 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Navbar.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): each focus stop shows a visible indicator (focus screenshots of all nine stops): ring or border on links, buttons, tree items and the select, a background on navigation items."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): each focus stop shows a visible indicator (focus screenshots of all nine stops): ring or border on links, buttons, tree items and the select, a background on navigation items."
           date: 2026-10-11
-      notes: Focus is always visible; the weak contrast of one indicator is EN301549-9.1.4.11.
+      notes: Focus is always visible. The navigation items show it only as a faint background (about 1.1:1 against white), visible but weak; that contrast is assessed under EN301549-9.1.4.11.
   - id: EN301549-9.2.5.1
     section: "9.2.5"
     clause: "9.2.5.1"
@@ -800,7 +807,7 @@ criteria:
           ref: apps/client/src/components/media/ProductImageGalleria.vue
           note: navigators and indicators are buttons
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): zooming and rotating an image use buttons in the preview dialog; no function needs a path or multipoint gesture."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): zooming and rotating an image use buttons in the preview dialog; no function needs a path or multipoint gesture."
           date: 2026-10-11
       notes: Single-pointer operation throughout.
   - id: EN301549-9.2.5.2
@@ -820,7 +827,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Navbar.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): all controls act on click (pointer up), none on pointer down."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): all controls act on click (pointer up), none on pointer down."
           date: 2026-10-11
       notes: Native and PrimeVue controls fire on the up-event.
   - id: EN301549-9.2.5.3
@@ -840,7 +847,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Navbar.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): accessible names contain the visible labels: To pass view, Chat with AI, View details, English."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): accessible names contain the visible labels: To pass view, Chat with AI, View details, English."
           date: 2026-10-11
       notes: Unnamed controls are EN301549-9.4.1.2.
   - id: EN301549-9.2.5.4
@@ -860,7 +867,7 @@ criteria:
         - type: code
           ref: apps/client/src/view/presentation/View.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no function reacts to device motion or orientation events."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no function reacts to device motion or orientation events."
           date: 2026-10-11
       notes: No motion actuation.
   - id: EN301549-9.3.1.1
@@ -884,12 +891,12 @@ criteria:
           ref: apps/client/src/composables/presentation-language.ts
           note: the ?lang= choice switches vue-i18n only
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): after selecting German, the interface and headings were German while the html element still declared lang en."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): after selecting German, the interface and headings were German while the html element still declared lang en."
           date: 2026-10-11
         - type: check
           ref: a11y.page-language-follows-selection
           result: failed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: "Credited: English pages declare English. Missing: the page language does not follow the visitor's selection (Check a11y.page-language-follows-selection fails)."
       gapIssue: 1035
   - id: EN301549-9.3.1.2
@@ -910,7 +917,7 @@ criteria:
           ref: apps/client/src/components/presentation/SubmodelElementValue.vue
           note: no MultiLanguageProperty branch; values carry no lang attribute
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): values in another language than the page are not marked; the multilingual description rendered nothing in either language."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): values in another language than the page are not marked; the multilingual description rendered nothing in either language."
           date: 2026-10-11
       notes: "Missing: a value whose language differs from the page's is never marked, and the one element type that knows its language (MultiLanguageProperty) is not rendered at all. Cluster #838 (languages); the Property type itself carries no language."
       gapIssue: 838
@@ -931,7 +938,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Navbar.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): tabbing through every control changed no page, window or content."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): tabbing through every control changed no page, window or content."
           date: 2026-10-11
       notes: Focus alone never changes the context.
   - id: EN301549-9.3.2.2
@@ -951,7 +958,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): choosing a language re-renders the same page in that language (?lang= in the URL) without moving focus or opening a window; no other control acts on input."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): choosing a language re-renders the same page in that language (?lang= in the URL) without moving focus or opening a window; no other control acts on input."
           date: 2026-10-11
       notes: Translating the page in place is a change of content, not of context.
   - id: EN301549-9.3.2.3
@@ -972,7 +979,7 @@ criteria:
           ref: apps/client/src/layout/Presentation.vue
           note: one header for every presentation page
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the passport page, a collection's details page and the chat view showed the same header (logo, navigation, language select, chat button) in the same order."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the passport page, a collection's details page and the chat view showed the same header (logo, navigation, language select, chat button) in the same order."
           date: 2026-10-11
       notes: The navigation sits in the same place and order on the passport, details and chat pages.
   - id: EN301549-9.3.2.4
@@ -992,7 +999,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/presentation/Navbar.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the same icons and labels identify the same functions on every page."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the same icons and labels identify the same functions on every page."
           date: 2026-10-11
       notes: Consistent identification.
   - id: EN301549-9.3.3.1
@@ -1012,7 +1019,7 @@ criteria:
         - type: code
           ref: apps/client/src/view/presentation/Chat.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): sending a chat question while AI is disabled answers with the text AI is not enabled in the message list; no other input is validated."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): sending a chat question while AI is disabled answers with the text AI is not enabled in the message list; no other input is validated."
           date: 2026-10-11
       notes: The only automatic refusal on the view is described in text. That it is not announced is EN301549-9.4.1.3.
   - id: EN301549-9.3.3.2
@@ -1036,7 +1043,7 @@ criteria:
           ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
           note: Select without label or aria-label
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the chat field's only label is its placeholder, gone once typing starts; the language select has no label, its name being the selected value."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the chat field's only label is its placeholder, gone once typing starts; the language select has no label, its name being the selected value."
           date: 2026-10-11
       notes: "Missing: visible labels for the chat question and the language choice."
       gapIssue: 1035
@@ -1057,7 +1064,7 @@ criteria:
         - type: code
           ref: apps/client/src/view/presentation/Chat.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view's inputs (chat question, language select) have no format or value constraint that could produce a correctable error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view's inputs (chat question, language select) have no format or value constraint that could produce a correctable error."
           date: 2026-10-11
       notes: No input on the view has a detectable error with a known correction to suggest.
   - id: EN301549-9.3.3.4
@@ -1077,7 +1084,7 @@ criteria:
         - type: code
           ref: apps/client/src/view/presentation/View.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view submits nothing with legal or financial effect and changes no stored data (only the chat question and the page-view counter are sent)."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view submits nothing with legal or financial effect and changes no stored data (only the chat question and the page-view counter are sent)."
           date: 2026-10-11
       notes: Not triggered by the presentation view; the editor is outside this file's scope.
   - id: EN301549-9.4.1.1
@@ -1097,7 +1104,7 @@ criteria:
         - type: code
           ref: apps/client/index.html
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no duplicate id on the view; the DOM is produced by Vue, so tags are complete and attributes unique."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no duplicate id on the view; the DOM is produced by Vue, so tags are complete and attributes unique."
           date: 2026-10-11
       notes: W3C notes that 4.1.1 is always satisfied for HTML content (errata to WCAG 2.1). The content-model error (dd outside dl) is assessed under EN301549-9.1.3.1 and EN18216-5(d).
   - id: EN301549-9.4.1.2
@@ -1123,7 +1130,7 @@ criteria:
           ref: apps/client/src/components/presentation/Navbar.vue
           note: menubar role for two links
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): axe button-name (tree toggle), label (boolean checkbox), link-name (two download links); the image preview dialog has no accessible name; the language select's name is its value; the navigation links are exposed as menu items of a menubar."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): axe button-name (tree toggle), label (boolean checkbox), link-name (two download links); the image preview dialog has no accessible name; the language select's name is its value; the navigation links are exposed as menu items of a menubar."
           date: 2026-10-11
       notes: "Missing: names for the tree toggle, the download links, the boolean checkbox, the preview dialog and the language select; navigation links carry menu semantics. Credited: links, buttons with text, the tree and its items, tables and the chat button expose correct roles and names."
       gapIssue: 1035
@@ -1148,7 +1155,7 @@ criteria:
           ref: apps/client/src/components/notifications/NotificationHandler.vue
           note: the app's live region is mounted in the Main layout only, not the presentation layout
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no element with aria-live, role status, log or alert existed on the view; chat replies and the AI-disabled message appeared without announcement."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): no element with aria-live, role status, log or alert existed on the view; chat replies and the AI-disabled message appeared without announcement."
           date: 2026-10-11
       notes: "Missing: status messages (chat replies and errors, loading) are not exposed to assistive technology; the presentation layout has no live region."
       gapIssue: 1035
@@ -1169,11 +1176,11 @@ criteria:
         - type: code
           ref: apps/client/src/layout/Presentation.vue
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the passport presentation view (General information and every submodel), a collection's details page and the chat view assessed as full pages; the visitor's processes are reading, navigating, switching language, downloading and asking the chat."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the passport presentation view (General information and every submodel), a collection's details page and the chat view assessed as full pages; the visitor's processes are reading, navigating, switching language, downloading and asking the chat."
           date: 2026-10-11
         - type: check
           ref: a11y.public-view-no-serious-violations
           result: failed
-          date: 2026-10-11
-      notes: "Missing: the conformance level (every 9.1 to 9.4 criterion) is not reached (17 Partial, 1 Gap), and non-interference fails through EN301549-9.2.2.2 (the carousel). Full pages and complete processes are assessed; only accessibility-supported technologies (HTML, CSS, WAI-ARIA) are relied on. No accessibility statement exists (Check a11y.public-view-no-serious-violations fails)."
+          date: 2026-10-12
+      notes: "Missing: the conformance level (every 9.1 to 9.4 criterion) is not reached (18 Partial, 1 Gap), and non-interference fails through EN301549-9.2.2.2 (the carousel). Full pages and complete processes are assessed; only accessibility-supported technologies (HTML, CSS, WAI-ARIA) are relied on. Check a11y.public-view-no-serious-violations (critical and serious axe violations only) fails, which evidences the miss; its passing would not by itself show the level."
       gapIssue: 1035

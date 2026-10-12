@@ -35,12 +35,12 @@ criteria:
           ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
           note: bundle by UUID and slug, shells, submodels, submodel elements and values parsed as JSON
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Every response labelled application/json is produced by JSON.stringify, whose output follows the grammar by construction (structural tokens, escaped strings, finite numbers; NaN and Infinity become null). Check format.public-reads-are-json parses the public reads strictly. Request bodies, the export and the import use the same serialiser. A value-only route that does not answer JSON is EN18216-5(a)'s finding, not a malformed JSON text.
   - id: ISO21778-2(2)
     section: "2"
@@ -59,7 +59,7 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/body-handler.ts
-          note: express.json (JSON.parse) on every route except /api/auth; malformed input answers 400 Invalid JSON payload; top level object or array except on /$value
+          note: express.json (JSON.parse) on every route except the unversioned /api/auth routes (the versioned ones are parsed too); malformed input answers 400 Invalid JSON payload; top level object or array except on /$value
         - type: code
           ref: apps/main/src/bulk-import/domain/json-parser.ts
           note: bulk import parses JSON with JSON.parse and requires an array of objects
@@ -72,7 +72,7 @@ criteria:
         - type: check
           ref: format.malformed-json-refused
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: "Recommendation, met: request bodies go through JSON.parse, which refuses anything outside the grammar (trailing commas, NaN, single quotes, unescaped control characters); the API answers 400 (Check format.malformed-json-refused). The semantic restrictions the clause allows are applied: a top-level object or array except on value routes, size limits (OPEN_DPP_JSON_LIMIT_DEFAULT, 10 MB), and the Zod schema of each route."
   - id: ISO21778-4
     section: "4-9"
@@ -95,12 +95,12 @@ criteria:
           ref: apps/main/src/body-handler.ts
           note: parses request bodies with express.json, which uses JSON.parse
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Emitted texts carry no insignificant whitespace (JSON.stringify without indentation); parsing accepts whitespace around tokens only, as JSON.parse implements the grammar.
   - id: ISO21778-5
     section: "4-9"
@@ -123,12 +123,12 @@ criteria:
           ref: apps/main/src/body-handler.ts
           note: parses request bodies with express.json, which uses JSON.parse
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Only objects, arrays, numbers, strings, true, false and null are emitted; undefined members are dropped and non-finite numbers become null by JSON.stringify.
   - id: ISO21778-6
     section: "4-9"
@@ -151,12 +151,12 @@ criteria:
           ref: apps/main/src/body-handler.ts
           note: parses request bodies with express.json, which uses JSON.parse
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Objects are emitted from JavaScript objects, so member names are strings and unique. On input, duplicate names are accepted (the last wins), which the syntax permits.
   - id: ISO21778-7
     section: "4-9"
@@ -179,12 +179,12 @@ criteria:
           ref: apps/main/src/body-handler.ts
           note: parses request bodies with express.json, which uses JSON.parse
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Arrays are emitted from JavaScript arrays (lists of submodels, elements, pages of results); order carries meaning only where the API defines it (pagination, element order).
   - id: ISO21778-8
     section: "4-9"
@@ -210,12 +210,12 @@ criteria:
           ref: packages/dto/src/aas/submodel-base/property-json-schema.ts
           note: property values travel as strings
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Numbers are emitted by JSON.stringify in the decimal grammar, never as NaN or Infinity. Passport values are carried as strings (Property values, Range bounds), so a decimal keeps its digits; numeric types are validated before storage (z.coerce.number, property.spec.ts).
   - id: ISO21778-9
     section: "4-9"
@@ -238,10 +238,10 @@ criteria:
           ref: apps/main/src/body-handler.ts
           note: parses request bodies with express.json, which uses JSON.parse
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements parsed with JSON.parse (the ECMA-404 grammar) without error."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: Strings are escaped by JSON.stringify (quotation mark, reverse solidus, control characters below U+0020; lone surrogates as \u escapes); JSON.parse refuses unescaped control characters on input.

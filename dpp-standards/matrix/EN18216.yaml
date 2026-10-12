@@ -177,7 +177,7 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/body-handler.ts
-          note: express.json (JSON.parse) on every route except /api/auth; malformed input answers 400 Invalid JSON payload; top level object or array except on /$value
+          note: express.json (JSON.parse) on every route except the unversioned /api/auth routes (the versioned ones are parsed too); malformed input answers 400 Invalid JSON payload; top level object or array except on /$value
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
           note: public bundle and AAS read routes under /api/v{1,2}/p/:id, OptionalAuth
@@ -188,12 +188,12 @@ criteria:
           ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
           note: bundle by UUID and slug, shells, submodels, submodel elements and values parsed as JSON
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements answered application/json; a malformed body (NaN, trailing comma) to the anonymous page-view counter answered 400 Invalid JSON payload."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the anonymous permalink bundle, shells, submodels, one submodel and its elements answered application/json; a malformed body (NaN, trailing comma) to the anonymous page-view counter answered 400 Invalid JSON payload."
           date: 2026-10-11
         - type: check
           ref: format.public-reads-are-json
           result: passed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: "Credited: JSON is the format of every request and response of the API, public and member routes alike, the export and import, and the bulk import (Check format.public-reads-are-json on the public reads). Missing: one value-only read route does not answer a JSON text for every element type; the details sit in a related private finding until it is fixed. There is no other format, so nothing else is offered by negotiation (EN18216-5(b) to 5(d))."
       gapIssue: 1034
   - id: EN18216-5(b)
@@ -213,7 +213,7 @@ criteria:
         - type: code
           ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
           note: export and import in open-dpp's own JSON envelope only
-      notes: Optional format, assessed as enablement. open-dpp offers no XML representation of a passport (no AAS XML serialisation, no XML media type, no Accept handling), so a client cannot negotiate one. Not needed to conform to the EN; recorded so the cluster lists the full negotiation picture.
+      notes: Optional format, assessed as enablement. open-dpp offers no XML representation of a passport (no AAS XML serialisation, no XML media type, no Accept handling), so a client cannot negotiate one. Not needed to conform to the EN; recorded so the cluster lists the full negotiation picture. Under the map rule of 2026-10-12 only mandatory clauses cap a law row, so this optional Gap does not cap ESPR Art. 10(1)(d) or 11(a).
       gapIssue: 1034
   - id: EN18216-5(c)
     section: "5"
@@ -233,7 +233,7 @@ criteria:
         - type: code
           ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
           note: export and import in open-dpp's own JSON envelope only
-      notes: "Optional format, assessed as enablement. No JSON-LD representation exists (no @context on any passport document, no application/ld+json), so the condition that JSON-LD stays readable by a plain JSON parser has nothing to bind. Related: the UNTP data model, which is JSON-LD based, is #189. Not needed to conform to the EN."
+      notes: "Optional format, assessed as enablement. No JSON-LD representation exists (no @context on any passport document, no application/ld+json), so the condition that JSON-LD stays readable by a plain JSON parser has nothing to bind. Related: the UNTP data model, which is JSON-LD based, is #189. Not needed to conform to the EN; under the map rule of 2026-10-12 only mandatory clauses cap a law row, so this optional Gap does not cap ESPR Art. 10(1)(d) or 11(a)."
       gapIssue: 1034
   - id: EN18216-5-para3
     section: "5"
@@ -256,13 +256,13 @@ criteria:
           ref: apps/client/src/layout/Presentation.vue
           note: presentation layout with the main landmark
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): WCAG 2.1 audit of the presentation view, its details pages and its chat view (axe-core 4.13 all A and AA rules at 1280 and 320 pixels, keyboard walk, focus screenshots, reflow at 320 and 640 pixels, text-spacing override, language switch, colour measurements); per-criterion results in EN301549."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): WCAG 2.1 audit of the presentation view, its details pages and its chat view (axe-core 4.13 all A and AA rules at 1280 and 320 pixels, keyboard walk, focus screenshots, reflow at 320 and 640 pixels, text-spacing override, language switch, colour measurements); per-criterion results in EN301549."
           date: 2026-10-11
         - type: check
           ref: a11y.public-view-no-serious-violations
           result: failed
-          date: 2026-10-11
-      notes: "The rendering of DPP content for humans is the passport presentation view, so the applicable requirements are EN 301 549 clause 9 (web content, the 50 WCAG 2.1 A and AA success criteria plus the conformance requirements); assessed in EN301549 in this run: 33 Met, 17 Partial, 1 Gap. Main misses: no text alternatives an operator can set (images carry their file name), unnamed download links and tree toggles, an unlabelled boolean checkbox and language select, a fixed page language and page title, link contrast 4.3:1, an auto-advancing image carousel without pause control, no live region for the chat, and no accessibility statement or operator guidance. Check a11y.public-view-no-serious-violations fails on the content-bearing subject (6 violations)."
+          date: 2026-10-12
+      notes: "The rendering of DPP content for humans is the passport presentation view, so the applicable requirements are EN 301 549 clause 9 (web content, the 50 WCAG 2.1 A and AA success criteria plus the conformance requirements); assessed in EN301549 in this run: 32 Met, 18 Partial, 1 Gap. Main misses: no text alternatives an operator can set (images carry their file name), unnamed download links and tree toggles, an unlabelled boolean checkbox and language select, a fixed page language and page title, link contrast 4.3:1, links in chat replies told apart by nothing, an auto-advancing image carousel without pause control, no live region for the chat, and no accessibility statement or operator guidance. Check a11y.public-view-no-serious-violations fails on the content-bearing subject (6 violations)."
       gapIssue: 1035
   - id: EN18216-5(d)
     section: "5"
@@ -295,12 +295,12 @@ criteria:
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
           note: 302 to the presentation URL with the query string forwarded
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the Digital Link answered 302 to /p/<permalink> for Accept application/json, text/html, application/ld+json and application/xml alike; /p/<permalink> answers the SPA shell (text/html), the JSON lives at /api/v2/p/<permalink>; axe flagged dd elements inside table cells without a dl (definition-list, dlitem)."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the Digital Link answered 302 to /p/<permalink> for Accept application/json, text/html, application/ld+json and application/xml alike; /p/<permalink> answers the SPA shell (text/html), the JSON lives at /api/v2/p/<permalink>; axe flagged dd elements inside table cells without a dl (definition-list, dlitem)."
           date: 2026-10-11
         - type: check
           ref: format.digital-link-negotiates-representation
           result: failed
-          date: 2026-10-11
+          date: 2026-10-12
       notes: "Credited: DPP content is provided as an HTML page for browsers (the presentation view), with a doctype and the HTML5 elements a browser expects. Missing: the HTML is not chosen by HTTP content negotiation: HTML and JSON live at different URLs, the Digital Link and the permalink ignore the Accept header (Check format.digital-link-negotiates-representation fails), and the server sends only the SPA shell, the passport being rendered client-side from the JSON API. Markup outside the HTML content model: dd elements in table cells without a dl parent."
       gapIssue: 1034
   - id: EN18216-5-para5
@@ -325,7 +325,7 @@ criteria:
           ref: .github/workflows/e2e.yml
           note: CI runs the setup, chromium and account projects only
         - type: manual
-          ref: "Against an Instance built from ea05ef20 (port 3001), on the published conformance passport with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view rendered and worked in Chromium at 1280, 640 and 320 pixel widths (Playwright); no other engine was exercised in this run."
+          ref: "Against an Instance built from ea05ef20 (port 3001), on a published audit passport of the conformance organisation (permalink eb36457f, built through the API before the Check subject got its content) with a content submodel (text, number, boolean, date and link properties, multilingual text, a PNG image, a PDF, a collection, a list, a range): the view rendered and worked in Chromium at 1280, 640 and 320 pixel widths (Playwright); no other engine was exercised in this run."
           date: 2026-10-11
-      notes: "Recommendation. Credited: the end-to-end suite is configured for Chromium, Firefox and WebKit. Missing: CI runs Chromium only, mobile viewports and devices are not emulated in any project, and no test targets the presentation view across engines (the conformance Checks run in Chromium)."
+      notes: "Recommendation. Credited: the end-to-end suite has Chromium, Firefox and WebKit projects, and specs that open the presentation view run in all three locally. Missing: CI runs Chromium only, no project emulates a mobile viewport or device, and the conformance Checks run in Chromium only. Under the map rule of 2026-10-12 a recommendation does not cap a law row."
       gapIssue: 1035

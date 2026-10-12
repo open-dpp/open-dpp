@@ -17,7 +17,7 @@ check(
     await page.goto(subject.publicUrl);
     await page.waitForLoadState("networkidle");
     const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
     const serious = results.violations
       .filter((v) => v.impact === "critical" || v.impact === "serious")
