@@ -18,7 +18,7 @@ sections:
   - id: "4.1.2.3"
     title: 4.1.2.3 to 4.1.2.8 Data elements
   - id: "4.1.2.9"
-    title: 4.1.2.9 Value data types
+    title: 4.1.2.9 Data types of values
   - id: "4.2"
     title: 4.2 Changes to the DPP
   - id: "4.3"
@@ -746,7 +746,7 @@ criteria:
   - id: EN18223-4.3(1)
     section: "4.3"
     clause: "4.3(1)"
-    paraphrase: "Data points and their definitions are managed apart from each other (a decoupled approach), so that semantics work across sectors without tying DPP content to one technology."
+    paraphrase: "The definitions behind the data points are kept and governed apart from the data points themselves (a decoupled approach), so that semantics work across sectors without tying DPP content to one technology."
     applicability: software
     areas:
       - 8
@@ -940,7 +940,7 @@ criteria:
   - id: EN18223-5.2.3-sub1
     section: "5.2"
     clause: "5.2.3, first requirement, with Table 7"
-    paraphrase: "Recommendation: where a data dictionary or semantic repository specifies a value's data type, the value takes the native JSON type (ISO/IEC 21778) Table 7 maps it to: booleans as true or false; decimals, integers and floating-point values as JSON numbers (a string allowed for high-precision decimals); dates as YYYY-MM-DD and date-times as YYYY-MM-DDThh:mm:ssZ (ISO 8601-1); URIs per RFC 3986; base64 data as a string."
+    paraphrase: "Recommendation: where a dictionary or a semantic repository fixes the data type of a value, the value takes the native JSON type (ISO/IEC 21778) Table 7 maps it to: booleans as true or false; decimals, integers and floating-point values as JSON numbers (a string allowed for high-precision decimals); dates as YYYY-MM-DD and date-times in UTC as YYYY-MM-DDThh:mm:ssZ, both per ISO 8601-1; URIs per RFC 3986; base64 data as a string."
     applicability: software
     areas:
       - 2
@@ -1024,7 +1024,7 @@ criteria:
   - id: EN18223-5.2.5-sub1
     section: "5.2"
     clause: "5.2.5, first paragraph, first part"
-    paraphrase: "A DataElementCollection is serialised as a JSON object whose members may mix any data types."
+    paraphrase: "A DataElementCollection becomes a JSON object whose members may mix any data types."
     applicability: software
     areas:
       - 2
@@ -1110,7 +1110,7 @@ criteria:
   - id: EN18223-5.2.7
     section: "5.2"
     clause: "5.2.7"
-    paraphrase: "A MultiValuedDataElement is serialised as a JSON array whose items share one JSON type, simple or object; an item carries no key and is identified by its index."
+    paraphrase: "A MultiValuedDataElement becomes a JSON array whose items share one JSON type, simple or object; an item carries no key and is identified by its index."
     applicability: software
     areas:
       - 2
@@ -1139,7 +1139,7 @@ criteria:
   - id: EN18223-5.2.8
     section: "5.2"
     clause: "5.2.8"
-    paraphrase: "A RelatedResource is serialised as a JSON object carrying its attributes (resourceTitle, contentType, url, language)."
+    paraphrase: "A RelatedResource becomes a JSON object carrying its attributes (resourceTitle, contentType, url, language)."
     applicability: software
     areas:
       - 2
@@ -1164,7 +1164,7 @@ criteria:
   - id: EN18223-5.2.9
     section: "5.2"
     clause: "5.2.9"
-    paraphrase: "A MultiLanguageDataElement is serialised as a JSON array of objects, one per MultiLanguageValue, each holding the value and its language."
+    paraphrase: "A MultiLanguageDataElement becomes a JSON array of objects, one per MultiLanguageValue, each holding the value and its language."
     applicability: software
     areas:
       - 2
