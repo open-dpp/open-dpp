@@ -1,0 +1,538 @@
+# Conformance Matrix: IDTA01002 (Specification of the Asset Administration Shell, Part 2: Application Programming Interfaces, IDTA-01002-3-2 V3.2.0). Rules: dpp-standards/README.md.
+# Criteria extracted on 2026-10-12 (ticket #1045) from the AsciiDoc sources and the OpenAPI files of release tag v3.2.0 of admin-shell-io/aas-specs-api (commit f136ba14, July 2026, CC-BY-4.0); assessments are added in place, one per Criterion. Public text: the paraphrases are ours, short quotes are allowed.
+# Declared standard (map decision of 2026-10-12, #1021): no law and no JTC 24 EN cites the AAS API; open-dpp declares the AAS as its data model and serves AAS-shaped routes, so the lens is "implements as declared". Lowest severity; these Criteria never cap a law or EN row. EN 18222 defines an API of its own; its file (EN18222) grades that API, this file grades the AAS API.
+# Profiles graded (scoped file, #1045): Part 2 groups operations into service specifications and profiles. open-dpp serves one AAS environment per passport and per template: below the base URL /api/v{1,2}/passports/{passportId} (and /templates/{templateId}) it lists shells at /shells and serves submodels at /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}, the root paths of the AAS Repository and of the Submodel Repository service specifications; members read and write there, and anyone reads published passports below /api/v{1,2}/p/{permalink}. Part 2 lets the path segment before the functional endpoint be a tenant or any other server choice (HTTP/REST API, API Versioning), so the passport base is read as a server base URL. The pair that fits best is therefore AssetAdministrationShellRepositoryServiceSpecification/SSP-001 together with SubmodelRepositoryServiceSpecification/SSP-001 (the Full profiles, both at one base URL); their Read profiles (SSP-002) are the subsets the public base is measured against. The AAS Service and Submodel Service specifications (one shell or one submodel per endpoint, /aas and /submodel) fit worse and hold no operation the pair lacks.
+# In scope: every operation of the two Full profiles except the left-out interfaces below (the AAS Repository, AAS, Submodel Repository and Submodel interfaces and the Description interface), one Criterion per operation; and the general rules every operation follows (design principles, design decisions, addressing, versioning, pagination, serialization modifiers, status codes and the result object, security alignment and the normative operation-to-right annex). Operations the profile texts omit but their OpenAPI files carry (DeleteSubmodelElementByPath, PatchSubmodelElementValueByPath) are extracted; superpath operations the AAS Repository profile text lists but its OpenAPI file never defines (GetAllSubmodels, PostSubmodel and the filters below /shells/{aasIdentifier}/submodels) are graded once, on the Submodel Repository rows. The experimental RecentChanges operations are in both Full profiles and are extracted.
+# Left out, with the reason: the registry, discovery and serialization interfaces (GenerateSerializationByIds, although both Full profiles list it), by the ticket's scope; open-dpp's export is graded as a serialization in IDTA01001 (Mappings). The AASX File Server, the Concept Description Repository, the Query profiles (AAS Repository SSP-003, Submodel Repository SSP-005, with the query language and its constraint AASa-005), the Signature profiles (SSP-004, SSP-006, the $signed JWS), the History profiles (SSP-006, SSP-007, $history and the date parameter), the Identifiable profile (SSP-005, a subset of SSP-001) and the Template profiles (Submodel Repository SSP-003 and SSP-004 with AASa-003 and AASa-004): none is part of the profiles graded. Bulk operations belong to the registry profiles. The ID Link and LinkSet interactions are exemplary sequences.
+# The Digital Product Passport annex (new in V3.2) carries no normative or informative marker, is written in "shall" and is bound to no profile. It maps EN 18222's Life Cycle, registry and fine-granular API onto AAS operations (ReadDPPById onto GetAssetAdministrationShellById plus the submodels, historical versions onto the History profiles, the DppMetadata submodel IDTA-02099-1 as the DPP header) and says a DPP service built on AAS shall implement all of it. open-dpp does not claim to be such a service, EN 18222 is graded in its own file, and IDTA submodel templates are outside the map; the annex is not extracted, and its mapping is handed to the EN 18222 Life Cycle API cluster #1052.
+# Normativity: Part 2 has no conformance clause of its own, only the BCP 14 keywords; the profile enumeration says a server listing a profile "implemented all features" of it, and the interface is the unit of compliance statements. Not extracted, no requirement on a server: Terms, Preamble, Introduction, the naming rules and semantic ids of operations (they bind the specification's own operation names), Interactions (exemplary), API Code Generation, Summary and Outlook, Change Log, Bibliography, the UML, class-table and API-table template annexes, the overview of constraints (non-normative), the SerializationModifier examples (their PATCH rules are folded into IDTA01002-Methods-PATCH) and the Conformance Test Corpus (informative; it names no test tool).
+# Text defects found while reading (recorded, not graded): the Submodel Repository Read profile identifier is printed as SubmodelServiceSpecification/SSP-002 (the OpenAPI file has SubmodelRepositoryServiceSpecification/SSP-002); the profile enumeration lacks the 3.2 History profiles and swaps two Submodel Service labels; the default page size is 100 in the text but the OpenAPI Limit parameter has minimum 1 and no default; the result object's attribute is "message" in the text and "messages" in the OpenAPI schema; three clauses state three different rules for modifiers on PUT.
+# References: IDTA-01001 V3.2 (payloads; graded in IDTA01001), IDTA-01004 V3.1 (security; named by the alignment clause, not declared by open-dpp, read through on IDTA01002-Security and IDTA01002-OperationRights only), RFC 4648 (base64url) and RFC 7231 (status codes) are read through on the rows that cite them. RFC 7515 (JWS) belongs to the left-out signature profiles.
+
+standard: IDTA01002
+edition: IDTA-01002-3-2 V3.2.0 (July 2026)
+extractedFrom: https://github.com/admin-shell-io/aas-specs-api/tree/v3.2.0
+extractedAt: 2026-10-12
+sections:
+  - id: general
+    title: General (design principles of the operations)
+  - id: http
+    title: HTTP/REST API (design decisions and addressing)
+  - id: versioning
+    title: API Versioning
+  - id: pagination
+    title: Pagination
+  - id: modifiers
+    title: Serialization Modifiers
+  - id: status
+    title: Status Codes and the Result Object
+  - id: security
+    title: Security Alignment and Operation Rights
+  - id: description
+    title: Description Interface
+  - id: aas-repo
+    title: Asset Administration Shell Repository Interface
+  - id: aas
+    title: Asset Administration Shell Interface (by superpath)
+  - id: sm-repo
+    title: Submodel Repository Interface
+  - id: sm
+    title: Submodel Interface (by superpath)
+criteria:
+  - id: IDTA01002-Methods-POST
+    section: general
+    clause: General, Design Principles (POST); API Interfaces, PostSubmodelElement and PostSubmodelElementByPath
+    paraphrase: "POST creates a new resource whose identifier is part of the payload (the id of an identifiable, the idShort of an element), so creating an identifiable is idempotent: there is never more than one identifiable with the same id in one system, and posting the same object twice does not create two. A post into a SubmodelElementList appends at its end."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01002-Methods-PUT
+    section: general
+    clause: General, Design Principles (PUT); Change Log V3.0.4 to V3.1
+    paraphrase: "PUT replaces an existing resource, or creates it when it does not exist yet, wherever a POST of that resource would have been possible; a repository answers 201 when it created the resource and 204 when it replaced one."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Methods-PATCH
+    section: general
+    clause: General, Design Principles (PATCH); Annex SerializationModifier Examples, Description
+    paraphrase: "PATCH updates an existing resource; the serialization modifiers name the content replaced (content=value updates all values from the Value-Only form, values stay unchanged with content=metadata). The structure sent must match the stored one: the same element types, every element already present; elements are replaced one by one, and if one sent element does not exist nothing changes. A SubmodelElementList may be patched with fewer elements, never more."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-HTTPS
+    section: http
+    clause: HTTP/REST API, Design Decisions (transport)
+    paraphrase: "An endpoint of the HTTP/REST API always uses HTTPS (port 443) with an up-to-date level of encryption; the specification assumes HTTP/1.1."
+    applicability: mixed
+    areas:
+      - 10
+  - id: IDTA01002-IdentifierEncoding
+    section: http
+    clause: HTTP/REST API, Design Decisions (identifier encoding); Addressing Resources, Note 1
+    paraphrase: "Identifiers of identifiables (shells, submodels, concept descriptions) are passed in paths and query parameters base64url-encoded (RFC 4648) over the UTF-8 bytes of the string, without and never ending in '=' padding; lists of encoded ids are comma-separated. An identifiable is addressed by its identifier only."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01002-IdShortPath
+    section: http
+    clause: HTTP/REST API, Addressing Resources; Design Decisions (idShortPath)
+    paraphrase: "Every referable other than an identifiable is addressed by its idShortPath: a chain of idShorts separated by dots, with the index of a SubmodelElementList item in square brackets (sme1.sme2[0].p1), rooted at the submodel and descending through submodelElements, value, statements and annotations. Because of the brackets the path is URL-encoded in the request."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-IdShortCaseSensitive
+    section: http
+    clause: HTTP/REST API, Design Decisions (idShort comparison)
+    paraphrase: "The HTTP/REST API compares idShorts case-sensitively."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Superpaths
+    section: http
+    clause: HTTP/REST API, Design Decisions (superpaths); General, Relation of Interfaces; Service Specifications and Profiles
+    paraphrase: "Interfaces are combined through superpaths that the service specifications define: an AAS Repository reaches the AAS interface, the submodels and their elements of one shell below /shells/{aasIdentifier} (/asset-information, /submodel-refs, /submodels/{submodelIdentifier}/submodel-elements/…), a Submodel Repository reaches the Submodel interface below /submodels/{submodelIdentifier}; the shell's submodels attribute maps to /submodel-refs, apart from the /submodels superpath."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-JSON
+    section: http
+    clause: Service Specifications and Profiles (SerializationFormat JSON); HTTP/REST API, Payload; Data Types for Payload, File Content
+    paraphrase: "The profiles graded exchange JSON: payloads follow the JSON mapping of Part 1 (Value-Only payloads its Value-Only mapping), error and paging envelopes are JSON, and file content is arbitrary binary data sent as application/octet-stream when a content type is needed."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-AASa-002
+    section: http
+    clause: HTTP/REST API, Mapping of Operations (GetAllSubmodelsBySemanticId), Constraint AASa-002
+    paraphrase: "Constraint AASa-002: the base64url-encoded semanticId passed as query parameter is at most 3072 characters long."
+    applicability: software
+    areas:
+      - 1
+      - 8
+  - id: IDTA01002-Versioning
+    section: versioning
+    clause: HTTP/REST API, API Versioning; Versioning
+    paraphrase: "The API is versioned major.minor; versions with the same major stay compatible, so a client for an older or newer minor keeps working, and a consistent OpenAPI description is provided per major version. URL-based versioning with the prefix api/v<major>/ of Part 2 (api/v3/) is recommended; the segment before the functional path may also be a tenant or any other server choice, and a /description endpoint is recommended for each service."
+    applicability: software
+    areas:
+      - 1
+      - 13
+  - id: IDTA01002-Pagination
+    section: pagination
+    clause: HTTP/REST API, Pagination; Design Decisions (pagination)
+    paraphrase: "GetAll operations page their results: the answer is a Result holding the items in result and a paging_metadata object whose cursor points at the next page, its absence meaning the end has been reached; a missing cursor asks for the first page, limit is the maximum page size (the server may return fewer, decides when limit is absent; 100 in the text), and the cursor is an opaque string the client never interprets."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Pagination-order
+    section: pagination
+    clause: HTTP/REST API, Pagination (ordering)
+    paraphrase: "The server orders result sets deterministically: two items never swap places between requests, even when their attributes changed in between; created or deleted items may shift later pages, and the server need not disclose its ordering."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-AASa-001
+    section: pagination
+    clause: HTTP/REST API, Pagination, Constraint AASa-001
+    paraphrase: "Constraint AASa-001: the cursor query parameter is never empty; a client without a cursor omits the parameter."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Level
+    section: modifiers
+    clause: Basic Operation Parameters, Enumeration Level; HTTP/REST API, Design Decisions
+    paraphrase: "The Level modifier, query parameter ?level=, sets the depth of the content: deep (the default) returns every child on every sublevel, core returns the requested element and its direct children only, so a client can walk the hierarchy step by step."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Content-Metadata
+    section: modifiers
+    clause: Basic Operation Parameters, Enumeration Content (Metadata); HTTP/REST API, Design Decisions
+    paraphrase: "Content=Metadata, path suffix /$metadata, returns (and on PATCH accepts) only the metadata of the element and its children, without values, in the Part 1 metadata format."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-Content-Value
+    section: modifiers
+    clause: Basic Operation Parameters, Enumeration Content (Value); HTTP/REST API, Design Decisions and Modifier Constraints
+    paraphrase: "Content=Value, path suffix /$value, returns (and on PATCH accepts) only the raw values in the Part 1 Value-Only serialization, JSON only, as an unnamed JSON object or array with no idShort-named property at the root; with level=core the direct children appear without values ({} for a collection, [] for a list)."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-Content-Reference
+    section: modifiers
+    clause: Basic Operation Parameters, Enumeration Content (Reference); HTTP/REST API, Design Decisions
+    paraphrase: "Content=Reference, path suffix /$reference, returns only the reference to the requested referable (a shell, a submodel or an element), ignoring its children."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-Content-Path
+    section: modifiers
+    clause: Basic Operation Parameters, Enumeration Content (Path); HTTP/REST API, Design Decisions
+    paraphrase: "Content=Path, path suffix /$path, returns the idShort of the requested submodel, collection, list, annotated relationship or entity and the idShortPaths of its children, in the Part 1 path format."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-Extent
+    section: modifiers
+    clause: Basic Operation Parameters, Enumeration Extent; HTTP/REST API, Design Decisions (blobs)
+    paraphrase: "The Extent modifier, query parameter ?extent=, applies to Blob elements: withoutBlobValue (the default) leaves the Blob content out of the payload, withBlobValue returns it base64-encoded."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-ModifierApplicability
+    section: modifiers
+    clause: Basic Operation Parameters, Applicability of SerializationModifiers; HTTP/REST API, Mapping of Operations (GetSubmodelElementByPath, Note)
+    paraphrase: "Which modifiers a resource accepts is fixed per type: a shell takes content Normal or Reference only; submodels, collections, lists and entities take every level, content and extent value; data elements take content Normal, Metadata, Value and Reference (Blob also both extents); Capability and Operation take Normal and Reference. A path suffix the element does not define (a Capability's /$value) is answered 400 with an error description."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-ModifierConstraints
+    section: modifiers
+    clause: HTTP/REST API, Modifier Constraints; Basic Operation Parameters, Applicability of SerializationModifiers
+    paraphrase: "Modifiers combine under rules: Content=Metadata with Extent=withBlobValue is not allowed, Content=Metadata with any Level is answered 400, Level=deep with Content=Reference is not allowed, POST takes no modifiers, and PUT takes them with the meaning they have on GET except Reference and Path (another clause allows only Extent on PUT)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-StatusCodes
+    section: status
+    clause: HTTP/REST API, Mapping of Status Codes; Data Types for Payload, Generic Status Codes; the OpenAPI responses of the profiles
+    paraphrase: "Generic status codes map to HTTP: 200 success with payload, 201 created (with the created resource and a Location header), 202 accepted, 204 success without payload (updates and deletes), 400 malformed request, 401 missing or invalid credentials, 403 refused authorization, 404 resource not found, 405 method not allowed for that resource, 409 conflict (a resource with the same id or idShort exists), 500 internal error, 501 an operation beyond the supported profiles, 502 bad gateway."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Result
+    section: status
+    clause: Data Types for Payload, General Result Object (Result, Message, MessageTypeEnum)
+    paraphrase: "A failed operation returns a Result object explaining why: a list of Messages, each with a messageType (Info, Warning, Error, Exception) and a text, and optionally a technology-dependent code, a correlationId relating messages across systems, and a timestamp; every failure status except 501 carries one."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-Security
+    section: security
+    clause: Editorial Notes, Alignment with other AAS Specifications (IDTA-01004)
+    paraphrase: "Part 2 is used together with Part 4 Security (IDTA-01004 V3.1): security measures are applied to the API and access control rules are implemented; an implementation supporting only a subset of the access rules states which."
+    applicability: software
+    areas:
+      - 5
+      - 10
+  - id: IDTA01002-OperationRights
+    section: security
+    clause: Annex Operation to RIGHT Mapping (normative)
+    paraphrase: "A security implementation evaluates every HTTP operation against one fixed IDTA-01004 right: reads of resources and values need READ, reads of references, paths and submodel-refs need VIEW, creating POSTs need CREATE, PATCH and replacing PUTs need UPDATE (CREATE when a PUT creates), DELETE needs DELETE, invocations and their status and result need EXECUTE; a request denied for that right is refused whatever the HTTP method."
+    applicability: software
+    areas:
+      - 5
+      - 10
+  - id: IDTA01002-GetSelfDescription
+    section: description
+    clause: API Interfaces, Operation GetSelfDescription; Data Types for Payload, ServiceDescription; Service Specifications and Profiles, Profiles
+    paraphrase: "GET /description returns a ServiceDescription listing, as URIs https://admin-shell.io/aas/API/<major>/<minor>/<Name>ServiceSpecification/SSP-<nnn>, the one or more profiles the server implements in full; a profile is listed only when its API is served at or below that path, a server hosting several lists them all, and a server-wide /description may list everything it offers."
+    applicability: software
+    areas:
+      - 1
+      - 13
+  - id: IDTA01002-GetAllAssetAdministrationShells
+    section: aas-repo
+    clause: API Interfaces, Operation GetAllAssetAdministrationShells; OpenAPI GET /shells (and /shells/$reference)
+    paraphrase: "GET /shells returns all shells of the repository as a paged Result, optionally filtered by createdFrom and updatedFrom (new in V3.2, OR-combined) and combined with limit and cursor; the /$reference suffix returns their references instead."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllAssetAdministrationShellsRecentChanges
+    section: aas-repo
+    clause: API Interfaces, Operation GetAllAssetAdministrationShellsRecentChanges (experimental); Data Types for Payload, Recent Changes; OpenAPI GET /shells/$recent-changes
+    paraphrase: "Experimental: GET /shells/$recent-changes returns a paged list of light change records of shells (id, createdAt, updatedAt, asset ids) created or updated at or after the given dates, the filters AND-combined except createdFrom and updatedFrom, which form an OR group."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: IDTA01002-GetAssetAdministrationShellById
+    section: aas-repo
+    clause: API Interfaces, Operation GetAssetAdministrationShellById; OpenAPI GET /shells/{aasIdentifier} (and /$reference)
+    paraphrase: "GET /shells/{aasIdentifier} returns the shell with that identifier (404 when there is none); the /$reference suffix returns its reference."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllAssetAdministrationShellsByAssetId
+    section: aas-repo
+    clause: API Interfaces, Operation GetAllAssetAdministrationShellsByAssetId; HTTP/REST API, Design Decisions (assetIds); OpenAPI GET /shells?assetIds=
+    paraphrase: "GET /shells?assetIds= returns the shells linked to a global asset id or to specific asset ids; each name-value pair is serialized to JSON and base64url-encoded, every pair given must match on the server, and their order does not change the result."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01002-GetAllAssetAdministrationShellsByIdShort
+    section: aas-repo
+    clause: API Interfaces, Operation GetAllAssetAdministrationShellsByIdShort; OpenAPI GET /shells?idShort=
+    paraphrase: "GET /shells?idShort= returns the shells with that idShort, paged."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PostAssetAdministrationShell
+    section: aas-repo
+    clause: API Interfaces, Operation PostAssetAdministrationShell; OpenAPI POST /shells
+    paraphrase: "POST /shells creates a shell whose id is set in the payload and answers 201 with the created shell; an existing id is a conflict (409)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PutAssetAdministrationShellById
+    section: aas-repo
+    clause: API Interfaces, Operation PutAssetAdministrationShellById; OpenAPI PUT /shells/{aasIdentifier}
+    paraphrase: "PUT /shells/{aasIdentifier} replaces the shell (204) or creates it (201); since V3.2 an id in the body that differs from the path identifier is answered 400."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-DeleteAssetAdministrationShellById
+    section: aas-repo
+    clause: API Interfaces, Operation DeleteAssetAdministrationShellById; OpenAPI DELETE /shells/{aasIdentifier}
+    paraphrase: "DELETE /shells/{aasIdentifier} deletes the shell (204; 404 when there is none)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllSubmodelReferences
+    section: aas
+    clause: API Interfaces, Operation GetAllSubmodelReferences; OpenAPI GET /shells/{aasIdentifier}/submodel-refs
+    paraphrase: "GET /shells/{aasIdentifier}/submodel-refs returns the shell's submodel references, paged."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PostSubmodelReference
+    section: aas
+    clause: API Interfaces, Operation PostSubmodelReference; HTTP/REST API, Mapping of Operations; OpenAPI POST /shells/{aasIdentifier}/submodel-refs
+    paraphrase: "POST …/submodel-refs adds a submodel reference to the shell and answers 201 with it and a Location header ending in /submodel-refs/{base64url submodel id}; a reference already held is a conflict (409)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-DeleteSubmodelReference
+    section: aas
+    clause: API Interfaces, Operation DeleteSubmodelReference; OpenAPI DELETE /shells/{aasIdentifier}/submodel-refs/{submodelIdentifier}
+    paraphrase: "DELETE …/submodel-refs/{submodelIdentifier} removes the reference to that submodel from the shell (204)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAssetInformation
+    section: aas
+    clause: API Interfaces, Operation GetAssetInformation; OpenAPI GET /shells/{aasIdentifier}/asset-information
+    paraphrase: "GET …/asset-information returns the shell's asset information."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01002-PutAssetInformation
+    section: aas
+    clause: API Interfaces, Operation PutAssetInformation; OpenAPI PUT /shells/{aasIdentifier}/asset-information
+    paraphrase: "PUT …/asset-information replaces the shell's asset information (204)."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01002-GetThumbnail
+    section: aas
+    clause: API Interfaces, Operation GetThumbnail; OpenAPI GET /shells/{aasIdentifier}/asset-information/thumbnail
+    paraphrase: "GET …/asset-information/thumbnail returns the thumbnail file of the asset as binary content."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PutThumbnail
+    section: aas
+    clause: API Interfaces, Operation PutThumbnail; OpenAPI PUT /shells/{aasIdentifier}/asset-information/thumbnail
+    paraphrase: "PUT …/asset-information/thumbnail replaces the thumbnail file, uploaded as the binary file part of a multipart request whose filename travels in Content-Disposition (204)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-DeleteThumbnail
+    section: aas
+    clause: API Interfaces, Operation DeleteThumbnail; OpenAPI DELETE /shells/{aasIdentifier}/asset-information/thumbnail
+    paraphrase: "DELETE …/asset-information/thumbnail deletes the thumbnail file (204; 200 is deprecated)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllSubmodels
+    section: sm-repo
+    clause: API Interfaces, Operation GetAllSubmodels; OpenAPI GET /submodels (and /$metadata, /$value, /$reference, /$path)
+    paraphrase: "GET /submodels returns all submodels of the repository as a paged Result, optionally filtered by createdFrom and updatedFrom (new in V3.2), with the level and extent modifiers and the content suffixes."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllSubmodelsRecentChanges
+    section: sm-repo
+    clause: API Interfaces, Operation GetAllSubmodelsRecentChanges (experimental); Data Types for Payload, Recent Changes; OpenAPI GET /submodels/$recent-changes
+    paraphrase: "Experimental: GET /submodels/$recent-changes returns a paged list of light change records of submodels (id, createdAt, updatedAt, semantic ids) created or updated at or after the given dates."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: IDTA01002-GetSubmodelById
+    section: sm-repo
+    clause: API Interfaces, Operation GetSubmodelById and GetSubmodel; OpenAPI GET /submodels/{submodelIdentifier} (and its content suffixes)
+    paraphrase: "GET /submodels/{submodelIdentifier} returns the submodel with that identifier (404 when there is none), with the level and extent modifiers and the /$metadata, /$value, /$reference and /$path suffixes."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllSubmodelsBySemanticId
+    section: sm-repo
+    clause: API Interfaces, Operation GetAllSubmodelsBySemanticId; HTTP/REST API, Design Decisions (semanticId); OpenAPI GET /submodels?semanticId=
+    paraphrase: "GET /submodels?semanticId= returns the submodels whose semanticId or supplementalSemanticIds hold the given reference, serialized to JSON and base64url-encoded, paged."
+    applicability: software
+    areas:
+      - 1
+      - 8
+  - id: IDTA01002-GetAllSubmodelsByIdShort
+    section: sm-repo
+    clause: API Interfaces, Operation GetAllSubmodelsByIdShort; OpenAPI GET /submodels?idShort=
+    paraphrase: "GET /submodels?idShort= returns the submodels with that idShort, paged."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PostSubmodel
+    section: sm-repo
+    clause: API Interfaces, Operation PostSubmodel; OpenAPI POST /submodels
+    paraphrase: "POST /submodels creates a submodel whose id is set in the payload and answers 201 with the created submodel and a Location header; an existing id is a conflict (409)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PutSubmodelById
+    section: sm-repo
+    clause: API Interfaces, Operation PutSubmodelById and PutSubmodel; OpenAPI PUT /submodels/{submodelIdentifier}
+    paraphrase: "PUT /submodels/{submodelIdentifier} replaces the submodel with the one sent (204) or creates it (201)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PatchSubmodelById
+    section: sm-repo
+    clause: API Interfaces, Operation PatchSubmodelById and PatchSubmodel; OpenAPI PATCH /submodels/{submodelIdentifier} (and /$metadata, /$value)
+    paraphrase: "PATCH /submodels/{submodelIdentifier} updates the submodel from a submodel sent in Normal form, or from its metadata (/$metadata) or its Value-Only values (/$value), under the PATCH rules, and answers 204."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-DeleteSubmodelById
+    section: sm-repo
+    clause: API Interfaces, Operation DeleteSubmodelById; OpenAPI DELETE /submodels/{submodelIdentifier}
+    paraphrase: "DELETE /submodels/{submodelIdentifier} deletes the submodel (204; 404 when there is none)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetAllSubmodelElements
+    section: sm
+    clause: API Interfaces, Operation GetAllSubmodelElements; OpenAPI GET /submodels/{submodelIdentifier}/submodel-elements (and its content suffixes)
+    paraphrase: "GET …/submodel-elements returns all elements of the submodel with their hierarchy as a paged Result, with the level and extent modifiers and the content suffixes."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetSubmodelElementByPath
+    section: sm
+    clause: API Interfaces, Operation GetSubmodelElementByPath; OpenAPI GET /submodels/{submodelIdentifier}/submodel-elements/{idShortPath} (and its content suffixes)
+    paraphrase: "GET …/submodel-elements/{idShortPath} returns the element at that path (404 when there is none), with the modifiers its type admits."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetSubmodelElementValueByPath
+    section: sm
+    clause: API Interfaces, Operation GetSubmodelElementValueByPath; OpenAPI GET /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$value
+    paraphrase: "GET …/submodel-elements/{idShortPath}/$value returns the value of the element at that path in the Part 1 Value-Only serialization."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-GetFileByPath
+    section: sm
+    clause: API Interfaces, Operation GetFileByPath; Data Types for Payload, File Content; OpenAPI GET …/submodel-elements/{idShortPath}/attachment
+    paraphrase: "GET …/submodel-elements/{idShortPath}/attachment returns the file a File element holds as binary content (405 for an element that is no File)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PutFileByPath
+    section: sm
+    clause: API Interfaces, Operation PutFileByPath; OpenAPI PUT …/submodel-elements/{idShortPath}/attachment
+    paraphrase: "PUT …/attachment replaces the file of a File element with the uploaded binary file part, its filename in Content-Disposition (204)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-DeleteFileByPath
+    section: sm
+    clause: API Interfaces, Operation DeleteFileByPath; OpenAPI DELETE …/submodel-elements/{idShortPath}/attachment
+    paraphrase: "DELETE …/attachment deletes the file of a File element (200)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PostSubmodelElement
+    section: sm
+    clause: API Interfaces, Operation PostSubmodelElement; OpenAPI POST /submodels/{submodelIdentifier}/submodel-elements
+    paraphrase: "POST …/submodel-elements creates an element as a direct child of the submodel, its idShort set in the payload, and answers 201 with the created element; an idShort already used there is a conflict (409)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PostSubmodelElementByPath
+    section: sm
+    clause: API Interfaces, Operation PostSubmodelElementByPath; OpenAPI POST …/submodel-elements/{idShortPath}
+    paraphrase: "POST …/submodel-elements/{idShortPath} creates an element below the container at that path (collection, list, entity or annotated relationship) and answers 201 with it; inside a list it is appended at the end without an idShort, elsewhere its idShort is set in the payload and a duplicate is a conflict (409)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PutSubmodelElementByPath
+    section: sm
+    clause: API Interfaces, Operation PutSubmodelElementByPath; OpenAPI PUT …/submodel-elements/{idShortPath}
+    paraphrase: "PUT …/submodel-elements/{idShortPath} replaces the element at that path with the one sent (204) or creates it there (201)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PatchSubmodelElementByPath
+    section: sm
+    clause: API Interfaces, Operation PatchSubmodelElementByPath; OpenAPI PATCH …/submodel-elements/{idShortPath} (and /$metadata)
+    paraphrase: "PATCH …/submodel-elements/{idShortPath} updates the element at that path from an element sent in Normal form or from its metadata (/$metadata), under the PATCH rules, and answers 204."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-PatchSubmodelElementValueByPath
+    section: sm
+    clause: API Interfaces, Operation PatchSubmodelElementValueByPath; OpenAPI PATCH …/submodel-elements/{idShortPath}/$value
+    paraphrase: "PATCH …/submodel-elements/{idShortPath}/$value sets the value of the element at that path from the Part 1 Value-Only serialization and answers 204."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01002-DeleteSubmodelElementByPath
+    section: sm
+    clause: API Interfaces, Operation DeleteSubmodelElementByPath; OpenAPI DELETE …/submodel-elements/{idShortPath}
+    paraphrase: "DELETE …/submodel-elements/{idShortPath} deletes the element at that path (204; 404 when there is none)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-InvokeOperationSync
+    section: sm
+    clause: API Interfaces, Operation InvokeOperationSync; HTTP/REST API, Asynchronous Invocation; OpenAPI POST …/{idShortPath}/invoke (and /$value)
+    paraphrase: "POST …/{idShortPath}/invoke runs the Operation element at that path with the input and inoutput arguments sent and keeps the connection open until it returns the OperationResult (200), a timeout or an error; /invoke/$value does the same with Value-Only arguments; any other element type is answered 405."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-InvokeOperationAsync
+    section: sm
+    clause: API Interfaces, Operation InvokeOperationAsync; HTTP/REST API, Asynchronous Invocation; OpenAPI POST …/{idShortPath}/invoke-async (and /$value)
+    paraphrase: "POST …/{idShortPath}/invoke-async starts the Operation and answers 202 at once with a link to …/operation-status/{handleId}; errors found at once are answered directly (400), later ones in the result."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetOperationAsyncStatus
+    section: sm
+    clause: API Interfaces, Operation GetOperationAsyncStatus; HTTP/REST API, Asynchronous Invocation; OpenAPI GET …/operation-status/{handleId}
+    paraphrase: "GET …/operation-status/{handleId} answers 200 with executionState Running while the operation runs and 302 with a Location header pointing at …/operation-results/{handleId} once it finished."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01002-GetOperationAsyncResult
+    section: sm
+    clause: API Interfaces, Operation GetOperationAsyncResult; HTTP/REST API, Asynchronous Invocation; OpenAPI GET …/operation-results/{handleId} (and /$value)
+    paraphrase: "GET …/operation-results/{handleId} returns the OperationResult of the finished invocation with 200, executionState Failed when the server found an error only while running it."
+    applicability: software
+    areas:
+      - 1
