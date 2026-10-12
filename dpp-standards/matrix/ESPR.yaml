@@ -900,7 +900,7 @@ criteria:
           ref: carriers.qr-quiet-zone-four-modules
           result: failed
           date: 2026-10-12
-      notes: "Software part: a carrier the operator can place on product, packaging or documentation as the delegated act will say. Credited: a QR Code of every permalink and of the Digital Link in the back office, with its URL to copy. Missing: no carrier output to print or embed (no image download, print layout or size choice) and a quiet zone of one module (EN18220-5.1, 6.2.3). Capped at Partial by Annex ZA through EN18220-5.4.5(2), the mandatory clause of 5.4 (Partial); 5.7.2 (Partial) is a statement and 5.4.1 and 5.7.1 are operator duties, none of which caps (#489). No delegated act names the placement yet."
+      notes: "Software part: a carrier the operator can place on product, packaging or documentation as the delegated act will say. Credited: a QR Code of every permalink and of the Digital Link in the back office, with its URL to copy. Missing: no carrier output to print or embed (no download control, print layout or size choice) and a generated image with a quiet zone of about one module (EN18220-5.1, 6.2.3). Capped at Partial by Annex ZA through EN18220-5.4.5(2), the mandatory clause of 5.4 (Partial); 5.7.2 (Partial) is a statement and 5.4.1 and 5.7.1 are operator duties, none of which caps (#489). No delegated act names the placement yet."
   - id: ESPR-Art10(1)(c)
     section: Art10
     clause: Art. 10(1)(c)
@@ -928,10 +928,6 @@ criteria:
         - type: code
           ref: apps/client/src/components/QrCode.vue
           note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
-        - type: check
-          ref: carriers.qr-decodes-to-passport-link
-          result: passed
-          date: 2026-10-12
         - type: check
           ref: carriers.qr-quiet-zone-four-modules
           result: failed
@@ -2142,17 +2138,13 @@ criteria:
           ref: apps/client/src/components/QrCode.vue
           note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
         - type: check
-          ref: carriers.qr-decodes-to-passport-link
-          result: passed
-          date: 2026-10-12
-        - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
           date: 2026-10-12
         - type: manual
           ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
           date: 2026-10-12
-      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met; that restricted circulation numbers pass is graded under 4.1.2(2)); the QR Code carries that key, decoded whole (EN18220-6.2.4.1 Met). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023). Parts 1 and 5 are not relevant to products. The carrier's quiet zone (EN18220-6.2.3, #489) is no ISO/IEC 15459 matter (#518)."
+      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met; that restricted circulation numbers pass is graded under 4.1.2(2)); the QR Code can carry that key (EN18220-6.2.4.1 Met). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023). Parts 1 and 5 are not relevant to products. The carrier's quiet zone (EN18220-6.2.3, #489) is no ISO/IEC 15459 matter (#518)."
   - id: ESPR-AnnexIII-para3
     section: AnnexIII
     clause: Annex III third paragraph

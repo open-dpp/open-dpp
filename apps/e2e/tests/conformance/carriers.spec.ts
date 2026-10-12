@@ -90,9 +90,10 @@ check(
     criteria: [
       "EN18220-5.2.1-sub1",
       "EN18220-5.2.3-sub1",
+      "EN18220-5.3.4-sub1",
       "EN18220-5.3.4-sub2",
       "EN18220-5.6.1",
-      "EN18220-5.8.1",
+      "EN18220-5.8.1-sub1",
       "EN18220-5.8.2",
       "EN18220-6.1(2)",
       "EN18220-6.2.3",
@@ -100,8 +101,9 @@ check(
       "EN18219-4.5.2(1)",
       "EN18246-5.2.1(4)",
       "ESPR-Art10(1)(a)",
-      "ESPR-Art10(1)(c)",
-      "ESPR-AnnexIII-para2",
+      "BATT-Art13(6)",
+      "BATT-Art13(6)(a)",
+      "BATT-Art77(3)-sub1",
     ],
   },
   async ({ page, request, browser }) => {
@@ -139,6 +141,7 @@ check(
       "EN18246-5.2.1(4)",
       "ESPR-Art10(1)(b)",
       "ESPR-Art10(1)(c)",
+      "BATT-Art13(6)",
     ],
   },
   async ({ page, request }) => {

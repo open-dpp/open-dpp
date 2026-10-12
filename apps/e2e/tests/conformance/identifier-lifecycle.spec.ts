@@ -230,10 +230,18 @@ check(
     id: "identifiers.published-permalink-survives-config-deletion",
     title:
       "a published permalink keeps answering after the presentation configuration it names is deleted",
-    criteria: ["EN18220-5.2.1-sub1", "EN18219-4.5.2(1)", "EN18219-4.2.2(1)", "ESPR-Art10(1)(a)"],
+    criteria: [
+      "EN18220-5.2.1-sub1",
+      "EN18219-4.5.2(1)",
+      "EN18219-4.2.2(1)",
+      "ESPR-Art10(1)(a)",
+      "BATT-Art13(6)(a)",
+      "BATT-Art77(3)-sub1",
+    ],
   },
   async ({ request, browser }) => {
-    // A published passport cannot be deleted: the Check archives its own passport at the end.
+    // A published passport cannot be deleted: the Check archives its own passport at the end, so each
+    // run leaves one archived passport in the subject's organisation.
     const { orgId } = readSubject();
     const { passportId } = await draftPassport(request, orgId);
     const published = await request.put(`${ApiBase}/passports/${passportId}/status`, {

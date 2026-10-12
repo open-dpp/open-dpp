@@ -117,6 +117,8 @@ check(
       "EN18219-4.5.2(1)",
       "EN18219-4.2.2(1)",
       "ESPR-Art10(1)(a)",
+      "BATT-Art13(6)(a)",
+      "BATT-Art77(3)-sub1",
     ],
   },
   async ({ request }) => {

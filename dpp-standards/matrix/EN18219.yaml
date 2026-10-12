@@ -614,7 +614,7 @@ criteria:
           ref: identifiers.published-permalink-survives-config-deletion
           result: failed
           date: 2026-10-12
-      notes: "Graded by pointing at EN 18220 (run 2026-10-12-en18220). Credited: the identifier is read back from the QR Code by an independent decoder and leads to the passport (EN18220-5.2.1-sub1, Check carriers.qr-decodes-to-passport-link). Missing: the carrier is no conforming EN 18220 carrier, an on-screen canvas with a quiet zone of one module and no print output (EN18220-5.1, 5.6.1, 6.2.3, #489), and two defects break the tie from carrier to passport for some identifiers (bugs #1049, #1050, EN18220-5.2.1-sub1, #518)."
+      notes: "Graded by pointing at EN 18220 (run 2026-10-12-en18220). Credited: the identifier is read back from the QR Code by an independent decoder and leads to the passport (EN18220-5.2.1-sub1, Check carriers.qr-decodes-to-passport-link). Missing: the carrier is no conforming EN 18220 carrier, a back-office canvas whose image keeps a quiet zone of about one module, with no print output (EN18220-5.1, 5.6.1, 6.2.3, #489), and two defects break the tie from carrier to passport for some identifiers (bugs #1049, #1050, EN18220-5.2.1-sub1, #518)."
   - id: EN18219-4.5.2(2)
     section: "4.5"
     clause: 4.5.2(2)

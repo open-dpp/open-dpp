@@ -1,0 +1,90 @@
+# Earlier Assessments of BATT, moved here by matrix:supersede. Append-only: never edit or delete an entry.
+
+standard: BATT
+entries:
+  - criterion: BATT-Art13(6)
+    date: 2026-09-06
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    validator: agent:conformance-review
+    status: Partial
+    operational: true
+    evidence:
+      - type: code
+        ref: apps/client/src/components/QrCode.vue
+        note: client-side QR generation
+    notes: "Client-side QR generation exists, but not the Annex VI Part C battery-label format (high contrast, specified layout). Tracked by #489."
+    gapIssue: 489
+  - criterion: BATT-Art13(6)(a)
+    date: 2026-09-06
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    validator: agent:conformance-review
+    status: Met
+    operational: true
+    evidence:
+      - type: code
+        ref: apps/client/src/components/QrCode.vue
+        note: QR code of the permalink/GS1 link
+      - type: code
+        ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+        note: resolves the scanned key to the passport
+      - type: test
+        ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+      - type: doc
+        ref: docs/guides/passports.md
+    notes: A scanned QR code carrying the GS1 Digital Link resolves to the passport's public presentation view; the resolver E2E test proves the chain. The Annex VI Part C carrier format itself is tracked as a Gap (Art. 13(6) chapeau).
+  - criterion: BATT-Art13(6)(b)
+    date: 2026-09-06
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    validator: agent:conformance-review
+    status: Partial
+    operational: true
+    evidence:
+      - type: code
+        ref: apps/main/src/templates/domain/template.ts
+        note: reusable AAS template per organisation
+      - type: code
+        ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+        note: full AAS submodel-element type set
+    notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+    gapIssue: 522
+  - criterion: BATT-Art77(3)-sub1
+    date: 2026-09-06
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    validator: agent:conformance-review
+    status: Met
+    operational: true
+    evidence:
+      - type: code
+        ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+        note: QR -> UPI -> passport
+      - type: code
+        ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+        note: operator-attributed UPI, model/batch/item granularity
+      - type: test
+        ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+      - type: doc
+        ref: docs/guides/passports.md
+      - type: check
+        ref: resolver.redirect-published
+        result: passed
+        date: 2026-10-12
+    notes: The passport is reached through a GS1 Digital Link QR resolving to a unique product identifier the operator attributes (GTIN/batch/serial, item-level granularity supported). The resolver.redirect-published Check evidences the redirect.
+  - criterion: BATT-Art77(3)-sub2
+    date: 2026-09-06
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    validator: agent:conformance-review
+    status: Partial
+    operational: true
+    evidence:
+      - type: code
+        ref: packages/dto/src/unique-product-identifiers/gs1
+        note: GS1 Digital Link AI table/parser/builder
+      - type: code
+        ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+        note: operator-attributed UPI
+      - type: check
+        ref: identifiers.gs1-syntax-valid
+        result: passed
+        date: 2026-10-12
+    notes: "GS1 Digital Link identifiers are used and validate in the GS1 Syntax Engine (GS1 is an ISO/IEC 15459 issuing scheme); ISO/IEC 15459 conformance is not explicitly asserted and the standard is gated/unread. Tracked by #518."
+    gapIssue: 518
