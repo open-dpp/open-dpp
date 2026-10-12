@@ -1,5 +1,11 @@
 # @open-dpp/dto
 
+## 6.2.1
+
+### Patch Changes
+
+- [#1019](https://github.com/open-dpp/open-dpp/pull/1019) [`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83) Thanks [@mr42](https://github.com/mr42)! - Published passports can be exported to upload them to the EU registry.
+
 ## 6.2.0
 
 ### Minor Changes
