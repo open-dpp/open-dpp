@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useZip } from "./zip.ts";
+import { downloadZip } from "./zip.ts";
 
-describe("useZip", () => {
+describe("downloadZip", () => {
   const createObjectURL = vi.fn();
   const revokeObjectURL = vi.fn();
   let clickedLinks: HTMLAnchorElement[];
@@ -20,7 +20,6 @@ describe("useZip", () => {
   });
 
   it("downloads the blob as file with the given name and cleans up", () => {
-    const { downloadZip } = useZip();
 
     downloadZip(new Blob(["zip"]), "export.zip");
 
@@ -36,7 +35,6 @@ describe("useZip", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {
       throw new Error("blocked");
     });
-    const { downloadZip } = useZip();
 
     expect(() => downloadZip(new Blob(["zip"]), "export.zip")).toThrow("blocked");
 

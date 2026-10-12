@@ -7,7 +7,7 @@ import apiClient from "../lib/api-client.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useNotificationStore } from "../stores/notification.ts";
-import { useZip } from "./zip.ts";
+import { downloadZip } from "../lib/zip.ts";
 
 /**
  * Downloads the published passports matching the filter as ZIP of EU registry files.
@@ -17,7 +17,6 @@ export function useRegistryExport() {
   const { t } = useI18n();
   const notificationStore = useNotificationStore();
   const errorHandlingStore = useErrorHandlingStore();
-  const { downloadZip } = useZip();
   const exporting = ref(false);
 
   /** Returns whether the ZIP was downloaded. */

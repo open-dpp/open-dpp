@@ -3,7 +3,7 @@ import { useI18n } from "vue-i18n";
 import type { ActivityDto, ActivityFilterDto, PagingParamsDto } from "@open-dpp/dto";
 import type { PagingResult } from "./pagination.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
-import { useZip } from "./zip.ts";
+import { downloadZip } from "../lib/zip.ts";
 import { type DigitalProductDocumentTypeType } from "../lib/digital-product-document.ts";
 import { getDigitalProductDocNamespace } from "./digital-product-document.ts";
 import { ref } from "vue";
@@ -16,7 +16,6 @@ import { z } from "zod";
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 export function useActivityHistory(type: DigitalProductDocumentTypeType) {
-  const { downloadZip } = useZip();
   const activities = ref<ActivityDto[]>([]);
   const route = useRoute();
   const router = useRouter();
