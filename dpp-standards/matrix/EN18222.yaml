@@ -631,7 +631,7 @@ criteria:
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
       status: Partial
-      gapIssue: 1052
+      operational: false
       evidence:
         - type: code
           ref: apps/main/src/passports/domain/registry-export-item.ts
@@ -639,7 +639,8 @@ criteria:
         - type: code
           ref: apps/main/src/passports/presentation/passport.controller.ts
           note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
-      notes: "Credited: identifiers are strings (UUIDs, permalink slugs, GS1 Digital Links). Missing: the registry entry cannot be filled. open-dpp's registry file names only the unique product identifier, taken from the oldest permalink. It has no passport id, no unique operator identifier, neither the economic operator's nor the back-up operator's (no such identifiers exist, #1023, #596), and no DPP API endpoint (no EN 18222 API exists). The DigitalProductPassport, DataElement, Identifier and Timestamp types are EN 18223's: graded on its rows in #762, and this row is re-read then."
+      notes: "Re-read with the EN 18223 rows (#762). Credited: identifiers are strings (UUIDs, permalink slugs, GS1 Digital Links). Missing: the DigitalProductPassport type of Table 11 is EN 18223's, whose header is missing in open-dpp or only partly there (the EN18223-4.1.2.1(5) rows, #1057, #597, #1023), and whose data elements open-dpp holds as AAS elements (the class rows, Partial); EN 18223 defines no Identifier or Timestamp type, so those rest on strings and on the one timestamp lastUpdated, which never advances (bug #1056). The registry entry cannot be filled: open-dpp's registry file names only the unique product identifier, taken from the oldest permalink; it has no passport id, no unique operator identifier of the economic operator or of the back-up operator (#1023, #596), and no DPP API endpoint (#1052). EN 18222's registry entry calls itself a DPP header but names other attributes than EN 18223's Table 1 (text finding)."
+      gapIssue: 1052
   - id: EN18222-7.2(1)
     section: "7"
     clause: "7.2(1)"
@@ -846,7 +847,7 @@ criteria:
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
       status: Gap
-      gapIssue: 1052
+      operational: false
       evidence:
         - type: code
           ref: apps/main/src/passports/presentation/passport.controller.ts
@@ -854,7 +855,8 @@ criteria:
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
           note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
-      notes: "No route takes a representation parameter. Reads answer AAS JSON or open-dpp's export, neither of them the compressed or full representation of EN 18223 (the payload types are EN 18223's, assessed in #762)."
+      notes: Re-read with the EN 18223 rows (#762). No route takes a representation parameter. Reads answer AAS JSON or open-dpp's export. The nearest thing to EN 18223's compressed form is the AAS values read (EN18223-5.2.2(2) Partial) and to its full form the full AAS JSON (EN18223-A Partial), neither of them selectable by the flag. Annex B, to which 8.1 also points the full representation, is EN 18223's compressed XML (text finding of both files).
+      gapIssue: 1052
   - id: EN18222-8.2
     section: "8.2"
     clause: "8.2"

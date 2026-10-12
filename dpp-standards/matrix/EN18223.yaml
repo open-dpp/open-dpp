@@ -36,6 +36,25 @@ criteria:
     areas:
       - 8
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: "SubmodelElementList: ordered items with typeValueListElement and optional valueTypeListElement; the item type is checked on single adds only (bug #1054)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a SubmodelElementList declared typeValueListElement Property, posted with a SubmodelElementCollection item, answered 201; a list declared valueTypeListElement Double with a String item answered 201; an empty SubmodelElementCollection answered 201."
+          date: 2026-10-12
+        - type: check
+          ref: model.list-items-one-type
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: a SubmodelElementList declares the type of its items (typeValueListElement, and valueTypeListElement for properties) and refuses a mismatching item added on its own. Missing: a list posted with its items is stored unchecked, so a list of properties can hold a collection and a list of doubles a string (bug #1054; Check model.list-items-one-type fails), and no MultiValuedDataElement is offered (#1057)."
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(digitalProductPassportId)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: digitalProductPassportId"
@@ -43,6 +62,28 @@ criteria:
     applicability: software
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: every passport has an id, a string (a version 4 UUID), which the public permalink read gives as passport.id. Missing: no attribute digitalProductPassportId; the AAS shell has an id of its own, so the passport's AAS content never names the passport's id; no EN 18223 serialisation carries it (5.2.4(1); Check format.dpp-header-published fails)."
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(uniqueProductIdentifier)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: uniqueProductIdentifier"
@@ -50,6 +91,28 @@ criteria:
     applicability: software
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: a passport holds any number of unique product identifiers (permalink URL, GS1 Digital Link); none is an attribute of the passport
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: a passport can hold unique product identifiers, its permalink URL and a GS1 Digital Link, both URLs that lead to the passport (EN18219-4.3.2(2) Met). Missing: none is an attribute of the passport or appears in its JSON; a passport may hold none or several where Table 1 asks for exactly one; the EN 18219 format is met only in part (EN18219-4.3.2(1) Partial, #518)."
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(granularity)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: granularity, with 4.1.2.2"
@@ -58,6 +121,25 @@ criteria:
     areas:
       - 3
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: a passport holds any number of unique product identifiers (permalink URL, GS1 Digital Link); none is an attribute of the passport
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: Mandatory. No passport records whether it describes a model, a batch or an item; a GS1 identity implies a level only through its keys (EN18219-4.4.2 Partial, ESPR-Art10(1)(f)). Check format.dpp-header-published fails.
+      gapIssue: 597
   - id: EN18223-4.1.2.1(5)(dppSchemaVersion)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: dppSchemaVersion"
@@ -66,6 +148,25 @@ criteria:
     areas:
       - 8
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: "members' export: one JSON object, open-dpp's envelope (format version 6.0) around an AAS environment"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: Mandatory. Nothing names the reference standard a passport's schema follows. The members' export carries version 6.0 of open-dpp's own export format, outside the passport's data, and the administration version of an AAS shell counts content versions, not a schema. Check format.dpp-header-published fails.
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(dppStatus)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: dppStatus"
@@ -73,6 +174,28 @@ criteria:
     applicability: software
     areas:
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: statuses Draft, Published and Archived; publish, archive, restore
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: each passport has a status (Draft, Published, Archived), which the public permalink read gives as lastStatusChange.currentStatus. Missing: no attribute dppStatus; the values differ from the examples (active, inactive, archived, invalid), and nothing can mark a passport inactive or invalid. Check format.dpp-header-published fails."
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(lastUpdated)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: lastUpdated"
@@ -80,6 +203,32 @@ criteria:
     applicability: software
     areas:
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: model.last-updated-advances
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: the public permalink read gives updatedAt, a UTC timestamp in the ISO 8601 extended format. Missing: it stays at the creation time whatever changes (bug #1056; Check model.last-updated-advances fails), so it never tells the latest update, and it is not named lastUpdated."
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(economicOperatorId)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: economicOperatorId"
@@ -87,6 +236,25 @@ criteria:
     applicability: software
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. open-dpp knows the owning organisation only by its internal tenant id, which the public permalink read gives as organizationId; no operator identifier in an EN 18219 scheme exists (EN18219-6.2.2(a) and the other scheme rows Gap, #1023). Check format.dpp-header-published fails."
+      gapIssue: 1023
   - id: EN18223-4.1.2.1(5)(facilityId)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: facilityId"
@@ -94,6 +262,18 @@ criteria:
     applicability: software
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+      notes: Optional attribute; never caps a law row. No facility identifier exists (#1023).
+      gapIssue: 1023
   - id: EN18223-4.1.2.1(5)(contentSpecificationIds)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: contentSpecificationIds"
@@ -101,6 +281,18 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+      notes: Optional attribute; never caps a law row. Nothing references the horizontal or product-type content specification a passport follows; a passport records only the template it was made from (templateId), an object of the operator's organisation, not a specification.
+      gapIssue: 1057
   - id: EN18223-4.1.2.1(6)-sub1
     section: "4.1.2.1"
     clause: "4.1.2.1(6), first requirement"
@@ -108,6 +300,24 @@ criteria:
     applicability: software
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's id and its draft twin's id, minted in this run, are distinct version 4 UUIDs."
+          date: 2026-10-12
+        - type: check
+          ref: model.passport-id-globally-unique
+          result: passed
+          date: 2026-10-12
+      notes: Mandatory. Passport ids are version 4 UUIDs from crypto.randomUUID, 122 random bits, unique worldwide by construction (Check model.passport-id-globally-unique). That the id is not published as digitalProductPassportId is graded on 4.1.2.1(5)(digitalProductPassportId).
   - id: EN18223-4.1.2.1(6)-sub2
     section: "4.1.2.1"
     clause: "4.1.2.1(6), second requirement"
@@ -115,6 +325,21 @@ criteria:
     applicability: software
     areas:
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: a passport holds any number of unique product identifiers (permalink URL, GS1 Digital Link); none is an attribute of the passport
+      notes: Recommendation; never caps a law row. The passport id is a bare UUID, not a URI. The permalink URL and the GS1 Digital Link that lead to a passport are URLs, but they identify its presentation and its product, not the passport instance.
+      gapIssue: 1057
   - id: EN18223-4.1.2.3(elementId)-sub1
     section: "4.1.2.3"
     clause: "4.1.2.3, Table 2: elementId, mandatory part"
@@ -122,6 +347,31 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: addSubmodelElementOrFail refuses a second element with the same idShort, for elements added one by one
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: "fromPlain builds a posted submodel's elements without the idShort check (bug #1054)"
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: adding a second element with an existing idShort throws
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a submodel posted with two Properties of idShort A answered 201 and kept both; GET of path A answered the first, $value answered {"A": "second"}; a second submodel with an idShort already used answered 201; adding an element with an existing idShort one by one answered 400 ("already exists").'
+          date: 2026-10-12
+        - type: check
+          ref: model.element-ids-unique-on-create
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: every element has an idShort, a string; adding an element refuses a second one with the same idShort at its level (unit test), and a path of dot-separated idShorts below the submodel addresses an element. Missing: a submodel, collection or list posted with its elements is stored with duplicates, and two submodels of one passport may share an idShort; the path read then answers the first duplicate while the values read keeps the second (bug #1054; Check model.element-ids-unique-on-create fails). The attribute is called idShort, not elementId (5.2.2(1))."
+      gapIssue: 1057
   - id: EN18223-4.1.2.3(elementId)-sub2
     section: "4.1.2.3"
     clause: "4.1.2.3, Table 2: elementId, recommendation"
@@ -129,6 +379,21 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: addSubmodelElementOrFail refuses a second element with the same idShort, for elements added one by one
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a submodel posted with two Properties of idShort A answered 201 and kept both; GET of path A answered the first, $value answered {"A": "second"}; a second submodel with an idShort already used answered 201; adding an element with an existing idShort one by one answered 400 ("already exists").'
+          date: 2026-10-12
+      notes: "Recommendation; never caps a law row. An operator can keep idShorts unique across a passport by naming them so, but nothing checks it, and even the mandatory check at one level leaks (bug #1054)."
+      gapIssue: 1057
   - id: EN18223-4.1.2.3(dictionaryReference)
     section: "4.1.2.3"
     clause: "4.1.2.3, Table 2: dictionaryReference"
@@ -137,6 +402,24 @@ criteria:
     areas:
       - 8
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds (AAS References) on every element
+        - type: code
+          ref: apps/client/src/components/aas/PropertyEditor.vue
+          note: the editor offers no field for semanticId
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property with a semanticId of key GlobalReference https://dictionary.example/maxPressure was stored and returned (201); the public full read of the subject shows semanticId null on every element."
+          date: 2026-10-12
+      notes: "Optional attribute; never caps a law row. Credited: every element can carry a semanticId, an AAS Reference whose key holds the definition's identifier; the API accepts and returns it, the public full read shows it. Missing: the editor has no field for it, so an operator working in the UI cannot set one; no template ships one; it is a Reference object, not a string; nothing resolves it against a repository (#826)."
+      gapIssue: 826
   - id: EN18223-4.1.2.4(2)
     section: "4.1.2.3"
     clause: "4.1.2.4(2)"
@@ -144,6 +427,21 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+          note: "SubmodelElementCollection: named elements of any kind, nestable; fromPlain skips the idShort check and accepts an empty collection"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a SubmodelElementList declared typeValueListElement Property, posted with a SubmodelElementCollection item, answered 201; a list declared valueTypeListElement Double with a String item answered 201; an empty SubmodelElementCollection answered 201."
+          date: 2026-10-12
+      notes: "Mandatory. Credited: a SubmodelElementCollection holds named elements of any kind, nested collections included, each with idShort and semanticId. Missing: an empty collection is stored (201), where at least one element is required; no DataElementCollection is offered (#1057)."
+      gapIssue: 1057
   - id: EN18223-4.1.2.5
     section: "4.1.2.3"
     clause: "4.1.2.5, Table 3"
@@ -151,6 +449,25 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/property.ts
+          note: "Property: one value, stored as a string, and a mandatory valueType; validateValue checks only Double, Float, DateTime, Boolean and AnyUri (bug #1055)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: Integer abc and 1.5, Decimal x, Date not-a-date and 2026-02-30 were stored (201); Double x and a DateTime without offset were refused (400)."
+          date: 2026-10-12
+        - type: check
+          ref: model.typed-values-checked
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: a Property holds one value and a mandatory value type, stricter than the optional valueDataType. Missing: the value is always a string, never another JSON type (5.2.3-sub1), and it is checked against its type only for Double, Float, DateTime, Boolean and AnyUri, so an Integer may hold abc and a Date not-a-date (bug #1055; Check model.typed-values-checked fails), which defeats a type meant for interpreting the value."
+      gapIssue: 1057
   - id: EN18223-4.1.2.6
     section: "4.1.2.3"
     clause: "4.1.2.6, Table 4"
@@ -158,6 +475,21 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: "SubmodelElementList: ordered items with typeValueListElement and optional valueTypeListElement; the item type is checked on single adds only (bug #1054)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a SubmodelElementList declared typeValueListElement Property, posted with a SubmodelElementCollection item, answered 201; a list declared valueTypeListElement Double with a String item answered 201; an empty SubmodelElementCollection answered 201."
+          date: 2026-10-12
+      notes: "Mandatory. Credited: a SubmodelElementList is an ordered list of elements with a declared item type and, for properties, a value type. Missing: the item type is not enforced when the list is posted with its items (bug #1054, graded on 4.1.2.1(4)(d)); no MultiValuedDataElement is offered (#1057). Table 4 allows an empty list, the prose does not (text finding); open-dpp stores empty lists."
+      gapIssue: 1057
   - id: EN18223-4.1.2.7
     section: "4.1.2.3"
     clause: "4.1.2.7, Table 5"
@@ -166,6 +498,21 @@ criteria:
     areas:
       - 8
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: "File: contentType and value (a media id for an upload, or any path or URL); no language"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a File with value https://example.com/manual.pdf was stored (201); the subject's uploaded image and PDF hold media ids, which $value returns as {contentType, value: <media id>}."
+          date: 2026-10-12
+      notes: "Mandatory; Annex ZA maps 4.1.2.7 to ESPR Art. 11(d). Credited: a File element carries a media type (contentType, required) and a value that may be a URL (a File holding an https URL is stored), and its displayName can serve as the title. Missing: an uploaded document's value is a media id, not a URL; the public view turns it into a download link, but the passport's data never hold the URL; a File has no language; no RelatedResource is offered (#1057)."
+      gapIssue: 1057
   - id: EN18223-4.1.2.8.1
     section: "4.1.2.3"
     clause: "4.1.2.8.1"
@@ -174,6 +521,21 @@ criteria:
     areas:
       - 8
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: "MultiLanguageProperty: a list of language texts with unique languages"
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: the public view renders no MultiLanguageProperty value (#838)
+      notes: "Mandatory; Annex ZA maps it to ESPR Art. 7(8). Credited: a MultiLanguageProperty holds one text per language, each language at most once. Missing: its values cannot be entered in the editor and the public view does not render them (#838)."
+      gapIssue: 838
   - id: EN18223-4.1.2.8.2
     section: "4.1.2.3"
     clause: "4.1.2.8.2, Table 6"
@@ -182,6 +544,28 @@ criteria:
     areas:
       - 8
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/language-enum.ts
+          note: 29 bare language codes, no country part, Irish and Maltese missing; BcpLanguageTagSchema has no consumer
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: "MultiLanguageProperty: a list of language texts with unique languages"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: MultiLanguageProperty texts tagged en-GB, de-AT, en-gb, ga and mt were refused (400), el and en accepted (201)."
+          date: 2026-10-12
+        - type: check
+          ref: model.language-tag-with-country
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory; Annex ZA maps it to ESPR Art. 7(8). Credited: each language text holds a string and a language code. Missing: the language is one of 29 bare codes; a tag with a country part (en-GB, de-AT) is refused (Check model.language-tag-with-country fails), and so are Irish and Maltese; a BCP 47 validator exists in the DTO package but nothing uses it (#838). Read through ISO 639 (Set 1 codes) and ISO 3166-1 (alpha-2 codes)."
+      gapIssue: 838
   - id: EN18223-4.1.2.9
     section: "4.1.2.9"
     clause: "4.1.2.9, lead"
@@ -189,6 +573,27 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: "30 value types: the XSD 1.0 built-ins without the list types, the string-derived types, NOTATION and QName"
+        - type: code
+          ref: packages/dto/src/aas/common/basic-json-schema.ts
+          note: "ValueTypeSchema maps xs:<name> onto the 30 types and throws on any other name, answered 500 (bug #1033, which also hits xs:anyURI)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property took each of the 30 value types with a valid value (201), Base64Binary aGVsbG8= included; xs:ENTITIES, xs:IDREFS, xs:NMTOKENS, the string-derived types (normalizedString, token, language, Name, NCName, ID and the rest), xs:NOTATION and xs:QName were refused with 500 and left nothing stored; xs:anyURI also answered 500 (bug #1033), AnyUri 201."
+          date: 2026-10-12
+        - type: check
+          ref: model.admitted-xsd-types-accepted
+          result: passed
+          date: 2026-10-12
+      notes: "Recommendation, graded as enablement. open-dpp's value types are exactly the XSD 1.0 built-ins 4.1.2.9 admits: every primitive but NOTATION and QName, and the integer types derived from decimal; a property takes each of them with a valid value (Check model.admitted-xsd-types-accepted). The type is named in open-dpp's spelling (Integer); the XSD spelling xs:integer works for every type but xs:anyURI, which answers 500 (bug #1033). Read through W3C XML Schema Part 2 (Second Edition), clause 3."
   - id: EN18223-4.1.2.9(a)
     section: "4.1.2.9"
     clause: "4.1.2.9, first item"
@@ -196,6 +601,27 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: "30 value types: the XSD 1.0 built-ins without the list types, the string-derived types, NOTATION and QName"
+        - type: code
+          ref: packages/dto/src/aas/common/basic-json-schema.ts
+          note: "ValueTypeSchema maps xs:<name> onto the 30 types and throws on any other name, answered 500 (bug #1033, which also hits xs:anyURI)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property took each of the 30 value types with a valid value (201), Base64Binary aGVsbG8= included; xs:ENTITIES, xs:IDREFS, xs:NMTOKENS, the string-derived types (normalizedString, token, language, Name, NCName, ID and the rest), xs:NOTATION and xs:QName were refused with 500 and left nothing stored; xs:anyURI also answered 500 (bug #1033), AnyUri 201."
+          date: 2026-10-12
+        - type: check
+          ref: model.excluded-xsd-types-refused
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. The value types hold none of the list types: a property declared xs:ENTITIES, xs:IDREFS or xs:NMTOKENS is refused and nothing is stored (Check model.excluded-xsd-types-refused). The refusal answers 500 instead of 400 (bug #1033), a status-code matter of EN 18222, not of this row."
   - id: EN18223-4.1.2.9(b)
     section: "4.1.2.9"
     clause: "4.1.2.9, second item"
@@ -203,6 +629,27 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: "30 value types: the XSD 1.0 built-ins without the list types, the string-derived types, NOTATION and QName"
+        - type: code
+          ref: packages/dto/src/aas/common/basic-json-schema.ts
+          note: "ValueTypeSchema maps xs:<name> onto the 30 types and throws on any other name, answered 500 (bug #1033, which also hits xs:anyURI)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property took each of the 30 value types with a valid value (201), Base64Binary aGVsbG8= included; xs:ENTITIES, xs:IDREFS, xs:NMTOKENS, the string-derived types (normalizedString, token, language, Name, NCName, ID and the rest), xs:NOTATION and xs:QName were refused with 500 and left nothing stored; xs:anyURI also answered 500 (bug #1033), AnyUri 201."
+          date: 2026-10-12
+        - type: check
+          ref: model.excluded-xsd-types-refused
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. The value types hold none of the types derived from string (normalizedString, token, language, Name, NCName, ID, IDREF, ENTITY, NMTOKEN): a property declared with one is refused and nothing is stored (Check model.excluded-xsd-types-refused; 500 instead of 400, bug #1033)."
   - id: EN18223-4.1.2.9(c)
     section: "4.1.2.9"
     clause: "4.1.2.9, third item"
@@ -210,6 +657,27 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: "30 value types: the XSD 1.0 built-ins without the list types, the string-derived types, NOTATION and QName"
+        - type: code
+          ref: packages/dto/src/aas/common/basic-json-schema.ts
+          note: "ValueTypeSchema maps xs:<name> onto the 30 types and throws on any other name, answered 500 (bug #1033, which also hits xs:anyURI)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property took each of the 30 value types with a valid value (201), Base64Binary aGVsbG8= included; xs:ENTITIES, xs:IDREFS, xs:NMTOKENS, the string-derived types (normalizedString, token, language, Name, NCName, ID and the rest), xs:NOTATION and xs:QName were refused with 500 and left nothing stored; xs:anyURI also answered 500 (bug #1033), AnyUri 201."
+          date: 2026-10-12
+        - type: check
+          ref: model.excluded-xsd-types-refused
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. Neither NOTATION nor QName is a value type: a property declared xs:NOTATION or xs:QName is refused and nothing is stored (Check model.excluded-xsd-types-refused; 500 instead of 400, bug #1033)."
   - id: EN18223-4.1.2.9(d)
     section: "4.1.2.9"
     clause: "4.1.2.9, fourth item"
@@ -217,6 +685,24 @@ criteria:
     applicability: software
     areas:
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: "30 value types: the XSD 1.0 built-ins without the list types, the string-derived types, NOTATION and QName"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property took each of the 30 value types with a valid value (201), Base64Binary aGVsbG8= included; xs:ENTITIES, xs:IDREFS, xs:NMTOKENS, the string-derived types (normalizedString, token, language, Name, NCName, ID and the rest), xs:NOTATION and xs:QName were refused with 500 and left nothing stored; xs:anyURI also answered 500 (bug #1033), AnyUri 201."
+          date: 2026-10-12
+        - type: check
+          ref: model.admitted-xsd-types-accepted
+          result: passed
+          date: 2026-10-12
+      notes: Option. Base64Binary is a value type; a property holding aGVsbG8= is stored (Check model.admitted-xsd-types-accepted).
   - id: EN18223-4.2(1)
     section: "4.2"
     clause: "4.2(1)"
@@ -225,6 +711,18 @@ criteria:
     areas:
       - 6
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: "activity record: passport id (aggregateId), time, user id, type and payload of the change"
+      notes: "Recommendation; never caps a law row. Credited: the activity history records about 25 kinds of change with the passport id, the time, the acting user and the changed data, which members read and download. Missing: creation, status changes and deletion are not recorded (bug #1032); a record names neither the product identifier nor an actor identity as EN 18239 defines it, only an internal user id (#1023); the log is not tamper-evident (#1024)."
+      gapIssue: 1024
   - id: EN18223-4.2(2)
     section: "4.2"
     clause: "4.2(2)"
@@ -233,6 +731,18 @@ criteria:
     areas:
       - 6
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: "activity record: passport id (aggregateId), time, user id, type and payload of the change"
+      notes: "Mandatory. Credited: most changes are logged in the activity history (4.2(1)). Missing: no version archive as EN 18221 requires (EN18221-4.2(5) Partial, #1029), and creation, status changes and deletion escape the log (bug #1032). Delegated acts have not set an extent yet, so every change counts."
+      gapIssue: 1029
   - id: EN18223-4.3(1)
     section: "4.3"
     clause: "4.3(1)"
@@ -241,6 +751,24 @@ criteria:
     areas:
       - 8
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds (AAS References) on every element
+        - type: code
+          ref: apps/main/src/aas/domain/concept-description.ts
+          note: ConceptDescription held in one passport's or template's environment, imported and exported, no HTTP route (#1030)
+        - type: code
+          ref: apps/client/src/components/aas/PropertyEditor.vue
+          note: the editor offers no field for semanticId
+      notes: "Mandatory. Credited: the AAS model keeps definitions apart from data: an element refers to its definition through semanticId, which may name an external dictionary entry (an ECLASS IRDI, an IEC CDD entry, a URI) or a concept description held as a separate object. Missing: the editor cannot set a reference, no template ships one, concept descriptions live inside one passport or template instead of apart from it (#1030), and nothing connects to a repository (#826)."
+      gapIssue: 826
   - id: EN18223-4.3(2)-sub1
     section: "4.3"
     clause: "4.3(2), first requirement"
@@ -249,6 +777,24 @@ criteria:
     areas:
       - 8
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds (AAS References) on every element
+        - type: code
+          ref: apps/client/src/components/aas/PropertyEditor.vue
+          note: the editor offers no field for semanticId
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a Property with a semanticId of key GlobalReference https://dictionary.example/maxPressure was stored and returned (201); the public full read of the subject shows semanticId null on every element."
+          date: 2026-10-12
+      notes: "Recommendation; never caps a law row. The mechanism of 4.3(1) can link an element to a machine-readable definition through semanticId. Missing: no element made through the UI or shipped in a template is linked, and no repository is integrated (#826)."
+      gapIssue: 826
   - id: EN18223-4.3(2)-sub2
     section: "4.3"
     clause: "4.3(2), second requirement"
@@ -256,6 +802,14 @@ criteria:
     applicability: commission
     areas:
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Binds the owner of a dictionary repository (for the EU semantic repository of REG1778 Art. 12, the Commission). open-dpp runs no repository: its concept descriptions belong to one passport or template."
   - id: EN18223-4.3(2)-sub3
     section: "4.3"
     clause: "4.3(2), third requirement"
@@ -263,6 +817,14 @@ criteria:
     applicability: commission
     areas:
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Binds the owner of a dictionary repository (for the EU semantic repository of REG1778 Art. 12, the Commission). open-dpp runs no repository: its concept descriptions belong to one passport or template."
   - id: EN18223-4.3(2)-sub4
     section: "4.3"
     clause: "4.3(2), fourth requirement"
@@ -270,6 +832,14 @@ criteria:
     applicability: commission
     areas:
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Binds the owner of a dictionary repository (for the EU semantic repository of REG1778 Art. 12, the Commission). open-dpp runs no repository: its concept descriptions belong to one passport or template."
   - id: EN18223-5.2.1(1)
     section: "5.2"
     clause: "5.2.1(1)"
@@ -277,6 +847,25 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: "full AAS JSON: idShort, modelType, semanticId, valueType (open-dpp spelling, Double) and value per element"
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: check
+          ref: format.public-reads-are-json
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: open-dpp exchanges passport data as JSON, the syntax EN 18216 sets (Check format.public-reads-are-json). Missing: the data follow the AAS metamodel, not the Clause 4 model: no header, other class and attribute names (Annex A, 5.2.2(1))."
+      gapIssue: 1057
   - id: EN18223-5.2.1(2)
     section: "5.2"
     clause: "5.2.1(2)"
@@ -284,6 +873,21 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: "full AAS JSON: idShort, modelType, semanticId, valueType (open-dpp spelling, Double) and value per element"
+      notes: "Mandatory. Credited: the AAS values read ($value) comes close to the compressed JSON for collections, single values and lists (5.2.2(2), 5.2.5 to 5.2.7), and the full AAS JSON carries the information of the expanded form under other names (Annex A). Missing: neither is the EN 18223 serialisation (no header, values as strings, other shapes for multi-language values and documents), and there is no XML (Annex B)."
+      gapIssue: 1057
   - id: EN18223-5.2.2(1)
     section: "5.2"
     clause: "5.2.2(1)"
@@ -291,6 +895,18 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: "full AAS JSON: idShort, modelType, semanticId, valueType (open-dpp spelling, Double) and value per element"
+      notes: "Mandatory. Credited: open-dpp's JSON follows the same convention (camelCase attributes such as idShort and valueType, PascalCase class names in modelType). Missing: the EN 18223 class and attribute names appear nowhere, because the EN 18223 serialisation is missing."
+      gapIssue: 1057
   - id: EN18223-5.2.2(2)
     section: "5.2"
     clause: "5.2.2(2)"
@@ -299,6 +915,28 @@ criteria:
     areas:
       - 2
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+        - type: check
+          ref: format.compressed-keys-are-element-ids
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: the AAS values read of a submodel ($value, public for published passports) keys each element by its idShort and leaves semanticId, valueType and modelType out (Check format.compressed-keys-are-element-ids). Missing: it covers one submodel at a time, so there is no payload of the passport as a whole and no header (5.2.4(1)); multi-language values and files take other shapes (5.2.8, 5.2.9)."
+      gapIssue: 1057
   - id: EN18223-5.2.3-sub1
     section: "5.2"
     clause: "5.2.3, first requirement, with Table 7"
@@ -306,6 +944,32 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/property.ts
+          note: "Property: one value, stored as a string, and a mandatory valueType; validateValue checks only Double, Float, DateTime, Boolean and AnyUri (bug #1055)"
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+        - type: check
+          ref: format.compressed-values-native-json
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: model.typed-values-checked
+          result: failed
+          date: 2026-10-12
+      notes: 'Recommendation; never caps a law row. Every value goes out as a JSON string, in the values read as in the full read ("1.25", "true"; Check format.compressed-values-native-json fails), and dates, integers and decimals are not even checked against their type (bug #1055; Check model.typed-values-checked fails). No dictionary or repository specifies types (#826).'
+      gapIssue: 1057
   - id: EN18223-5.2.3-sub2
     section: "5.2"
     clause: "5.2.3, second requirement"
@@ -313,6 +977,21 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: "full AAS JSON: idShort, modelType, semanticId, valueType (open-dpp spelling, Double) and value per element"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+      notes: Option; never caps a law row. The full AAS JSON gives each value as a string next to its valueType, the fallback this paragraph allows, but names the type in open-dpp's spelling (Double) rather than as an XSD name (xsd:double); the values read leaves the type out.
+      gapIssue: 1057
   - id: EN18223-5.2.4(1)
     section: "5.2"
     clause: "5.2.4(1)"
@@ -320,6 +999,28 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: "members' export: one JSON object, open-dpp's envelope (format version 6.0) around an AAS environment"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+        - type: check
+          ref: format.dpp-header-published
+          result: failed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: the members' export serialises a passport as one JSON object. Missing: it is open-dpp's envelope around an AAS environment, without the header of Table 1 (Check format.dpp-header-published fails); the public reads come per shell and per submodel, and the permalink read carries only the passport's id, status and timestamps, under other names."
+      gapIssue: 1057
   - id: EN18223-5.2.5-sub1
     section: "5.2"
     clause: "5.2.5, first paragraph, first part"
@@ -327,6 +1028,25 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+        - type: check
+          ref: format.compressed-keys-are-element-ids
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: the values read serialises a collection as a JSON object keyed by its elements' idShorts, its members of mixed kinds (Check format.compressed-keys-are-element-ids). Missing: scalar members are always strings, never numbers or booleans (5.2.3-sub1)."
+      gapIssue: 1057
   - id: EN18223-5.2.5-sub2
     section: "5.2"
     clause: "5.2.5, first paragraph, second part"
@@ -334,6 +1054,14 @@ criteria:
     applicability: commission
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: Addressed to those who write DPP requirements (delegated acts, product-group specifications), not to a DPP system.
   - id: EN18223-5.2.6-sub1
     section: "5.2"
     clause: "5.2.6, first requirement"
@@ -341,6 +1069,25 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+        - type: check
+          ref: format.compressed-keys-are-element-ids
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: in the values read a property is a key, its idShort, with its value (Check format.compressed-keys-are-element-ids). Missing: the value is always a string (5.2.3-sub1)."
+      gapIssue: 1057
   - id: EN18223-5.2.6-sub2
     section: "5.2"
     clause: "5.2.6, second requirement"
@@ -348,6 +1095,18 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+      notes: Option; never caps a law row. In the values read a list of properties gives its items as bare values, but as strings, not as native JSON types.
+      gapIssue: 1057
   - id: EN18223-5.2.7
     section: "5.2"
     clause: "5.2.7"
@@ -355,6 +1114,28 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: "SubmodelElementList: ordered items with typeValueListElement and optional valueTypeListElement; the item type is checked on single adds only (bug #1054)"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+        - type: check
+          ref: format.compressed-keys-are-element-ids
+          result: passed
+          date: 2026-10-12
+      notes: "Mandatory. Credited: the values read serialises a list as a JSON array whose items carry no key (Check format.compressed-keys-are-element-ids). Missing: the items of one list can differ in type, because the type check is skipped when a list is posted with its items (bug #1054); scalar items are strings."
+      gapIssue: 1057
   - id: EN18223-5.2.8
     section: "5.2"
     clause: "5.2.8"
@@ -362,6 +1143,24 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: "File: contentType and value (a media id for an upload, or any path or URL); no language"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+      notes: "Mandatory; Annex ZA maps the class (4.1.2.7) to ESPR Art. 11(d). Credited: the values read serialises a File as a JSON object with contentType. Missing: the link sits under value and, for an upload, is a media id instead of a URL; language and resourceTitle are absent."
+      gapIssue: 1057
   - id: EN18223-5.2.9
     section: "5.2"
     clause: "5.2.9"
@@ -369,6 +1168,21 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+      notes: 'Mandatory. Credited: the values read serialises a MultiLanguageProperty as a JSON array of objects, one per language. Missing: each object keys the text by its language ({"en": text}) instead of holding value and language; the tags lack the country part (4.1.2.8.2, #838).'
+      gapIssue: 1057
   - id: EN18223-A
     section: "A"
     clause: Annex A (normative)
@@ -376,6 +1190,24 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: "full AAS JSON: idShort, modelType, semanticId, valueType (open-dpp spelling, Double) and value per element"
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: "members' export: one JSON object, open-dpp's envelope (format version 6.0) around an AAS environment"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
+          date: 2026-10-12
+      notes: "Mandatory. Credited: the full AAS JSON gives every element as an object with its id (idShort), class (modelType), semantic reference (semanticId), value type (valueType) and value or nested elements, the information of the expanded form. Missing: the EN 18223 names and shape (elementId, objectType, dictionaryReference as a string, valueDataType as an XSD name, an elements array after the header); the elements sit under shells and submodels, and there is no header."
+      gapIssue: 1057
   - id: EN18223-B
     section: "A"
     clause: Annex B (normative)
@@ -383,3 +1215,15 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: "full AAS JSON: idShort, modelType, semanticId, valueType (open-dpp spelling, Double) and value per element"
+      notes: "Binds only an XML serialisation, which EN 18216 makes optional (EN18216-5(b) Gap, #1034); never caps a law row. open-dpp offers no XML at all."
+      gapIssue: 1057
