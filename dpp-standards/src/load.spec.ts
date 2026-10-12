@@ -33,6 +33,7 @@ describe("the committed files", () => {
       "EN18246",
       "EN301549",
       "ESPR",
+      "IDTA01001",
       "ISO21778",
       "REG1778",
       "TOYS",

@@ -1,0 +1,660 @@
+# Conformance Matrix: IDTA01001 (Specification of the Asset Administration Shell, Part 1: Metamodel, IDTA-01001-3-2 V3.2). Rules: dpp-standards/README.md.
+# Criteria extracted on 2026-10-12 (ticket #1044) from the AsciiDoc sources of release tag v3.2.0 of admin-shell-io/aas-specs-metamodel (commit ecd19127, July 2026, CC-BY-4.0) and the JSON schema of that tag; assessments are added in place, one per Criterion. Public text: the paraphrases are ours, short quotes are allowed.
+# Declared standard (map decision of 2026-10-12, #1021): no law and no JTC 24 EN cites the AAS; open-dpp declares it as its data model, so the lens is "implements as declared". Lowest severity; these Criteria never cap a law or EN row.
+# What open-dpp declares: its documentation names the Asset Administration Shell (IEC 63278) as its data model but no edition (first finding of #1044). This file grades V3.2, the edition current on the run date (map rule for undated references); V3.2 adds AssetKind Batch, createdAt and updatedAt, Constraints AASd-137 and AASd-138, the container depth of 32 and the informative DPP annex to V3.1.2.
+# IEC 63278-1:2023 and this text: IEC 63278-1 (Edition 1.0, 2023-12) specifies the structure of the AAS and its terms; V3.2 takes its definitions from it where available and renamed "submodel" to "Submodel" to match it. IEC 63278-1 holds no metamodel: the metamodel is to become IEC 63278-2, which V3.2 cites without date and which is still in development. IEC 63278-1 is therefore not read for this file; the watch follows IDTA releases (V3.2.x patch releases are binding bugfixes) and the publication of IEC 63278-2.
+# Criterion granularity: one Criterion per class clause of the metamodel with its attribute table and the enumerations defined in that clause (id = the class name, IDTA01001-Property); one per Constraint AASd-xxx, wherever the text states it (id = the constraint id); one per further paragraph that states a requirement of its own (the AdministrativeInformation rules on dates and on Submodels sharing a semanticId, the container depth of 32); one per data type group and one per Mappings clause. EventElement is folded into BasicEventElement, OperationVariable into Operation, the logical key enumerations into Key, the deprecated category table into Referable.
+# Normative and informative: by its own Structure clause only the clauses marked "(normative)" bind: the metamodel specification, Data Specification Templates and Mappings. Not extracted, no requirement of their own: Terms, Preamble, Introduction, the metamodel overview (an AAS represents exactly one asset, folded into AssetAdministrationShell), Summary and Outlook, Change Notes, Bibliography and all Annexes (Concepts, General Topics with the identifier recommendations and matching strategies, Value-Only example, BNF, UML templates and legend, semantic ids of the metamodel, handling and overview of constraints, usage hints, metamodel with inheritance).
+# The Digital Product Passport annex (new in V3.2, informative) maps EN 18223's DPP header and data elements onto the AAS: digitalProductPassportId to AssetAdministrationShell/id, uniqueProductIdentifier to AssetInformation/globalAssetId, granularity to AssetInformation/assetKind (Item = Instance, Model = Type, Batch = Batch), lastUpdate to AdministrativeInformation/updatedAt. It recommends the Submodel template IDTA-02099 for the DPP metadata and equates EN 18223's compressed JSON with the AAS Value-Only format and its expanded JSON with Normal. Not extracted (informative; IDTA Submodel templates are out of the map's scope). Its recommendations are recorded as a finding of the run and handed to the EN 18223 representation cluster #1057.
+# References: XML Schema 1.0 Part 2 (the value types, registered as XSD2), RDF 1.1 and BCP 47 (langString and its language tags), RFC 2046 (content types) and RFC 2396 (PathType) are read through on the rows that cite them. IEC 62832 (versions), ISO 15836-1 (Dublin Core), Attribute Based Access Control and the Part 3 data specification templates (IDTA-01003-a and -b) are named in explanations only and not read. Aligned specifications: Part 2 (IDTA01002, #1045) grades the API and the content modifiers that use the Mappings formats; Part 5 (AASX) is not declared by open-dpp.
+
+standard: IDTA01001
+edition: IDTA-01001-3-2 V3.2 (July 2026)
+extractedFrom: https://github.com/admin-shell-io/aas-specs-metamodel/tree/v3.2.0
+extractedAt: 2026-10-12
+sections:
+  - id: designators
+    title: Designators (general)
+  - id: common
+    title: Common Attributes
+  - id: core
+    title: Core Classes
+  - id: sme
+    title: SubmodelElement Types
+  - id: cd-env
+    title: Concept Descriptions and Environment
+  - id: referencing
+    title: Referencing
+  - id: types
+    title: Data Types
+  - id: constraints
+    title: Constraints (AASd)
+  - id: data-specifications
+    title: Data Specification Templates
+  - id: mappings
+    title: Mappings
+criteria:
+  - id: IDTA01001-Designators-depth32
+    section: designators
+    clause: Designators, introduction; Referencing, AasContainerSubmodelElements
+    paraphrase: "Recommendation: an implementation supports container elements (collections, lists, entities, annotated relationships) nested to a depth of at least 32."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AdministrativeInformation
+    section: common
+    clause: Administrative Information Attributes, class AdministrativeInformation
+    paraphrase: "Every identifiable may carry administrative information: version and revision (numeric strings of up to four digits), the creator (a subject reference), createdAt and updatedAt (UTC date-times) and the templateId of the Submodel template that guided its creation, all optional; it may itself use data specifications."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: IDTA01001-AdministrativeInformation-dates
+    section: common
+    clause: Administrative Information Attributes, paragraphs on versions and dates
+    paraphrase: "Version and revision order releases numerically (a higher number is a later release). createdAt is fixed at the first creation of the object, updatedAt marks relevant changes and is never earlier than createdAt, and a higher version implies a later updatedAt; all four are business values, so not every change has to move them."
+    applicability: software
+    areas:
+      - 6
+  - id: IDTA01001-AdministrativeInformation-submodels
+    section: common
+    clause: Administrative Information Attributes, paragraphs on Submodels sharing a semanticId or a templateId
+    paraphrase: "Two Submodels of one AAS with the same semanticId differ in their version, their createdAt or updatedAt, their creator, a supplementalSemanticId or their templateId, and both carry the attribute used to tell them apart. Two Submodels guided by the same Submodel template have different ids and both carry the templateId."
+    applicability: software
+    areas:
+      - 1
+      - 8
+  - id: IDTA01001-HasDataSpecification
+    section: common
+    clause: Has Data Specification Attributes, class HasDataSpecification
+    paraphrase: "An element that has data specifications names, by external reference to their global ids, the data specification templates whose additional attributes it carries (0..*)."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-HasExtensions
+    section: common
+    clause: Has Extensions Attributes, classes HasExtensions and Extension
+    paraphrase: "Every referable may carry proprietary extensions (0..*). An Extension has semantics, a name, an optional valueType (default xs:string), an optional value and optional model references to the elements it refers to."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-HasKind
+    section: common
+    clause: Has Kind Attributes, class HasKind and enumeration ModellingKind
+    paraphrase: "An element with a kind is either a Template or an Instance (optional attribute, default Instance); Submodel uses it to tell Submodel templates from Submodels."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-HasSemantics
+    section: common
+    clause: Has Semantics Attributes, class HasSemantics
+    paraphrase: "An element with semantics may name its main semantic definition (semanticId, a Reference, 0..1) and any number of supplemental semantic definitions (supplementalSemanticId, 0..*)."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-Identifiable
+    section: common
+    clause: Identifiable Attributes, class Identifiable
+    paraphrase: "An identifiable (AAS, Submodel, ConceptDescription) has a globally unique id (Identifier, mandatory) and optional administrative information; it is referenced only by its id, and its idShort is optional."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01001-Qualifiable
+    section: common
+    clause: Qualifiable and Qualifier Attributes, classes Qualifiable and Qualifier, enumeration QualifierKind
+    paraphrase: "A qualifiable element may carry qualifiers (0..*). A Qualifier has semantics, an optional kind (ValueQualifier, ConceptQualifier or TemplateQualifier, default ConceptQualifier), a type, a valueType, an optional value and an optional valueId."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Referable
+    section: common
+    clause: Referable Attributes, class Referable and the deprecated category table
+    paraphrase: "A referable has an idShort (NameType) that identifies it within its name space, optional multilingual displayName and description, and the deprecated category; the idShort is optional for identifiables and for direct children of a SubmodelElementList, and categories should no longer be used."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AssetAdministrationShell
+    section: core
+    clause: Asset Administration Shell Attributes, class AssetAdministrationShell
+    paraphrase: "An AAS represents exactly one asset. It is identifiable and has data specifications; it carries assetInformation (mandatory), an optional derivedFrom model reference to the AAS it was derived from, and model references to its Submodels (0..*)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AssetInformation
+    section: core
+    clause: Asset Information Attributes, class AssetInformation and enumeration AssetKind
+    paraphrase: "AssetInformation names the assetKind (Type, Instance, Batch, Role or NotApplicable, mandatory), an optional globalAssetId (required once the AAS is exchanged with partners), specific asset ids (0..*), an optional assetType (the asset id of the type asset) and an optional defaultThumbnail (one Resource)."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: IDTA01001-Resource
+    section: core
+    clause: Resource Attributes, class Resource
+    paraphrase: "A Resource locates a file: a path (PathType, absolute or relative URI with the file name and extension, mandatory) and an optional contentType."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-SpecificAssetId
+    section: core
+    clause: Specific Asset ID Attributes, class SpecificAssetId
+    paraphrase: "A specific asset id is a supplementary, not necessarily unique identifying attribute of the asset: it has semantics, a name (LabelType), a value (Identifier) and an optional externalSubjectId naming the subject the value belongs to."
+    applicability: software
+    areas:
+      - 3
+  - id: IDTA01001-Submodel
+    section: core
+    clause: Submodel Attributes, class Submodel
+    paraphrase: "A Submodel is identifiable, has a kind, semantics, qualifiers and data specifications, and contains SubmodelElements (0..*); validators treat it like a SubmodelElementCollection. A semanticId is recommended."
+    applicability: software
+    areas:
+      - 1
+      - 8
+  - id: IDTA01001-SubmodelElement
+    section: core
+    clause: SubmodelElement Attributes, class SubmodelElement
+    paraphrase: "SubmodelElement is the abstract base of every element in a Submodel: referable, with semantics, qualifiers and data specifications; a semanticId is recommended."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AnnotatedRelationshipElement
+    section: sme
+    clause: Annotated Relationship Element Attributes, class AnnotatedRelationshipElement
+    paraphrase: "An annotated relationship element is a relationship element whose relationship may be annotated with data elements (annotation, 0..*, of type DataElement)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-BasicEventElement
+    section: sme
+    clause: Basic Event Element and Event Element Attributes, classes BasicEventElement and EventElement, enumerations Direction and StateOfEvent (experimental)
+    paraphrase: "A basic event element (an EventElement) names the observed referable (mandatory model reference), a direction (input or output) and a state (on or off), and optionally a messageTopic, a messageBroker reference, lastUpdate, minInterval and maxInterval."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-EventPayload
+    section: sme
+    clause: Basic Event Element Attributes, Event Payload Attributes, class EventPayload (experimental)
+    paraphrase: "Events sent or received by an AAS follow one payload format: the source event element and the observable referable (model references, mandatory), their optional semanticIds, an optional topic and subjectId, a UTC timestamp (mandatory) and an optional base64 payload. It is not part of the exchanged information model."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Blob
+    section: sme
+    clause: Blob Attributes, class Blob
+    paraphrase: "A Blob is a data element holding a file's content itself: value (BlobType, base64, 0..1) and contentType (a MIME type as RFC 2046 defines it, 0..1)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Capability
+    section: sme
+    clause: Capability Attributes, class Capability
+    paraphrase: "A Capability is a SubmodelElement describing, independently of its implementation, the potential of an asset to achieve an effect; it has no attributes of its own."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-DataElement
+    section: sme
+    clause: Data Element and Overview of Data Element Types, class DataElement
+    paraphrase: "DataElement is the abstract SubmodelElement that holds a value and is not composed of other SubmodelElements: Property, MultiLanguageProperty, Range, File, Blob and ReferenceElement."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Entity
+    section: sme
+    clause: Entity Attributes, class Entity and enumeration EntityType
+    paraphrase: "An Entity models a part of a composite asset: statements (SubmodelElements, 0..*), an optional entityType (CoManagedEntity or SelfManagedEntity), an optional globalAssetId and specific asset ids (0..*)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-File
+    section: sme
+    clause: File Attributes, class File
+    paraphrase: "A File is a data element that locates a file: value (PathType, the absolute or relative path and name of the file with extension, 0..1) and contentType (0..1); a path relative to the package root is used for files inside an AAS package."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-MultiLanguageProperty
+    section: sme
+    clause: Multi Language Property Attributes, class MultiLanguageProperty
+    paraphrase: "A MultiLanguageProperty is a data element with a multilingual value (MultiLanguageTextType, 0..1) and an optional valueId referencing a coded value."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Operation
+    section: sme
+    clause: Operation and Operation Variable Attributes, classes Operation and OperationVariable
+    paraphrase: "An Operation is a SubmodelElement with input, output and in-output variables (0..* each); an OperationVariable wraps exactly one SubmodelElement as its value. Operations in Submodel instances are specified like those in templates."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Property
+    section: sme
+    clause: Property Attributes, class Property
+    paraphrase: "A Property is a data element with a single value: valueType (DataTypeDefXsd, mandatory), value (ValueDataType, 0..1) and an optional valueId referencing a coded value."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Range
+    section: sme
+    clause: Range Attributes, class Range (experimental)
+    paraphrase: "A Range is a data element with a valueType (mandatory) and an optional min and max; since V3.2 a missing bound no longer means infinity."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-ReferenceElement
+    section: sme
+    clause: Reference Element Attributes, class ReferenceElement
+    paraphrase: "A ReferenceElement is a data element whose value (0..1) is a Reference: a model reference to a referable in the same or another AAS, or an external reference."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-RelationshipElement
+    section: sme
+    clause: Relationship Element Attributes, class RelationshipElement
+    paraphrase: "A RelationshipElement relates two elements, model or external: first (subject) and second (object), each a Reference, each 0..1; its semanticId defines the relationship."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-SubmodelElementCollection
+    section: sme
+    clause: SubmodelElement Collection Attributes, class SubmodelElementCollection
+    paraphrase: "A SubmodelElementCollection is a struct of named SubmodelElements (value, 0..*), unordered; adhering to the order of the Submodel template is recommended."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-SubmodelElementList
+    section: sme
+    clause: SubmodelElement List Attributes, class SubmodelElementList and enumeration AasSubmodelElements
+    paraphrase: "A SubmodelElementList is an ordered list of SubmodelElements numbered from zero: value (0..*), orderRelevant (default true), an optional semanticIdListElement, the element type typeValueListElement (one AasSubmodelElements literal, mandatory) and an optional valueTypeListElement."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-ConceptDescription
+    section: cd-env
+    clause: Concept Description Attributes, class ConceptDescription
+    paraphrase: "A ConceptDescription defines the semantics of an element: it is identifiable, has data specifications (at least one template describes the concept) and references the external definitions it is a case of (isCaseOf, 0..*)."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-Environment
+    section: cd-env
+    clause: Environment Attributes, class Environment
+    paraphrase: "An Environment, neither identifiable nor referable, lists the AASs, Submodels and ConceptDescriptions (0..* each) for file transfer and serialization."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-Reference
+    section: referencing
+    clause: Reference Attributes, class Reference and enumeration ReferenceTypes
+    paraphrase: "A Reference is either an external reference (to an entity outside the AAS world, a unique identifier) or a model reference (an ordered key chain to a model element): its type is mandatory, it has an optional referredSemanticId and an ordered list of at least one Key."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-Key
+    section: referencing
+    clause: Key Attributes, class Key, enumeration KeyTypes and the logical key enumerations
+    paraphrase: "A Key names a referenced element by its id: a type out of KeyTypes (the 24 literals: the identifiables, the referables and their abstract kinds, GlobalReference and FragmentReference) and a value (an IRDI, IRI, idShort or fragment, as an Identifier)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-StringTypes
+    section: types
+    clause: Primitive Data Types (BlobType to VersionType)
+    paraphrase: "The metamodel's string types restrict their values: Identifier 1 to 2048 characters, NameType and ContentType 1 to 128, LabelType 1 to 64, MessageTopicType 1 to 255, PathType 1 to 2048 and a URI, VersionType and RevisionType 1 to 4 digits without a leading zero, BlobType base64, DateTimeUtc a UTC date-time."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-LangStringSet
+    section: types
+    clause: Primitive Data Types, LangStringSet, MultiLanguageNameType and MultiLanguageTextType; DataTypeDefRdf (rdf:langString)
+    paraphrase: "Multilingual values are sets of strings tagged with a language: the tags are IETF BCP 47 language tags (bare ISO 639 codes and tags with a region such as en-GB); each name string has 1 to 128 characters, each text string 1 to 1023."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-DataTypeDefXsd
+    section: types
+    clause: Enumeration for SubmodelElement Value Types, DataTypeDefXsd
+    paraphrase: "The value type of a Property, Range, Qualifier, Extension or list is one of 30 XML Schema 1.0 types, named with the xs: prefix (xs:string, xs:double, xs:anyURI and so on); XSD list, derived string, NOTATION and QName types and the RDF types HTML and XMLLiteral are excluded."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-ValueDataType
+    section: types
+    clause: Primitive Data Types, ValueDataType; Predefined Simple Data Types
+    paraphrase: "A value (ValueDataType) is a literal of the XML Schema atomic type its valueType names, in the lexical form XML Schema 1.0 Part 2 defines for that type."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-002
+    section: constraints
+    clause: Constraint AASd-002 (Referable)
+    paraphrase: "An idShort has at least two characters, only letters, digits, hyphen and underscore, starts with a letter and does not end with a hyphen (^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9_]+$)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-005
+    section: constraints
+    clause: Constraint AASd-005 (AdministrativeInformation)
+    paraphrase: "A revision requires a version: without a version there is no revision."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-006
+    section: constraints
+    clause: Constraint AASd-006 (Qualifier)
+    paraphrase: "If a qualifier has both a value and a valueId, the value equals the coded value the valueId references."
+    applicability: operator
+    areas:
+      - 8
+  - id: IDTA01001-AASd-007
+    section: constraints
+    clause: Constraint AASd-007 (Property)
+    paraphrase: "If a Property has both a value and a valueId, the value equals the coded value the valueId references."
+    applicability: operator
+    areas:
+      - 8
+  - id: IDTA01001-AASd-012
+    section: constraints
+    clause: Constraint AASd-012 (MultiLanguageProperty)
+    paraphrase: "If a MultiLanguageProperty has both a value and a valueId, every language string means what the valueId specifies."
+    applicability: operator
+    areas:
+      - 8
+  - id: IDTA01001-AASd-014
+    section: constraints
+    clause: Constraint AASd-014 (Entity)
+    paraphrase: "A self-managed Entity has a globalAssetId or a specific asset id."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-020
+    section: constraints
+    clause: Constraint AASd-020 (Qualifier)
+    paraphrase: "A qualifier's value is consistent with its valueType."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-021
+    section: constraints
+    clause: Constraint AASd-021 (Qualifiable)
+    paraphrase: "A qualifiable has at most one qualifier of each qualifier type."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-022
+    section: constraints
+    clause: Constraint AASd-022 (Referable, global invariant)
+    paraphrase: "The idShorts of non-identifiable referables are unique, case-sensitively, within their name space (the parent element)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-077
+    section: constraints
+    clause: Constraint AASd-077 (HasExtensions)
+    paraphrase: "The extension names of one element are unique."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-107
+    section: constraints
+    clause: Constraint AASd-107 (SubmodelElementList)
+    paraphrase: "A first-level list item that has a semanticId has the list's semanticIdListElement as its semanticId."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-108
+    section: constraints
+    clause: Constraint AASd-108 (SubmodelElementList)
+    paraphrase: "All first-level list items are of the SubmodelElement type the list's typeValueListElement names."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-109
+    section: constraints
+    clause: Constraint AASd-109 (SubmodelElementList)
+    paraphrase: "A list of Properties or Ranges sets valueTypeListElement, and all its first-level items have that value type."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-114
+    section: constraints
+    clause: Constraint AASd-114 (SubmodelElementList)
+    paraphrase: "Two first-level list items that both have a semanticId have the same one."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-115
+    section: constraints
+    clause: Constraint AASd-115 (SubmodelElementList)
+    paraphrase: "A first-level list item without a semanticId is taken to have the list's semanticIdListElement."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-AASd-116
+    section: constraints
+    clause: Constraint AASd-116 (asset-related information)
+    paraphrase: "\"globalAssetId\" (case-insensitive) is a reserved specific asset id name meaning the asset's globalAssetId."
+    applicability: software
+    areas:
+      - 3
+  - id: IDTA01001-AASd-117
+    section: constraints
+    clause: Constraint AASd-117 (Referable, global invariant)
+    paraphrase: "Every non-identifiable referable that is not a direct child of a SubmodelElementList has an idShort."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-118
+    section: constraints
+    clause: Constraint AASd-118 (HasSemantics)
+    paraphrase: "An element with a supplementalSemanticId also has a main semanticId."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-AASd-119
+    section: constraints
+    clause: Constraint AASd-119 (qualifiers)
+    paraphrase: "An element with a TemplateQualifier that has a kind is of kind Template."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-121
+    section: constraints
+    clause: Constraint AASd-121 (Reference)
+    paraphrase: "The first key of every reference is of a globally identifiable type (AssetAdministrationShell, ConceptDescription, GlobalReference, Identifiable or Submodel)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-122
+    section: constraints
+    clause: Constraint AASd-122 (Reference)
+    paraphrase: "The first key of an external reference is a GlobalReference."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-123
+    section: constraints
+    clause: Constraint AASd-123 (Reference)
+    paraphrase: "The first key of a model reference is an AAS identifiable (AssetAdministrationShell, ConceptDescription, Identifiable or Submodel)."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-124
+    section: constraints
+    clause: Constraint AASd-124 (Reference)
+    paraphrase: "The last key of an external reference is a GlobalReference or a FragmentReference."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-125
+    section: constraints
+    clause: Constraint AASd-125 (Reference)
+    paraphrase: "In a model reference with more than one key, every key after the first is a fragment key (a referable that is not identifiable, or a FragmentReference), so the shortest path is used."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-126
+    section: constraints
+    clause: Constraint AASd-126 (Reference)
+    paraphrase: "In a model reference with more than one key, only the last key may be a FragmentReference."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-127
+    section: constraints
+    clause: Constraint AASd-127 (Reference)
+    paraphrase: "In a model reference, a FragmentReference key follows a File or Blob key; no other element supports fragments."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-128
+    section: constraints
+    clause: Constraint AASd-128 (Reference)
+    paraphrase: "In a model reference, the key after a SubmodelElementList key holds an integer: the position of the item in the list."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-129
+    section: constraints
+    clause: Constraint AASd-129 (qualifiers)
+    paraphrase: "A SubmodelElement with a TemplateQualifier is part of a Submodel of kind Template, unless it belongs to an OperationVariable."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-130
+    section: constraints
+    clause: Constraint AASd-130 (types)
+    paraphrase: "Every string attribute holds only characters XML 1.0 admits (tab, line feed, carriage return and the Unicode ranges from U+0020, without surrogates, U+FFFE and U+FFFF), so it can be carried by every serialization."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01001-AASd-131
+    section: constraints
+    clause: Constraint AASd-131 (AssetInformation)
+    paraphrase: "AssetInformation defines the globalAssetId or at least one specific asset id."
+    applicability: software
+    areas:
+      - 3
+  - id: IDTA01001-AASd-133
+    section: constraints
+    clause: Constraint AASd-133 (SpecificAssetId)
+    paraphrase: "The externalSubjectId of a specific asset id is an external reference."
+    applicability: software
+    areas:
+      - 3
+  - id: IDTA01001-AASd-134
+    section: constraints
+    clause: Constraint AASd-134 (Operation)
+    paraphrase: "The idShorts of all input, output and in-output variable values of an Operation are unique."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-137
+    section: constraints
+    clause: Constraint AASd-137 (Reference)
+    paraphrase: "No key of an external reference has an AAS referable type."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-AASd-138
+    section: constraints
+    clause: Constraint AASd-138 (SubmodelElementList)
+    paraphrase: "A SubmodelElementList inside a Submodel of kind Template or inside an OperationVariable has exactly one element."
+    applicability: software
+    areas:
+      - 1
+  - id: IDTA01001-DataSpecification
+    section: data-specifications
+    clause: Data Specification Template Attributes, classes DataSpecification and DataSpecificationContent
+    paraphrase: "A data specification template has a globally unique id (used as HasDataSpecification/dataSpecification), optional description and administration, and its content: the additional attributes an element that uses the template carries."
+    applicability: software
+    areas:
+      - 8
+  - id: IDTA01001-JSON-environment
+    section: mappings
+    clause: Format "Normal" in JSON, Top-Level Structure
+    paraphrase: "The root of a JSON serialization is an Environment object with the arrays assetAdministrationShells, submodels and conceptDescriptions; identifiables appear only at that level."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-JSON-rules
+    section: mappings
+    clause: Format "Normal" in JSON, JSON Mapping Rules
+    paraphrase: "The JSON serialization follows the schema of the text: every class a JSON object, optional attributes omitted when absent, aggregations as plural-named arrays that are omitted when empty, the modelType discriminator on every class with descendants, enumerations as their literals (xs:string), Property value and Range bounds as strings, BlobType as a base64 string."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-EmbeddedDataSpecifications
+    section: mappings
+    clause: Embedded Data Specifications; JSON and XML mapping rules on embedded data specifications
+    paraphrase: "Serializations embed data specifications: each pairs the external reference to the data specification with the data specification content itself (embeddedDataSpecifications), in place of the bare reference."
+    applicability: software
+    areas:
+      - 2
+      - 8
+  - id: IDTA01001-XML
+    section: mappings
+    clause: Format "Normal" in XML
+    paraphrase: "Option: the AAS is serialized in XML following the XML mapping rules and the XSD of the text."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-RDF
+    section: mappings
+    clause: Format "Normal" in RDF
+    paraphrase: "Option: the AAS is serialized in RDF following the RDF mapping rules, the ontology and the SHACL shapes of the text."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-Metadata
+    section: mappings
+    clause: Format "Metadata"
+    paraphrase: "The Metadata format serializes an object as in its full form, leaving out the fields that hold values or children (for instance assetInformation and submodels of an AAS, value and valueId of a Property)."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-ValueOnly
+    section: mappings
+    clause: Format "Value" (Value-Only Serialization) in JSON, serialization rules
+    paraphrase: "Value-Only JSON: a Submodel or collection is an object keyed by idShort, a list an array keeping every index, each data element as its value (MultiLanguageProperty as language objects, Range as min and max, File and Blob as contentType and value, references and specific asset ids in Normal form, relationships, annotations, entities and events as named objects), elements without a value and Operations and Capabilities omitted."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-ValueOnly-types
+    section: mappings
+    clause: Format "Value" in JSON, Data type to value mapping
+    paraphrase: "In Value-Only JSON a value takes the JSON type its XML Schema type maps to: numbers for the numeric types, true and false for xs:boolean, strings for the rest."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-ReferenceFormat
+    section: mappings
+    clause: Format "Reference"
+    paraphrase: "The Reference format serializes a referable as the model reference to it alone, ignoring its children."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-Path
+    section: mappings
+    clause: Format "Path" (idShortPath Serialization) in JSON
+    paraphrase: "An idShortPath joins idShorts with dots from the requested element down, and addresses list items by their index in square brackets, never by their idShort."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: IDTA01001-ReferenceText
+    section: mappings
+    clause: Text Serialization of Values of Type "Reference"
+    paraphrase: "Where a mapping turns a Reference into a single string, it follows the grammar of the text: an optional [ExternalRef] or [ModelRef] prefix with an optional referredSemanticId, then the keys as (KeyType)value separated by comma and space."
+    applicability: software
+    areas:
+      - 2
+  - id: IDTA01001-BlobEncoding
+    section: mappings
+    clause: Mappings, Encoding
+    paraphrase: "Blob content is encoded as a base64 string."
+    applicability: software
+    areas:
+      - 2

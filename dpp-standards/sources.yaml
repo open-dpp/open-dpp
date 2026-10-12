@@ -285,18 +285,32 @@ sources:
     watch:
       url: https://www.iec.ch/dyn/www/f?p=103:23:::::FSP_ORG_ID,FSP_LANG_ID:1250,25
       lookFor: Publication of IEC 63278-4 (2026-10), -2, -3 or -5, and whether EN 18222 or EN 18223 start citing them
-  - id: IDTAAAS
+  - id: IDTA01001
     tier: C
-    title: IDTA Specification of the Asset Administration Shell – Part 1 Metamodel and Part 2 API
-    reference: IDTA-01001-3-2 (V3.2) and IDTA-01002-3-2 (V3.2.0)
+    title: Specification of the Asset Administration Shell – Part 1 Metamodel (declared standard)
+    short: AAS Part 1 V3.2
+    reference: IDTA-01001-3-2 (V3.2)
     publisher: Industrial Digital Twin Association
-    edition: Release 26-01, July 2026 (CC-BY-4.0), with the DPP annex
-    stage: Published
+    edition: V3.2, July 2026 (release tag v3.2.0 of admin-shell-io/aas-specs-metamodel, DOI 10.62628/IDTA.01001-3-2, CC-BY-4.0), with the informative Digital Product Passport annex; read from the AsciiDoc sources and the JSON schema of that tag
+    stage: Published; a declared standard of open-dpp (map decision of 2026-10-12, #1021), no law or EN cites it
+    access: public
+    url: https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.2/index.html
+    watch:
+      url: https://github.com/admin-shell-io/aas-specs-metamodel/releases
+      lookFor: A V3.2.x patch release (patch releases are binding bugfixes) or V3.3, and the publication of IEC 63278-2 (the metamodel as an IEC standard)
+  - id: IDTA01002
+    tier: C
+    title: Specification of the Asset Administration Shell – Part 2 Application Programming Interfaces (declared standard)
+    short: AAS Part 2 V3.2
+    reference: IDTA-01002-3-2 (V3.2.0)
+    publisher: Industrial Digital Twin Association
+    edition: V3.2.0, aligned with IDTA-01001 V3.2 (CC-BY-4.0); scoped to the AAS and Submodel interfaces (#1021), assessed in #1045
+    stage: Published; a declared standard of open-dpp (map decision of 2026-10-12, #1021), no law or EN cites it
     access: public
     url: https://industrialdigitaltwin.org/en/content-hub/aasspecifications
     watch:
       url: https://github.com/admin-shell-io/aas-specs-api/releases
-      lookFor: Release 26-02 (Part 4 Security with a DPP annex) or any Part 1 or Part 2 patch release
+      lookFor: A V3.2.x patch release or V3.3
   - id: EN301549
     tier: C
     title: Accessibility requirements for ICT products and services
