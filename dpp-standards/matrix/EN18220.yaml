@@ -1,0 +1,358 @@
+# Conformance Matrix: EN18220 (EN 18220:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18220-2026.pdf) on 2026-10-12 (ticket #757); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: one Criterion per paragraph that carries a requirement (shall, should or may), as EN 18246 was extracted. A clause of one paragraph keeps its bare number ("5.6.1"); in a clause of several paragraphs the paragraphs are numbered as the PDF sets them apart ("5.4.5(2)"), and those without a requirement keep their number and are listed below. A paragraph holding two requirements gets "-sub1" and "-sub2": 5.2.1 (the identifier in the carrier; the scheme's rules), 5.2.3 (character sets of the identifier; of other data), 5.3.4 (access without registration; a decoder built into the device), 5.7.1 (recognisable presence; placement) and 5.7.4 (accessibility of the carrier; of both digital and physical interaction). The capability rows of Table 1 (6.2.4.1) and Table 2 (6.3.6) are one Criterion each. Three statements without a modal verb are Criteria as well: 4.2 and 5.7.2, because Annex ZA cites them, and 5.4.1, which names the only marking methods allowed. Optional and recommended clauses and these statements are graded as enablement and never cap a law row (map rule of 2026-10-12).
+# Not extracted, no requirement of their own: the Introduction, clauses 1 (scope: symbology, format, error correction, encoding, print and production quality, durability, recognition marks, placement; architecture, use cases and cryptographic features are outside it), 2 (normative references, forms below), 3 (terms; 3.1 additional software leaves out web browsers, QR scanning by a phone's camera app and the common internet protocols, as in EN 18246), 4.3.3 (who reads carriers and with which devices), 5.2.2 (the syntaxes are those of EN 18219, with examples in Annex A; Annex ZA cites it for ESPR Art. 10(1)(a), graded through 5.2.1-sub2), 5.3.1 to 5.3.3 (reading distances and processes for barcodes, NFC and RAIN RFID; Annex ZA cites 5.3 as a whole, graded through 5.3.4), 5.4.2, 5.4.3 and 5.4.6 (the methods described: direct marking, packaging, embedding; 5.4.3 asks to weigh persistence without a modal verb, which 5.4.1 carries), 5.4.4(1), 5.5.1 (what error correction does; no level is required), 5.5.2(1) (the factors that set a symbol's size), 5.6.2(2), (3) and (5) (the usual print grade 1.5/80 %/660 and industry standards), 5.6.4(2) (product-specific RFID standards, tyres for instance), 6.1(1) and (3), 6.2.1, the descriptive sentences of 6.2.2 and 6.2.3, 6.3.1, 6.3.2.2, 6.3.2.5 and 6.3.3.4 (test methods described, nothing required), 6.3.3.1, 6.3.4.1, 6.3.5 (the RFID privacy impact assessment of EN 16571, described), the informative Annexes A (syntax examples), B (examples and size tables per EN 18219 scheme; B.1 says with "shall" what 5.2.1 and EN18219-4.5.2(1) already require, and an informative annex adds no requirement) and C (implicit and explicit recognition of a DPP carrier, the IEC 61406 frame) and the Bibliography.
+# Mirror: 5.3.4-sub1 restates EN18219-4.6.2(2) (public DPP information reachable through the identifier without registering, DPP-specific software or credentials) with no delta and carries no Assessment of its own. 5.3.4-sub2 is no Mirror of EN18219-4.5.3(1): it asks for a decoder of the carrier that comes with the device's operating system, not for an identifier that works on phones.
+# References (forms decided in #1021, confirmed by this Extract). Read-through, graded on this file's rows: ISO/IEC 18004:2024 (QR Code), through the text's own restatement (the notes of Annexes A to C ask for a quiet zone of four modules; Annex B lists the error-correction levels L, M, Q and H with their module counts) and the Checks carriers.qr-decodes-to-passport-link and carriers.qr-quiet-zone-four-modules; not bought, because no Met rests on its own text. Gap, unread: ISO/IEC 16022:2024 (Data Matrix, 6.2.2, #489), an alternative open-dpp does not offer, which never caps a law row. Not applicable, unread: the RF air interfaces, tag data and test methods ISO/IEC 14443-1 to -4, ISO/IEC 15693-1 to -3, ISO/IEC 18000-3, ISO/IEC 18000-63, ISO/IEC 18046-1 to -3, ISO/IEC 18047-63, ISO/IEC 18092, ISO/IEC 21481, ISO/IEC 15961-2, ISO/IEC 15962 and the GS1 EPC Tag Data Standard 2.3 (the hardware of an RF alternative: tags, readers and what is written to them are the operator's equipment); ISO/IEC 15693-3:2019, which the text dates, was withdrawn on 2026-05-07 and replaced by the 2026 edition; the print-quality methods ISO/IEC 15415:2024, ISO/IEC 15426-2:2023 and ISO/IEC 29158 (undated); the vocabulary ISO/IEC 19762:2025. EN 18219 (undated) is graded by pointing at its rows. Named in the body but listed only in the Bibliography, so no normative reference: ISO/IEC 8859-1 and ISO/IEC 646 (characters for other data, 5.2.3-sub2: Gap with the feature it constrains, unread), ISO 1073-2 (OCR-B, an example font in 5.7.2), ISO 7000 and IEC 60417 (5.7.3(2): Gap with the optional marking, unread), ISO 19809 and EN 301 549 V3.2.1 (5.7.4, examples to take into account: the physical side is the operator's, the digital side is graded by pointing at the clause 9 rows of the EN301549 file, the same V3.2.1, run 2026-10-11-en18216+en301549+iso21778), EN 16571 and the NFC Forum specifications (RF, Not applicable). ISO/IEC 18975, ISO/IEC 15459-2, -3 and -6 and EN IEC 61406-1 and -2 appear only in the informative annexes and the Bibliography; EN 18219 reads them (#1043).
+# Finding: the footnotes of the text still call EN 18239 and EN 18246 under preparation, as in EN 18219.
+# Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736: Art. 9(2)(b) through 5.1; 9(2)(d) through 4.2, 6.1 and 6.2.4; 10(1)(a) through 5.2.1 and 5.2.2; 10(1)(b) through 5.4, 5.7.1 and 5.7.2; 10(1)(c) through 5.2 and 5.3; 10(1)(g) through 4.2, for access by way of a data carrier only; 12(6)(a) to (c) through 5.2.1. The mandatory clauses among them, which cap the law rows: 5.1, 5.2.1-sub1, 5.2.1-sub2, 5.2.3-sub1, 5.4.5(2), 6.1(2) and 6.2.4.1, and 5.3.4-sub1 through its EN 18219 target. This Extract added EN18220 to operationalisedBy of ESPR-Art9(2)(d), 10(1)(g) and 12(6)(a) to (c), the last three Commission rows and Not applicable by rule all the same. The other law rows naming EN18220 are rows its clauses address without presumption (map rule of 2026-10-09): ESPR-Art9(2)(c) (5.7.1, placement), 9(2)(e) and 10(3)(a) (5.4.5, the carrier in digital documents such as a shop page), Annex III second paragraph (6.2.4.1, encoding an ISO/IEC 15459 identifier) and BATT-Art13(6), 13(6)(a), 13(6)(b), 77(3)-sub1 and 77(3)-sub2 (6.2.3, the QR Code; Annex ZA covers ESPR only).
+
+standard: EN18220
+edition: EN 18220:2026
+extractedFrom: standards/EN18220-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4"
+    title: 4 Concepts
+  - id: "5.1"
+    title: 5.1 Requirements, general
+  - id: "5.2"
+    title: 5.2 Data encoding
+  - id: "5.3"
+    title: 5.3 Data carrier reading
+  - id: "5.4"
+    title: 5.4 Marking or embedding methods
+  - id: "5.5"
+    title: 5.5 Dimensional characteristics for barcodes
+  - id: "5.6"
+    title: 5.6 Data carrier quality and performance
+  - id: "5.7"
+    title: 5.7 Data carrier design
+  - id: "5.8"
+    title: 5.8 Other considerations
+  - id: "6.1"
+    title: 6.1 Data carrier technologies, general
+  - id: "6.2"
+    title: 6.2 Two-dimensional barcodes
+  - id: "6.3"
+    title: 6.3 Radio frequency data carriers
+criteria:
+  - id: EN18220-4.1
+    section: "4"
+    clause: "4.1"
+    paraphrase: "Option: when the identifier's online lookup is briefly unavailable and the carrier has room for it (space in a barcode, memory in an RFID tag), further information may be held in the carrier itself."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-4.2
+    section: "4"
+    clause: "4.2"
+    paraphrase: "Statement: the text sets the basic rules for carriers that identify products at model, batch or item level; which level and which carriers a product group uses is for further legislation. Annex ZA maps 4.2 to ESPR-Art9(2)(d) and, for access by way of a carrier only, to ESPR-Art10(1)(g)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+  - id: EN18220-4.3.1
+    section: "4"
+    clause: "4.3.1"
+    paraphrase: "Recommendation: a carrier stays usable through repeated use, resale, reuse and repair, which depends on how durable the surface it sits on is; where a new passport is needed, a new identifier and carrier follow."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-4.3.2
+    section: "4"
+    clause: "4.3.2"
+    paraphrase: "Recommendation: the carrier specification for a product group's DPP takes account of the identifiers and carriers the group already uses, with their industry production specifications (module size, print grade and position, tag frequency or memory), so that a DPP need not bring a new carrier."
+    applicability: commission
+    areas:
+      - 4
+  - id: EN18220-5.1
+    section: "5.1"
+    clause: "5.1"
+    paraphrase: "Each product item carries one data carrier or more, physically on the product itself, on its packaging or on the documents that come with it, made as this text specifies. Annex ZA maps 5.1 to ESPR-Art9(2)(b)."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.2.1-sub1
+    section: "5.2"
+    clause: 5.2.1, first sentence
+    paraphrase: "The data carrier encodes a unique product identifier through which the DPP can be reached. Annex ZA maps 5.2.1 to ESPR-Art10(1)(a) and 12(6)(a) to (c), and 5.2 to ESPR-Art10(1)(c)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+  - id: EN18220-5.2.1-sub2
+    section: "5.2"
+    clause: 5.2.1, second sentence
+    paraphrase: "What the carrier holds follows the rules of the unique identifier's scheme, including its syntax where one applies, so that systems interoperate; the syntaxes are those of EN 18219 (5.2.2, which Annex ZA also maps to ESPR-Art10(1)(a))."
+    applicability: software
+    areas:
+      - 4
+      - 3
+  - id: EN18220-5.2.3-sub1
+    section: "5.2"
+    clause: 5.2.3, first sentence
+    paraphrase: "The carrier supports the character sets that the identifier schemes of EN 18219 require."
+    applicability: software
+    areas:
+      - 4
+      - 3
+  - id: EN18220-5.2.3-sub2
+    section: "5.2"
+    clause: 5.2.3, second sentence
+    paraphrase: "Option: data other than the identifier may be encoded with the characters of ISO/IEC 8859-1 or ISO/IEC 646."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-5.3.4-sub1
+    section: "5.3"
+    clause: 5.3.4, first sentence
+    paraphrase: "For consumers, the unique product identifier opens the public DPP information without registering, downloading DPP-specific software or entering credentials. Annex ZA maps 5.3 to ESPR-Art10(1)(c)."
+    applicability: software
+    areas:
+      - 4
+      - 11
+    mirrors: EN18219-4.6.2(2)
+  - id: EN18220-5.3.4-sub2
+    section: "5.3"
+    clause: 5.3.4, second sentence
+    paraphrase: "Recommendation: on smart devices, the software that decodes the carrier comes with the operating system, so nothing has to be installed to read it."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-5.4.1
+    section: "5.4"
+    clause: "5.4.1"
+    paraphrase: "Statement: the carrier is applied by one of the allowed methods only: marked on the product item, on the packaging, on a label, in an accompanying document, or embedded in the product; the method is chosen with the carrier's persistence in mind, since a lost, damaged or removed mark breaks the link to the identifier. Annex ZA maps 5.4 to ESPR-Art10(1)(b)."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.4.4(2)
+    section: "5.4"
+    clause: 5.4.4(2)
+    paraphrase: "Recommendation: the economic operator assesses how the carrier is printed, affixed or integrated on packaging or item, for what may affect its durability and persistence."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.4.5(1)
+    section: "5.4"
+    clause: 5.4.5(1)
+    paraphrase: "Option: the product identifier may be given in a document that comes with the product, on paper or in digital form."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.4.5(2)
+    section: "5.4"
+    clause: 5.4.5(2)
+    paraphrase: "Where accompanying documentation is the only place the product identifier appears, the data carrier itself is included in it; on paper (user manual, warranty, printed receipt, conformity documents) or digital (shop web page, digital receipt, customer account, e-mail)."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.5.2(2)
+    section: "5.5"
+    clause: 5.5.2(2)
+    paraphrase: "The X-dimension (module size) is chosen so that the barcode scans reliably in the environments it is meant for, such as point of sale or consumers' phones; a smaller module gives a denser symbol that low-resolution scanners and printers handle worse."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.6.1
+    section: "5.6"
+    clause: "5.6.1"
+    paraphrase: "The DPP data carrier reaches the minimum quality needed to perform in the environment or environments it targets."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.6.2(1)
+    section: "5.6"
+    clause: 5.6.2(1)
+    paraphrase: "Where the print quality of 2D symbols is assessed, the method follows ISO/IEC 15415:2024 (grade, measuring aperture and light wavelength)."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.6.2(4)
+    section: "5.6"
+    clause: 5.6.2(4)
+    paraphrase: "The symbol quality of marks applied directly to an item's surface and read with a 2D imager is assessed with ISO/IEC 29158."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.6.3
+    section: "5.6"
+    clause: "5.6.3"
+    paraphrase: "Where the quality of 2D barcode symbols is assessed, the verification follows ISO/IEC 15426-2:2023."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.6.4(1)
+    section: "5.6"
+    clause: 5.6.4(1)
+    paraphrase: "Where the performance of RFID carriers (UHF or NFC) is assessed, it is tested per ISO/IEC 18046-1:2011, -2:2020 and -3:2020, or with the NFC Forum's tests of tag performance."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.6.4(3)
+    section: "5.6"
+    clause: 5.6.4(3)
+    paraphrase: "Recommendation: a carrier is write-protected once the EN 18219 identifier has been encoded in it."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.7.1-sub1
+    section: "5.7"
+    clause: 5.7.1, first to fourth sentences
+    paraphrase: "Recommendation: consumers can tell that a DPP carrier is present, through a visible carrier or, for an RFID or NFC tag they cannot see, a mark showing it is there, without having to read brand name or model number on the label. Annex ZA maps 5.7.1 to ESPR-Art10(1)(b)."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.7.1-sub2
+    section: "5.7"
+    clause: 5.7.1, last sentence
+    paraphrase: "Recommendation: visible carriers are placed as industry standards say, for efficient scanning and for existing safety requirements."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-5.7.2
+    section: "5.7"
+    clause: "5.7.2"
+    paraphrase: "Statement: HRI (human readable interpretation) means printing what the carrier encodes beside it in a typeface that reads well, OCR-B for instance; industries and product-group legislation may set rules for it. Annex ZA maps 5.7.2 to ESPR-Art10(1)(b)."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.7.3(1)
+    section: "5.7"
+    clause: 5.7.3(1)
+    paraphrase: "Option: a 2D carrier linking to a DPP may carry a graphical mark that sets it apart from other carriers."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.7.3(2)
+    section: "5.7"
+    clause: 5.7.3(2)
+    paraphrase: "Recommendation: where the economic operator uses such a mark, it follows ISO 7000 or IEC 60417 symbol 6452 or 6452-1."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18220-5.7.4-sub1
+    section: "5.7"
+    clause: 5.7.4, first sentence
+    paraphrase: "DPP carriers do not hinder users of differing abilities; the guidance to weigh includes ISO 19809 for accessible packaging and EN 301 549 V3.2.1 for digital content on the web and on phones."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+  - id: EN18220-5.7.4-sub2
+    section: "5.7"
+    clause: 5.7.4, second sentence
+    paraphrase: "Accessibility extends to both the digital and the physical interaction with product, packaging and documentation, so that every consumer can get to the DPP information."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+  - id: EN18220-5.8.1
+    section: "5.8"
+    clause: "5.8.1"
+    paraphrase: "The standards a DPP relies on for its carrier and for the carrier's quality are ones ISO and IEC recognise; only where needed are other specifications considered, European standards first, then national standards, then industry-forum specifications; extra software that improves accessibility may be considered too."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-5.8.2
+    section: "5.8"
+    clause: "5.8.2"
+    paraphrase: "Recommendation: the carriers chosen for DPP use are proven on the market, both in producing the carrier and in capturing and processing what it encodes, to keep disruption low."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-6.1(2)
+    section: "6.1"
+    clause: 6.1(2)
+    paraphrase: "Each carrier technology of clause 6 holds one or more product identifiers that EN 18219 defines as globally unique. Annex ZA maps 6.1 to ESPR-Art9(2)(d)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+  - id: EN18220-6.2.2
+    section: "6.2"
+    clause: "6.2.2"
+    paraphrase: "A Data Matrix symbol conforms to ISO/IEC 16022:2024."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-6.2.3
+    section: "6.2"
+    clause: "6.2.3"
+    paraphrase: "A QR Code symbol conforms to ISO/IEC 18004:2024."
+    applicability: software
+    areas:
+      - 4
+  - id: EN18220-6.2.4.1
+    section: "6.2"
+    clause: 6.2.4.1, Table 1
+    paraphrase: "A 2D carrier (Data Matrix or QR Code) can encode a URI, an ISO/IEC 15459 identifier and the granularity level of the product. Annex ZA maps 6.2.4 to ESPR-Art9(2)(d)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+  - id: EN18220-6.3.2.1
+    section: "6.3"
+    clause: "6.3.2.1"
+    paraphrase: "HF RFID carriers comply with ISO/IEC 14443-1 to -4, ISO/IEC 15693-1 to -3 or ISO/IEC 18000-3 in the editions the text dates."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.2.3
+    section: "6.3"
+    clause: "6.3.2.3"
+    paraphrase: "Data on an HF RFID tag are encoded per ISO/IEC 15961-2:2019 and ISO/IEC 15962:2022."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.2.4
+    section: "6.3"
+    clause: "6.3.2.4"
+    paraphrase: "The HF RFID air interface protocol follows ISO/IEC 14443-1 to -4, ISO/IEC 15693-1 to -3 or ISO/IEC 18000-3."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.3.2
+    section: "6.3"
+    clause: "6.3.3.2"
+    paraphrase: "The NFC air interface protocols follow ISO/IEC 18092:2023 and ISO/IEC 21481:2021."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.3.3
+    section: "6.3"
+    clause: "6.3.3.3"
+    paraphrase: "Data on an NFC tag are encoded per ISO/IEC 15961-2:2019 and ISO/IEC 15962:2022; the NFC Forum specifications say how to encode them for native reading by smart devices."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.4.2
+    section: "6.3"
+    clause: "6.3.4.2"
+    paraphrase: "The RAIN RFID (UHF) air interface protocol follows ISO/IEC 18000-63:2021."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.4.3
+    section: "6.3"
+    clause: "6.3.4.3"
+    paraphrase: "RAIN RFID data are encoded per ISO/IEC 18000-63:2021: with the numbering-system toggle bit at 0 as the GS1 EPC Tag Data Standard 2.3 describes, at 1 as a UII registered under ISO/IEC 15961-2:2019."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.4.4
+    section: "6.3"
+    clause: "6.3.4.4"
+    paraphrase: "RAIN RFID tags and readers are tested for air interface compliance with ISO/IEC 18047-63:2023."
+    applicability: operator
+    areas:
+      - 4
+  - id: EN18220-6.3.6
+    section: "6.3"
+    clause: 6.3.6, Table 2
+    paraphrase: "An RF carrier (RAIN RFID, or NFC and HF RFID) can encode a URI (for RAIN RFID: with enough memory), an ISO/IEC 15459 identifier and the granularity level, as its own standards define."
+    applicability: operator
+    areas:
+      - 4

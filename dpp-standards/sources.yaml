@@ -121,16 +121,16 @@ sources:
     title: Digital product passport – Data carriers
     reference: EN 18220:2026
     publisher: CEN/CENELEC JTC 24
-    edition: EN 18220:2026 (available 2026-05-27)
+    edition: EN 18220:2026 (approved by CEN 2026-05-03, available 2026-05-27; read in the English SIS edition SS-EN 18220:2026, edition 1)
     stage: Published; date of withdrawal of conflicting national standards 2026-11-30
     access: gated
     url: https://www.nen.nl/nen-en-18220-2026-en-352706
     citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
     localFile: standards/EN18220-2026.pdf
-    normativeReferences: [GS1DL]
+    normativeReferences: [ISO18004, EN18219]
     watch:
       url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
-      lookFor: An amendment or new edition on the JTC 24 work programme
+      lookFor: An amendment updating the dated references (ISO/IEC 15693-3:2019 was withdrawn on 2026-05-07 and replaced by the 2026 edition; ISO/IEC 18004 is under revision) or a new edition (Annex ZA presumes conformity with ESPR Art. 9(2)(b), 9(2)(d), 10(1)(a), (b), (c), (g) and 12(6)(a) to (c) through clauses 4.2, 5.1, 5.2, 5.3, 5.4, 5.7.1, 5.7.2, 6.1 and 6.2.4)
   - id: EN18216
     tier: B
     title: Digital product passport – Data exchange protocols
@@ -321,6 +321,18 @@ sources:
     watch:
       url: https://www.iso.org/standard/71616.html
       lookFor: A new edition (none expected)
+  - id: ISO18004
+    tier: C
+    title: Information technology – Automatic identification and data capture techniques – QR code bar code symbology specification
+    reference: ISO/IEC 18004:2024
+    publisher: ISO/IEC
+    edition: Edition 4, 2024-08, as EN 18220 6.2.3 dates it; read through EN 18220's own restatement (a quiet zone of four modules in the notes of its Annexes A to C, the error-correction levels and module counts of its Annex B) and the conformance Checks that decode and measure the QR Code open-dpp renders; not bought (a read-through of EN 18220, no matrix file)
+    stage: Published; under revision (stage 90.92, an edition 5 working draft exists)
+    access: gated
+    url: https://www.iso.org/standard/83389.html
+    watch:
+      url: https://www.iso.org/standard/83389.html
+      lookFor: Edition 5 reaching publication, or an EN 18220 amendment updating the dated reference
   - id: ISO646
     tier: C
     title: Information technology – ISO 7-bit coded character set for information interchange

@@ -553,6 +553,7 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+      - EN18220
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -957,6 +958,7 @@ criteria:
       - 5
     operationalisedBy:
       - EN18239
+      - EN18220
     assessment:
       date: 2026-10-09
       commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
@@ -1446,6 +1448,8 @@ criteria:
       status: Not applicable
       evidence: []
       notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
+    operationalisedBy:
+      - EN18220
   - id: ESPR-Art12(6)(b)
     section: Art12
     clause: Art. 12(6)(b)
@@ -1458,6 +1462,8 @@ criteria:
       status: Not applicable
       evidence: []
       notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
+    operationalisedBy:
+      - EN18220
   - id: ESPR-Art12(6)(c)
     section: Art12
     clause: Art. 12(6)(c)
@@ -1470,6 +1476,8 @@ criteria:
       status: Not applicable
       evidence: []
       notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
+    operationalisedBy:
+      - EN18220
   - id: ESPR-Art13(1)
     section: Art13
     clause: Art. 13(1) (four subparagraphs)
