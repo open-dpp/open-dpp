@@ -20,7 +20,6 @@ describe("downloadZip", () => {
   });
 
   it("downloads the blob as file with the given name and cleans up", () => {
-
     downloadZip(new Blob(["zip"]), "export.zip");
 
     expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));

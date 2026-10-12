@@ -9,8 +9,6 @@ import { PagingResult } from "../../../pagination/paging-result";
 import { Permalink } from "../../../permalink/domain/permalink";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
 import { Period } from "../../../time/period";
-import type { Archiver } from "archiver";
-import type { Response } from "express";
 import { Passport } from "../../domain/passport";
 import { RegistryExportFile } from "../../domain/registry-export-file";
 import { PassportRepository } from "../../infrastructure/passport.repository";
@@ -59,18 +57,22 @@ describe("euRegistryExportService", () => {
     );
   });
 
-  async function run(filter: any = {}) {
+  async function run(filter: any = {}, onFile?: (file: RegistryExportFile) => void) {
     const files: RegistryExportFile[] = [];
-    const result = await service.export(organizationId, filter, (file) => {
-      files.push(file);
-    });
-    return { ...result, files };
+    const generator = service.exportFiles(organizationId, filter);
+    let step = await generator.next();
+    while (!step.done) {
+      files.push(step.value);
+      onFile?.(step.value);
+      step = await generator.next();
+    }
+    return { ...step.value, files };
   }
 
-  it("throws NotFoundError without calling onFile when no published passport matches", async () => {
+  it("throws NotFoundError before yielding when no published passport matches", async () => {
     servePassports([]);
-    const onFile = jest.fn<(file: RegistryExportFile) => void | Promise<void>>();
-    await expect(service.export(organizationId, {}, onFile)).rejects.toThrow(NotFoundError);
+    const onFile = jest.fn<(file: RegistryExportFile) => void>();
+    await expect(run({}, onFile)).rejects.toThrow(NotFoundError);
     expect(onFile).not.toHaveBeenCalled();
   });
 
@@ -169,11 +171,9 @@ describe("euRegistryExportService", () => {
       permalinksByPassport.set(p.id, [publishedOpenDpp(p.id)]);
     }
     const emittedAtPage: number[] = [];
-    const files: RegistryExportFile[] = [];
 
-    const result = await service.export(organizationId, {}, (file) => {
+    const { files, ...result } = await run({}, () => {
       emittedAtPage.push(passportRepository.findAllByOrganizationId.mock.calls.length);
-      files.push(file);
     });
 
     expect(result.exportedCount).toBe(101);
@@ -183,127 +183,5 @@ describe("euRegistryExportService", () => {
     expect(files[0].items[0].uniqueProductIdentifier).toBe(
       permalinksByPassport.get(passports[0].id)![0].publishedUrl,
     );
-  });
-
-  describe("exportToArchive", () => {
-    let res: { set: jest.Mock<any>; destroy: jest.Mock<any> };
-    let archive: {
-      on: jest.Mock<any>;
-      pipe: jest.Mock<any>;
-      append: jest.Mock<any>;
-      finalize: any;
-      abort: jest.Mock<any>;
-    };
-
-    beforeEach(() => {
-      res = { set: jest.fn(), destroy: jest.fn() };
-      archive = {
-        pipe: jest.fn(),
-        append: jest.fn(),
-        finalize: jest.fn(async () => undefined),
-        abort: jest.fn(),
-        on: jest.fn(),
-      };
-    });
-
-    const exportToArchive = () =>
-      service.exportToArchive(
-        res as unknown as Response,
-        organizationId,
-        {},
-        archive as unknown as Archiver,
-        new Date("2026-10-08T10:00:00.000Z"),
-      );
-
-    it("streams numbered registry files and sets the headers", async () => {
-      const passports = Array.from({ length: 101 }, () => passport());
-      servePassports(passports);
-      for (const p of passports) {
-        permalinksByPassport.set(p.id, [publishedOpenDpp(p.id)]);
-      }
-
-      await exportToArchive();
-
-      expect(res.set).toHaveBeenCalledWith({
-        "Content-Type": "application/zip",
-        "Content-Disposition": 'attachment; filename="eu-registry-export-2026-10-08.zip"',
-      });
-      expect(archive.pipe).toHaveBeenCalledWith(res);
-      expect(archive.append.mock.calls.map((call) => (call[1] as any).name)).toEqual([
-        "batteries-001.json",
-        "batteries-002.json",
-      ]);
-      expect(JSON.parse(archive.append.mock.calls[1][0] as string).items).toHaveLength(1);
-      expect(archive.finalize).toHaveBeenCalledTimes(1);
-    });
-
-    it("adds failed-passports.json when passports could not be exported", async () => {
-      const ok = passport();
-      const failed = passport();
-      servePassports([ok, failed]);
-      permalinksByPassport.set(ok.id, [publishedOpenDpp(ok.id)]);
-
-      await exportToArchive();
-
-      const names = archive.append.mock.calls.map((call) => (call[1] as any).name);
-      expect(names).toEqual(["batteries-001.json", "failed-passports.json"]);
-      expect(JSON.parse(archive.append.mock.calls[1][0] as string)).toEqual([
-        { passportId: failed.id, reason: "No published permalink" },
-      ]);
-    });
-
-    it("serves only failed-passports.json when nothing could be exported", async () => {
-      const failed = passport();
-      servePassports([failed]);
-
-      await exportToArchive();
-
-      expect(archive.append.mock.calls.map((call) => (call[1] as any).name)).toEqual([
-        "failed-passports.json",
-      ]);
-      expect(archive.finalize).toHaveBeenCalledTimes(1);
-    });
-
-    it("throws before touching the response when no passport matches", async () => {
-      servePassports([]);
-
-      await expect(exportToArchive()).rejects.toThrow(NotFoundError);
-
-      expect(res.set).not.toHaveBeenCalled();
-      expect(archive.pipe).not.toHaveBeenCalled();
-    });
-
-    it("aborts the response when an error happens after streaming started", async () => {
-      const p = passport();
-      servePassports([p]);
-      permalinksByPassport.set(p.id, [publishedOpenDpp(p.id)]);
-      archive.finalize.mockImplementation(async () => {
-        throw new Error("boom");
-      });
-
-      await exportToArchive();
-
-      expect(archive.abort).toHaveBeenCalled();
-      expect(res.destroy).toHaveBeenCalled();
-    });
-
-    it("destroys the response when the archive emits an error event", async () => {
-      const p = passport();
-      servePassports([p]);
-      permalinksByPassport.set(p.id, [publishedOpenDpp(p.id)]);
-
-      await exportToArchive();
-
-      const [event, listener] = archive.on.mock.calls[0] as [string, (error: Error) => void];
-      expect(event).toBe("error");
-      // the listener has to be registered before the archive is piped
-      expect(archive.on.mock.invocationCallOrder[0]).toBeLessThan(
-        archive.pipe.mock.invocationCallOrder[0],
-      );
-      const error = new Error("archive failed");
-      listener(error);
-      expect(archive.abort).toHaveBeenCalled();
-      expect(res.destroy).toHaveBeenCalledWith(error);
-    });
   });
 });

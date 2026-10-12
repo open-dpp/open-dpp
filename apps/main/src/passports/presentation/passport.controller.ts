@@ -41,7 +41,6 @@ import {
   RemoveEditingRestrictionsDtoSchema,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
-import archiver from "archiver";
 import { type Response } from "express";
 
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -138,6 +137,7 @@ import { Policy } from "../../policy/presentation/policy.decorator";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { EuRegistryExportService } from "../application/services/eu-registry-export.service";
+import { writeRegistryExportZip } from "./registry-export-zip.writer";
 import { PassportService } from "../application/services/passport.service";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
@@ -1365,11 +1365,9 @@ export class PassportController
     const { templateIds, startDate, endDate } = body;
     const period =
       startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
-    await this.euRegistryExportService.exportToArchive(
+    await writeRegistryExportZip(
       res,
-      organizationId,
-      { templateIds, period },
-      archiver("zip", { zlib: { level: 9 } }),
+      this.euRegistryExportService.exportFiles(organizationId, { templateIds, period }),
     );
   }
 
