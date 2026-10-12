@@ -13,6 +13,7 @@ import type {
   PassportDto,
   ReorderColumnDto,
   PassportPaginationDto,
+  PassportRegistryExportRequestDto,
   PassportRequestCreateDto,
   RemoveEditingRestrictionsDto,
   SubmodelElementListResponseDto,
@@ -33,6 +34,7 @@ import {
   PassportDtoSchema,
   PassportEditingModeDto,
   PassportPaginationDtoSchema,
+  PassportRegistryExportRequestDtoSchema,
   PassportRequestCreateDtoSchema,
   PolicyKeyList,
   Populates,
@@ -134,6 +136,8 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { EuRegistryExportService } from "../application/services/eu-registry-export.service";
+import { writeRegistryExportZip } from "./registry-export-zip.writer";
 import { PassportService } from "../application/services/passport.service";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
@@ -170,6 +174,7 @@ export class PassportController
     @Inject(forwardRef(() => PermalinkApplicationService))
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly euRegistryExportService: EuRegistryExportService,
   ) {}
 
   @Get()
@@ -1346,6 +1351,24 @@ export class PassportController
         organizationId,
       );
     return await this.aasSerializationService.exportPassport(passport, subject);
+  }
+
+  // Must stay a POST with a static path: GET ":id" routes must not match it.
+  @Post("/export-to-registry")
+  @HttpCode(HttpStatus.OK)
+  async exportToRegistry(
+    @OrganizationId() organizationId: string,
+    @Body(new ZodValidationPipe(PassportRegistryExportRequestDtoSchema))
+    body: PassportRegistryExportRequestDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { templateIds, startDate, endDate } = body;
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
+    await writeRegistryExportZip(
+      res,
+      this.euRegistryExportService.exportFiles(organizationId, { templateIds, period }),
+    );
   }
 
   @Post("/import")

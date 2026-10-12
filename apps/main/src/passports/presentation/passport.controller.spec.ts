@@ -38,6 +38,8 @@ import {
 import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
+import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
+import { Permalink } from "../../permalink/domain/permalink";
 import { PermalinkModule } from "../../permalink/permalink.module";
 import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
 import {
@@ -675,6 +677,121 @@ describe("passportController", () => {
 
   it(`/GET download activities`, async () => {
     await ctx.asserts.downloadActivities(createPassport);
+  });
+
+  describe("/POST export-to-registry", () => {
+    const zipBinaryParser = (res: any, callback: (err: Error | null, body: Buffer) => void) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk: Buffer) => chunks.push(chunk));
+      res.on("end", () => callback(null, Buffer.concat(chunks)));
+    };
+
+    async function createPublishedPassportWithPermalink(orgId: string, publishedUrl?: string) {
+      const { aas, submodels } = ctx.getAasObjects();
+      const passport = await savePassport(
+        Passport.create({
+          organizationId: orgId,
+          environment: Environment.create({
+            assetAdministrationShells: [aas.id],
+            submodels: submodels.map((s) => s.id),
+            conceptDescriptions: [],
+          }),
+          lastStatusChange: DigitalProductDocumentStatusChange.create({
+            previousStatus: DigitalProductDocumentStatus.Draft,
+            currentStatus: DigitalProductDocumentStatus.Published,
+          }),
+        }),
+      );
+      const permalinkRepository = ctx.getModuleRef().get(PermalinkRepository, { strict: false });
+      const permalink = Permalink.create({ passportId: passport.id });
+      await permalinkRepository.save(
+        publishedUrl ? permalink.withPublishedUrl(publishedUrl) : permalink,
+      );
+      return passport;
+    }
+
+    it("returns a ZIP with a registry file", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      await createPublishedPassportWithPermalink(org.id, "https://open-dpp.example/p/1");
+      await createPublishedPassportWithPermalink(org.id, "https://open-dpp.example/p/2");
+      await createPassport(org.id); // draft, not exported
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/export-to-registry`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .buffer()
+        .parse(zipBinaryParser)
+        .send({});
+
+      expect(response.status).toEqual(200);
+      expect(response.header["content-type"]).toEqual("application/zip");
+      expect(response.header["content-disposition"]).toMatch(
+        /^attachment; filename="eu-registry-export-\d{4}-\d{2}-\d{2}\.zip"$/,
+      );
+      expect(response.body.includes("batteries-001.json")).toBe(true);
+      expect(response.body.includes("failed-passports.json")).toBe(false);
+    });
+
+    it("adds failed-passports.json for passports without a published permalink", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      await createPublishedPassportWithPermalink(org.id, "https://open-dpp.example/p/1");
+      await createPublishedPassportWithPermalink(org.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/export-to-registry`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .buffer()
+        .parse(zipBinaryParser)
+        .send({});
+
+      expect(response.status).toEqual(200);
+      expect(response.body.includes("batteries-001.json")).toBe(true);
+      expect(response.body.includes("failed-passports.json")).toBe(true);
+    });
+
+    it("returns 404 when no published passport matches", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      await createPassport(org.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/export-to-registry`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({});
+      expect(response.status).toEqual(404);
+    });
+
+    it("does not export passports of other organizations", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      await createPublishedPassportWithPermalink(randomUUID(), "https://open-dpp.example/p/other");
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/export-to-registry`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({});
+
+      expect(response.status).toEqual(404);
+    });
+
+    it("rejects an invalid date", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/export-to-registry`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ startDate: "yesterday" });
+
+      expect(response.status).toEqual(400);
+    });
   });
 
   it("/GET export passport", async () => {

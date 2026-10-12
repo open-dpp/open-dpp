@@ -14,6 +14,7 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { EuRegistryExportService } from "./application/services/eu-registry-export.service";
 import { PassportService } from "./application/services/passport.service";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
@@ -50,7 +51,8 @@ import { ActivityHistoryModule } from "../activity-history/activity-history.modu
     UniqueProductIdentifierRepository,
     PassportRepository,
     PassportService,
+    EuRegistryExportService,
   ],
-  exports: [PassportRepository, PassportService],
+  exports: [PassportRepository, PassportService, EuRegistryExportService],
 })
 export class PassportsModule {}
