@@ -1,0 +1,2098 @@
+# Conformance Matrix: IDTA01001 (Specification of the Asset Administration Shell, Part 1: Metamodel, IDTA-01001-3-2 V3.2). Rules: dpp-standards/README.md.
+# Criteria extracted on 2026-10-12 (ticket #1044) from the AsciiDoc sources of release tag v3.2.0 of admin-shell-io/aas-specs-metamodel (commit ecd19127, July 2026, CC-BY-4.0) and the JSON schema of that tag; assessments are added in place, one per Criterion. Public text: the paraphrases are ours, short quotes are allowed.
+# Declared standard (map decision of 2026-10-12, #1021): no law and no JTC 24 EN cites the AAS; open-dpp declares it as its data model, so the lens is "implements as declared". Lowest severity; these Criteria never cap a law or EN row.
+# What open-dpp declares: its documentation names the Asset Administration Shell (IEC 63278) as its data model but no edition (first finding of #1044). This file grades V3.2, the edition current on the run date (map rule for undated references); V3.2 adds AssetKind Batch, createdAt and updatedAt, Constraints AASd-137 and AASd-138, the container depth of 32 and the informative DPP annex to V3.1.2.
+# IEC 63278-1:2023 and this text: IEC 63278-1 (Edition 1.0, 2023-12) specifies the structure of the AAS and its terms; V3.2 takes its definitions from it where available and renamed "submodel" to "Submodel" to match it. IEC 63278-1 holds no metamodel: the metamodel is to become IEC 63278-2, which V3.2 cites without date and which is still in development. IEC 63278-1 is therefore not read for this file; the watch follows IDTA releases (V3.2.x patch releases are binding bugfixes) and the publication of IEC 63278-2.
+# Criterion granularity: one Criterion per class clause of the metamodel with its attribute table and the enumerations defined in that clause (id = the class name, IDTA01001-Property); one per Constraint AASd-xxx, wherever the text states it (id = the constraint id); one per further paragraph that states a requirement of its own (the AdministrativeInformation rules on dates and on Submodels sharing a semanticId, the container depth of 32); one per data type group and one per Mappings clause. EventElement is folded into BasicEventElement, OperationVariable into Operation, the logical key enumerations into Key, the deprecated category table into Referable.
+# Grading reading (applied by the first Assess, 2026-10-12): a class row is graded on the attributes the class itself adds, and inherited attributes are graded once, on the abstract rows (Referable, Identifiable, HasSemantics, Qualifiable, HasDataSpecification, HasExtensions); an abstract class that adds nothing (SubmodelElement, DataElement) is graded on being the shared base. An attribute the metamodel keeps optional but open-dpp requires makes its row Partial, since a valid AAS is then refused; so does an attribute restriction open-dpp does not enforce. A constraint row is Met when every write path refuses data breaking it or open-dpp cannot hold such data, Partial when some paths enforce it or the data open-dpp creates itself conforms, Gap when nothing enforces it.
+# Normative and informative: by its own Structure clause only the clauses marked "(normative)" bind: the metamodel specification, Data Specification Templates and Mappings. Not extracted, no requirement of their own: Terms, Preamble, Introduction, the metamodel overview (an AAS represents exactly one asset, folded into AssetAdministrationShell), Summary and Outlook, Change Notes, Bibliography and all Annexes (Concepts, General Topics with the identifier recommendations and matching strategies, Value-Only example, BNF, UML templates and legend, semantic ids of the metamodel, handling and overview of constraints, usage hints, metamodel with inheritance).
+# The Digital Product Passport annex (new in V3.2, informative) maps EN 18223's DPP header and data elements onto the AAS: digitalProductPassportId to AssetAdministrationShell/id, uniqueProductIdentifier to AssetInformation/globalAssetId, granularity to AssetInformation/assetKind (Item = Instance, Model = Type, Batch = Batch), lastUpdate to AdministrativeInformation/updatedAt. It recommends the Submodel template IDTA-02099 for the DPP metadata and equates EN 18223's compressed JSON with the AAS Value-Only format and its expanded JSON with Normal. Not extracted (informative; IDTA Submodel templates are out of the map's scope). Its recommendations are recorded as a finding of the run and handed to the EN 18223 representation cluster #1057.
+# References: XML Schema 1.0 Part 2 (the value types, registered as XSD2), RDF 1.1 and BCP 47 (langString and its language tags), RFC 2046 (content types) and RFC 2396 (PathType) are read through on the rows that cite them. IEC 62832 (versions), ISO 15836-1 (Dublin Core), Attribute Based Access Control and the Part 3 data specification templates (IDTA-01003-a and -b) are named in explanations only and not read. Aligned specifications: Part 2 (IDTA01002, #1045) grades the API and the content modifiers that use the Mappings formats; Part 5 (AASX) is not declared by open-dpp.
+
+standard: IDTA01001
+edition: IDTA-01001-3-2 V3.2 (July 2026)
+extractedFrom: https://github.com/admin-shell-io/aas-specs-metamodel/tree/v3.2.0
+extractedAt: 2026-10-12
+sections:
+  - id: designators
+    title: Designators (general)
+  - id: common
+    title: Common Attributes
+  - id: core
+    title: Core Classes
+  - id: sme
+    title: SubmodelElement Types
+  - id: cd-env
+    title: Concept Descriptions and Environment
+  - id: referencing
+    title: Referencing
+  - id: types
+    title: Data Types
+  - id: constraints
+    title: Constraints (AASd)
+  - id: data-specifications
+    title: Data Specification Templates
+  - id: mappings
+    title: Mappings
+criteria:
+  - id: IDTA01001-Designators-depth32
+    section: designators
+    clause: Designators, introduction; Referencing, AasContainerSubmodelElements
+    paraphrase: "Recommendation: an implementation supports container elements (collections, lists, entities, annotated relationships) nested to a depth of at least 32."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-element-collection-json-schema.ts
+          note: collections, lists, entities and annotated relationships parse their children recursively (lazy schemas), no depth limit
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: 32 collections nested in one another, a Property at the bottom, posted to a draft passport answered 201, and the submodel read returned all 32 levels down to the Property (Check metamodel.container-depth-32)."
+          date: 2026-10-12
+        - type: check
+          ref: metamodel.container-depth-32
+          result: passed
+          date: 2026-10-12
+      notes: "Recommendation, met at the depth the text asks for: containers nest recursively in the DTO schemas, the domain classes and the stored document, and 32 levels of collections round-trip through the API. The Check nests collections only; lists, entities and annotated relationships use the same recursive schemas."
+  - id: IDTA01001-AdministrativeInformation
+    section: common
+    clause: Administrative Information Attributes, class AdministrativeInformation
+    paraphrase: "Every identifiable may carry administrative information: version and revision (numeric strings of up to four digits), the creator (a subject reference), createdAt and updatedAt (UTC date-times) and the templateId of the Submodel template that guided its creation, all optional; it may itself use data specifications."
+    applicability: software
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/administrative-information-json-schema.ts
+          note: version and revision only, both mandatory strings
+        - type: code
+          ref: apps/main/src/aas/domain/common/administrative-information.ts
+          note: increaseVersion on every tracked change; no other attribute
+        - type: test
+          ref: apps/main/src/aas/domain/common/administrative-information.spec.ts
+      notes: "Credited: Submodels and shells carry version and revision; open-dpp creates them as 1 and 0 and raises the version on every tracked change (a probe submodel read back version 2). Missing: creator, createdAt, updatedAt and templateId (createdAt and updatedAt are new in V3.2), and data specifications on the administrative information; version and revision are mandatory where the metamodel makes both optional, so an AdministrativeInformation with only a templateId is refused; their VersionType pattern is unchecked (open-dpp's own repository test stores version 1.0.0, see IDTA01001-StringTypes)."
+      gapIssue: 1064
+  - id: IDTA01001-AdministrativeInformation-dates
+    section: common
+    clause: Administrative Information Attributes, paragraphs on versions and dates
+    paraphrase: "Version and revision order releases numerically (a higher number is a later release). createdAt is fixed at the first creation of the object, updatedAt marks relevant changes and is never earlier than createdAt, and a higher version implies a later updatedAt; all four are business values, so not every change has to move them."
+    applicability: software
+    areas:
+      - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/administrative-information-json-schema.ts
+          note: no createdAt or updatedAt
+      notes: "Gap, not Partial: the clause's requirements are about createdAt and updatedAt (fixed creation date, updatedAt never before createdAt, a later version with a later updatedAt), and the AdministrativeInformation has neither attribute, so none of them can be held. The passport keeps its own createdAt and updatedAt outside the AAS, and that updatedAt never advances (bug #1056, the EN 18223 finding). The numeric ordering of versions holds for the versions open-dpp writes itself (1, 2, 3), not for imported ones (IDTA01001-StringTypes)."
+      gapIssue: 1064
+  - id: IDTA01001-AdministrativeInformation-submodels
+    section: common
+    clause: Administrative Information Attributes, paragraphs on Submodels sharing a semanticId or a templateId
+    paraphrase: "Two Submodels of one AAS with the same semanticId differ in their version, their createdAt or updatedAt, their creator, a supplementalSemanticId or their templateId; both carry the attribute used to tell them apart, except a supplementalSemanticId, which one of the two suffices to carry. Two Submodels guided by the same Submodel template have different ids and both carry the templateId."
+    applicability: software
+    areas:
+      - 1
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+          note: addSubmodel adds the reference without comparing semanticIds
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: every Submodel starts with version 1, revision 0
+      notes: "Nothing compares two Submodels of one shell that share a semanticId: both may carry the same version (every Submodel starts at 1), and createdAt, updatedAt, creator and templateId, the other distinguishing attributes, do not exist (IDTA01001-AdministrativeInformation)."
+      gapIssue: 1063
+  - id: IDTA01001-HasDataSpecification
+    section: common
+    clause: Has Data Specification Attributes, class HasDataSpecification
+    paraphrase: "An element that has data specifications names, by external reference to their global ids, the data specification templates whose additional attributes it carries (0..*)."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/embedded-data-specification-json-schema.ts
+          note: dataSpecification reference only
+        - type: code
+          ref: apps/main/src/aas/domain/embedded-data-specification.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: "Credited: shells, Submodels, every SubmodelElement and ConceptDescriptions hold data specification references (embeddedDataSpecifications), and a probe reference to the IEC 61360 template round-tripped. Missing: the AdministrativeInformation cannot hold one, and the data specification content is dropped (IDTA01001-EmbeddedDataSpecifications), so the reference names attributes the element cannot carry."
+      gapIssue: 1064
+  - id: IDTA01001-HasExtensions
+    section: common
+    clause: Has Extensions Attributes, classes HasExtensions and Extension
+    paraphrase: "Every referable may carry proprietary extensions (0..*). An Extension has semantics, a name, an optional valueType (default xs:string), an optional value and optional model references to the elements it refers to."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/extension-json-schema.ts
+          note: "refersTo: z.array(ReferenceJsonSchema), any reference"
+        - type: code
+          ref: apps/main/src/aas/domain/extension.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+        - type: check
+          ref: metamodel.extension-refers-to-model-reference
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: shells, Submodels, every SubmodelElement and ConceptDescriptions hold extensions with all attributes of the class; a probe extension with valueType, value and a refersTo model reference round-tripped. Missing: refersTo is typed as a model reference to a referable, and open-dpp accepts any reference there (an external one answered 201, Check metamodel.extension-refers-to-model-reference). Name uniqueness is AASd-077's row."
+      gapIssue: 1063
+  - id: IDTA01001-HasKind
+    section: common
+    clause: Has Kind Attributes, class HasKind and enumeration ModellingKind
+    paraphrase: "An element with a kind is either a Template or an Instance (optional attribute, default Instance); Submodel uses it to tell Submodel templates from Submodels."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-json-schema.ts
+          note: "kind: Template or Instance, optional"
+        - type: code
+          ref: packages/dto/src/aas/enums/modelling-kind-enum.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: Submodels take an optional kind, Template or Instance (absent means Instance, as the default says); a probe Submodel of kind Template read back as Template.
+  - id: IDTA01001-HasSemantics
+    section: common
+    clause: Has Semantics Attributes, class HasSemantics
+    paraphrase: "An element with semantics may name its main semantic definition (semanticId, a Reference, 0..1) and any number of supplemental semantic definitions (supplementalSemanticId, 0..*)."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: semanticId 0..1, supplementalSemanticIds 0..* on Submodels and SubmodelElements
+        - type: code
+          ref: packages/dto/src/aas/common/qualifier-json-schema.ts
+        - type: code
+          ref: packages/dto/src/aas/specific-asset-id-json-schema.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: "Submodels, SubmodelElements, qualifiers, extensions and specific asset ids hold a semanticId and supplemental semantic ids through the API; a probe Submodel's and Property's semantic ids round-tripped. The editor has no field for them (an EN 18223 finding, #1057), which does not change what the model holds. The ConceptDescription DTO also accepts a semanticId, an attribute the metamodel does not give it (IDTA01001-ConceptDescription). AASd-118 has its own row."
+  - id: IDTA01001-Identifiable
+    section: common
+    clause: Identifiable Attributes, class Identifiable
+    paraphrase: "An identifiable (AAS, Submodel, ConceptDescription) has a globally unique id (Identifier, mandatory) and optional administrative information; it is referenced only by its id, and its idShort is optional."
+    applicability: software
+    areas:
+      - 1
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: "idShort: z.string(), required for Submodels"
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+          note: id defaults to a random UUID
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: id defaults to a random UUID
+        - type: check
+          ref: metamodel.submodel-without-idshort
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: shells, Submodels and ConceptDescriptions have a mandatory id (a random UUID where open-dpp creates it, globally unique by construction) and optional administrative information, and Submodels are referenced by id. Missing: a Submodel without idShort is refused (Check metamodel.submodel-without-idshort: 400), although idShort is optional for identifiables; the Identifier length is unchecked (IDTA01001-StringTypes)."
+      gapIssue: 1064
+  - id: IDTA01001-Qualifiable
+    section: common
+    clause: Qualifiable and Qualifier Attributes, classes Qualifiable and Qualifier, enumeration QualifierKind
+    paraphrase: "A qualifiable element may carry qualifiers (0..*). A Qualifier has semantics, an optional kind (ValueQualifier, ConceptQualifier or TemplateQualifier, default ConceptQualifier), a type, a valueType, an optional value and an optional valueId."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/common/qualifier-json-schema.ts
+          note: "kind: QualifierKindEnum, required"
+        - type: code
+          ref: apps/main/src/aas/domain/common/qualififiable.ts
+        - type: check
+          ref: metamodel.qualifier-kind-optional
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: Submodels and SubmodelElements hold qualifiers with semantics, kind, type, valueType, value and valueId, and all three qualifier kinds. Missing: kind is mandatory where the metamodel makes it optional with ConceptQualifier as default, so a qualifier without kind is refused (Check metamodel.qualifier-kind-optional: 400). The constraints on qualifiers (AASd-020, -021, -119, -129) have their own rows."
+      gapIssue: 1064
+  - id: IDTA01001-Referable
+    section: common
+    clause: Referable Attributes, class Referable and the deprecated category table
+    paraphrase: "A referable has an idShort (NameType) that identifies it within its name space, optional multilingual displayName and description, and the deprecated category; the idShort is optional for identifiables and for direct children of a SubmodelElementList, and categories should no longer be used."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: idShort required on every SubmodelElement
+        - type: code
+          ref: packages/dto/src/aas/common/language-text-json-schema.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a list posted with two Properties that had no idShort answered 400 (Check metamodel.list-items-without-idshort)."
+          date: 2026-10-12
+        - type: check
+          ref: metamodel.list-items-without-idshort
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: SubmodelElements and Submodels have an idShort, a displayName and a description, and the deprecated category is still accepted. Missing: direct children of a SubmodelElementList must carry an idShort, although the metamodel exempts them (list items without idShort answer 400), so a valid AAS list is refused; the idShort's NameType length and AASd-002 pattern are unchecked (own rows)."
+      gapIssue: 1064
+  - id: IDTA01001-AssetAdministrationShell
+    section: core
+    clause: Asset Administration Shell Attributes, class AssetAdministrationShell
+    paraphrase: "An AAS represents exactly one asset. It is identifiable and has data specifications; it carries assetInformation (mandatory), an optional derivedFrom model reference to the AAS it was derived from, and model references to its Submodels (0..*)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/asset-administration-shell-json-schema.ts
+          note: "derivedFrom: ResourceJsonSchema; extra security attribute"
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+      notes: "Credited: a passport holds one shell per environment, with assetInformation, model references to its Submodels (key Submodel, value the Submodel id) and data specifications. Missing: derivedFrom is typed as a Resource instead of a model reference, so it is dropped on creation and update and refused on import (bug #1059); the shell carries a security attribute the metamodel does not have, inside the AAS JSON open-dpp emits."
+      gapIssue: 1064
+  - id: IDTA01001-AssetInformation
+    section: core
+    clause: Asset Information Attributes, class AssetInformation and enumeration AssetKind
+    paraphrase: "AssetInformation names the assetKind (Type, Instance, Batch, Role or NotApplicable, mandatory), an optional globalAssetId (required once the AAS is exchanged with partners), specific asset ids (0..*), an optional assetType (the asset id of the type asset) and an optional defaultThumbnail (one Resource)."
+    applicability: software
+    areas:
+      - 1
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/asset-kind-enum.ts
+          note: Type and Instance only
+        - type: code
+          ref: packages/dto/src/aas/asset-information-json-schema.ts
+          note: "defaultThumbnails: array; the modification schema picks defaultThumbnails only"
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+          note: assetKind Instance, globalAssetId = shell id by default
+      notes: "Credited: assetKind, globalAssetId, specific asset ids and assetType are held, and every shell open-dpp creates gets assetKind Instance and a globalAssetId. Missing: the AssetKind literals Batch (new in V3.2 for DPPs), Role and NotApplicable; defaultThumbnail is a list (defaultThumbnails) where the metamodel allows one Resource; the API can change only the thumbnails, so globalAssetId, specific asset ids and assetType are settable by import alone. The informative DPP annex maps EN 18223's granularity onto assetKind (Model to Type, Batch to Batch, Item to Instance), which the two literals cannot carry."
+      gapIssue: 1064
+  - id: IDTA01001-Resource
+    section: core
+    clause: Resource Attributes, class Resource
+    paraphrase: "A Resource locates a file: a path (PathType, absolute or relative URI with the file name and extension, mandatory) and an optional contentType."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/resource-json-schema.ts
+          note: "path: any string"
+        - type: code
+          ref: apps/main/src/aas/domain/resource.ts
+        - type: code
+          ref: apps/client/src/composables/aas-gallery.ts
+          note: thumbnails come from the media library
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: the import treats a thumbnail path as a media id
+      notes: "Credited: a Resource has a path and an optional contentType. Missing: the thumbnail path open-dpp writes is the id of a media library entry, not a path or URI that locates the file for a consumer outside the instance; PathType is unchecked (IDTA01001-StringTypes)."
+      gapIssue: 1065
+  - id: IDTA01001-SpecificAssetId
+    section: core
+    clause: Specific Asset ID Attributes, class SpecificAssetId
+    paraphrase: "A specific asset id is a supplementary, not necessarily unique identifying attribute of the asset: it has semantics, a name (LabelType), a value (Identifier) and an optional externalSubjectId naming the subject the value belongs to."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/specific-asset-id-json-schema.ts
+          note: name, value, semanticId, supplementalSemanticIds, externalSubjectId
+        - type: code
+          ref: apps/main/src/aas/domain/specific-asset-id.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a self-managed Entity posted with one specific asset id carrying name, value, semanticId, a supplemental semantic id and an external externalSubjectId answered 201 and read back with all five (Check metamodel.specific-asset-id-attributes-held)."
+          date: 2026-10-12
+        - type: check
+          ref: metamodel.specific-asset-id-attributes-held
+          result: passed
+          date: 2026-10-12
+      notes: The class is held with all its attributes on AssetInformation and Entity, persisted and serialized. Specific asset ids reach a shell by import only (the shell API changes thumbnails alone, IDTA01001-AssetInformation). LabelType and Identifier lengths are IDTA01001-StringTypes; AASd-116 and AASd-133 have their own rows.
+  - id: IDTA01001-Submodel
+    section: core
+    clause: Submodel Attributes, class Submodel
+    paraphrase: "A Submodel is identifiable, has a kind, semantics, qualifiers and data specifications, and contains SubmodelElements (0..*); validators treat it like a SubmodelElementCollection. A semanticId is recommended."
+    applicability: software
+    areas:
+      - 1
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-json-schema.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+        - type: test
+          ref: apps/main/src/aas/infrastructure/submodel.repository.spec.ts
+          note: a Submodel with administration, a Property and nested Entities saved and read back equal
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: Graded on the attribute the class adds, its SubmodelElements, which are held with kind, semantics, qualifiers, data specifications and administration; the Submodel is addressed by id. Inherited attributes are graded on their abstract rows (file header), so the mandatory idShort (Check metamodel.submodel-without-idshort) counts on IDTA01001-Identifiable and the incomplete administrative information on IDTA01001-AdministrativeInformation. API reads of a Submodel omit modelType (IDTA01001-JSON-rules).
+  - id: IDTA01001-SubmodelElement
+    section: core
+    clause: SubmodelElement Attributes, class SubmodelElement
+    paraphrase: "SubmodelElement is the abstract base of every element in a Submodel: referable, with semantics, qualifiers and data specifications; a semanticId is recommended."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: the attributes every element shares
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a Property posted with category PARAMETER, a displayName, a description, a semanticId, a supplemental semantic id, a ConceptQualifier with a semanticId and an IEC 61360 data specification reference answered 201 and read back with each of them (Check metamodel.element-shared-attributes-held)."
+          date: 2026-10-12
+        - type: check
+          ref: metamodel.element-shared-attributes-held
+          result: passed
+          date: 2026-10-12
+      notes: The abstract class adds no attribute of its own; it is graded on being the one base every element shares, with the Referable, HasSemantics, Qualifiable and HasDataSpecification attributes, which a probe element kept. The defects of those inherited attributes count on their abstract rows (IDTA01001-Referable and IDTA01001-Qualifiable are Partial), per the reading in the file header. The concrete types open-dpp lacks are their own rows (Operation, Capability, BasicEventElement).
+  - id: IDTA01001-AnnotatedRelationshipElement
+    section: sme
+    clause: Annotated Relationship Element Attributes, class AnnotatedRelationshipElement
+    paraphrase: "An annotated relationship element is a relationship element whose relationship may be annotated with data elements (annotation, 0..*, of type DataElement)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/annotated-relationship-element-json-schema.ts
+          note: "annotations: SubmodelElementSchema.array(); first and second required"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/annotated-relationship-element.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: an annotated relationship element whose annotation is a collection, not a data element, answered 201."
+          date: 2026-10-12
+      notes: "Credited: the element holds first, second and annotations. Missing: annotations accept any SubmodelElement instead of data elements only (a collection as annotation was accepted); first and second are mandatory although both are optional (IDTA01001-RelationshipElement); the values read drops the annotations (IDTA01001-ValueOnly)."
+      gapIssue: 1064
+  - id: IDTA01001-BasicEventElement
+    section: sme
+    clause: Basic Event Element and Event Element Attributes, classes BasicEventElement and EventElement, enumerations Direction and StateOfEvent (experimental)
+    paraphrase: "A basic event element (an EventElement) names the observed referable (mandatory model reference), a direction (input or output) and a state (on or off), and optionally a messageTopic, a messageBroker reference, lastUpdate, minInterval and maxInterval."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: no event element registered
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-element-schema.ts
+          note: the discriminated union has no BasicEventElement
+      notes: "open-dpp has no event elements: a BasicEventElement is refused on every write path and cannot be imported. The class is experimental in V3.2."
+      gapIssue: 1064
+  - id: IDTA01001-EventPayload
+    section: sme
+    clause: Basic Event Element Attributes, Event Payload Attributes, class EventPayload (experimental)
+    paraphrase: "Events sent or received by an AAS follow one payload format: the source event element and the observable referable (model references, mandatory), their optional semanticIds, an optional topic and subjectId, a UTC timestamp (mandatory) and an optional base64 payload. It is not part of the exchanged information model."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: no event element registered
+      notes: No events are sent or received, so there is no payload. A requirement on a feature open-dpp lacks is Gap in that feature's cluster (map rule on conditional clauses); the class is experimental.
+      gapIssue: 1064
+  - id: IDTA01001-Blob
+    section: sme
+    clause: Blob Attributes, class Blob
+    paraphrase: "A Blob is a data element holding a file's content itself: value (BlobType, base64, 0..1) and contentType (a MIME type as RFC 2046 defines it, 0..1)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/blob-json-schema.ts
+          note: "contentType: z.string(), required; value: z.base64()"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/blob.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a Blob without contentType answered 400; one with contentType text/plain and a base64 value answered 201."
+          date: 2026-10-12
+      notes: "Credited: value is held as base64 and checked to be base64. Missing: contentType is mandatory where the metamodel makes it optional (a Blob without it answered 400); the content type is not checked against RFC 2046 (IDTA01001-StringTypes)."
+      gapIssue: 1064
+  - id: IDTA01001-Capability
+    section: sme
+    clause: Capability Attributes, class Capability
+    paraphrase: "A Capability is a SubmodelElement describing, independently of its implementation, the potential of an asset to achieve an effect; it has no attributes of its own."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: no Capability registered
+      notes: open-dpp has no Capability element; it is refused on every write path and cannot be imported.
+      gapIssue: 1064
+  - id: IDTA01001-DataElement
+    section: sme
+    clause: Data Element and Overview of Data Element Types, class DataElement
+    paraphrase: "DataElement is the abstract SubmodelElement that holds a value and is not composed of other SubmodelElements: Property, MultiLanguageProperty, Range, File, Blob and ReferenceElement."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: Property, MultiLanguageProperty, Range, File, Blob and ReferenceElement registered
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/range.spec.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/file.spec.ts
+      notes: All six data element types exist and hold a value without child elements. Their own findings sit on their rows (Blob and File contentType).
+  - id: IDTA01001-Entity
+    section: sme
+    clause: Entity Attributes, class Entity and enumeration EntityType
+    paraphrase: "An Entity models a part of a composite asset: statements (SubmodelElements, 0..*), an optional entityType (CoManagedEntity or SelfManagedEntity), an optional globalAssetId and specific asset ids (0..*)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/entity-type-json-schema.ts
+          note: "entityType: EntityTypeEnum, required"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/entity.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/entity.spec.ts
+        - type: check
+          ref: metamodel.entity-type-optional
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: statements, entityType (both literals), globalAssetId and specific asset ids are held. Missing: entityType is mandatory where the metamodel makes it optional, so an Entity without it answered 400 (Check metamodel.entity-type-optional). AASd-014 has its own row."
+      gapIssue: 1064
+  - id: IDTA01001-File
+    section: sme
+    clause: File Attributes, class File
+    paraphrase: "A File is a data element that locates a file: value (PathType, the absolute or relative path and name of the file with extension, 0..1) and contentType (0..1); a path relative to the package root is used for files inside an AAS package."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/file-json-schema.ts
+          note: "contentType: z.string(), required"
+        - type: code
+          ref: apps/client/src/components/aas/form/FileField.vue
+          note: the editor stores the media library id as the File value
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+        - type: check
+          ref: metamodel.file-content-type-optional
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: value and contentType are held. Missing: contentType is mandatory where the metamodel makes it optional (Check metamodel.file-content-type-optional: 400); the value the editor writes is a media library id, not the path and name of the file, so outside the instance it locates nothing (the serialization side is in the cluster of IDTA01001-Resource)."
+      gapIssue: 1064
+  - id: IDTA01001-MultiLanguageProperty
+    section: sme
+    clause: Multi Language Property Attributes, class MultiLanguageProperty
+    paraphrase: "A MultiLanguageProperty is a data element with a multilingual value (MultiLanguageTextType, 0..1) and an optional valueId referencing a coded value."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/multi-language-property-json-schema.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: A MultiLanguageProperty holds a multilingual value and a valueId; a probe with English and German text and a valueId round-tripped. Which language tags are allowed is IDTA01001-LangStringSet.
+  - id: IDTA01001-Operation
+    section: sme
+    clause: Operation and Operation Variable Attributes, classes Operation and OperationVariable
+    paraphrase: "An Operation is a SubmodelElement with input, output and in-output variables (0..* each); an OperationVariable wraps exactly one SubmodelElement as its value. Operations in Submodel instances are specified like those in templates."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: no Operation registered
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: an Operation posted to a draft submodel answered 400."
+          date: 2026-10-12
+      notes: "open-dpp has no Operation element (nor OperationVariable): it is refused on every write path and cannot be imported."
+      gapIssue: 1064
+  - id: IDTA01001-Property
+    section: sme
+    clause: Property Attributes, class Property
+    paraphrase: "A Property is a data element with a single value: valueType (DataTypeDefXsd, mandatory), value (ValueDataType, 0..1) and an optional valueId referencing a coded value."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/property-json-schema.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/property.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/property.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: A Property holds valueType, value and valueId; a probe Int Property with valueId and semanticId round-tripped. Whether a value fits its type is IDTA01001-ValueDataType; the type names are IDTA01001-DataTypeDefXsd.
+  - id: IDTA01001-Range
+    section: sme
+    clause: Range Attributes, class Range (experimental)
+    paraphrase: "A Range is a data element with a valueType (mandatory) and an optional min and max; since V3.2 a missing bound no longer means infinity."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/range-json-schema.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/range.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/range.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: A Range holds valueType, min and max, each bound optional; a probe Int range 1 to 9 round-tripped. Bounds are not checked against the type (IDTA01001-ValueDataType).
+  - id: IDTA01001-ReferenceElement
+    section: sme
+    clause: Reference Element Attributes, class ReferenceElement
+    paraphrase: "A ReferenceElement is a data element whose value (0..1) is a Reference: a model reference to a referable in the same or another AAS, or an external reference."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/reference-element-json-schema.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/reference-element.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/reference-element.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: A ReferenceElement holds an optional Reference, model or external; a probe external reference round-tripped. Reference checks are the Reference and AASd-121 to -137 rows.
+  - id: IDTA01001-RelationshipElement
+    section: sme
+    clause: Relationship Element Attributes, class RelationshipElement
+    paraphrase: "A RelationshipElement relates two elements, model or external: first (subject) and second (object), each a Reference, each 0..1; its semanticId defines the relationship."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/relationship-element-json-schema.ts
+          note: first and second required
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/relationship-element.ts
+        - type: check
+          ref: metamodel.relationship-ends-optional
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: first and second are held as references. Missing: both are mandatory although the metamodel has made them optional since V3.1, so a relationship element without them answered 400 (Check metamodel.relationship-ends-optional)."
+      gapIssue: 1064
+  - id: IDTA01001-SubmodelElementCollection
+    section: sme
+    clause: SubmodelElement Collection Attributes, class SubmodelElementCollection
+    paraphrase: "A SubmodelElementCollection is a struct of named SubmodelElements (value, 0..*), unordered; adhering to the order of the Submodel template is recommended."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-element-collection-json-schema.ts
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: A collection holds named SubmodelElements and keeps the order they were posted in; a probe collection round-tripped, and 32 nested levels did too (IDTA01001-Designators-depth32). idShort uniqueness inside it is AASd-022.
+  - id: IDTA01001-SubmodelElementList
+    section: sme
+    clause: SubmodelElement List Attributes, class SubmodelElementList and enumeration AasSubmodelElements
+    paraphrase: "A SubmodelElementList is an ordered list of SubmodelElements numbered from zero: value (0..*), orderRelevant (default true), an optional semanticIdListElement, the element type typeValueListElement (one AasSubmodelElements literal, mandatory) and an optional valueTypeListElement."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/aas-submodel-elements.ts
+          note: AasSubmodelElements with an extra literal ConceptDescription
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards. A list with typeValueListElement ConceptDescription answered 201."
+          date: 2026-10-12
+      notes: "Credited: a list holds its items in order with orderRelevant, semanticIdListElement, typeValueListElement and valueTypeListElement; a probe list round-tripped. Missing: typeValueListElement accepts ConceptDescription, which is no AasSubmodelElements literal, and the types open-dpp cannot hold (Operation, Capability, BasicEventElement), so a list can declare items it can never contain; items are addressed by idShort, not by their index (IDTA01001-Path, AASd-128). The item constraints have their own rows."
+      gapIssue: 1063
+  - id: IDTA01001-ConceptDescription
+    section: cd-env
+    clause: Concept Description Attributes, class ConceptDescription
+    paraphrase: "A ConceptDescription defines the semantics of an element: it is identifiable, has data specifications (at least one template describes the concept) and references the external definitions it is a case of (isCaseOf, 0..*)."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/concept-description-json-schema.ts
+          note: id, isCaseOf, embeddedDataSpecifications and an extra semanticId
+        - type: code
+          ref: apps/main/src/aas/domain/concept-description.ts
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-types.ts
+          note: the current export schema (v6.0) extends v5 to v1
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-v1.schema.ts
+          note: the concept description shape, kept to v6.0, has no id
+      notes: "Credited: concept descriptions are held with id, isCaseOf and data specification references and persisted with the environment. Missing: they enter by import only (no API reads or writes them); the export drops their id; their data specification content, which carries the concept's definition, is dropped (IDTA01001-EmbeddedDataSpecifications); the DTO adds a semanticId the class does not have. Concept descriptions are shared between a template and its passports (#1030)."
+      gapIssue: 1064
+  - id: IDTA01001-Environment
+    section: cd-env
+    clause: Environment Attributes, class Environment
+    paraphrase: "An Environment, neither identifiable nor referable, lists the AASs, Submodels and ConceptDescriptions (0..* each) for file transfer and serialization."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/environment-json-schema.ts
+          note: the stored environment lists ids
+        - type: code
+          ref: apps/main/src/aas/domain/exportable/aas-exportable.ts
+          note: the export wraps the expanded environment in the open-dpp:json envelope
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-types.ts
+          note: the current export schema (v6.0) extends v5 to v1
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-v1.schema.ts
+          note: the shell and concept description shapes, kept to v6.0, have no id
+      notes: "Credited: a passport is an environment of one shell, its Submodels and concept descriptions, and the export carries it with the three lists. Missing: the exported shells and concept descriptions lack their id, the lists come inside an open-dpp envelope (format open-dpp:json), and the import reads that envelope only, so no plain AAS environment can be imported; JSON details in IDTA01001-JSON-rules."
+      gapIssue: 823
+  - id: IDTA01001-Reference
+    section: referencing
+    clause: Reference Attributes, class Reference and enumeration ReferenceTypes
+    paraphrase: "A Reference is either an external reference (to an entity outside the AAS world, a unique identifier) or a model reference (an ordered key chain to a model element): its type is mandatory, it has an optional referredSemanticId and an ordered list of at least one Key."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: "keys: z.array(KeyJsonSchema), no minimum"
+        - type: code
+          ref: apps/main/src/aas/domain/common/reference.ts
+        - type: check
+          ref: metamodel.reference-has-keys
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: references carry type, referredSemanticId and an ordered key list, and the references open-dpp builds itself always have a key. Missing: a reference without keys is accepted (Check metamodel.reference-has-keys: 201), although at least one key is required."
+      gapIssue: 1063
+  - id: IDTA01001-Key
+    section: referencing
+    clause: Key Attributes, class Key, enumeration KeyTypes and the logical key enumerations
+    paraphrase: "A Key names a referenced element by its id: a type out of KeyTypes (the 24 literals: the identifiables, the referables and their abstract kinds, GlobalReference and FragmentReference) and a value (an IRDI, IRI, idShort or fragment, as an Identifier)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/key-types-enum.ts
+          note: the 24 KeyTypes literals
+        - type: code
+          ref: apps/main/src/aas/domain/common/key.ts
+        - type: test
+          ref: apps/main/src/aas/domain/common/reference.spec.ts
+      notes: Keys carry a type out of exactly the 24 KeyTypes literals of V3.2 and a value. The Identifier length of the value is IDTA01001-StringTypes.
+  - id: IDTA01001-StringTypes
+    section: types
+    clause: Primitive Data Types (BlobType to VersionType)
+    paraphrase: "The metamodel's string types restrict their values: Identifier 1 to 2048 characters, NameType and ContentType 1 to 128, LabelType 1 to 64, MessageTopicType 1 to 255, PathType 1 to 2048 and a URI, VersionType and RevisionType 1 to 4 digits without a leading zero, BlobType base64, DateTimeUtc a UTC date-time."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: "idShort: z.string()"
+        - type: code
+          ref: packages/dto/src/aas/administrative-information-json-schema.ts
+          note: "version and revision: z.string()"
+        - type: code
+          ref: packages/dto/src/aas/common/key-json-schema.ts
+          note: "value: z.string()"
+        - type: test
+          ref: apps/main/src/aas/infrastructure/submodel.repository.spec.ts
+          note: stores version 1.0.0 and idShort carbon footprint
+      notes: "Credited: the values open-dpp generates fit their types (UUID ids of 36 characters, versions 1, 2, 3, revision 0). Missing: no length or pattern of Identifier, NameType, LabelType, ContentType, PathType, MessageTopicType, VersionType or RevisionType is checked on any write or import path; open-dpp's own repository test stores version 1.0.0 and the idShort carbon footprint."
+      gapIssue: 1063
+  - id: IDTA01001-LangStringSet
+    section: types
+    clause: Primitive Data Types, LangStringSet, MultiLanguageNameType and MultiLanguageTextType; DataTypeDefRdf (rdf:langString)
+    paraphrase: "Multilingual values are sets of strings tagged with a language: the tags are IETF BCP 47 language tags (bare ISO 639 codes and tags with a region such as en-GB); each name string has 1 to 128 characters, each text string 1 to 1023."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/language-enum.ts
+          note: 29 bare codes; BcpLanguageTagSchema used by the client language parameter only
+        - type: code
+          ref: packages/dto/src/aas/common/language-text-json-schema.ts
+        - type: check
+          ref: model.language-tag-with-country
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: names and texts are sets of language-tagged strings, and descriptions refuse two strings in one language. Missing: the tags are limited to 29 bare codes, so BCP 47 tags with a region (en-GB) are refused (Check model.language-tag-with-country) and Irish and Maltese are missing; the 128 and 1023 character limits are unchecked."
+      gapIssue: 838
+  - id: IDTA01001-DataTypeDefXsd
+    section: types
+    clause: Enumeration for SubmodelElement Value Types, DataTypeDefXsd
+    paraphrase: "The value type of a Property, Range, Qualifier, Extension or list is one of 30 XML Schema 1.0 types, named with the xs: prefix (xs:string, xs:double, xs:anyURI and so on); XSD list, derived string, NOTATION and QName types and the RDF types HTML and XMLLiteral are excluded."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: the 30 types, named without prefix (Double)
+        - type: code
+          ref: packages/dto/src/aas/common/basic-json-schema.ts
+          note: "xs: input mapped to the names"
+        - type: check
+          ref: model.admitted-xsd-types-accepted
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: model.excluded-xsd-types-refused
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: open-dpp admits exactly the 30 types of DataTypeDefXsd and refuses the excluded ones (Checks model.admitted-xsd-types-accepted, which posts open-dpp's names, and model.excluded-xsd-types-refused, which counts a 500 as a refusal). Missing: the literals are open-dpp's own names (Double for xs:double) in every response and in the export; xs:-prefixed input is mapped, except xs:anyURI, which answers 500 (bug #1033). The literal spelling belongs to the standard JSON (#823)."
+      gapIssue: 823
+  - id: IDTA01001-ValueDataType
+    section: types
+    clause: Primitive Data Types, ValueDataType; Predefined Simple Data Types
+    paraphrase: "A value (ValueDataType) is a literal of the XML Schema atomic type its valueType names, in the lexical form XML Schema 1.0 Part 2 defines for that type."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/property.ts
+          note: validateValue checks Double, Float, DateTime, Boolean and AnyUri only
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/range.ts
+          note: min and max unchecked
+        - type: check
+          ref: model.typed-values-checked
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: Property values of xs:double, xs:float, xs:dateTime, xs:boolean and xs:anyURI are checked. Missing: the other 25 types accept any text (bug #1055; Check model.typed-values-checked), Range bounds, qualifier values and extension values are never checked, and xs:dateTime is narrowed to values with a time zone."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-002
+    section: constraints
+    clause: Constraint AASd-002 (Referable)
+    paraphrase: "An idShort has at least two characters, only letters, digits, hyphen and underscore, starts with a letter and does not end with a hyphen (^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9_]+$)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: "idShort: z.string()"
+        - type: code
+          ref: apps/client/src/components/aas/form/IdField.vue
+          note: the editor proposes a random UUID as idShort
+        - type: code
+          ref: apps/client/src/lib/submodel-base-form.ts
+          note: "idShort: min(1) only"
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-object.ts
+          note: a permission object's idShort is an idShortPath joined with dots
+        - type: check
+          ref: metamodel.idshort-syntax-enforced
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: 1Leading, a, Trailing- and has space were all accepted (Check metamodel.idshort-syntax-enforced). open-dpp itself breaks it: the editor fills idShort with a random UUID, which starts with a digit in ten of sixteen cases; the shell's security permissions are ReferenceElements whose idShort is a dotted idShortPath, so every permission on a nested element emits an idShort with dots; the repository test uses carbon footprint; and an empty idShort is accepted."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-005
+    section: constraints
+    clause: Constraint AASd-005 (AdministrativeInformation)
+    paraphrase: "A revision requires a version: without a version there is no revision."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/administrative-information-json-schema.ts
+          note: version and revision both required
+        - type: code
+          ref: apps/main/src/aas/domain/common/administrative-information.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a Submodel posted with administration revision 1 and no version answered 400; one with version 1 and revision 0 answered 201 (Check metamodel.revision-needs-version)."
+          date: 2026-10-12
+        - type: check
+          ref: metamodel.revision-needs-version
+          result: passed
+          date: 2026-10-12
+      notes: "A revision never comes without a version: open-dpp requires both whenever administrative information is present and creates them as 1 and 0. That requiring both is stricter than the metamodel is IDTA01001-AdministrativeInformation's finding."
+  - id: IDTA01001-AASd-006
+    section: constraints
+    clause: Constraint AASd-006 (Qualifier)
+    paraphrase: "If a qualifier has both a value and a valueId, the value equals the coded value the valueId references."
+    applicability: operator
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+      notes: "A duty on the content: whether a qualifier's value equals the coded value its valueId names can only be judged against the dictionary the content owner chose; open-dpp keeps value and valueId as posted, which is graded on the class rows (Property, Qualifiable). The reference SDK aas-core leaves it unchecked for the same reason (it depends on resolving references)."
+  - id: IDTA01001-AASd-007
+    section: constraints
+    clause: Constraint AASd-007 (Property)
+    paraphrase: "If a Property has both a value and a valueId, the value equals the coded value the valueId references."
+    applicability: operator
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+      notes: "A duty on the content: whether a Property's value equals the coded value its valueId names can only be judged against the dictionary the content owner chose; open-dpp keeps value and valueId as posted, which is graded on the class rows (Property, Qualifiable). The reference SDK aas-core leaves it unchecked for the same reason (it depends on resolving references)."
+  - id: IDTA01001-AASd-012
+    section: constraints
+    clause: Constraint AASd-012 (MultiLanguageProperty)
+    paraphrase: "If a MultiLanguageProperty has both a value and a valueId, every language string means what the valueId specifies."
+    applicability: operator
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/multi-language-property-json-schema.ts
+      notes: "A duty on the content: whether each language string means what the valueId specifies is a judgment of meaning no software can make (the reference SDK aas-core calls it untestable); open-dpp keeps value and valueId as posted."
+  - id: IDTA01001-AASd-014
+    section: constraints
+    clause: Constraint AASd-014 (Entity)
+    paraphrase: "A self-managed Entity has a globalAssetId or a specific asset id."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.self-managed-entity-has-asset-id
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: a self-managed Entity without either was accepted (Check metamodel.self-managed-entity-has-asset-id: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-020
+    section: constraints
+    clause: Constraint AASd-020 (Qualifier)
+    paraphrase: "A qualifier's value is consistent with its valueType."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.qualifier-value-typed
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: a qualifier of type Int with value abc was accepted (Check metamodel.qualifier-value-typed: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-021
+    section: constraints
+    clause: Constraint AASd-021 (Qualifiable)
+    paraphrase: "A qualifiable has at most one qualifier of each qualifier type."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.qualifier-types-unique
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: two qualifiers of type Cardinality on one Property were accepted (Check metamodel.qualifier-types-unique: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-022
+    section: constraints
+    clause: Constraint AASd-022 (Referable, global invariant)
+    paraphrase: "The idShorts of non-identifiable referables are unique, case-sensitively, within their name space (the parent element)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: addSubmodelElementOrFail refuses a duplicate idShort
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: fromPlain parses elements without the check
+        - type: check
+          ref: model.element-ids-unique-on-create
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: adding one element to a Submodel, collection or list refuses an idShort its siblings already use (case-sensitive). Missing: a Submodel, collection or list posted together with its elements skips the check (bug #1054; Check model.element-ids-unique-on-create), and so does the import."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-077
+    section: constraints
+    clause: Constraint AASd-077 (HasExtensions)
+    paraphrase: "The extension names of one element are unique."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.extension-names-unique
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: two extensions named Origin on one Property were accepted (Check metamodel.extension-names-unique: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-107
+    section: constraints
+    clause: Constraint AASd-107 (SubmodelElementList)
+    paraphrase: "A first-level list item that has a semanticId has the list's semanticIdListElement as its semanticId."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.list-child-semantic-id-matches
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: a list item with a semanticId other than the list's semanticIdListElement was accepted (Check metamodel.list-child-semantic-id-matches: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-108
+    section: constraints
+    clause: Constraint AASd-108 (SubmodelElementList)
+    paraphrase: "All first-level list items are of the SubmodelElement type the list's typeValueListElement names."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: addSubmodelElement refuses an item of another type
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-element-list-json-schema.ts
+          note: "value: any SubmodelElement"
+        - type: check
+          ref: model.list-items-one-type
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: adding one item to a list refuses an item of another SubmodelElement type. Missing: a list posted with its items accepts mixed types (bug #1054; Check model.list-items-one-type), and so does the import."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-109
+    section: constraints
+    clause: Constraint AASd-109 (SubmodelElementList)
+    paraphrase: "A list of Properties or Ranges sets valueTypeListElement, and all its first-level items have that value type."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.property-list-declares-value-type
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: a list of Properties without valueTypeListElement was accepted (Check metamodel.property-list-declares-value-type: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-114
+    section: constraints
+    clause: Constraint AASd-114 (SubmodelElementList)
+    paraphrase: "Two first-level list items that both have a semanticId have the same one."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: no comparison of item semanticIds
+      notes: "No write or import path checks it: list items with different semanticIds are held side by side, like the item AASd-107's Check posted."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-115
+    section: constraints
+    clause: Constraint AASd-115 (SubmodelElementList)
+    paraphrase: "A first-level list item without a semanticId is taken to have the list's semanticIdListElement."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: semanticIdListElement kept as posted
+      notes: "A reading rule for consumers that match semantics: it fixes what an absent item semanticId means and binds no write or read behaviour of a holder. open-dpp never resolves or matches semanticIds (no code compares them), so it never has to infer one; it keeps semanticIdListElement as posted for consumers that do. Not a Gap under the conditional-clause rule, because semantic matching is no feature Part 1 asks an implementation to have."
+  - id: IDTA01001-AASd-116
+    section: constraints
+    clause: Constraint AASd-116 (asset-related information)
+    paraphrase: "\"globalAssetId\" (case-insensitive) is a reserved specific asset id name meaning the asset's globalAssetId."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/specific-asset-id-json-schema.ts
+          note: "name: z.string()"
+      notes: "No write or import path checks it: an imported specific asset id may be named globalAssetId with any value, unrelated to the shell's globalAssetId."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-117
+    section: constraints
+    clause: Constraint AASd-117 (Referable, global invariant)
+    paraphrase: "Every non-identifiable referable that is not a direct child of a SubmodelElementList has an idShort."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: idShort required on every SubmodelElement
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a Property without idShort posted to a draft submodel answered 400, and so did list items without idShort."
+          date: 2026-10-12
+      notes: "Every non-identifiable referable open-dpp holds has an idShort: it is required on every write and import path. An empty idShort is accepted, which breaks NameType and AASd-002, not the presence this constraint asks for (IDTA01001-StringTypes, IDTA01001-AASd-002). That open-dpp also requires it on list items, which the constraint exempts, is IDTA01001-Referable's finding."
+  - id: IDTA01001-AASd-118
+    section: constraints
+    clause: Constraint AASd-118 (HasSemantics)
+    paraphrase: "An element with a supplementalSemanticId also has a main semanticId."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.supplemental-semantic-id-needs-main
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: a Property with a supplemental semantic id and no semanticId was accepted (Check metamodel.supplemental-semantic-id-needs-main: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-119
+    section: constraints
+    clause: Constraint AASd-119 (qualifiers)
+    paraphrase: "An element with a TemplateQualifier that has a kind is of kind Template."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/common/qualifier-json-schema.ts
+          note: kind not related to the element's kind
+      notes: "No write or import path checks it: a TemplateQualifier is accepted on an element of any kind."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-121
+    section: constraints
+    clause: Constraint AASd-121 (Reference)
+    paraphrase: "The first key of every reference is of a globally identifiable type (AssetAdministrationShell, ConceptDescription, GlobalReference, Identifiable or Submodel)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: submodelToReference
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+        - type: check
+          ref: metamodel.model-reference-starts-with-identifiable
+          result: failed
+          date: 2026-10-12
+      notes: "The references open-dpp builds itself conform (a shell's Submodel references, key Submodel with the Submodel id; links migrated to external references, one GlobalReference key). Missing: references posted or imported are unchecked; a model reference starting with a Property key was accepted (Check metamodel.model-reference-starts-with-identifiable: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-122
+    section: constraints
+    clause: Constraint AASd-122 (Reference)
+    paraphrase: "The first key of an external reference is a GlobalReference."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/migrate-links.ts
+          note: migrated links become one GlobalReference key
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+      notes: "The references open-dpp builds itself conform (a shell's Submodel references, key Submodel with the Submodel id; links migrated to external references, one GlobalReference key). Missing: external references posted or imported are unchecked; open-dpp's own test fixture for shells carries an external reference whose key is of type Submodel."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-123
+    section: constraints
+    clause: Constraint AASd-123 (Reference)
+    paraphrase: "The first key of a model reference is an AAS identifiable (AssetAdministrationShell, ConceptDescription, Identifiable or Submodel)."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: submodelToReference
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+        - type: check
+          ref: metamodel.model-reference-starts-with-identifiable
+          result: failed
+          date: 2026-10-12
+      notes: "The references open-dpp builds itself conform (a shell's Submodel references, key Submodel with the Submodel id; links migrated to external references, one GlobalReference key). Missing: a model reference starting with a Property key was accepted (Check metamodel.model-reference-starts-with-identifiable: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-124
+    section: constraints
+    clause: Constraint AASd-124 (Reference)
+    paraphrase: "The last key of an external reference is a GlobalReference or a FragmentReference."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/migrate-links.ts
+          note: migrated links become one GlobalReference key
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+      notes: "The references open-dpp builds itself conform (a shell's Submodel references, key Submodel with the Submodel id; links migrated to external references, one GlobalReference key). Missing: external references posted or imported are unchecked; open-dpp's own test fixture for shells carries an external reference whose key is of type Submodel."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-125
+    section: constraints
+    clause: Constraint AASd-125 (Reference)
+    paraphrase: "In a model reference with more than one key, every key after the first is a fragment key (a referable that is not identifiable, or a FragmentReference), so the shortest path is used."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: "submodelToReference: one key"
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+      notes: "The model references open-dpp emits have a single key, and the internal key chains of its element pointers (a Submodel key followed by element keys, no fragment) satisfy the rule by key type. Missing: key chains posted or imported are unchecked."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-126
+    section: constraints
+    clause: Constraint AASd-126 (Reference)
+    paraphrase: "In a model reference with more than one key, only the last key may be a FragmentReference."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: "submodelToReference: one key"
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+      notes: "The model references open-dpp emits have a single key, and the internal key chains of its element pointers (a Submodel key followed by element keys, no fragment) satisfy the rule by key type. Missing: key chains posted or imported are unchecked."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-127
+    section: constraints
+    clause: Constraint AASd-127 (Reference)
+    paraphrase: "In a model reference, a FragmentReference key follows a File or Blob key; no other element supports fragments."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: "submodelToReference: one key"
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+      notes: "The model references open-dpp emits have a single key, and the internal key chains of its element pointers (a Submodel key followed by element keys, no fragment) satisfy the rule by key type. Missing: key chains posted or imported are unchecked."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-128
+    section: constraints
+    clause: Constraint AASd-128 (Reference)
+    paraphrase: "In a model reference, the key after a SubmodelElementList key holds an integer: the position of the item in the list."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/pointer.ts
+          note: getReferenceToElement keys every element by its idShort
+        - type: code
+          ref: apps/main/src/aas/domain/common/id-short-path.ts
+          note: paths of idShorts only
+      notes: "Graded on open-dpp's reference model, not only on what it emits: the only multi-key references open-dpp builds are the internal key chains of its element pointers, and they key a list item by its idShort where the constraint requires its index, so open-dpp cannot form or resolve a conforming reference into a list. These internal references are not emitted, and references posted or imported are unchecked. The same chains satisfy AASd-125 to -127 by key type, which is why those rows are Partial."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-129
+    section: constraints
+    clause: Constraint AASd-129 (qualifiers)
+    paraphrase: "A SubmodelElement with a TemplateQualifier is part of a Submodel of kind Template, unless it belongs to an OperationVariable."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/common/qualifier-json-schema.ts
+          note: kind not related to the Submodel's kind
+      notes: "No write or import path checks it: a TemplateQualifier is accepted on elements of a Submodel of kind Instance."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-130
+    section: constraints
+    clause: Constraint AASd-130 (types)
+    paraphrase: "Every string attribute holds only characters XML 1.0 admits (tab, line feed, carriage return and the Unicode ranges from U+0020, without surrogates, U+FFFE and U+FFFF), so it can be carried by every serialization."
+    applicability: software
+    areas:
+      - 1
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-base-json-schema.ts
+          note: no refinement for the constraint
+        - type: check
+          ref: metamodel.string-characters-xml-safe
+          result: failed
+          date: 2026-10-12
+      notes: "No write or import path checks it: a value holding U+0007 was accepted (Check metamodel.string-characters-xml-safe: 201)."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-131
+    section: constraints
+    clause: Constraint AASd-131 (AssetInformation)
+    paraphrase: "AssetInformation defines the globalAssetId or at least one specific asset id."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+          note: default globalAssetId = shell id
+        - type: code
+          ref: packages/dto/src/aas/asset-information-json-schema.ts
+          note: globalAssetId nullish, specificAssetIds default []
+      notes: "Credited: every shell open-dpp creates gets a globalAssetId. Missing: an imported AssetInformation with neither a globalAssetId nor a specific asset id is accepted."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-133
+    section: constraints
+    clause: Constraint AASd-133 (SpecificAssetId)
+    paraphrase: "The externalSubjectId of a specific asset id is an external reference."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/specific-asset-id-json-schema.ts
+          note: "externalSubjectId: any Reference"
+      notes: "No write or import path checks it: an imported specific asset id may name its subject by a model reference."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-134
+    section: constraints
+    clause: Constraint AASd-134 (Operation)
+    paraphrase: "The idShorts of all input, output and in-output variable values of an Operation are unique."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: no Operation registered
+      notes: "Constrains Operations, which open-dpp lacks (IDTA01001-Operation): Gap in that feature's cluster (map rule on conditional clauses)."
+      gapIssue: 1064
+  - id: IDTA01001-AASd-137
+    section: constraints
+    clause: Constraint AASd-137 (Reference)
+    paraphrase: "No key of an external reference has an AAS referable type."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/migrate-links.ts
+          note: migrated links become one GlobalReference key
+        - type: code
+          ref: packages/dto/src/aas/common/reference-json-schema.ts
+          note: keys unchecked
+      notes: "The references open-dpp builds itself conform (a shell's Submodel references, key Submodel with the Submodel id; links migrated to external references, one GlobalReference key). Missing: external references posted or imported are unchecked; open-dpp's own test fixture for shells carries an external reference whose key is of type Submodel."
+      gapIssue: 1063
+  - id: IDTA01001-AASd-138
+    section: constraints
+    clause: Constraint AASd-138 (SubmodelElementList)
+    paraphrase: "A SubmodelElementList inside a Submodel of kind Template or inside an OperationVariable has exactly one element."
+    applicability: software
+    areas:
+      - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: no size rule
+      notes: "No write or import path checks it: a Submodel of kind Template may hold lists of any length; the OperationVariable case falls with IDTA01001-Operation."
+      gapIssue: 1063
+  - id: IDTA01001-DataSpecification
+    section: data-specifications
+    clause: Data Specification Template Attributes, classes DataSpecification and DataSpecificationContent
+    paraphrase: "A data specification template has a globally unique id (used as HasDataSpecification/dataSpecification), optional description and administration, and its content: the additional attributes an element that uses the template carries."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/embedded-data-specification-json-schema.ts
+          note: dataSpecification reference only
+        - type: code
+          ref: apps/main/src/aas/domain/embedded-data-specification.ts
+      notes: "Credited: elements name data specification templates by their global id. Missing: open-dpp holds no template and no content, so the additional attributes a template defines (IEC 61360's preferredName, unit, definition) cannot be stored."
+      gapIssue: 1064
+  - id: IDTA01001-JSON-environment
+    section: mappings
+    clause: Format "Normal" in JSON, Top-Level Structure
+    paraphrase: "The root of a JSON serialization is an Environment object with the arrays assetAdministrationShells, submodels and conceptDescriptions; identifiables appear only at that level."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/exportable/aas-exportable.ts
+          note: environment inside the open-dpp:json envelope
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-types.ts
+          note: the current export schema (v6.0) extends v5 to v1
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-v1.schema.ts
+          note: the shell and concept description shapes, kept to v6.0, have no id
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: importPassport parses the envelope only
+        - type: check
+          ref: metamodel.export-matches-v32-json-schema
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: the export holds an environment object with assetAdministrationShells, submodels and conceptDescriptions, identifiables at that level only. Missing: it is nested in open-dpp's envelope, the shells lack id and modelType, the concept descriptions lack id, and the import reads the envelope only. The export fails the official V3.2 JSON schema (Check metamodel.export-matches-v32-json-schema) and the V3.0 metamodel verification (Check export.aas-environment-verifies)."
+      gapIssue: 823
+  - id: IDTA01001-JSON-rules
+    section: mappings
+    clause: Format "Normal" in JSON, JSON Mapping Rules
+    paraphrase: "The JSON serialization follows the schema of the text: every class a JSON object, optional attributes omitted when absent, aggregations as plural-named arrays that are omitted when empty, the modelType discriminator on every class with descendants, enumerations as their literals (xs:string), Property value and Range bounds as strings, BlobType as a base64 string."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: explicit null for absent attributes, empty arrays, no modelType on the shell
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: "value type names without xs:"
+        - type: code
+          ref: packages/dto/src/aas/asset-information-json-schema.ts
+          note: defaultThumbnails list
+        - type: check
+          ref: metamodel.export-matches-v32-json-schema
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: the JSON follows the metamodel's classes and attribute names, with plural array names and modelType on SubmodelElements. Missing: absent attributes are written as null and empty aggregations as [] where both must be omitted; the shell has no modelType and the export also drops the Submodel's (API reads of a Submodel omit it too); value types are open-dpp's names (Double for xs:double); defaultThumbnails is a list and the shell carries security; the data specification content is missing. On the conformance subject's export the V3.2 schema reports 4200 violations, still 724 with nulls and empty arrays removed (Check metamodel.export-matches-v32-json-schema)."
+      gapIssue: 823
+  - id: IDTA01001-EmbeddedDataSpecifications
+    section: mappings
+    clause: Embedded Data Specifications; JSON and XML mapping rules on embedded data specifications
+    paraphrase: "Serializations embed data specifications: each pairs the external reference to the data specification with the data specification content itself (embeddedDataSpecifications), in place of the bare reference."
+    applicability: software
+    areas:
+      - 2
+      - 8
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/embedded-data-specification-json-schema.ts
+          note: no dataSpecificationContent
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: visitEmbeddedDataSpecification writes the reference only
+      notes: Embedded data specifications carry only the reference; the content the text requires beside it is dropped on input and never written, so no IEC 61360 concept description content survives.
+      gapIssue: 1064
+  - id: IDTA01001-XML
+    section: mappings
+    clause: Format "Normal" in XML
+    paraphrase: "Option: the AAS is serialized in XML following the XML mapping rules and the XSD of the text."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: JSON only
+      notes: "Option open-dpp does not offer: there is no XML serialization. A format alternative it lacks is Gap in its cluster; as a declared-standard row it caps nothing."
+      gapIssue: 1065
+  - id: IDTA01001-RDF
+    section: mappings
+    clause: Format "Normal" in RDF
+    paraphrase: "Option: the AAS is serialized in RDF following the RDF mapping rules, the ontology and the SHACL shapes of the text."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: JSON only
+      notes: "Option open-dpp does not offer: there is no RDF serialization."
+      gapIssue: 1065
+  - id: IDTA01001-Metadata
+    section: mappings
+    clause: Format "Metadata"
+    paraphrase: "The Metadata format serializes an object as in its full form, leaving out the fields that hold values or children (for instance assetInformation and submodels of an AAS, value and valueId of a Property)."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: full serialization only
+      notes: "open-dpp has no Metadata serialization: every read returns the full object. Whether the API should offer it through the content modifier is Part 2's row (#1045)."
+      gapIssue: 1065
+  - id: IDTA01001-ValueOnly
+    section: mappings
+    clause: Format "Value" (Value-Only Serialization) in JSON, serialization rules
+    paraphrase: "Value-Only JSON: a Submodel or collection is an object keyed by idShort, a list an array keeping every index, each data element as its value (MultiLanguageProperty as language objects, Range as min and max, File and Blob as contentType and value, references and specific asset ids in Normal form, relationships, annotations, entities and events as named objects), elements without a value and Operations and Capabilities omitted."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: the $value serialization
+        - type: test
+          ref: apps/main/src/aas/domain/value-visitor.spec.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a draft passport got a Template submodel with a semanticId, a supplemental semantic id, a TemplateQualifier, an extension with refersTo and an embedded data specification reference, holding a Property (Int, with valueId and semanticId), a Range (Int, 1 to 9), a MultiLanguageProperty (en and de, with valueId), a ReferenceElement, a list (orderRelevant false, semanticIdListElement, valueTypeListElement String) and a collection. The submodel read returned every attribute as posted, the values read keyed them by idShort; the draft was deleted afterwards."
+          date: 2026-10-12
+      notes: "Credited: the values read keys Submodels and collections by idShort, writes lists as arrays and serializes Properties, MultiLanguageProperties (language objects), Ranges, Files, Blobs and references as the text says (manual probe; the EN 18223 Check format.compressed-keys-are-element-ids also asserts that no semanticId appears, which a conforming Value-Only payload with specific asset ids would break, so it is not tagged here). Missing: annotations of annotated relationships are dropped; specific asset ids are written as name-value pairs instead of in Normal form; elements without a value appear as null instead of being omitted; a list drops items whose value is empty or unreadable, so indices shift; an Entity's empty globalAssetId appears as null."
+      gapIssue: 1065
+  - id: IDTA01001-ValueOnly-types
+    section: mappings
+    clause: Format "Value" in JSON, Data type to value mapping
+    paraphrase: "In Value-Only JSON a value takes the JSON type its XML Schema type maps to: numbers for the numeric types, true and false for xs:boolean, strings for the rest."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: visitProperty returns the stored string
+        - type: check
+          ref: format.compressed-values-native-json
+          result: failed
+          date: 2026-10-12
+      notes: 'Every value is written as a JSON string: numbers and booleans never take their JSON types (Check format.compressed-values-native-json; a probe Int 5 came out as "5", a Range as "1" and "9").'
+      gapIssue: 1065
+  - id: IDTA01001-ReferenceFormat
+    section: mappings
+    clause: Format "Reference"
+    paraphrase: "The Reference format serializes a referable as the model reference to it alone, ignoring its children."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: full serialization only
+      notes: open-dpp has no Reference serialization of a referable; the content modifier that asks for it is Part 2's (#1045).
+      gapIssue: 1065
+  - id: IDTA01001-Path
+    section: mappings
+    clause: Format "Path" (idShortPath Serialization) in JSON
+    paraphrase: "An idShortPath joins idShorts with dots from the requested element down, and addresses list items by their index in square brackets, never by their idShort."
+    applicability: software
+    areas:
+      - 1
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/id-short-path.ts
+          note: segments joined with dots; no index notation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/pointer.ts
+      notes: open-dpp addresses every element, list items included, by a dotted path of idShorts; the [index] notation for list items does not exist, and there is no Path serialization.
+      gapIssue: 1065
+  - id: IDTA01001-ReferenceText
+    section: mappings
+    clause: Text Serialization of Values of Type "Reference"
+    paraphrase: "Where a mapping turns a Reference into a single string, it follows the grammar of the text: an optional [ExternalRef] or [ModelRef] prefix with an optional referredSemanticId, then the keys as (KeyType)value separated by comma and space."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: references always as objects
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+          note: references always as objects
+      notes: "Conditional: the grammar binds a mapping that turns a Reference into one string, and no serialization of open-dpp does; references are always JSON objects. Not a Gap under the conditional-clause rule: Part 1 asks for no string serialization of references (it uses the grammar for its own examples and notation), so open-dpp lacks no feature the text requires."
+  - id: IDTA01001-BlobEncoding
+    section: mappings
+    clause: Mappings, Encoding
+    paraphrase: "Blob content is encoded as a base64 string."
+    applicability: software
+    areas:
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/blob-json-schema.ts
+          note: "value: z.base64()"
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: a Blob posted with value aGVsbG8= came back as aGVsbG8= in the submodel read and in the values read."
+          date: 2026-10-12
+      notes: Blob content is accepted only as base64 and written back as the same base64 string in the full and in the values serialization.
