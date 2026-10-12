@@ -1149,6 +1149,20 @@ criteria:
     operationalisedBy:
       - EN18246
       - EN18221
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: export envelope without signature or hash
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+      notes: "Read against EN 18246, which operationalises it (run 2026-10-12-en18246): no mechanism makes passport data authentic or verifiable. Access control keeps unauthorised people from changing data and the activity history names the user of a recorded change (EN18246-4.1(2), 4.7(5) Partial), but nothing signs, seals or hashes passport data or exports, so no recipient can verify origin or integrity (4.1(3), 4.7(1), 4.7(4), A.3 Gap), and the history is neither complete nor tamper-evident (#1024). Same finding as BATT-Art78(g). The HSTS Check this row carries skips on plain http; transport security would not satisfy the row anyway (EN18246-4.1(3))."
+      gapIssue: 824
   - id: ESPR-Art11(h)
     section: Art11
     clause: Art. 11 first subparagraph (h)

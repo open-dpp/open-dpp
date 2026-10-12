@@ -43,6 +43,34 @@ criteria:
     areas:
       - 10
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element access rules per role
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: user id and time per record, no hash or signature
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: anonymous writes refused on the public routes
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: access.foreign-user-denied-management
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: only the owning organisation's members, within the element rules, can change passport data (Checks: anonymous and outside users are refused), and the activity history names the user behind each recorded content change. Missing: nothing makes the data attributable to a source a third party can verify; the user id is internal, unsigned and not in the passport or its export (#824)."
+      gapIssue: 824
   - id: EN18246-4.1(3)
     section: "4.1"
     clause: 4.1(3)
@@ -50,6 +78,20 @@ criteria:
     applicability: software
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: export envelope without signature or hash
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+      notes: "open-dpp has no integrity or authenticity mechanism of the data's own: no signature, seal, hash or ESDC on passport data or exports. Whatever protection exists is the access control on the routes and, when the operator adds it, TLS on the channel, which is exactly what this clause says is not enough (#824)."
+      gapIssue: 824
   - id: EN18246-4.2(3)
     section: "4.2"
     clause: 4.2(3)
@@ -58,6 +100,23 @@ criteria:
     areas:
       - 5
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/users/domain/user.ts
+          note: users known by internal id, name and e-mail
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "subjects: anonymous, user, member or owner, instance admin"
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+      notes: Actors reaching controlled data are organisation members, API keys acting as their creator, or the instance admin, all known by internal ids, names and e-mail addresses. No actor carries a globally unique identifier such as the operator identifier of EN 18219, and an Organization has none either (#1023, as EN18239-5.2(1)). Annex ZA ties 4.2 to ESPR-Art11(a), which is therefore at most Partial when the interoperability assessment (#762) grades it.
+      gapIssue: 1023
   - id: EN18246-4.2(4)
     section: "4.2"
     clause: 4.2(4)
@@ -66,6 +125,20 @@ criteria:
     areas:
       - 10
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, optional OAuth Trusted Client, API keys; no second factor
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+      notes: "Credited: controlled data need authentication (password session, API key, or an access token of the optional OAuth Trusted Client). Missing: no notion of level of assurance and only one strength of authentication: no second factor, no identity proofing, no stronger method for more sensitive data or roles, and e-mail verification is sent but not required to sign in (#1023)."
+      gapIssue: 1023
   - id: EN18246-4.3(a)
     section: "4.3"
     clause: 4.3(a)
@@ -92,6 +165,24 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+        - type: code
+          ref: apps/main/src/common/throttler/user-or-ip.throttler-guard.ts
+          note: throttling on a few account routes only
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Recommendation, assessed as enablement. Public reads are stateless requests answered from the database, but nothing protects the service from floods of requests: public routes are not rate limited, there is no caching layer or guide for sizing and scaling, and the health endpoint checks no dependency (#1026; hardening and availability in #1027)."
+      gapIssue: 1026
   - id: EN18246-4.3(d)
     section: "4.3"
     clause: 4.3(d)
@@ -99,6 +190,26 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: check
+          ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: a scanned Digital Link redirects to the public view
+      notes: "A published passport opens as an ordinary web page in a stock browser, and its data are also served as JSON over plain HTTP(S); no app, plugin or extension is involved. The Check access.public-view-renders-in-plain-browser loads the view in Playwright's stock Chromium without any extension and finds the subject's trade name; resolver.redirect-published shows a scanned Digital Link leading there. Not operational: publishing is all the economic operator does."
   - id: EN18246-4.3(e)
     section: "4.3"
     clause: 4.3(e)
@@ -107,6 +218,23 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: check
+          ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: public routes pass without any credential or challenge
+      notes: "No security measure stands in front of public data: the public routes need no credential, CAPTCHA, client certificate, app attestation or token, so nothing an implementation adds there requires extra software (Check access.public-view-renders-in-plain-browser). Should rate limiting arrive (#1026), it has to keep this property; that is noted on the cluster."
   - id: EN18246-4.4(2)
     section: "4.4"
     clause: 4.4(2)
@@ -115,11 +243,36 @@ criteria:
     areas:
       - 1
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: plain HTTP listener, no security headers
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, optional OAuth Trusted Client, API keys; no second factor
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Credited: controlled data need authentication, and public data need none, as the clause allows. Missing: open-dpp serves plain HTTP and leaves encryption to a reverse proxy it neither ships nor documents, so controlled data and session cookies travel unencrypted unless the operator adds TLS on its own (#1027, as EN18216-4(1) and 4(2)). The TLS Checks skip on the plain-http Instance."
+      gapIssue: 1027
   - id: EN18246-4.4(3)
     section: "4.4"
     clause: 4.4(3)
     paraphrase: "Recommendation: DPP service providers apply the requirements ETSI EN 319 401:2024 sets for trust service providers (general policy requirements of an organisation offering trust services)."
     applicability: operator
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Operator recommendation by rule: ETSI EN 319 401 holds organisational policy requirements for trust service providers (risk management, staff, assets, operations, incident handling, termination); following them is the DPP service provider's management system, which no software feature provides."
   - id: EN18246-4.4(4)
     section: "4.4"
     clause: 4.4(4)
@@ -128,6 +281,21 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.endpoints.ts
+          note: AAS read, create, modify and delete endpoints
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+      notes: "This clause defers to EN 18216, whose run (2026-10-11) gives the detail: a RESTful JSON API is met (EN18216-4(6)), while TLS and HTTP/2 are left to the operator (#1027) and nothing negotiates the representation, so a machine following the Digital Link gets the app shell instead of data (#1034). The channel exists and is open, but it is not yet interoperable in the sense EN 18216 sets."
+      gapIssue: 1034
   - id: EN18246-4.5(1)
     section: "4.5"
     clause: 4.5(1)
@@ -137,6 +305,21 @@ criteria:
       - 3
       - 4
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: the QR code encodes the permalink's public URL
+      notes: Recommendation, assessed as enablement. The QR code open-dpp draws holds the bare public URL; nothing signs, seals or otherwise protects the identifier it carries, and there is no service a scan could check it against (#1037).
+      gapIssue: 1037
   - id: EN18246-4.5(2)
     section: "4.5"
     clause: 4.5(2)
@@ -145,6 +328,17 @@ criteria:
     areas:
       - 3
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+      notes: A conditional duty on whatever protects the identifier. open-dpp offers no such protection, so no protected identifier exists whose interoperability with EN 18219 could be shown; graded Gap as the conditional EN18239-5.2(12) was. A protection added outside open-dpp would have to keep the GS1 Digital Link resolvable, which the cluster names as a constraint (#1037).
+      gapIssue: 1037
   - id: EN18246-4.5(3)
     section: "4.5"
     clause: 4.5(3)
@@ -153,6 +347,24 @@ criteria:
     areas:
       - 4
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: the QR code encodes the permalink's public URL
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR code and public URL of a permalink, with a copy button
+      notes: "Software part met: open-dpp draws a QR code that encodes the passport's public URL, which a phone's camera app opens in the browser (Checks resolver.redirect-published and access.public-view-renders-in-plain-browser cover the URL; the carrier itself is drawn client-side and not checkable). Operational and undocumented: putting at least one such carrier on every product is the economic operator's step, and no operator guide explains generating, sizing and placing it (#828)."
+      gapIssue: 828
   - id: EN18246-4.5(4)
     section: "4.5"
     clause: 4.5(4)
@@ -161,6 +373,18 @@ criteria:
     areas:
       - 4
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: generic AAS element types
+      notes: Optional. An operator can add a free-text or multilingual property saying that the identifier is protected and how to check it, through the generic AAS model; no dedicated element, template or display exists, so the statement is ad hoc (#1037).
+      gapIssue: 1037
   - id: EN18246-4.6(1)
     section: "4.6"
     clause: 4.6(1)
@@ -169,6 +393,18 @@ criteria:
     areas:
       - 4
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: generic AAS element types
+      notes: Optional. Securing the physical carrier is the economic operator's act outside the software; the passport side, explaining how to inspect the security feature, is possible only as an ad-hoc property of the generic AAS model (#1037).
+      gapIssue: 1037
   - id: EN18246-4.6(2)
     section: "4.6"
     clause: 4.6(2)
@@ -177,6 +413,17 @@ criteria:
     areas:
       - 4
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+      notes: "A conditional duty on whatever secures the carrier's physical authenticity. open-dpp provides no such solution, so none can be shown to work with EN 18220 carriers; graded Gap as 4.5(2). EN 18220 itself is assessed in #757 (#1037)."
+      gapIssue: 1037
   - id: EN18246-4.6(4)
     section: "4.6"
     clause: 4.6(4)
@@ -185,6 +432,17 @@ criteria:
     areas:
       - 4
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+      notes: A conditional duty on a protected carrier. open-dpp offers no protected carrier, so this cannot be shown; a plain QR code from open-dpp stays readable by any camera when an operator adds physical protection around it, but a signed or sealed carrier (Annex B) would need a design that keeps the public URL readable without an app, which the cluster carries (#1037).
+      gapIssue: 1037
   - id: EN18246-4.6(5)
     section: "4.6"
     clause: 4.6(5)
@@ -193,6 +451,18 @@ criteria:
     areas:
       - 4
       - 8
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: generic AAS element types
+      notes: "Optional. As 4.5(4): an ad-hoc property of the generic AAS model can state that the carrier is protected and how to check it; nothing dedicated exists (#1037)."
+      gapIssue: 1037
   - id: EN18246-4.7(1)
     section: "4.7"
     clause: 4.7(1)
@@ -200,6 +470,20 @@ criteria:
     applicability: software
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: export envelope without signature or hash
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+      notes: "Nothing lets anyone verify the authenticity or integrity of a passport's data: no signature, seal, hash or ESDC in the public view, the public API or the export, and no published key or certificate to check against (#824)."
+      gapIssue: 824
   - id: EN18246-4.7(2)
     section: "4.7"
     clause: 4.7(2)
@@ -208,6 +492,20 @@ criteria:
     areas:
       - 10
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, optional OAuth Trusted Client, API keys; no second factor
+        - type: code
+          ref: apps/main/src/identity/users/domain/user.ts
+          note: users known by internal id, name and e-mail
+      notes: "Actors supplying data sign in with a password, an API key or an OAuth access token; no authentication rests on a digital certificate, and nothing proves the identity behind an account (no identity proofing). The certificate format is expected from the implementing acts under ESPR Art. 11 fourth subparagraph, not adopted yet (#824; actor identity in #1023)."
+      gapIssue: 824
   - id: EN18246-4.7(3)
     section: "4.7"
     clause: 4.7(3)
@@ -216,6 +514,26 @@ criteria:
     areas:
       - 10
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: user id and time per record, no hash or signature
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: content, status, editing-mode and access-rule changes; no creation or deletion of a passport
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001): the published conformance passport, created and published by the Check setup and given a content submodel, lists exactly one activity, SubmodelAdded, in GET /api/v2/passports/:id/activities; neither its creation nor its publication is recorded (bug #1032)."
+          date: 2026-10-12
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+      notes: "Credited: recorded content, editing-mode and access-rule changes carry the user id and time. Missing: the binding is a database field anyone with database access can change, not a signature or seal, so a change can still be denied; a passport's creation and deletion and its status changes are not recorded at all (bug #1032), and deleting a draft deletes its records (#824; logging in #1024)."
+      gapIssue: 824
   - id: EN18246-4.7(4)
     section: "4.7"
     clause: 4.7(4)
@@ -223,6 +541,17 @@ criteria:
     applicability: software
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+      notes: "There is nothing to verify: with no signature, seal or hash on passport data (4.7(1)), no verifier can check validity and integrity, free of charge or otherwise (#824)."
+      gapIssue: 824
   - id: EN18246-4.7(5)
     section: "4.7"
     clause: 4.7(5)
@@ -231,6 +560,28 @@ criteria:
     areas:
       - 10
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: user id and time per record, no hash or signature
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: records deleted with a deleted draft
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: content, status, editing-mode and access-rule changes; no creation or deletion of a passport
+        - type: test
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.spec.ts
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001): the published conformance passport, created and published by the Check setup and given a content submodel, lists exactly one activity, SubmodelAdded, in GET /api/v2/passports/:id/activities; neither its creation nor its publication is recorded (bug #1032)."
+          date: 2026-10-12
+      notes: "Credited: changes of passport and template content, editing mode and element access rules are logged with user and time, and members can list and download the log. Missing: creation, status changes (bug #1032) and deletion of a passport are not logged; the records carry no hash chain or signature, can be altered in the database, and are deleted together with a deleted draft, so neither non-repudiation nor integrity over time holds (#1024)."
+      gapIssue: 1024
   - id: EN18246-4.7(6)
     section: "4.7"
     clause: 4.7(6)
@@ -239,6 +590,20 @@ criteria:
     areas:
       - 5
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
+          note: user id and time per record, no hash or signature
+        - type: code
+          ref: apps/main/src/identity/users/domain/user.ts
+          note: users known by internal id, name and e-mail
+      notes: The editor of a recorded change is identified only by an internal user id (with name and e-mail in the account); no globally unique operator identifier exists for users or organisations (#1023, as EN18239-5.2(1)).
+      gapIssue: 1023
   - id: EN18246-4.7(7)
     section: "4.7"
     clause: 4.7(7)
@@ -247,6 +612,23 @@ criteria:
     areas:
       - 6
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: content, status, editing-mode and access-rule changes; no creation or deletion of a passport
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: activities list and download, organisation members only
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001): the published conformance passport, created and published by the Check setup and given a content submodel, lists exactly one activity, SubmodelAdded, in GET /api/v2/passports/:id/activities; neither its creation nor its publication is recorded (bug #1032)."
+          date: 2026-10-12
+      notes: "Credited: content changes of a passport are logged and the owning organisation's members can read and download the log. Missing: status changes are not logged (bug #1032), the log is not audit-proof (no hash chain or signature, editable in the database), and parties outside the organisation, such as market surveillance authorities, have no access to it (#1024; access for authorities in #821)."
+      gapIssue: 1024
   - id: EN18246-5.1.2
     section: "5.1"
     clause: 5.1.2
@@ -255,6 +637,26 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: IP address and user agent of every request
+        - type: code
+          ref: apps/main/src/analytics/presentation/passport-metric.controller.ts
+          note: first-party page-view counter, no IP or user stored
+        - type: code
+          ref: apps/client/src/stores/analytics.ts
+          note: the client sends the full page URL
+        - type: manual
+          ref: "Against the ea05ef20 Instance: every anonymous read of the public view (GET /api/v2/p/<permalink>/shells, /submodels) and the page-view call appear in the backend log with the visitor's IP address and full user agent at debug level, which main.ts always enables."
+          date: 2026-10-12
+      notes: "Credited: the public view asks nothing of the visitor, sets no cookie and needs no account (Check privacy.public-view-asks-no-personal-data), and the page-view counter stores no IP address or user. Missing: the request log always records the IP address and user agent of every anonymous visitor, which is personal information collected from people who only read public data; no setting switches it off (#840). The anonymous AI chat, where an organisation enables it, logs each visitor message verbatim (#840)."
+      gapIssue: 840
   - id: EN18246-5.1.3(1)
     section: "5.1"
     clause: 5.1.3(1)
@@ -262,6 +664,24 @@ criteria:
     applicability: mixed
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, optional OAuth Trusted Client, API keys; no second factor
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Personal data open-dpp keeps: user accounts (name, e-mail, preferred language), sessions with IP address and user agent, organisation memberships, and the request log. Credited: accounts and sessions are behind authentication and passwords are stored hashed by the authentication library. Missing: no backup and restore procedure or guide against loss, no retention limit on logs and sessions, and no documented purpose binding; the request log keeps visitor IPs for whatever the operator's log retention is (#1027; logging in #840)."
+      gapIssue: 1027
   - id: EN18246-5.1.3(2)
     section: "5.1"
     clause: 5.1.3(2)
@@ -269,6 +689,21 @@ criteria:
     applicability: mixed
     areas:
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/view/profile/ProfileGeneralView.vue
+          note: users correct their name and change their e-mail address
+        - type: code
+          ref: apps/main/src/identity/users/presentation/users.controller.ts
+          note: verified e-mail change
+      notes: "Credited: users can correct their name and change their e-mail address (with verification). Missing: no self-service deletion of an account (#479), no export of one's data, and the client shows no privacy information; the admin pages cannot delete an account either, so an operator has to remove one in the database. The privacy texts are the operator's, the means to act on requests are the software's."
+      gapIssue: 479
   - id: EN18246-5.1.3(3)
     section: "5.1"
     clause: 5.1.3(3)
@@ -276,6 +711,29 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: check
+          ref: privacy.public-view-first-party-only
+          result: passed
+          date: 2026-10-12
+        - type: code
+          ref: apps/client/index.html
+          note: no third-party script, font or stylesheet
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/main/src/analytics/presentation/passport-metric.controller.ts
+          note: first-party page-view counter, no IP or user stored
+        - type: manual
+          ref: "Searched apps/client/src at ea05ef20 for geolocation, Notification, getUserMedia, mediaDevices, permissions, serviceWorker, PushManager, share, vibrate, getBattery and navigator.connection: no use anywhere; the client writes to the clipboard only when a user presses a copy button."
+          date: 2026-10-12
+      notes: "The public view loads only first-party code and data: no analytics service, tag manager, CDN, web font or pixel (Check privacy.public-view-first-party-only records every request of an anonymous visit, scrolled through, and finds none outside the instance's origin). The page-view counter is first-party and not an external tool; its tracking is judged under 5.1.5 and #840. The AI chat, where enabled, calls its model provider from the server, so the visitor's browser never contacts it. Content an operator enters can still link to other sites; such a link is the operator's data, not a component the service loads."
   - id: EN18246-5.1.4(2)
     section: "5.1"
     clause: 5.1.4(2)
@@ -283,6 +741,27 @@ criteria:
     applicability: mixed
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element access rules per role
+        - type: code
+          ref: apps/main/src/main.ts
+          note: plain HTTP listener, no security headers
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Recommendation, assessed as enablement. Credited: access control on every management route and per element. Missing: encryption in transit is left to the operator (no TLS, no guide), encryption at rest is not configured or documented, and nothing supports regular audits (no security event log, no audit export of access) (#1027)."
+      gapIssue: 1027
   - id: EN18246-5.1.4(3)
     section: "5.1"
     clause: 5.1.4(3)
@@ -291,6 +770,24 @@ criteria:
     areas:
       - 10
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: element access rules per role
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Credited: organisational data (drafts, member-only elements, templates, members) are confined to the owning organisation by membership checks and element rules. Missing: availability and loss protection depend on a backup and restore procedure open-dpp does not provide or document, and integrity has no protection beyond access control (#1027; integrity in #824)."
+      gapIssue: 1027
   - id: EN18246-5.1.4(4)
     section: "5.1"
     clause: 5.1.4(4)
@@ -298,6 +795,24 @@ criteria:
     applicability: mixed
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Credited: public data are served without barriers (no account, no app) while organisational data stay behind authentication. Missing: the security measures are not mapped to a recognised framework (no security policy, SECURITY.md or hardening baseline such as ISO/IEC 27001 controls or the BSI baseline), and transport security is left to the operator (#1027)."
+      gapIssue: 1027
   - id: EN18246-5.1.4(5)
     section: "5.1"
     clause: 5.1.4(5)
@@ -306,6 +821,24 @@ criteria:
     areas:
       - 5
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, optional OAuth Trusted Client, API keys; no second factor
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "subjects: anonymous, user, member or owner, instance admin"
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/member-role.enum.ts
+          note: owner and member
+      notes: "Recommendation, assessed as enablement. Credited: privileged rights are configured roles (instance admin, organisation owner) separate from ordinary members. Missing: no stronger authentication for privileged accounts (no second factor), no support for periodically reviewing who holds which rights, and one broad instance-admin role with no separation into narrower trusted roles (#1027; access-rights life cycle in #1025)."
+      gapIssue: 1027
   - id: EN18246-5.1.5(1)
     section: "5.1"
     clause: 5.1.5(1)
@@ -314,6 +847,24 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: IP address and user agent of every request
+        - type: code
+          ref: apps/main/src/analytics/presentation/passport-metric.controller.ts
+          note: first-party page-view counter, no IP or user stored
+        - type: manual
+          ref: "Against the ea05ef20 Instance: every anonymous read of the public view (GET /api/v2/p/<permalink>/shells, /submodels) and the page-view call appear in the backend log with the visitor's IP address and full user agent at debug level, which main.ts always enables."
+          date: 2026-10-12
+      notes: "Credited: no cookie, visitor id, third-party tracker or fingerprinting on the public view, and the page-view counter stores no IP address. Missing: the request log combines IP address, user agent, time and requested passport URL for every anonymous visit, always on, so per-visitor profiles can be built from it; no setting reduces the fields or the level (#840)."
+      gapIssue: 840
   - id: EN18246-5.1.5(2)
     section: "5.1"
     clause: 5.1.5(2)
@@ -330,6 +881,20 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: check
+          ref: privacy.public-view-asks-no-personal-data
+          result: passed
+          date: 2026-10-12
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+      notes: The public view has no form asking for name, e-mail, phone, address, password or any other personal data, and it sets no cookie (Check privacy.public-view-asks-no-personal-data, after an anonymous visit scrolled through). The optional AI chat, where an organisation enables it, offers a free-text box for questions and asks for nothing personal; what a visitor types there is volunteered. What the server logs about a visitor is collection, not a request to the device, and is judged under 5.1.2.
   - id: EN18246-5.1.6(2)
     section: "5.1"
     clause: 5.1.6(2)
@@ -337,6 +902,23 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: check
+          ref: privacy.public-view-no-device-functions
+          result: passed
+          date: 2026-10-12
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: manual
+          ref: "Searched apps/client/src at ea05ef20 for geolocation, Notification, getUserMedia, mediaDevices, permissions, serviceWorker, PushManager, share, vibrate, getBattery and navigator.connection: no use anywhere; the client writes to the clipboard only when a user presses a copy button."
+          date: 2026-10-12
+      notes: "The public view uses no device function: no position, notifications or push, camera or microphone, permission queries, network or battery information, service worker installation, sharing or vibration. The Check privacy.public-view-no-device-functions wraps those browser interfaces before any page script runs and records no call during an anonymous visit; the source search finds no use of them in the client."
   - id: EN18246-5.1.7(1)
     section: "5.1"
     clause: 5.1.7(1)
@@ -345,6 +927,24 @@ criteria:
     areas:
       - 10
       - 4
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/virus-scan.file-validator.ts
+          note: uploads scanned when OPEN_DPP_CLAMAV_URL is set
+        - type: code
+          ref: apps/main/src/main.ts
+          note: plain HTTP listener, no security headers
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+      notes: "Recommendation, assessed as enablement. Credited: uploads are scanned for malware when the operator configures the scanner, and schema validation rejects malformed input. Missing: the scanner is optional and off in the example stacks, no Content-Security-Policy or other header limits injected code, and nothing helps a visitor tell a genuine passport QR code from a misleading one (#1027; verifiable entry points in #1037)."
+      gapIssue: 1027
   - id: EN18246-5.1.7(5)
     section: "5.1"
     clause: 5.1.7(5)
@@ -353,6 +953,20 @@ criteria:
     areas:
       - 4
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+      notes: "Optional. open-dpp gives visitors nothing to tell a genuine entry point from a fake one: the QR code is unsigned, the public view shows no verification mark, and there is no awareness text for scanners (#1037)."
+      gapIssue: 1037
   - id: EN18246-5.1.7(6)
     section: "5.1"
     clause: 5.1.7(6)
@@ -360,6 +974,21 @@ criteria:
     applicability: mixed
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/virus-scan.file-validator.ts
+          note: uploads scanned when OPEN_DPP_CLAMAV_URL is set
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+      notes: "Optional. Credited: optional malware scanning of uploads (ClamAV through clamav-rest), documented in the production guide. Missing: no monitoring or alerting hook and no secure transport out of the box (#1027)."
+      gapIssue: 1027
   - id: EN18246-5.1.8(2)
     section: "5.1"
     clause: 5.1.8(2)
@@ -368,6 +997,21 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/common/throttler/user-or-ip.throttler-guard.ts
+          note: throttling on a few account routes only
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+      notes: "Recommendation, assessed as enablement. Credited: controlled data are behind authentication, API-key calls are limited and a few account routes throttled. Missing: public reads (permalink, public AAS routes, resolver, attachments) are not rate limited, so mass extraction is not mitigated; the limits are hard-coded (#1026). The permission for search engines is not used: the view is a client-rendered app with no sitemap, which indexing would need."
+      gapIssue: 1026
   - id: EN18246-5.2.1(4)
     section: "5.2"
     clause: 5.2.1(4)
@@ -383,6 +1027,20 @@ criteria:
     applicability: software
     areas:
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/users/domain/user.ts
+          note: users known by internal id, name and e-mail
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "subjects: anonymous, user, member or owner, instance admin"
+      notes: Actors beyond public reading (organisation members, API keys, the instance admin) are identified by internal ids, names and e-mail addresses only; EN 18239 asks for a globally unique operator identifier, which open-dpp does not have (#1023, as EN18239-5.2(1)).
+      gapIssue: 1023
   - id: EN18246-5.2.2(2)
     section: "5.2"
     clause: 5.2.2(2)
@@ -390,11 +1048,34 @@ criteria:
     applicability: software
     areas:
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "subjects: anonymous, user, member or owner, instance admin"
+        - type: manual
+          ref: "Searched apps/main/src, apps/client/src and packages at ea05ef20 for geo-IP, country, region and IP allow or deny rules in guards, middleware, the authentication setup and access rules: none. The only region setting is the S3 client's storage region."
+          date: 2026-10-12
+      notes: Neither sign-in nor sign-up nor any access decision looks at where a person or organisation is located; the same holds as for EN18239-5.2(3). Geo-blocking an operator adds at a proxy would break this clause; the software gives no reason to.
   - id: EN18246-5.3.1(1)
     section: "5.3"
     clause: 5.3.1(1)
     paraphrase: "Recommendation: where relevant, a counterfeiting risk assessment weighs the risk and its possible impact on how far the DPP data and the product can be trusted."
     applicability: operator
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Operator recommendation by rule: a counterfeiting risk assessment is the economic operator's analysis of its products and markets; no software feature performs it."
   - id: EN18246-5.3.1(2)
     section: "5.3"
     clause: 5.3.1(2)
@@ -403,6 +1084,17 @@ criteria:
     areas:
       - 4
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+      notes: Optional. open-dpp offers no authentication element for the carrier and no passport-linked authentication service a consumer could query; the operator would have to bring both, and the passport could only mention them in an ad-hoc property (#1037).
+      gapIssue: 1037
   - id: EN18246-5.3.2(1)
     section: "5.3"
     clause: 5.3.2(1)
@@ -411,6 +1103,23 @@ criteria:
     areas:
       - 6
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: content, status, editing-mode and access-rule changes; no creation or deletion of a passport
+        - type: code
+          ref: apps/main/src/activity-history/infrastructure/activity.repository.ts
+          note: records deleted with a deleted draft
+        - type: manual
+          ref: "Against an Instance built from ea05ef20 (port 3001): the published conformance passport, created and published by the Check setup and given a content submodel, lists exactly one activity, SubmodelAdded, in GET /api/v2/passports/:id/activities; neither its creation nor its publication is recorded (bug #1032)."
+          date: 2026-10-12
+      notes: "This clause defers to EN 18221, whose run (2026-10-09) found no version archive (EN18221-4.2(2) to 4.2(8)). Credited: content changes are recorded in the activity history. Missing: no retrievable versions, status changes unrecorded (bug #1032), records editable in the database and deleted with a draft, so retrospective tampering is neither prevented nor detectable (#1029)."
+      gapIssue: 1029
   - id: EN18246-5.3.2(3)
     section: "5.3"
     clause: 5.3.2(3)
@@ -418,6 +1127,20 @@ criteria:
     applicability: mixed
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: IP address and user agent of every request
+        - type: code
+          ref: apps/main/src/common/throttler/user-or-ip.throttler-guard.ts
+          note: throttling on a few account routes only
+      notes: "Recommendation, assessed as enablement. Nothing detects suspicious requests: requests are logged, failures at warning level, but no rule, threshold or alert evaluates them, and there is no hook to send security events anywhere (#1026; event logging in #1027)."
+      gapIssue: 1026
   - id: EN18246-5.4.1-sub1
     section: "5.4"
     clause: 5.4.1 first sentence
@@ -425,11 +1148,36 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public reads free of charge and without account
+        - type: check
+          ref: a11y.public-view-no-serious-violations
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: public passports cost nothing, need no account and open in any browser on any device (Checks access.public-view-renders-in-plain-browser and access.public-view-renders-on-phone). Missing: the public view fails WCAG 2.1 AA in several places (the axe Check fails with serious violations; details in the EN301549 run), so it is not accessible to everyone with a disability (#1035)."
+      gapIssue: 1035
   - id: EN18246-5.4.1-sub2
     section: "5.4"
     clause: 5.4.1 second sentence
     paraphrase: "Recommendation: stakeholders are trained to understand and meet the diverse needs of users, so nobody is left out."
     applicability: operator
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Operator recommendation by rule: training stakeholders to meet diverse user needs is an organisational measure of the economic operator and service provider."
   - id: EN18246-5.4.2(1)
     section: "5.4"
     clause: 5.4.2(1)
@@ -437,6 +1185,25 @@ criteria:
     applicability: mixed
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: says the example stack has no TLS termination; no TLS, proxy or backup guide
+        - type: check
+          ref: access.public-view-renders-on-phone
+          result: passed
+          date: 2026-10-12
+      notes: "Software part met: the public view is a responsive web page that renders the passport on a phone-sized screen without horizontal scrolling (Check access.public-view-renders-on-phone, Pixel 7 profile) and in a desktop browser (access.public-view-renders-in-plain-browser). 'At any time' is availability, which rests on the operator's hosting: open-dpp offers no guide for redundancy, backup and restore or monitoring, and its health endpoint checks no dependency (#1027)."
+      gapIssue: 1027
   - id: EN18246-5.4.2(2)
     section: "5.4"
     clause: 5.4.2(2)
@@ -444,6 +1211,23 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: check
+          ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/client/index.html
+          note: no third-party script, font or stylesheet
+      notes: Reading a passport works in a common web browser with nothing installed (Check access.public-view-renders-in-plain-browser); the EN 18216 run (2026-10-11) used the view in Firefox and WebKit too, language switch and image preview included. The QR code needs only a camera app. Not operational.
   - id: EN18246-5.4.3(1)
     section: "5.4"
     clause: 5.4.3(1)
@@ -451,6 +1235,21 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: check
+          ref: a11y.public-view-no-serious-violations
+          result: failed
+          date: 2026-10-12
+      notes: "The public view fails WCAG 2.1 AA in several places: the axe Check a11y.public-view-no-serious-violations fails with serious violations on the content-bearing subject, and the EN 301 549 clause 9 run (2026-10-11) lists the missing text alternatives, names, page language and title, contrast, carousel pause and status messages (#1035)."
+      gapIssue: 1035
   - id: EN18246-5.4.3(2)
     section: "5.4"
     clause: 5.4.3(2)
@@ -458,6 +1257,17 @@ criteria:
     applicability: software
     areas:
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+      notes: "Optional. Credited: semantic markup most assistive technologies read, keyboard operation, and a presentation that reflows to small screens and follows text-spacing overrides (EN 301 549 run). Missing: the gaps of #1035 (names, text alternatives, status messages) limit assistive-technology use, and long values do not reflow everywhere (#1035)."
+      gapIssue: 1035
   - id: EN18246-5.4.3(3)
     section: "5.4"
     clause: 5.4.3(3)
@@ -465,6 +1275,17 @@ criteria:
     applicability: mixed
     areas:
       - 4
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code drawn in the browser (qrcode library) from a link
+      notes: Optional. The QR code open-dpp draws is a plain square image with no aid for finding or scanning it (no tactile or high-contrast frame, no accompanying text or placement guidance); such aids are the operator's when printing, and open-dpp offers nothing towards them (#1035).
+      gapIssue: 1035
   - id: EN18246-5.4.3(4)
     section: "5.4"
     clause: 5.4.3(4)
@@ -473,6 +1294,25 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: every non-public route needs a session, API key or bearer token and organisation membership
+        - type: code
+          ref: apps/client/src/router/routes/presentation/presentation.ts
+          note: "the public passport routes: the view and the chat"
+        - type: manual
+          ref: "Read the client routes and the public view at ea05ef20: every visitor gets the same two public routes (the passport view and the chat); there is no accessible, simplified or alternative variant, and accessibility is done in the markup of that view (ARIA attributes, keyboard handling). The server applies authentication and element rules to every API call whatever client sends it."
+          date: 2026-10-12
+      notes: Accessibility in open-dpp lives in the markup of the one public view every visitor gets; no alternative channel, simplified mode or assistive route bypasses authentication or element rules, which the server enforces whatever the client.
   - id: EN18246-5.4.3(5)
     section: "5.4"
     clause: 5.4.3(5)
@@ -481,6 +1321,23 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public passport and AAS read routes are OptionalAuth
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: export envelope without signature or hash
+      notes: "Credited: the HTML view, the public JSON API and the export are drawn from the same stored data, so no access route alters it. Missing: none of them carries anything that proves the data authentic or intact (4.7(1)), so authenticity cannot be preserved across modalities because it is never established (#824)."
+      gapIssue: 824
   - id: EN18246-5.4.3(6)
     section: "5.4"
     clause: 5.4.3(6)
@@ -489,6 +1346,23 @@ criteria:
     areas:
       - 10
       - 11
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: e-mail and password, optional OAuth Trusted Client, API keys; no second factor
+        - type: manual
+          ref: "Against the ea05ef20 Instance: axe-core (WCAG 2.0 and 2.1 A and AA rules) on /signin reports one critical violation (aria-expanded and aria-haspopup on the password input, where they are not allowed) and one serious violation (the Sign in button label at a contrast of 2.64:1); the page has no CAPTCHA or other challenge."
+          date: 2026-10-12
+      notes: "Recommendation, assessed as enablement. Credited: no security mechanism stands between a visitor and public passport data (Check access.public-view-renders-in-plain-browser), and controlled data need only the sign-in form, with no CAPTCHA or timed challenge. Missing: that form has accessibility errors, a misused ARIA state on the password field and a Sign in button below the contrast minimum, which can hold back users of screen readers and users with low vision (#1035)."
+      gapIssue: 1035
   - id: EN18246-A.3(1)
     section: A
     clause: A.3, first list
@@ -496,6 +1370,17 @@ criteria:
     applicability: software
     areas:
       - 10
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+      notes: "open-dpp produces no ESDC or any other signed construct: no issuer signature to confirm integrity and provenance, no non-repudiation of the issuer, and no check of the issuer's authority against a trusted list (#824)."
+      gapIssue: 824
   - id: EN18246-A.3(2)
     section: A
     clause: A.3, second list
@@ -504,3 +1389,17 @@ criteria:
     areas:
       - 10
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: manual
+          ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
+          date: 2026-10-12
+        - type: code
+          ref: apps/main/src/identity/users/domain/user.ts
+          note: users known by internal id, name and e-mail
+      notes: "No signed data construct exists, so none of its parts do either: no issuer identified by an EN 18219 identifier bound to a signing key or certificate, no signature by the economic operator or its authorised representative, no trust framework; the subject's GS1 identity and the data are there, unsigned (#824; operator identifier in #1023)."
+      gapIssue: 824
