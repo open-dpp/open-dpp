@@ -49,7 +49,6 @@ criteria:
     areas:
       - 7
     operationalisedBy:
-      - EN18223
       - EN18222
     assessment:
       date: 2026-09-06
@@ -179,8 +178,6 @@ criteria:
     areas:
       - 7
       - 3
-    operationalisedBy:
-      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -200,8 +197,6 @@ criteria:
     applicability: mixed
     areas:
       - 7
-    operationalisedBy:
-      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -319,7 +314,6 @@ criteria:
     areas:
       - 7
     operationalisedBy:
-      - EN18223
       - EN18222
     assessment:
       date: 2026-09-06
@@ -419,6 +413,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18219
+      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -560,7 +555,6 @@ criteria:
     areas:
       - 7
     operationalisedBy:
-      - EN18223
       - EN18222
     assessment:
       date: 2026-09-06
@@ -707,8 +701,6 @@ criteria:
     applicability: mixed
     areas:
       - 7
-    operationalisedBy:
-      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -1051,8 +1043,6 @@ criteria:
     areas:
       - 7
       - 8
-    operationalisedBy:
-      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -1366,8 +1356,6 @@ criteria:
     areas:
       - 7
       - 6
-    operationalisedBy:
-      - EN18223
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

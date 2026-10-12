@@ -1,0 +1,32 @@
+# Earlier Assessments of EN18222, moved here by matrix:supersede. Append-only: never edit or delete an entry.
+
+standard: EN18222
+entries:
+  - criterion: EN18222-7.1
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    status: Partial
+    gapIssue: 1052
+    evidence:
+      - type: code
+        ref: apps/main/src/passports/domain/registry-export-item.ts
+        note: the registry file holds the oldest permalink URL as the unique product identifier only
+      - type: code
+        ref: apps/main/src/passports/presentation/passport.controller.ts
+        note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+    notes: "Credited: identifiers are strings (UUIDs, permalink slugs, GS1 Digital Links). Missing: the registry entry cannot be filled. open-dpp's registry file names only the unique product identifier, taken from the oldest permalink. It has no passport id, no unique operator identifier, neither the economic operator's nor the back-up operator's (no such identifiers exist, #1023, #596), and no DPP API endpoint (no EN 18222 API exists). The DigitalProductPassport, DataElement, Identifier and Timestamp types are EN 18223's: graded on its rows in #762, and this row is re-read then."
+  - criterion: EN18222-8.1(7)
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    status: Gap
+    gapIssue: 1052
+    evidence:
+      - type: code
+        ref: apps/main/src/passports/presentation/passport.controller.ts
+        note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+      - type: code
+        ref: apps/main/src/permalink/presentation/permalink.controller.ts
+        note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
+    notes: "No route takes a representation parameter. Reads answer AAS JSON or open-dpp's export, neither of them the compressed or full representation of EN 18223 (the payload types are EN 18223's, assessed in #762)."

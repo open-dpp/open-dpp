@@ -118,3 +118,104 @@ entries:
         date: 2026-10-12
     notes: "Free and easy access for the public: no fee, no account, a resolver behind the data carrier, an accessible public view (Check). Missing: the other actors the article names (repairers, refurbishers, recyclers, market surveillance and customs authorities, civil society, trade unions) get nothing beyond the public view, because no access class exists for them (#821)."
     gapIssue: 821
+  - criterion: ESPR-Art10(1)(d)
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    status: Partial
+    gapIssue: 823
+    evidence:
+      - type: code
+        ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+        note: export in open-dpp's own JSON format 6.0
+      - type: code
+        ref: apps/main/src/permalink/presentation/permalink.controller.ts
+        note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
+      - type: code
+        ref: apps/main/src/open-api-docs/index.ts
+        note: OpenAPI 3.1 document, served only when OPEN_DPP_BUILD_API_DOC is set
+      - type: check
+        ref: api.openapi-document-served
+        result: passed
+        date: 2026-10-12
+      - type: check
+        ref: export.aas-environment-verifies
+        result: failed
+        date: 2026-10-12
+      - type: check
+        ref: format.public-reads-are-json
+        result: passed
+        date: 2026-10-12
+      - type: check
+        ref: api.read-dpp-ids-by-product-ids
+        result: failed
+        date: 2026-10-12
+    notes: |-
+      Credited (software part):
+      - DPP data are structured (the AAS metamodel) and machine-readable JSON, publicly readable for published passports (Check format.public-reads-are-json);
+      - the API can be described in an OpenAPI 3.1 document (Check api.openapi-document-served; off by default);
+      - the data can be exported.
+      Missing:
+      - the export is not a standard AAS environment (Check export.aas-environment-verifies fails, #823);
+      - nothing searches passports by product identifier;
+      - transfer runs over no standard exchange interface.
+      Capped at Partial by Annex ZA (map rule of 2026-10-10):
+      - EN18222-4.5(1) and (2) are Gap (no lookup by product identifiers, cluster #1052);
+      - EN 18216 clauses 4 and 5 are Partial (#1027, #1034);
+      - EN18219-4.3.2, 4.4.2, 4.5.2 and 4.6.2 are Partial (#518, #597, #828, #823).
+      EN 18223 is mapped as well and is read in #762, which re-grades this row.
+  - criterion: ESPR-Art10(1)(f)
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    status: Partial
+    gapIssue: 597
+    evidence:
+      - type: code
+        ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+        note: level implied by the GS1 keys only
+      - type: code
+        ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+        note: members list the organisation's identifiers (paginated) or read one, each with its passport id (referenceId)
+    notes: "Annex ZA maps Art. 10(1)(f) to EN18219-4.4.2, Partial in all three points, and to EN18222-4.5, Gap (no lookup from product identifiers to passports, cluster #1052). Credited: a GS1 identity implies model, batch or item. Missing: the passport has no level of its own, can mix identities of several levels, and UUID identifiers express none, so the data cannot be said to refer to the level a delegated act fixes (#597, as ESPR-Art9(2)(d))."
+  - criterion: ESPR-Art11(a)
+    date: 2026-10-12
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    validator: agent:conformance-review
+    status: Partial
+    gapIssue: 823
+    evidence:
+      - type: code
+        ref: apps/main/src/main.ts
+        note: global prefix /api; URI versions v1 and v2 for every controller; unversioned /api paths answer 308 to v1
+      - type: code
+        ref: apps/main/src/permalink/presentation/permalink.controller.ts
+        note: public AAS read routes keyed by the permalink id, anonymous for published passports only; GET /p?passportId= lists a passport's permalinks; no AAS write routes
+      - type: check
+        ref: format.public-reads-are-json
+        result: passed
+        date: 2026-10-12
+      - type: check
+        ref: export.aas-environment-verifies
+        result: failed
+        date: 2026-10-12
+      - type: check
+        ref: api.read-dpp-by-id
+        result: failed
+        date: 2026-10-12
+      - type: check
+        ref: api.read-dpp-ids-by-product-ids
+        result: failed
+        date: 2026-10-12
+    notes: |-
+      Software part: interoperability in the technical, semantic and organisational aspects of communication and data transfer between the ends. EN 18222's presumption covers the technical side only; the semantic side rests on the data model, which EN 18223 governs (#762). Credited: published passports are readable by anyone over HTTP as JSON through a REST API (EN18216-4(6) Met). Missing:
+      - no standard interface: neither the EN 18222 Life Cycle API (clause 4, 4.5(1) Gap; cluster #1052) nor a standard AAS export (#823);
+      - HTTPS and HTTP/2 are left to a proxy open-dpp neither ships nor documents (#1027);
+      - no content negotiation (#1034).
+      Capped at Partial by Annex ZA through:
+      - EN 18222 clause 4 and 4.5;
+      - EN 18216 clauses 4 and 5;
+      - EN18239-4.2 (Partial, #821);
+      - EN18246-4.2(3) and (4) (Gap and Partial, #1023);
+      - EN18219-4.5.2 and 4.6.2 (Partial).
+      EN 18223 is mapped as well and is read in #762, which re-grades this row.

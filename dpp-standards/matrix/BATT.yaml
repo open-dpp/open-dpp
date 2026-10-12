@@ -652,7 +652,6 @@ criteria:
       - 7
       - 3
     operationalisedBy:
-      - EN18223
       - EN18222
     assessment:
       date: 2026-09-06

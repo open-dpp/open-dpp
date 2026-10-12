@@ -166,16 +166,16 @@ sources:
     title: Digital product passport – System interoperability
     reference: EN 18223:2026
     publisher: CEN/CENELEC JTC 24
-    edition: EN 18223:2026 (available 2026-05-27)
+    edition: EN 18223:2026 (approved by CEN 2026-05-03, available 2026-05-27; read in the English SIS edition SS-EN 18223:2026, edition 1)
     stage: Published; date of withdrawal of conflicting national standards 2026-11-30
     access: gated
     url: https://www.nen.nl/nen-en-18223-2026-en-352704
     citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
     localFile: standards/EN18223-2026.pdf
-    normativeReferences: [IEC63278, IDTAAAS]
+    normativeReferences: [ISO8601, EN18219, EN18221, RFC3986, ISO639, ISO3166, XSD2, ISO21778, EN18216, EN18239]
     watch:
       url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
-      lookFor: An amendment or new edition on the JTC 24 work programme
+      lookFor: An amendment or new edition on the JTC 24 work programme (Annex ZA presumes conformity with ESPR Art. 7(8) through 4.1.2.8 and 4.1.2.8.2, 10(1)(d) through 4.1, 10(1)(f) through 4.1.2, 11(a) through clauses 4 and 5, and 11(d) through 4.1.2.7); a corrigendum repairing the examples of Annexes A and B (invalid JSON and XML, a repeated elementId, "gr" for Greek) or adding a class that links one DPP to another
   - id: EN18221
     tier: B
     title: Digital product passport – Data storage, archiving and data persistence
@@ -393,3 +393,51 @@ sources:
     watch:
       url: https://ref.gs1.org/standards/genspecs/
       lookFor: An EN 18219 amendment updating the dated reference, or a GS1 General Specifications release changing AI 01, 10 or 21
+  - id: ISO8601
+    tier: C
+    title: Date and time – Representations for information interchange – Part 1 Basic rules
+    reference: ISO 8601-1:2019, as amended by ISO 8601-1:2019/Amd 1:2022
+    publisher: ISO
+    edition: 2019 edition with Amd 1:2022, as EN 18223 clause 2 dates it; read through EN 18223 Table 7, which spells out the date and date-time patterns the text uses, and RFC 3339, the free Internet profile of ISO 8601; not bought (decided 2026-10-12 in #1021; a read-through of EN 18223, no matrix file). EN 18222 cites it undated and constrains only features open-dpp lacks (Gap, unread there)
+    stage: Published
+    access: gated
+    url: https://www.iso.org/standard/70907.html
+    watch:
+      url: https://www.iso.org/standard/70907.html
+      lookFor: A new edition, or an EN 18223 amendment updating the dated reference
+  - id: ISO639
+    tier: C
+    title: Code for individual languages and language groups
+    reference: ISO 639:2023
+    publisher: ISO
+    edition: 2023 edition, as the Bibliography of EN 18223 dates it for the two-letter language codes of the language tags of its Tables 5 and 6 (Set 1, the former ISO 639-1); read through the code tables of the ISO 639 registration authority (a read-through of EN 18223, no matrix file)
+    stage: Published
+    access: public
+    url: https://www.loc.gov/standards/iso639-2/php/code_list.php
+    watch:
+      url: https://www.iso.org/standard/74575.html
+      lookFor: A new edition, or an EN 18223 amendment changing the language tag of Tables 5 and 6
+  - id: ISO3166
+    tier: C
+    title: Codes for the representation of names of countries and their subdivisions – Part 1 Country code
+    reference: EN ISO 3166-1:2020
+    publisher: ISO (adopted by CEN)
+    edition: 2020 edition, as the Bibliography of EN 18223 dates it for the two-letter country codes of the language tags of its Tables 5 and 6; read through the alpha-2 code list of the ISO Online Browsing Platform (a read-through of EN 18223, no matrix file)
+    stage: Published
+    access: public
+    url: https://www.iso.org/obp/ui/#search/code/
+    watch:
+      url: https://www.iso.org/standard/72482.html
+      lookFor: A new edition, or an EN 18223 amendment changing the language tag of Tables 5 and 6
+  - id: XSD2
+    tier: C
+    title: W3C XML Schema Part 2 – Datatypes
+    reference: XML Schema Part 2 Datatypes Second Edition, W3C Recommendation 28 October 2004
+    publisher: W3C
+    edition: Second Edition (2004), the version EN 18223 4.1.2.9 links to (its built-in primitive and derived data types, clause 3); undated in the Bibliography, so the edition current on the run date applies and XML Schema 1.1 Part 2 is not the linked text; a read-through of EN 18223, no matrix file
+    stage: W3C Recommendation
+    access: public
+    url: https://www.w3.org/TR/xmlschema-2/
+    watch:
+      url: https://www.w3.org/TR/xmlschema-2/
+      lookFor: An EN 18223 amendment linking XML Schema 1.1 or changing the exclusions of 4.1.2.9
