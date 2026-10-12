@@ -851,7 +851,7 @@ criteria:
           ref: resolver.redirect-published
           result: passed
           date: 2026-10-12
-      notes: "Software part credited: every passport gets a unique product identifier and a public URL that a QR code carries; with a GS1 identity the QR holds a Digital Link the built-in resolver redirects to the passport, and identifiers are locked once the passport is published (EN18219-4.1.2(1) and 4.2.2(1) Met). Capped at Partial by Annex ZA (map rule of 2026-10-10): of the mapped EN 18219 clauses, 4.1.2(2), (3) and (4), 4.2.2(2) and (3), 4.5.2(2) and (4) are Partial (#518, #825, #828), 4.5.2(1) waits for EN 18220 (#757) and 5.1 for the scheme texts (#1043). Graded with EN 18219 alone; the data-carrier assessment re-grades it with EN 18220."
+      notes: "Software part credited: every passport gets a unique product identifier and a public URL that a QR code carries; with a GS1 identity the QR holds a Digital Link the built-in resolver redirects to the passport, and identifiers are locked once the passport is published. Capped at Partial by Annex ZA (map rule of 2026-10-10): of the mapped EN 18219 clauses, 4.1.2(1) to (4), 4.2.2(1) to (3), 4.5.2(2) and (4) are Partial (#518, #825, #828; the item key of bug #1046), 4.5.2(1) waits for EN 18220 (#757) and 5.1 for the scheme texts (#1043). Graded with EN 18219 alone; the data-carrier assessment re-grades it with EN 18220."
       gapIssue: 518
   - id: ESPR-Art10(1)(b)
     section: Art10
@@ -884,7 +884,7 @@ criteria:
           note: GS1 AI syntax, GTIN check digit
         - type: test
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
-      notes: "The cited harmonised standards now stand for the Annex III standards. Credited: GS1 identities use GS1 Application Identifiers as ISO/IEC 15418 requires (EN18219-5.2.2.1(b) Met) under GS1's registered Issuing Agency Code. Capped at Partial: Annex ZA maps Art. 10(1)(c) to EN18219-5.1 (and the definition 3.1.25), and 5.1 stays unassessed until GS1 Digital Link, ISO/IEC 18975 and ISO/IEC 15459 are read (#1042, #1043); restricted circulation numbers pass (5.2.2.1(g), #518); the carrier half waits for EN 18220 (#757)."
+      notes: "The cited harmonised standards now stand for the Annex III standards. Credited: GS1 identities use GS1 Application Identifiers as ISO/IEC 15418 requires (EN18219-5.2.2.1(b) Met) under GS1's registered Issuing Agency Code. Capped at Partial: Annex ZA maps Art. 10(1)(c) to EN18219-5.1 (and the definition 3.1.25), and 5.1 stays unassessed until GS1 Digital Link, ISO/IEC 18975 and ISO/IEC 15459 are read (#1042, #1043); restricted circulation numbers pass (4.1.2(2), bug #1046); the carrier half waits for EN 18220 (#757)."
       gapIssue: 518
   - id: ESPR-Art10(1)(d)
     section: Art10
@@ -2062,7 +2062,7 @@ criteria:
           ref: identifiers.gs1-syntax-valid
           result: passed
           date: 2026-10-12
-      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Partial, because restricted circulation numbers pass). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023); the carrier half waits for EN 18220 (#757). Parts 1 and 5 are not relevant to products."
+      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met; that restricted circulation numbers pass is graded under 4.1.2(2)). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023); the carrier half waits for EN 18220 (#757). Parts 1 and 5 are not relevant to products."
       gapIssue: 518
   - id: ESPR-AnnexIII-para3
     section: AnnexIII

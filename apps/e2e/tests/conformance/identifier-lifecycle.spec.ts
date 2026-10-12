@@ -63,12 +63,15 @@ check(
   async ({ request }) => {
     const { orgId, gtin, serial } = readSubject();
     const second = await draftPassport(request, orgId);
-    const duplicate = await request.post(`${ApiBase}/unique-product-identifiers`, {
-      headers: orgHeaders(orgId),
-      data: { referenceId: second.passportId, gtin, serial },
-    });
-    expect(duplicate.status()).toBe(409);
-    await second.remove();
+    try {
+      const duplicate = await request.post(`${ApiBase}/unique-product-identifiers`, {
+        headers: orgHeaders(orgId),
+        data: { referenceId: second.passportId, gtin, serial },
+      });
+      expect(duplicate.status()).toBe(409);
+    } finally {
+      await second.remove();
+    }
   },
 );
 
@@ -80,7 +83,7 @@ check(
     id: "identifiers.item-key-single-passport",
     title:
       "a GTIN and serial number name one item: the pair cannot go to a second passport under a batch",
-    criteria: ["EN18219-4.1.2(2)", "EN18219-4.1.2(3)"],
+    criteria: ["EN18219-4.1.2(1)", "EN18219-4.1.2(2)", "EN18219-4.1.2(3)", "EN18219-4.2.2(1)"],
   },
   async ({ request }) => {
     const { orgId, gtin, serial } = readSubject();
@@ -99,7 +102,7 @@ check(
     id: "identifiers.restricted-gtin-refused",
     title:
       "a restricted circulation number (GS1 prefix 02, 04 or 20 to 29) is refused as a GS1 identity",
-    criteria: ["EN18219-4.1.2(2)", "EN18219-5.2.2.1(g)"],
+    criteria: ["EN18219-4.1.2(2)"],
   },
   async ({ request }) => {
     const { orgId } = readSubject();
@@ -186,33 +189,37 @@ check(
   },
   async ({ request }) => {
     const subject = readSubject();
-    // A batch of CSET-82 characters that a URI path segment must percent-encode: / & % " < >.
-    const batch = 'Q/1&2%3"<>';
+    // CSET-82 characters a URI path segment must percent-encode (/ & % " < >) and three it must keep (- . _).
+    const batch = 'Q/1&2%3"<>-._';
     const draft = await draftPassport(request, subject.orgId);
-    const created = await request.post(`${ApiBase}/unique-product-identifiers`, {
-      headers: orgHeaders(subject.orgId),
-      data: {
-        referenceId: draft.passportId,
-        gtin: subject.gtin,
-        batch,
-        serial: uniqueSerial("enc"),
-      },
-    });
-    expect(created.status()).toBe(201);
-    const { digitalLink } = (await created.json()) as { digitalLink: string };
+    try {
+      const created = await request.post(`${ApiBase}/unique-product-identifiers`, {
+        headers: orgHeaders(subject.orgId),
+        data: {
+          referenceId: draft.passportId,
+          gtin: subject.gtin,
+          batch,
+          serial: uniqueSerial("enc"),
+        },
+      });
+      expect(created.status()).toBe(201);
+      const { digitalLink } = (await created.json()) as { digitalLink: string };
 
-    const list = await request.get(`${ApiBase}/passports/${subject.passportId}/permalinks`, {
-      headers: orgHeaders(subject.orgId),
-    });
-    const permalinks = items((await list.json()) as Listed<Permalink>).map((p) => p.publicUrl);
-    const uris = [digitalLink, subject.digitalLink, subject.publicUrl, ...permalinks];
-    for (const uri of uris) {
-      expect(uri, `${uri} is a URI of RFC 3986 characters only`).toMatch(RFC3986_URI);
+      const list = await request.get(`${ApiBase}/passports/${subject.passportId}/permalinks`, {
+        headers: orgHeaders(subject.orgId),
+      });
+      const permalinks = items((await list.json()) as Listed<Permalink>).map((p) => p.publicUrl);
+      const uris = [digitalLink, subject.digitalLink, subject.publicUrl, ...permalinks];
+      for (const uri of uris) {
+        expect(uri, `${uri} is a URI of RFC 3986 characters only`).toMatch(RFC3986_URI);
+      }
+      const segment = new URL(digitalLink).pathname.split("/10/")[1]?.split("/21/")[0] ?? "";
+      expect(segment, "no reserved or unsafe batch character stays raw").not.toMatch(/[/&"<>]/);
+      expect(segment, "a percent sign only starts an escape").not.toMatch(/%(?![0-9A-F]{2})/);
+      expect(segment, "unreserved characters stay as they are").toContain("-._");
+      expect(decodeURIComponent(segment)).toBe(batch);
+    } finally {
+      await draft.remove();
     }
-    const segment = new URL(digitalLink).pathname.split("/10/")[1]?.split("/21/")[0] ?? "";
-    expect(segment, "no reserved or unsafe batch character stays raw").not.toMatch(/[/&"<>]/);
-    expect(segment, "a percent sign only starts an escape").not.toMatch(/%(?![0-9A-F]{2})/);
-    expect(decodeURIComponent(segment)).toBe(batch);
-    await draft.remove();
   },
 );

@@ -3,7 +3,7 @@
 # Gated text: every paraphrase is ours, never a sentence of the standard.
 # Clause numbering: the requirements of 4.1.2 to 4.6.2 and the guidelines of 4.3.3 to 4.5.3 are numbered lists, one Criterion per numbered item ("4.1.2(1)"); the scheme requirements of clauses 5 and 6 are lettered lists, one Criterion per lettered item ("5.2.2.1(d)"), as EN 18239 5.2 and EN 18246 4.3 were extracted. A list that offers a choice of one option is one Criterion: 5.4.3 (one of three DID methods) and 6.2.3 (ISO/IEC 18975 or EN IEC 61406-2). Guidelines (may, should) are graded as enablement and never cap a law row (map rule of 2026-10-12).
 # Not extracted, no requirement of their own: the Introduction (0.2: the schemes of clauses 5 and 6 are alternatives, each acceptable when its own rules and clause 4 are both met), clause 1 (scope: product, operator and facility identifiers at three granularity levels, from issuing agencies, self-issuing systems or both), 2 (normative references, forms below), 3 (terms; 3.1.25 defines the unique product identifier as a unique string that also gives a web link to the DPP, which Annex ZA cites for ESPR Art. 10(1)(c) and which 4.3.2(2) grades), the principles 4.1.1 to 4.6.1 (intent only; 4.2.1 makes the economic operator responsible for recording and keeping its identifiers, itself or by way of a DPP service provider, and 4.6.1 restates what 4.6.2(2) requires), the scheme descriptions 5.2.1, 5.3.1, 5.4.1, 5.5.1, 5.6.1, 6.2.1, 6.3.1, 6.4.1 and 6.5.1, the example list of 6.2.3 (LEI, ASC DI, GS1 AI and PEPPOL identifiers for operators), the informative Annexes A (choosing the granularity level; A.6 repeats 4.4.2(3)), B and C (overview tables and examples per scheme for products and for operators and facilities) and the Bibliography.
-# References (forms decided in #1021, confirmed by this Extract). Read-through, graded on this file's rows: ISO/IEC 646:1991 (through ECMA-6), ISO/IEC 10646:2020 and RFC 3986 (4.3.2(1)); ISO/IEC 15418:2016 (through the GS1 General Specifications 25.0 for AIs 01, 10 and 21, 5.2.2.1(b)); ISO/IEC 15459-2:2015 (through the AIM register of Issuing Agency Codes, version 2026-06-16, where GS1 holds codes 0 to 9, 5.2.2.1(g)). Read later in #1043: GS1 Digital Link URI Syntax 1.6.0, ISO/IEC 18975:2024 and ISO/IEC 15459-3, -4 and -6 (files of their own, the ISO texts after the purchase #1042) and EN IEC 61406-1:2022 (read-through); the rows resting on them stay unassessed: 5.1, 5.2.2.1(a), (c), (d), (f), 5.3.2.1(a) and 5.3.3(a). Gap, unread (alternatives open-dpp does not offer; they never cap a law row): EN IEC 61406-2:2024, ISO/IEC 6523-1:2023 and -2:2025, ISO 26324:2025, W3C DIDs v1.0, DID Resolution v0.3, VC Data Model 2.0, ISO/IEC 15434:2025, DIN 16598:2022 and the GS1 General Specifications for the GS1 operator and facility scheme. Not applicable, unread: ISO/IEC 15961-1:2021, ISO/IEC 17360:2023 and the GS1 EPC Tag Data Standard 2.3 (RFID encoding, the hardware side of an RF alternative) and ISO/IEC 19762:2025 (vocabulary). ISO 3166-1 and ISO 639-1, listed in the ticket as bound in the body, appear only in the informative Annexes B and C (a country-of-origin element in a 2D example, VAT number prefixes) and move down to Not applicable, unread. EN 18220 (undated) is graded by pointing at its rows: 4.5.2(1) waits for them (#757).
+# References (forms decided in #1021, confirmed by this Extract). Read-through, graded on this file's rows: ISO/IEC 646:1991 (through ECMA-6), ISO/IEC 10646:2020 and RFC 3986 (4.3.2(1)); ISO/IEC 15418:2016 (through the GS1 General Specifications 25.0 for AIs 01, 10 and 21, 5.2.2.1(b)); ISO/IEC 15459-2:2015 (through the AIM register of Issuing Agency Codes, version 2026-06-16, where GS1 holds codes 0 to 9, 5.2.2.1(g)). Read later in #1043: GS1 Digital Link URI Syntax 1.6.0, ISO/IEC 18975:2024 and ISO/IEC 15459-3, -4 and -6 (files of their own, the ISO texts after the purchase #1042) and EN IEC 61406-1:2022 (read-through); the rows resting on them stay unassessed: 5.1, 5.2.2.1(a), (c), (d), (f), 5.3.2.1(a) and 5.3.3(a). Gap, unread (alternatives open-dpp does not offer; they never cap a law row): EN IEC 61406-2:2024, ISO/IEC 6523-1:2023 and -2:2025, ISO 26324:2025, W3C DIDs v1.0, DID Resolution v0.3, VC Data Model 2.0, ISO/IEC 15434:2025, DIN 16598:2022 and the GS1 General Specifications for the GS1 operator and facility scheme. Not applicable, unread: ISO/IEC 15961-1:2021, ISO/IEC 17360:2023 and the GS1 EPC Tag Data Standard 2.3 (RFID encoding, the hardware side of an RF alternative) and ISO/IEC 19762:2025 (vocabulary). ISO 3166-1 and ISO 639-1, listed in the ticket as bound in the body, appear only in the informative Annexes B and C (a country-of-origin element in a 2D example, VAT number prefixes) and move down to Not applicable, unread. EN 18220 (undated) is graded by pointing at its rows: 4.5.2(1) waits for them (#757). RAIN RFID (corrected after the adversarial review of PR #1047): the allocation rules 5.5.2.1(a), (c) and (d) are software rows graded like their twins 5.2.2.1(a), (f) and (g), because the identifier a tag carries is the one open-dpp issues; only the tag encoding 5.5.2.1(b) and the RFID guidelines 5.5.3(a) and (b) are the operator's equipment, Not applicable.
 # Finding: the text dates the GS1 Digital Link URI Syntax 1.6.0 to 2022 (clause 2 and 5.2.2.1(d)), but GS1 published 1.6.0 on 2025-03-06 and ratified 1.7.0 in August 2026; #1043 reads 1.6.0, the cited edition, and records the delta. The text's footnotes still call EN 18239 and EN 18246 under preparation.
 # Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736: Art. 10(1)(a) through 4.1.2, 4.2.2, 4.5.2 and 5.1; 10(1)(c) through 5.1 and 3.1.25; 10(1)(d) through 4.3.2, 4.4.2, 4.5.2 and 4.6.2; 10(1)(f) through 4.4.2; 10(3)(a) through 4.5.2; 11(a) through 4.5.2 and 4.6.2; 11(b) through 4.6.2; 11(d) through 4.4.2; 11(e) through 4.2.2, for the identifier's persistence only; 12(1) to (3) through 6.1. It marks every other point of Art. 10, 11 and 12 not applicable, so this Extract added EN18219 to operationalisedBy of ESPR-Art10(1)(d), 10(3)(a), 11(a), 11(b) and 11(e), and removed it from the Commission rows ESPR-Art12(4)(a), (b) and 12(5)(a) to (e), which the text does not touch. The other law rows naming EN18219 are rows its clauses address without presumption (map rule of 2026-10-09): ESPR-Art9(2)(d) and Annex III (b), (c), (g), (h), (i), (k) and second paragraph (4.4, clauses 5 and 6), BATT-Art13(6)(a), 77(2)-sub1, 77(3)-sub1, 77(3)-sub2 and 77(7)-sub1, REG1778-Art8(3), (4), (5), 8(7)(c) and 9(2)(a).
 
@@ -58,7 +58,7 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       evidence:
         - type: code
           ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
@@ -81,9 +81,16 @@ criteria:
         - type: test
           ref: apps/main/src/permalink/domain/permalink.spec.ts
           note: published URL immutable, slug locked once published
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's GTIN 04006381333931 and serial went to a second passport under batch B1 (201); once that passport was published, /gs1/v1/01/04006381333931/21/<serial> redirected to the subject's view and /gs1/v1/01/04006381333931/10/B1/21/<serial> to the second passport's view."
+          date: 2026-10-12
         - type: check
           ref: identifiers.gs1-identity-unique
           result: passed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.item-key-single-passport
+          result: failed
           date: 2026-10-12
         - type: check
           ref: identifiers.published-identity-locked
@@ -93,7 +100,8 @@ criteria:
           ref: identifiers.published-permalink-locked
           result: passed
           date: 2026-10-12
-      notes: "Credited: an identifier open-dpp issues is never moved to another passport. A GS1 identity (GTIN with optional batch and serial) is unique across the instance and, once its passport is published, can be neither changed nor deleted; published permalinks keep their frozen URL and can be neither deleted nor re-slugged; published passports cannot be deleted, so nothing frees their identifiers (Checks identifiers.gs1-identity-unique, identifiers.published-identity-locked, identifiers.published-permalink-locked). Before publication a draft's identity can still be edited or deleted and its key reused, but a draft does not resolve (resolver.draft-hidden), so nothing has been issued yet. A GTIN and serial reused under a batch for a second passport is graded under 4.1.2(2) and (3); whether a GTIN is used for another object outside the instance depends on the GS1 allocation the operator follows (4.1.2(2))."
+      notes: "Credited: an identifier open-dpp issues is never moved to another passport. A GS1 identity (GTIN with optional batch and serial) is unique across the instance and, once its passport is published, can be neither changed nor deleted; published permalinks keep their frozen URL and can be neither deleted nor re-slugged; published passports cannot be deleted, so nothing frees their identifiers (Checks identifiers.gs1-identity-unique, identifiers.published-identity-locked, identifiers.published-permalink-locked). Before publication a draft's identity can still be edited or deleted and its key reused, but a draft does not resolve (resolver.draft-hidden), so nothing has been issued yet. Missing: the item key (a GTIN with a serial) is not protected as such: the same GTIN and serial can be assigned to a second passport under a batch and then identify that passport as well (manual check, Check identifiers.item-key-single-passport fails; bug #1046). Whether a GTIN is used for another object outside the instance depends on the GS1 allocation the operator follows (4.1.2(2)) (#518)."
+      gapIssue: 518
   - id: EN18219-4.1.2(2)
     section: "4.1"
     clause: 4.1.2(2)
@@ -212,7 +220,7 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       evidence:
         - type: code
           ref: apps/main/src/permalink/domain/permalink.ts
@@ -232,6 +240,13 @@ criteria:
         - type: test
           ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
           note: update refused on a published passport
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's GTIN 04006381333931 and serial went to a second passport under batch B1 (201); once that passport was published, /gs1/v1/01/04006381333931/21/<serial> redirected to the subject's view and /gs1/v1/01/04006381333931/10/B1/21/<serial> to the second passport's view."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.item-key-single-passport
+          result: failed
+          date: 2026-10-12
         - type: check
           ref: identifiers.published-identity-locked
           result: passed
@@ -240,7 +255,8 @@ criteria:
           ref: identifiers.published-permalink-locked
           result: passed
           date: 2026-10-12
-      notes: "At publication every permalink's public URL is frozen (later changes to the organisation's or the instance's base URL do not alter it) and the GS1 identity is locked, so the identifier stays the same and keeps resolving to the same passport (Checks identifiers.published-identity-locked, identifiers.published-permalink-locked); archiving and restoring never move it. Not graded here: whether the identifier outlives the instance or follows the passport to another platform (4.2.2(3), 4.5.3(2))."
+      notes: "Credited: at publication every permalink's public URL is frozen (later changes to the organisation's or the instance's base URL do not alter it) and the GS1 identity is locked, so the identifier stays the same and keeps resolving to the same passport (Checks identifiers.published-identity-locked, identifiers.published-permalink-locked); archiving and restoring never move it. Missing: the item key does not keep referring to one passport without ambiguity, because the same GTIN and serial can be given to a second passport under a batch, and the link with the batch then opens that passport (bug #1046) (#518). Not graded here: whether the identifier outlives the instance or follows the passport to another platform (4.2.2(3), 4.5.3(2))."
+      gapIssue: 518
   - id: EN18219-4.2.2(2)
     section: "4.2"
     clause: 4.2.2(2)
@@ -304,7 +320,7 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       evidence:
         - type: code
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
@@ -320,11 +336,15 @@ criteria:
           note: RFC 3986 canonical encoding
         - type: test
           ref: packages/dto/src/shared/permalink-base-url.schema.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 with packages/dto built from dad48246: PermalinkBaseUrlSchema keeps https://brand.example/dpp|eu, .../dpp^eu and .../p[1] unchanged, while it encodes a space as %20."
+          date: 2026-10-12
         - type: check
           ref: identifiers.uris-ascii-rfc3986
           result: passed
           date: 2026-10-12
-      notes: 'Every identifier open-dpp exposes is 7-bit: GTINs are digits, batch and serial are restricted to GS1 CSET 82 (which uses only invariant characters of ISO/IEC 646, read through ECMA-6), slugs to lower-case letters, digits and hyphens, permalink ids are UUIDs, and base URLs pass the WHATWG URL parser, which turns an internationalised host into punycode and percent-encodes the path. In URIs, batch, serial and data-attribute values are percent-encoded except for the RFC 3986 unreserved characters, which stay as they are (Check identifiers.uris-ascii-rfc3986 with a batch of / & % " < >). Encoding characters of ISO/IEC 10646 beyond ASCII never arises, because no identifier component admits them.'
+      notes: "Credited: every identifier open-dpp builds itself is 7-bit: GTINs are digits, batch and serial are restricted to GS1 CSET 82 (which uses only invariant characters of ISO/IEC 646, read through ECMA-6), slugs to lower-case letters, digits and hyphens, permalink ids are UUIDs, and base URLs pass the WHATWG URL parser, which turns an internationalised host into punycode and percent-encodes the path. In URIs, batch, serial and data-attribute values are percent-encoded except for the RFC 3986 unreserved characters, which stay as they are (Check identifiers.uris-ascii-rfc3986 with a batch of / & % \" < >). Encoding characters of ISO/IEC 10646 beyond ASCII never arises, because no identifier component admits them. Missing: a base URL (the organisation's, a permalink's own or the instance's) may hold |, ^, [ or ] in its path, which the URL parser leaves unencoded, so permalinks and Digital Links under such a base are no RFC 3986 URIs (manual check; bug #1048) (#518)."
+      gapIssue: 518
   - id: EN18219-4.3.2(2)
     section: "4.3"
     clause: 4.3.2(2)
@@ -645,6 +665,9 @@ criteria:
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
         - type: test
           ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) with Playwright: the subject's Digital Link, opened anonymously, redirected to the public view and showed the passport content, without cookies, in WebKit desktop, WebKit with the iPhone 14 profile and Chromium with the Pixel 7 profile. Firefox (Gecko) could not be started headless in that environment and is untested."
+          date: 2026-10-12
         - type: check
           ref: access.public-view-renders-in-plain-browser
           result: passed
@@ -653,7 +676,7 @@ criteria:
           ref: access.public-view-renders-on-phone
           result: passed
           date: 2026-10-12
-      notes: "Optional, graded as enablement: the QR code holds a plain web URL that the camera apps of the major phone platforms open in the default browser, and the public view renders in a stock browser and a phone viewport without further software (Checks access.public-view-renders-in-plain-browser, access.public-view-renders-on-phone)."
+      notes: "Optional, graded as enablement: the QR code holds a plain web URL that the camera apps of the major phone platforms open in the default browser, and the public view renders without further software in the engines behind the major platforms: Chromium on desktop and an Android phone profile (Checks access.public-view-renders-in-plain-browser, access.public-view-renders-on-phone), WebKit on desktop and an iPhone profile (manual check). Firefox and a real camera scan were not exercised."
   - id: EN18219-4.5.3(2)
     section: "4.5"
     clause: 4.5.3(2)
@@ -736,6 +759,10 @@ criteria:
           date: 2026-10-12
         - type: check
           ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.redirect-published
           result: passed
           date: 2026-10-12
       notes: "Opening or scanning the identifier needs no account, app or credentials: the resolver and the public view are anonymous and render in a stock browser (Checks access.anonymous-reads-published, access.public-view-renders-in-plain-browser, resolver.redirect-published)."
@@ -858,21 +885,17 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Partial
-      operational: true
+      status: Met
       evidence:
         - type: code
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
-          note: "normalizeToGtin14: digits, length and check digit only"
+          note: "identities are GTINs only: digits, normalised to GTIN-14"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
+          ref: "Checked 2026-10-12: the AIM register of Issuing Agency Codes for ISO/IEC 15459, version 2026-06-16, lists GS1 Global Office with the codes 0 to 9."
           date: 2026-10-12
-        - type: check
-          ref: identifiers.restricted-gtin-refused
-          result: failed
-          date: 2026-10-12
-      notes: "Read through the AIM register of Issuing Agency Codes (version 2026-06-16): GS1 holds codes 0 to 9, so a GTIN allocated under a GS1 company prefix carries a registered Issuing Agency Code. Missing: open-dpp accepts any GTIN with a valid check digit, restricted circulation numbers (prefixes 02, 04, 20 to 29) included, which GS1 does not allocate for global use, and checks no prefix against GS1 (Check identifiers.restricted-gtin-refused; bug #1046) (#518)."
-      gapIssue: 518
+      notes: "Read through the AIM register of Issuing Agency Codes (version 2026-06-16): GS1 holds the codes 0 to 9, which every GTIN begins with, so each GS1 identity open-dpp issues uses GS1's registered Issuing Agency Code; no other issuing agency is offered. That restricted circulation numbers pass is a matter of global uniqueness under the GS1 General Specifications, graded under 4.1.2(2) (bug #1046), not of the agency code."
   - id: EN18219-5.2.2.2(a)
     section: "5.2"
     clause: 5.2.2.2(a)
@@ -1075,17 +1098,10 @@ criteria:
     section: "5.5"
     clause: 5.5.2.1(a)
     paraphrase: "Scheme 4, RAIN RFID (UHF, ISO/IEC 18000-63): the identifier follows ISO/IEC 15459-4:2014 for products and/or ISO/IEC 15459-6:2014 for groupings."
-    applicability: operator
+    applicability: software
     areas:
       - 3
       - 4
-    assessment:
-      date: 2026-10-12
-      commit: dad482466f7c8b760d173b41f2cefab283e9200f
-      validator: agent:conformance-review
-      status: Not applicable
-      evidence: []
-      notes: "RF alternative: encoding identifiers into RAIN RFID tags happens in the operator's tagging equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12)."
   - id: EN18219-5.5.2.1(b)
     section: "5.5"
     clause: 5.5.2.1(b)
@@ -1105,22 +1121,15 @@ criteria:
     section: "5.5"
     clause: 5.5.2.1(c)
     paraphrase: "Scheme 4, RAIN RFID: global uniqueness follows ISO/IEC 15459-3:2014."
-    applicability: operator
+    applicability: software
     areas:
       - 3
       - 4
-    assessment:
-      date: 2026-10-12
-      commit: dad482466f7c8b760d173b41f2cefab283e9200f
-      validator: agent:conformance-review
-      status: Not applicable
-      evidence: []
-      notes: "RF alternative: encoding identifiers into RAIN RFID tags happens in the operator's tagging equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12)."
   - id: EN18219-5.5.2.1(d)
     section: "5.5"
     clause: 5.5.2.1(d)
     paraphrase: "Scheme 4, RAIN RFID: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
-    applicability: operator
+    applicability: software
     areas:
       - 3
       - 4
@@ -1128,9 +1137,17 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Not applicable
-      evidence: []
-      notes: "RF alternative: encoding identifiers into RAIN RFID tags happens in the operator's tagging equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12)."
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "identities are GTINs only: digits, normalised to GTIN-14"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12: the AIM register of Issuing Agency Codes for ISO/IEC 15459, version 2026-06-16, lists GS1 Global Office with the codes 0 to 9."
+          date: 2026-10-12
+      notes: "Twin of 5.2.2.1(g): the identifier an operator encodes in a RAIN RFID tag is the GS1 identity open-dpp issues, which uses GS1's registered Issuing Agency Code (codes 0 to 9 in the AIM register of 2026-06-16). The tag encoding itself (5.5.2.1(b)) is the operator's equipment. 5.5.2.1(a) and (c) wait for ISO/IEC 15459-4, -6 and -3 (#1043), as their twins do."
   - id: EN18219-5.5.2.2(a)
     section: "5.5"
     clause: 5.5.2.2(a)
