@@ -432,7 +432,6 @@ criteria:
       - 1
       - 6
     operationalisedBy:
-      - EN18222
       - EN18221
     assessment:
       date: 2026-09-06
@@ -988,6 +987,7 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+      - EN18222
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
@@ -1059,6 +1059,7 @@ criteria:
     operationalisedBy:
       - EN18220
       - EN18219
+      - EN18222
     assessment:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
@@ -1082,6 +1083,8 @@ criteria:
     clause: Art. 10(3)(b)
     paraphrase: That digital copy or a web link is provided free of charge, promptly and within five working days of a request.
     applicability: operator
+    operationalisedBy:
+      - EN18222
   - id: ESPR-Art10(4)
     section: Art10
     clause: Art. 10(4)
@@ -1092,6 +1095,7 @@ criteria:
       - 2
     operationalisedBy:
       - EN18221
+      - EN18222
     assessment:
       date: 2026-10-09
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
@@ -1120,6 +1124,7 @@ criteria:
       - EN18239
       - EN18246
       - EN18219
+      - EN18222
   - id: ESPR-Art11(b)
     section: Art11
     clause: Art. 11 first subparagraph (b)
@@ -1642,6 +1647,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18223
+      - EN18222
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -1663,6 +1669,7 @@ criteria:
       - 7
     operationalisedBy:
       - EN18223
+      - EN18222
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d

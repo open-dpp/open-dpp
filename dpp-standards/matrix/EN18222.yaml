@@ -1,0 +1,287 @@
+# Conformance Matrix: EN18222 (EN 18222:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18222-2026.pdf) on 2026-10-12 (ticket #759); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: one Criterion per paragraph that carries a requirement (shall, should or may), as EN 18220 was extracted, numbered as the PDF sets the paragraphs apart ("4.1(2)"). The method clauses 4.2 to 4.8, 5.2, 6.2 and 6.3 and the mapping tables of 8.2 to 8.4 specify without a modal verb what 4.1, 5.1, 6.1 and 8.1 oblige, so each is one Criterion under its bare clause number: the method's description, its table and its paragraph on access rules. Where a method clause also holds paragraphs with a modal verb of their own (4.5, 4.7), the method is paragraph (1) and those paragraphs keep their numbers; 4.7(2), the access-rule paragraph, is graded with 4.7(1). Clause 7 defines the types every method uses: 7.1 (Table 11) is one Criterion, 7.2 has the result object on failure (7.2(1)), the error-only response (7.2(2)), the result and message structure of Tables 12 to 14, introduced by paragraphs 3 to 5 (7.2(3)), and the status codes of Table 15, introduced by paragraph 6 (7.2(6)). 8.1(7) is the optional representation flag; paragraphs 8 to 10 explain its two values and its default and are graded with it. The 4.1 rows carry who offers which method and how strongly; the method rows carry what each method does. A missing method therefore counts in both, as a conditional clause did in EN 18246 (map rule of 2026-10-12).
+# Not extracted, no requirement of their own: the Introduction, clauses 1 (scope), 2 (normative references, forms below), 3 (terms; 3.6 the unique registration identifier the registry returns), 4.1(1) (the clause holds the methods a custodian offers, stated abstractly, bound to HTTPS in clause 8), 4.1(7) (each method takes parameters, acts and answers with a result), 4.1(8) (three methods suit a search function; finding below), 4.4's date-format paragraph (graded with 4.4), 4.5(3) (the array notation of Table 4), the sentence introducing Table 11, 8.1(1) and (2) (what the mapping tables show), 8.1(3) (RFC 7396 merge patch "can be considered" for updates: a possibility, no requirement; RFC 7396 unread), Annex ZA (below) and the Bibliography.
+# Mirror: 4.7(4) restates EN18221-4.2(5) (every change to the DPP is archived, as EN 18221 lays down, its exemption included) with no delta. 4.4 resembles EN18221-4.2(7) (an authorised actor retrieves the version current at a point in time) but adds a fixed method, its parameters and its providers, so it is an own Criterion; 4.1(9) resembles the content-negotiation rows of EN 18216 (5(b) to 5(d)) but is a conditional recommendation on the API, so it is an own Criterion too.
+# References (forms decided in #1021, confirmed by this Extract). EN 18221 (undated), the only normative reference, graded by pointing at its rows (4.7(4) mirrors EN18221-4.2(5); EN18221-4.1(9) asks for the storage these methods need and is graded in this run). Read-through, graded on this file's rows: IETF RFC 9535 (JSONPath, February 2024), listed only in the Bibliography but bound by the "shall" of 8.1(5): its Normalized Paths (2.7) are the form an element path takes; registered in sources.yaml. Graded by pointing at the other JTC 24 ENs, which the body binds without listing them in clause 2: EN 18216 (content negotiation, 4.1(9)), EN 18219 (the product identifier of 4.3 and 4.5), EN 18223 (the DigitalProductPassport, DataElement, Identifier and Timestamp types of 7.1 and the compressed and full representations of 8.1(7); assessed in #762, so the type part of 7.1 is re-read there) and EN 18246 (the access rules each method names; access rights are the topic of EN 18239, whose element-level rows the notes also cite). Gap, unread: ISO 8601-1:2019 (dated, Bibliography), which only constrains the date parameter of ReadDPPVersionByIdAndDate and the message timestamp of Table 13, both missing in open-dpp (map rule for conditional clauses). Unread, no requirement: RFC 7396 (8.1(3)).
+# Findings: 4.1(8) names a query method ReadDPPVersionByProductIdAndDate that the text specifies nowhere (Table 16 has ReadDPPVersionByIdAndDate only). 4.1(3) and (6) recommend ReadDataElement and UpdateDataElement ("should"), while 6.1 only permits the fine-granular operations ("may"). 4.5 names the pagination parameters limit and cursor, but Table 4 lists neither, nor a cursor in the result. 8.1 cites RFC 7396 as [5] and RFC 9535 as [6], while the Bibliography numbers them [6] and [7] ([5] is EN 18223). 8.1(9) points the full representation to Annexes A and B of EN 18223, but Annex B there is the compressed XML serialisation. Every method points to EN 18246 for its access rules, although access rights are EN 18239's topic. The footnotes still call EN 18239 and EN 18246 under preparation, as in EN 18219 and EN 18220.
+# Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736: Art. 10(1)(d), 10(1)(f), 10(3)(a), 10(3)(b) and 11(b) through 4.5; 11(a) through clause 4 and 4.5, for the technical side of interoperability only (communication and data transfer between the ends). The mandatory clauses among them, which cap the law rows: 4.1(2), 4.1(5), 4.2, 4.3, 4.5(1), 4.5(2), 4.7(1) (mandatory through 4.1(5)) and the Mirror 4.7(4); the recommended and optional rows of clause 4 (4.1(3), 4.1(4), 4.1(6), 4.1(9), 4.4, 4.6, 4.7(3), 4.8) never cap. This Extract added EN18222 to operationalisedBy of ESPR-Art10(1)(f), 10(3)(a), 10(3)(b) and 11(a), and, as rows the text addresses without presumption (map rule of 2026-10-09), of ESPR-Art10(4) (4.1: the back-up DPP service provider serves the read methods), ESPR-Art13(4), 13(5), REG1778-Art3(b), 8(6), 8(7)(e), 8(10) and BATT-Art77(10) (clause 5 and the registry entry of 7.1). It dropped EN18222 from BATT-Art13(6)-closing, ESPR-Art9(1) and REG1778-Art10(2), which the text does not touch (completeness and accuracy of the data; the registry's own versioning). The other law rows naming EN18222 stay: BATT-Art77(5) (searchable and transferable data, the battery counterpart of ESPR-Art10(1)(d)), BATT-Art77(8) (4.8, deletion at end of life), REG1778-Art8(7) (the registry reads the DPP through the API endpoint of the registry entry), ESPR-Art9(2)(g), 9(2)(h) and 11(f) (who creates or updates which data: 4.1(5), 4.6, 4.7, 6.3) and ESPR-Art14 (search built on the query methods, 4.1(8)).
+
+standard: EN18222
+edition: EN 18222:2026
+extractedFrom: standards/EN18222-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4.1"
+    title: 4.1 Life Cycle API, general
+  - id: "4.2"
+    title: 4.2 to 4.5 Read methods
+  - id: "4.6"
+    title: 4.6 to 4.8 Create, update and delete
+  - id: "5"
+    title: 5 DPP registry API
+  - id: "6"
+    title: 6 Fine-granular methods
+  - id: "7"
+    title: 7 Parameter types, status codes and result messages
+  - id: "8.1"
+    title: 8.1 HTTPS/REST mapping, general
+  - id: "8.2"
+    title: 8.2 to 8.4 REST paths
+criteria:
+  - id: EN18222-4.1(2)
+    section: "4.1"
+    clause: "4.1(2)"
+    paraphrase: "The creator of the DPP, or its main DPP service provider, offers the read methods ReadDPPById, ReadDPPByProductId and ReadDPPIdsByProductIds, and the back-up DPP service provider offers them too."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: EN18222-4.1(3)
+    section: "4.1"
+    clause: "4.1(3)"
+    paraphrase: "Recommendation: the creator of the DPP or its main DPP service provider, and also the back-up DPP service provider, offer ReadDataElement."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-4.1(4)
+    section: "4.1"
+    clause: "4.1(4)"
+    paraphrase: "Recommendation: the main DPP service provider and the back-up DPP service provider offer CreateDPP, DeleteDPPById and ReadDPPVersionByIdAndDate."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: EN18222-4.1(5)
+    section: "4.1"
+    clause: "4.1(5)"
+    paraphrase: "Where authorised third parties may change parts of the DPP, the creator of the DPP or its main DPP service provider offers UpdateDPPById."
+    applicability: software
+    areas:
+      - 1
+      - 5
+  - id: EN18222-4.1(6)
+    section: "4.1"
+    clause: "4.1(6)"
+    paraphrase: "Recommendation: under the same condition (authorised third parties may change parts of the DPP), the creator or its main DPP service provider also offers UpdateDataElement."
+    applicability: software
+    areas:
+      - 1
+      - 5
+  - id: EN18222-4.1(9)
+    section: "4.1"
+    clause: "4.1(9)"
+    paraphrase: "Recommendation: an API that can answer in more than one response type selects the type through content negotiation as EN 18216 describes."
+    applicability: software
+    areas:
+      - 2
+  - id: EN18222-4.2
+    section: "4.2"
+    clause: "4.2"
+    paraphrase: "ReadDPPById: given a known DPP identifier, the method answers with a status code and that DPP (at most one, of the EN 18223 type); access rules (EN 18246) decide which data elements the answer holds."
+    applicability: software
+    areas:
+      - 1
+      - 5
+  - id: EN18222-4.3
+    section: "4.2"
+    clause: "4.3"
+    paraphrase: "ReadDPPByProductId: given a unique product identifier as EN 18219 defines it, the method answers with a status code and the DPP currently active for it, its latest version; access rules decide which data elements the answer holds."
+    applicability: software
+    areas:
+      - 1
+      - 3
+      - 5
+  - id: EN18222-4.4
+    section: "4.2"
+    clause: "4.4"
+    paraphrase: "ReadDPPVersionByIdAndDate: given a DPP identifier and a UTC timestamp (ISO 8601-1, as EN 18223 says), the method answers with a status code and the version of the DPP valid at that time; optional for the economic operator; access rules decide which data elements the answer holds. Related: EN18221-4.2(7)."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: EN18222-4.5(1)
+    section: "4.2"
+    clause: "4.5(1)"
+    paraphrase: "ReadDPPIdsByProductIds: given one or more unique product identifiers (EN 18219), the method answers with a status code and the identifiers of every DPP that matches them, possibly none. Annex ZA maps 4.5 to ESPR-Art10(1)(d), (f), 10(3)(a), (b), 11(a) and (b)."
+    applicability: software
+    areas:
+      - 1
+      - 3
+      - 7
+  - id: EN18222-4.5(2)
+    section: "4.2"
+    clause: "4.5(2)"
+    paraphrase: "The client can page through that list with two inputs, limit and cursor; a cursor never has an empty value."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-4.6
+    section: "4.6"
+    clause: "4.6"
+    paraphrase: "CreateDPP: the method takes a DPP (EN 18223 type), creates it where the access rules (EN 18246) allow the caller to, and answers with a status code and the new DPP's identifier."
+    applicability: software
+    areas:
+      - 1
+      - 5
+  - id: EN18222-4.7(1)
+    section: "4.6"
+    clause: "4.7(1)"
+    paraphrase: "UpdateDPPById: the method takes a DPP identifier and a partial DPP holding only the data to change or add, one data element or several, applies it where the access rules allow the patch (4.7(2)), and answers with the updated DPP and a status code that tells why a failed update failed."
+    applicability: software
+    areas:
+      - 1
+      - 5
+  - id: EN18222-4.7(3)
+    section: "4.6"
+    clause: "4.7(3)"
+    paraphrase: "Recommendation: an update whose parts do not all succeed fails as a whole and leaves the DPP unchanged."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: EN18222-4.7(4)
+    section: "4.6"
+    clause: "4.7(4)"
+    paraphrase: "Every change to the DPP is archived as EN 18221 requires."
+    applicability: software
+    areas:
+      - 6
+    mirrors: EN18221-4.2(5)
+  - id: EN18222-4.8
+    section: "4.6"
+    clause: "4.8"
+    paraphrase: "DeleteDPPById: given a DPP identifier, the method removes that DPP where the access rules allow it, a step that matters at the end of the DPP's life, and answers with a status code."
+    applicability: software
+    areas:
+      - 1
+      - 6
+  - id: EN18222-5.1
+    section: "5"
+    clause: "5.1"
+    paraphrase: "The DPP registry offers the method RegisterProductDPP."
+    applicability: commission
+    areas:
+      - 7
+  - id: EN18222-5.2
+    section: "5"
+    clause: "5.2"
+    paraphrase: "RegisterProductDPP, served by the registry: the calling client hands in a registry entry, the registry registers the new DPP and answers with a status code and a unique registration identifier."
+    applicability: commission
+    areas:
+      - 7
+  - id: EN18222-6.1
+    section: "6"
+    clause: "6.1"
+    paraphrase: "Option: whoever holds a DPP in custody, or an archiving service, may offer the fine-granular methods ReadDataElement and UpdateDataElement."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-6.2
+    section: "6"
+    clause: "6.2"
+    paraphrase: "ReadDataElement: given a DPP identifier and the absolute path of one of its data elements, the method answers with a status code and that data element (EN 18223 type)."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-6.3
+    section: "6"
+    clause: "6.3"
+    paraphrase: "UpdateDataElement: given a DPP identifier, the path of a data element and new content, the method updates that element, which may also mean amending or removing element information, and answers with a status code and the changed element."
+    applicability: software
+    areas:
+      - 1
+      - 5
+  - id: EN18222-7.1
+    section: "7"
+    clause: "7.1"
+    paraphrase: "The methods use the types of Table 11: identifiers are strings as EN 18223 defines them; a DPP is an EN 18223 object, or a subset of its data elements for an update; a timestamp is an ISO 8601-1 date-time as EN 18223 says; a data element is EN 18223's; the registry entry is a DPP header naming the unique product identifier, the DPP identifier, the unique operator identifiers of the economic operator and of the back-up operator, and the URI of the DPP API endpoint."
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 3
+      - 7
+  - id: EN18222-7.2(1)
+    section: "7"
+    clause: "7.2(1)"
+    paraphrase: "Recommendation: when a method fails, the answer carries a result object that explains why."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-7.2(2)
+    section: "7"
+    clause: "7.2(2)"
+    paraphrase: "Option: the answer to a failed request may consist of the error object alone."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-7.2(3)
+    section: "7"
+    clause: "7.2(3)"
+    paraphrase: "The result object (Tables 12 to 14) holds any number of messages; each message has a type (Info, Warning, Error or Exception) and a text, and may add a technology-specific status or error code, a correlation identifier that ties messages together across systems, and a timestamp."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-7.2(6)
+    section: "7"
+    clause: "7.2(6)"
+    paraphrase: "The status codes allowed (Table 15) are generic codes mapped to HTTP 200, 201, 202, 204 and 501, which carry no result object, and 400, 401, 403, 404, 405, 409, 500 and 502, which carry one."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-8.1(4)
+    section: "8.1"
+    clause: "8.1(4)"
+    paraphrase: "REST paths start with a version prefix, v1/ for this edition, which later versions of the API replace."
+    applicability: software
+    areas:
+      - 1
+      - 13
+  - id: EN18222-8.1(5)
+    section: "8.1"
+    clause: "8.1(5)"
+    paraphrase: "An element path (elementIdPath) is written as a JSONPath expression of RFC 9535."
+    applicability: software
+    areas:
+      - 1
+  - id: EN18222-8.1(6)
+    section: "8.1"
+    clause: "8.1(6)"
+    paraphrase: "Recommendation: parameters that travel in the URL path, such as the DPP identifier, are percent-encoded."
+    applicability: software
+    areas:
+      - 1
+      - 3
+  - id: EN18222-8.1(7)
+    section: "8.1"
+    clause: "8.1(7)"
+    paraphrase: "GET, POST and PATCH take an optional query parameter, representation, with the values compressed (the default, EN 18223 5.2) and full (EN 18223 Annexes A and B); a request without it gets the compressed payload."
+    applicability: software
+    areas:
+      - 1
+      - 2
+  - id: EN18222-8.2
+    section: "8.2"
+    clause: "8.2"
+    paraphrase: "The Life Cycle API is served at these paths (Table 16): GET v1/dpps/{dppId}, GET v1/dppsByProductId/{productId}, GET v1/dppsByIdAndDate/{dppId} with the date as a query parameter, POST v1/dppsByProductIds with a set of product identifiers, POST v1/dpps, PATCH v1/dpps/{dppId} with a partial DPP, and DELETE v1/dpps/{dppId}."
+    applicability: software
+    areas:
+      - 1
+      - 13
+  - id: EN18222-8.3
+    section: "8.2"
+    clause: "8.3"
+    paraphrase: "The registry serves RegisterProductDPP at POST v1/registerDPP, taking the registry entry and answering with the registration identifier (Table 17)."
+    applicability: commission
+    areas:
+      - 7
+  - id: EN18222-8.4
+    section: "8.2"
+    clause: "8.4"
+    paraphrase: "The fine-granular methods are served at GET and PATCH v1/dpps/{dppId}/elements/{elementIdPath} (Table 18)."
+    applicability: software
+    areas:
+      - 1
+      - 13
