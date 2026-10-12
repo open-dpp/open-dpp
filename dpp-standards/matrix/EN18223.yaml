@@ -74,9 +74,9 @@ criteria:
           note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
@@ -103,15 +103,15 @@ criteria:
           note: a passport holds any number of unique product identifiers (permalink URL, GS1 Digital Link); none is an attribute of the passport
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
           result: failed
           date: 2026-10-12
-      notes: "Mandatory. Credited: a passport can hold unique product identifiers, its permalink URL and a GS1 Digital Link, both URLs that lead to the passport (EN18219-4.3.2(2) Met). Missing: none is an attribute of the passport or appears in its JSON; a passport may hold none or several where Table 1 asks for exactly one; the EN 18219 format is met only in part (EN18219-4.3.2(1) Partial, #518)."
+      notes: "Mandatory. Credited: a passport can hold unique product identifiers, its permalink URL and a GS1 Digital Link, both URLs that lead to the passport (EN18219-4.3.2(2) Met), and the public permalink read gives one of them beside the passport as publicUrl (the GS1 Digital Link where there is one). Missing: no attribute uniqueProductIdentifier, and the identifier is not part of the passport's own data or of its AAS content; a passport may hold none or several where Table 1 asks for exactly one; the EN 18219 format is met only in part (EN18219-4.3.2(1) Partial, #518)."
       gapIssue: 1057
   - id: EN18223-4.1.2.1(5)(granularity)
     section: "4.1.2.1"
@@ -132,7 +132,7 @@ criteria:
           ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
           note: a passport holds any number of unique product identifiers (permalink URL, GS1 Digital Link); none is an attribute of the passport
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
@@ -159,7 +159,7 @@ criteria:
           ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
           note: "members' export: one JSON object, open-dpp's envelope (format version 6.0) around an AAS environment"
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
@@ -186,9 +186,9 @@ criteria:
           note: statuses Draft, Published and Archived; publish, archive, restore
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
@@ -215,9 +215,9 @@ criteria:
           note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
@@ -245,9 +245,9 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
@@ -258,7 +258,7 @@ criteria:
   - id: EN18223-4.1.2.1(5)(facilityId)
     section: "4.1.2.1"
     clause: "4.1.2.1(5), Table 1: facilityId"
-    paraphrase: "Optional attribute (zero or one): the instance may publish facilityId, the identifier of a location or building in the product's value chain or used by a life-cycle actor, in an EN 18219 format."
+    paraphrase: "Optional attribute (zero or one): the instance may publish facilityId, an EN 18219 identifier of a site or building that takes part in making or handling the product."
     applicability: software
     areas:
       - 3
@@ -270,9 +270,12 @@ criteria:
       operational: false
       evidence:
         - type: code
-          ref: apps/main/src/passports/domain/passport.ts
-          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
-      notes: Optional attribute; never caps a law row. No facility identifier exists (#1023).
+          ref: apps/main/src/passports/infrastructure/passport.schema.ts
+          note: a passport document holds id, organizationId, templateId, environment ids, status, editing mode and timestamps; no facility identifier
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          date: 2026-10-12
+      notes: "Optional attribute; never caps a law row. No facility identifier exists: neither the passport, its organisation nor its AAS content has a field for one, and the public permalink read carries none (#1023)."
       gapIssue: 1023
   - id: EN18223-4.1.2.1(5)(contentSpecificationIds)
     section: "4.1.2.1"
@@ -289,8 +292,8 @@ criteria:
       operational: false
       evidence:
         - type: code
-          ref: apps/main/src/passports/domain/passport.ts
-          note: "passport id minted with crypto.randomUUID (version 4); createdAt and updatedAt set once, at creation (bug #1056)"
+          ref: apps/main/src/passports/infrastructure/passport.schema.ts
+          note: "templateId: the template a passport was made from; no reference to a content specification"
       notes: Optional attribute; never caps a law row. Nothing references the horizontal or product-type content specification a passport follows; a passport records only the template it was made from (templateId), an object of the operator's organisation, not a specification.
       gapIssue: 1057
   - id: EN18223-4.1.2.1(6)-sub1
@@ -329,7 +332,7 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Partial
+      status: Gap
       operational: false
       evidence:
         - type: code
@@ -338,7 +341,7 @@ criteria:
         - type: code
           ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
           note: a passport holds any number of unique product identifiers (permalink URL, GS1 Digital Link); none is an attribute of the passport
-      notes: Recommendation; never caps a law row. The passport id is a bare UUID, not a URI. The permalink URL and the GS1 Digital Link that lead to a passport are URLs, but they identify its presentation and its product, not the passport instance.
+      notes: Recommendation; never caps a law row. The passport id is a bare UUID, not built on a URI or URL. The permalink URL and the GS1 Digital Link that lead to a passport are URLs, but they identify its presentation and its product, not the passport instance.
       gapIssue: 1057
   - id: EN18223-4.1.2.3(elementId)-sub1
     section: "4.1.2.3"
@@ -553,7 +556,7 @@ criteria:
       evidence:
         - type: code
           ref: packages/dto/src/aas/enums/language-enum.ts
-          note: 29 bare language codes, no country part, Irish and Maltese missing; BcpLanguageTagSchema has no consumer
+          note: 29 bare language codes, no country part, Irish and Maltese missing; BcpLanguageTagSchema checks only the public view's ?lang= parameter (apps/client/src/composables/presentation-language.ts), never a language text
         - type: code
           ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
           note: "MultiLanguageProperty: a list of language texts with unique languages"
@@ -564,7 +567,7 @@ criteria:
           ref: model.language-tag-with-country
           result: failed
           date: 2026-10-12
-      notes: "Mandatory; Annex ZA maps it to ESPR Art. 7(8). Credited: each language text holds a string and a language code. Missing: the language is one of 29 bare codes; a tag with a country part (en-GB, de-AT) is refused (Check model.language-tag-with-country fails), and so are Irish and Maltese; a BCP 47 validator exists in the DTO package but nothing uses it (#838). Read through ISO 639 (Set 1 codes) and ISO 3166-1 (alpha-2 codes)."
+      notes: "Mandatory; Annex ZA maps it to ESPR Art. 7(8). Credited: each language text holds a string and a language code. Missing: the language is one of 29 bare codes; a tag with a country part (en-GB, de-AT) is refused (Check model.language-tag-with-country fails), and so are Irish and Maltese; BCP 47 tags are checked only for the public view's language parameter, never for language texts (#838). Read through ISO 639 (Set 1 codes) and ISO 3166-1 (alpha-2 codes)."
       gapIssue: 838
   - id: EN18223-4.1.2.9
     section: "4.1.2.9"
@@ -593,7 +596,7 @@ criteria:
           ref: model.admitted-xsd-types-accepted
           result: passed
           date: 2026-10-12
-      notes: "Recommendation, graded as enablement. open-dpp's value types are exactly the XSD 1.0 built-ins 4.1.2.9 admits: every primitive but NOTATION and QName, and the integer types derived from decimal; a property takes each of them with a valid value (Check model.admitted-xsd-types-accepted). The type is named in open-dpp's spelling (Integer); the XSD spelling xs:integer works for every type but xs:anyURI, which answers 500 (bug #1033). Read through W3C XML Schema Part 2 (Second Edition), clause 3."
+      notes: "Recommendation, graded as enablement. open-dpp's value types are exactly the XSD 1.0 built-ins 4.1.2.9 admits: every primitive but NOTATION and QName, and the integer types derived from decimal; a property takes each of them with a valid value (Check model.admitted-xsd-types-accepted). The type is named in open-dpp's spelling (Integer); the spelling with prefix xs: works for every type but xs:anyURI, and the prefix xsd: that EN 18223 itself writes (Table 7, Annex A) answers 500 for every type (bug #1033), a matter of the serialisation rows. Read through W3C XML Schema Part 2 (Second Edition), clause 3."
   - id: EN18223-4.1.2.9(a)
     section: "4.1.2.9"
     clause: "4.1.2.9, first item"
@@ -706,7 +709,7 @@ criteria:
   - id: EN18223-4.2(1)
     section: "4.2"
     clause: "4.2(1)"
-    paraphrase: "Recommendation: every lifetime event that changes a DPP (a changed property or document, an added property) is tracked so that the change can be archived, recording at least the identifiers (DPP and product), when it happened, the actor as EN 18239 defines it, and which properties changed."
+    paraphrase: "Recommendation: every lifetime event that changes a DPP (a changed property or document, an added property) is tracked so that the change can be archived; the text names, as examples of what a record holds, the identifiers (DPP and product), the time of the change, the actor as EN 18239 defines it, and the properties changed."
     applicability: software
     areas:
       - 6
@@ -721,7 +724,10 @@ criteria:
         - type: code
           ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
           note: "activity record: passport id (aggregateId), time, user id, type and payload of the change"
-      notes: "Recommendation; never caps a law row. Credited: the activity history records about 25 kinds of change with the passport id, the time, the acting user and the changed data, which members read and download. Missing: creation, status changes and deletion are not recorded (bug #1032); a record names neither the product identifier nor an actor identity as EN 18239 defines it, only an internal user id (#1023); the log is not tamper-evident (#1024)."
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: the recorded change kinds; none for the creation or deletion of a passport
+      notes: "Recommendation; never caps a law row. Credited: the activity history records about 25 kinds of change to a passport's content (submodels, elements, table rows and columns, policies, editing mode) with the passport id, the time, the acting user and the changed data, which members read and download; that covers the examples the text gives, the product identifier aside. Missing: not every lifetime event that changes a passport is tracked: a status change leaves no record (bug #1032), the creation of a passport has no activity type, and deleting a draft removes its history with it (#1024, the cluster of a complete change log)."
       gapIssue: 1024
   - id: EN18223-4.2(2)
     section: "4.2"
@@ -741,7 +747,7 @@ criteria:
         - type: code
           ref: apps/main/src/activity-history/infrastructure/activity.schema.ts
           note: "activity record: passport id (aggregateId), time, user id, type and payload of the change"
-      notes: "Mandatory. Credited: most changes are logged in the activity history (4.2(1)). Missing: no version archive as EN 18221 requires (EN18221-4.2(5) Partial, #1029), and creation, status changes and deletion escape the log (bug #1032). Delegated acts have not set an extent yet, so every change counts."
+      notes: "Mandatory. Credited: most changes are logged in the activity history (4.2(1)). Missing: no version archive as EN 18221 requires (EN18221-4.2(5) Partial, #1029), and status changes (bug #1032), the creation of a passport and its deletion escape the log. Delegated acts have not set an extent yet, so every change counts."
       gapIssue: 1029
   - id: EN18223-4.3(1)
     section: "4.3"
@@ -927,7 +933,7 @@ criteria:
           note: "AAS ValueOnly ($value): submodel and collection as an object keyed by idShort, list as an array, Property as its stored string, MultiLanguageProperty as [{<language>: text}], File as {contentType, value}"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
           ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: $value of the subject's content submodel answered {\"TradeName\": \"Conformance Kettle\", \"Weight\": \"1.25\", \"Recyclable\": \"true\", \"Description\": [{\"en\": …}, {\"de\": …}], \"ProductImage\": {\"contentType\": \"image/png\", \"value\": <media id>}, \"Manufacturer\": {\"Name\": …}, \"Materials\": [{\"Material\": \"Steel\", \"Share\": \"60\"}, …]}; the full read gives each element with idShort, modelType, semanticId, valueType Double and value \"1.25\"."
           date: 2026-10-12
@@ -1011,15 +1017,15 @@ criteria:
           note: "members' export: one JSON object, open-dpp's envelope (format version 6.0) around an AAS environment"
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
-          note: public GET /p/:id answers the passport's id, organizationId, status (lastStatusChange), createdAt and updatedAt with the ids of its shells and submodels; AAS reads and $value keyed by the permalink id, published passports only
+          note: public GET /p/:id answers the passport (id, organizationId, status as lastStatusChange, createdAt, updatedAt, ids of its shells and submodels) and publicUrl, the GS1 Digital Link or the permalink URL; AAS reads and $value keyed by the permalink id, published passports only
         - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and no attribute of Table 1 by its name (Check format.dpp-header-published)."
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as a visitor: GET /api/v2/p/<permalink id> answered the passport's id (a version 4 UUID), organizationId, lastStatusChange (Published), createdAt and updatedAt (both 2026-10-12T17:31:42.423Z on the filled and published subject), and beside the passport its publicUrl, the GS1 Digital Link; no attribute of Table 1 by its name (Check format.dpp-header-published)."
           date: 2026-10-12
         - type: check
           ref: format.dpp-header-published
           result: failed
           date: 2026-10-12
-      notes: "Mandatory. Credited: the members' export serialises a passport as one JSON object. Missing: it is open-dpp's envelope around an AAS environment, without the header of Table 1 (Check format.dpp-header-published fails); the public reads come per shell and per submodel, and the permalink read carries only the passport's id, status and timestamps, under other names."
+      notes: "Mandatory. Credited: the members' export serialises a passport as one JSON object. Missing: it is open-dpp's envelope around an AAS environment, without the header of Table 1 (Check format.dpp-header-published fails); the public reads come per shell and per submodel, and the permalink read carries only the passport's id, status and timestamps and its public URL, under other names."
       gapIssue: 1057
   - id: EN18223-5.2.5-sub1
     section: "5.2"

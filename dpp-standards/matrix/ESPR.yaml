@@ -446,7 +446,7 @@ criteria:
           note: "MultiLanguageProperty: a list of language texts with unique languages"
         - type: code
           ref: packages/dto/src/aas/enums/language-enum.ts
-          note: 29 bare language codes, no country part, Irish and Maltese missing; BcpLanguageTagSchema has no consumer
+          note: 29 bare language codes, no country part, Irish and Maltese missing; BcpLanguageTagSchema checks only the public view's ?lang= parameter (apps/client/src/composables/presentation-language.ts), never a language text
         - type: code
           ref: apps/client/src/components/presentation/SubmodelElementValue.vue
           note: the public view renders no MultiLanguageProperty value (#838)
@@ -460,7 +460,7 @@ criteria:
           ref: model.eu-languages-accepted
           result: failed
           date: 2026-10-12
-      notes: "Software part: hold the passport's information in the language or languages each Member State sets, and show it in them. Credited: element and submodel labels carry texts per language, a MultiLanguageProperty holds a text per language for 29 language codes, 22 of the 24 official EU languages among them, and the public view offers a language switcher. Missing: Irish and Maltese are refused (Check model.eu-languages-accepted fails), and so is any tag with a country part (EN18223-4.1.2.8.2); multi-language values can be neither entered in the editor nor seen in the public view, whose own strings exist in English and German only (#838). Capped at Partial by Annex ZA through EN18223-4.1.2.8.1 and 4.1.2.8.2 (both Partial, #838). Operational: the operator supplies the texts in the languages each Member State requires. First assessment: the row was added by the EN 18223 Extract (#762)."
+      notes: "Software part: hold the passport's information in the language or languages each Member State sets, and show it in them. Credited: element and submodel labels carry texts per language, a MultiLanguageProperty holds a text per language for 29 language codes, 22 of the 24 official EU languages among them, and the public view offers a language switcher. Missing: Irish and Maltese are refused (Check model.eu-languages-accepted fails), and so is any tag with a country part (EN18223-4.1.2.8.2; BCP 47 tags are checked only for the public view's language parameter); multi-language values can be neither entered in the editor nor seen in the public view, whose own strings exist in English and German only (#838). Capped at Partial by Annex ZA through EN18223-4.1.2.8.1 and 4.1.2.8.2 (both Partial, #838). Operational: the operator supplies the texts in the languages each Member State requires. First assessment: the row was added by the EN 18223 Extract (#762)."
       gapIssue: 838
   - id: ESPR-Art9(1)
     section: Art9
@@ -1362,7 +1362,7 @@ criteria:
       evidence:
         - type: code
           ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
-          note: derivedFrom exists in the model, but a value sent on creation or update is dropped (stored null)
+          note: "derivedFrom is a Reference in the domain but a Resource in the DTO (packages/dto/src/aas/asset-administration-shell-json-schema.ts), so a reference sent on creation or update is dropped and refused on import (bug #1059)"
         - type: code
           ref: apps/main/src/aas/domain/submodel-base/file.ts
           note: "File: contentType and value (a media id for an upload, or any path or URL); no language"
@@ -1372,7 +1372,7 @@ criteria:
         - type: manual
           ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: a passport created with a shell whose derivedFrom references another shell answered 201 with derivedFrom null; a PATCH of the shell with derivedFrom answered 200 and left it null."
           date: 2026-10-12
-      notes: "First assessment. Software part: a passport made for a product that already has one links to the original passport or passports. Credited: an operator can record the original passport's URL in an element, a Property of type AnyUri or a File holding a URL, which the public view shows. Missing: nothing creates or keeps such a link and nothing marks it as a link between passports; the AAS shell's derivedFrom, which could carry it, is dropped when sent on creation or update; a GS1 identity added to an existing passport is the only other tie (EN18219-4.4.2(3), #597). Annex ZA maps Art. 11(d) to EN18219-4.4.2 (Partial, #597) and to EN18223-4.1.2.7 (RelatedResource, Partial, #1057), which caps it at Partial; EN 18223 itself has no class for a link between passports (text finding). Gap cluster #825 (passport linking)."
+      notes: "First assessment. Software part: a passport made for a product that already has one links to the original passport or passports. Credited: an operator can record the original passport's URL in an element, a Property of type AnyUri or a File holding a URL, which the public view shows. Missing: nothing creates or keeps such a link and nothing marks it as a link between passports; the AAS shell's derivedFrom, which could carry it, is typed as a Resource in the API and so dropped on creation and update and refused on import (bug #1059); a GS1 identity added to an existing passport is the only other tie (EN18219-4.4.2(3), #597). Annex ZA maps Art. 11(d) to EN18219-4.4.2 (Partial, #597) and to EN18223-4.1.2.7 (RelatedResource, Partial, #1057), which caps it at Partial; EN 18223 itself has no class for a link between passports (text finding). Gap cluster #825 (passport linking)."
       gapIssue: 825
   - id: ESPR-Art11(e)
     section: Art11
