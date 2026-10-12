@@ -1636,3 +1636,162 @@ runs:
     adversarialReview:
       blockingObjections: 4
       comment: https://github.com/open-dpp/open-dpp/pull/1047#issuecomment-6123777497
+  - id: 2026-10-12-en18220
+    date: 2026-10-12
+    trigger:
+      kind: code
+      detail: "first assessment of EN18220 EN 18220:2026 (wayfinder ticket #757)"
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    sources:
+      - EN18220
+    scope:
+      - id: EN18220-4.1
+        reason: not assessed
+      - id: EN18220-4.2
+        reason: not assessed
+      - id: EN18220-4.3.1
+        reason: not assessed
+      - id: EN18220-4.3.2
+        reason: not assessed
+      - id: EN18220-5.1
+        reason: not assessed
+      - id: EN18220-5.2.1-sub1
+        reason: not assessed
+      - id: EN18220-5.2.1-sub2
+        reason: not assessed
+      - id: EN18220-5.2.3-sub1
+        reason: not assessed
+      - id: EN18220-5.2.3-sub2
+        reason: not assessed
+      - id: EN18220-5.3.4-sub1
+        reason: not assessed
+      - id: EN18220-5.3.4-sub2
+        reason: not assessed
+      - id: EN18220-5.4.1
+        reason: not assessed
+      - id: EN18220-5.4.4(2)
+        reason: not assessed
+      - id: EN18220-5.4.5(1)
+        reason: not assessed
+      - id: EN18220-5.4.5(2)
+        reason: not assessed
+      - id: EN18220-5.5.2(2)
+        reason: not assessed
+      - id: EN18220-5.6.1
+        reason: not assessed
+      - id: EN18220-5.6.2(1)
+        reason: not assessed
+      - id: EN18220-5.6.2(4)
+        reason: not assessed
+      - id: EN18220-5.6.3
+        reason: not assessed
+      - id: EN18220-5.6.4(1)
+        reason: not assessed
+      - id: EN18220-5.6.4(3)
+        reason: not assessed
+      - id: EN18220-5.7.1-sub1
+        reason: not assessed
+      - id: EN18220-5.7.1-sub2
+        reason: not assessed
+      - id: EN18220-5.7.2
+        reason: not assessed
+      - id: EN18220-5.7.3(1)
+        reason: not assessed
+      - id: EN18220-5.7.3(2)
+        reason: not assessed
+      - id: EN18220-5.7.4-sub1
+        reason: not assessed
+      - id: EN18220-5.7.4-sub2
+        reason: not assessed
+      - id: EN18220-5.8.1-sub1
+        reason: not assessed
+      - id: EN18220-5.8.1-sub2
+        reason: not assessed
+      - id: EN18220-5.8.2
+        reason: not assessed
+      - id: EN18220-6.1(2)
+        reason: not assessed
+      - id: EN18220-6.2.2
+        reason: not assessed
+      - id: EN18220-6.2.3
+        reason: not assessed
+      - id: EN18220-6.2.4.1
+        reason: not assessed
+      - id: EN18220-6.3.2.1
+        reason: not assessed
+      - id: EN18220-6.3.2.3
+        reason: not assessed
+      - id: EN18220-6.3.2.4
+        reason: not assessed
+      - id: EN18220-6.3.3.2
+        reason: not assessed
+      - id: EN18220-6.3.3.3
+        reason: not assessed
+      - id: EN18220-6.3.4.2
+        reason: not assessed
+      - id: EN18220-6.3.4.3
+        reason: not assessed
+      - id: EN18220-6.3.4.4
+        reason: not assessed
+      - id: EN18220-6.3.6
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: Florian Bieck
+    notes: "Ticket #757, Extract and first Assess of EN 18220:2026 in one session (the Extract is the PR's first commit, ahead of the run; two Extract changes from the adversarial review are in the review commit). Extract: 45 Criteria, one per paragraph that carries a requirement, no Mirror; Annex ZA in the file header; EN18220 added to operationalisedBy of ESPR-Art9(2)(d), 10(1)(g) and 12(6)(a) to (c). References: ISO/IEC 18004:2024 registered as a read-through (through the text's own restatement and two Checks); ISO/IEC 16022 Gap, unread; the RF, print-quality and vocabulary references Not applicable, unread; the references of the EN18220 source entry corrected (GS1 Digital Link is none of them). Against main dad48246: 7 Met (the character sets of the identifier and of other data, access without registration, decoding native to phones, an ISO/IEC carrier with proven implementations, the capability rows of Table 1), 13 Partial, 5 Gap (module size, the optional graphical mark and its symbols, Data Matrix, extra accessibility software), 20 Not applicable (the operator's marking, print quality, RF hardware). Finding: open-dpp's only carrier is a QR Code drawn in the browser on back-office pages. It holds the permalink or the GS1 Digital Link and decodes correctly (jsQR and Apple's Vision framework), but exists only as a canvas at screen resolution (no download control, print layout, size choice or server output), its image keeps a quiet zone of about one module where ISO/IEC 18004 requires four, and it carries no readable text or distinguishing mark; no operator documentation covers carriers or GS1 data attributes. Bugs filed: #1049 (the resolver decodes batch and serial twice, so a key with a percent sign resolves to another passport or to nothing) and #1050 (deleting a presentation configuration breaks the published permalink naming it). Clusters: no new one; #489 (9 rows), #518 (3), #828 (2), #1035 (3), #597 (1). Checks: new carriers.qr-decodes-to-passport-link (passes; jsqr added to apps/e2e as an independent decoder), carriers.qr-quiet-zone-four-modules, resolver.percent-in-key-resolves-to-own-passport and identifiers.published-permalink-survives-config-deletion (all three fail on the findings); EN 18220, ESPR and BATT tags added to identifiers.gs1-syntax-valid, a11y.public-view-no-serious-violations, access.anonymous-reads-published and access.public-view-renders-in-plain-browser. Run against an Instance built from dad48246 in a worktree (port 3001, with VITE_API_ROOT and the ClamAV variables set): 20 passed, 10 failed (the seven known findings and the three new ones), 3 skipped (transport over http). Adversarial review: 5 blocking objections, all applied: the Gap issues got their comments; the BATT rows joined run 2026-10-12-manual-3; 4.1 is graded operational like 5.4.5(1) (Partial, #828); 5.3.4-sub1 became an own Criterion (it narrows EN18219-4.6.2(2) to end consumers and the product identifier); 5.8.1 was split; both run entries were regenerated with matrix:run after the Extract changes. Law rows assessed before the text that EN 18220 now addresses (ESPR-Art9(2)(b), 9(2)(d), 9(2)(e) and 10(1)(g)) wait for the text trigger of #768; so does EN18219-4.2.2(1), to which the fold added the failing finding Checks of bugs #1049 and #1050 while its notes name bug #1046 only. Left to the reviewer of record: whether computing an EPC or NFC tag encoding is software open-dpp could offer (6.3.2.3, 6.3.3.3, 6.3.4.3 are Not applicable as the operator's tagging equipment, the EN 18219 precedent)."
+    pr: 1051
+    adversarialReview:
+      blockingObjections: 5
+      comment: https://github.com/open-dpp/open-dpp/pull/1051#issuecomment-6126470851
+  - id: 2026-10-12-manual-3
+    date: 2026-10-12
+    trigger:
+      kind: manual
+      detail: "the ESPR and Batteries Regulation carrier rows EN 18220 operationalises that ticket #757 names or was handed (ESPR Art. 10(1)(a), (b), (c), 10(3)(a), Annex III second paragraph; BATT Art. 13(6), 13(6)(a), (b), 77(3)), and the EN 18219 and EN 18246 rows that wait for EN 18220"
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    sources:
+      - ESPR
+      - BATT
+      - EN18219
+      - EN18246
+      - DET
+      - TOYS
+    scope:
+      - id: ESPR-Art10(1)(a)
+        reason: manual
+      - id: ESPR-Art10(1)(b)
+        reason: manual
+      - id: ESPR-Art10(1)(c)
+        reason: manual
+      - id: ESPR-Art10(3)(a)
+        reason: manual
+      - id: ESPR-AnnexIII-para2
+        reason: manual
+      - id: BATT-Art13(6)
+        reason: manual
+      - id: BATT-Art13(6)(a)
+        reason: manual
+      - id: BATT-Art13(6)(b)
+        reason: manual
+      - id: BATT-Art77(3)-sub1
+        reason: manual
+      - id: BATT-Art77(3)-sub2
+        reason: manual
+      - id: EN18219-4.5.2(1)
+        reason: manual
+      - id: EN18246-5.2.1(4)
+        reason: manual
+      - id: DET-Art21(2)(h)
+        reason: mirror of ESPR-Art10(1)(a)
+      - id: DET-Art21(12)(a)
+        reason: mirror of ESPR-Art10(3)(a)
+      - id: TOYS-Art19(2)(h)
+        reason: mirror of ESPR-Art10(1)(a)
+      - id: TOYS-Art19(12)(a)
+        reason: mirror of ESPR-Art10(3)(a)
+    validator: agent:conformance-review
+    reviewer: Florian Bieck
+    notes: "Ticket #757, the ESPR and Batteries Regulation carrier rows EN 18220 operationalises that the ticket names or run 2026-10-12-manual-2 handed over, and the carry-overs waiting for EN 18220 (manual trigger, because matrix:run has no per-article scope), against main dad48246, read through run 2026-10-12-en18220. ESPR: Art. 10(1)(a) re-graded Partial (#518; capped by Annex ZA through EN18220-5.2.1-sub1 and -sub2, bugs #1049 and #1050, and through EN 18219 4.1.2, 4.2.2, 4.5.2 and 5.1); 10(1)(b) Partial (#489; capped through EN18220-5.4.5(2)); 10(1)(c) re-graded Partial (#518; capped through EN18220-5.2.1 and EN18219-5.1); 10(3)(a) Partial (#828; capped through EN18219-4.5.2); Annex III second paragraph re-graded Partial (#518; ISO/IEC 15459-3, -4 and -6 wait for #1043, operator and facility identifiers missing). Batteries Regulation, brought in by the adversarial review: Art. 13(6) Partial (#489; quiet zone, no print output, no Annex VI Part C layout); 13(6)(a) and 77(3)-sub1 Met to Partial (#518; bugs #1049, #1050 and #1046 break the chain from QR Code to passport for some passports, and their doc evidence said nothing on carriers); 13(6)(b) Partial (#522, content); 77(3)-sub2 Partial (#518, as Annex III second paragraph). EN18219-4.5.2(1) Partial (#489) and EN18246-5.2.1(4) Partial (#518), both graded on the EN 18220 rows. EN18221-4.1(9), also handed to this ticket, stays unassessed: its EN 18222 half (what the lifecycle and search APIs need, point-in-time reads among them) is for the EN 18222 assessment #759, which carries the same hand-over; its EN 18220 half is served except where a frozen permalink depends on a presentation configuration that can be deleted (bug #1050). Mirrors: DET-Art21(2)(h) and TOYS-Art19(2)(h) (of 10(1)(a)) and DET-Art21(12)(a) and TOYS-Art19(12)(a) (of 10(3)(a)) still restate their targets."
+    pr: 1051
+    adversarialReview:
+      blockingObjections: 5
+      comment: https://github.com/open-dpp/open-dpp/pull/1051#issuecomment-6126470851

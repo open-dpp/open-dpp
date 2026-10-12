@@ -1020,6 +1020,29 @@ criteria:
     areas:
       - 3
       - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 518
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+      notes: "Graded on the two texts' runs: EN 18219 (run 2026-10-12-en18219: 12 Met, 16 Partial, 36 Gap, 3 Not applicable, 10 unassessed; its largest cluster is the identification schemes, #518) and EN 18220 (run 2026-10-12-en18220: the carrier is an on-screen QR Code with a quiet zone of one module and no print output, #489; some identifiers do not lead from the carrier to their passport, bugs #1049 and #1050). Identifiers and carriers therefore follow the two ENs in part (#518)."
   - id: EN18246-5.2.2(1)
     section: "5.2"
     clause: 5.2.2(1)

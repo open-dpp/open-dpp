@@ -1,0 +1,1013 @@
+# Conformance Matrix: EN18220 (EN 18220:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18220-2026.pdf) on 2026-10-12 (ticket #757); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: one Criterion per paragraph that carries a requirement (shall, should or may), as EN 18246 was extracted. A clause of one paragraph keeps its bare number ("5.6.1"); in a clause of several paragraphs the paragraphs are numbered as the PDF sets them apart ("5.4.5(2)"), and those without a requirement keep their number and are listed below. A paragraph holding two requirements gets "-sub1" and "-sub2": 5.2.1 (the identifier in the carrier; the scheme's rules), 5.2.3 (character sets of the identifier; of other data), 5.3.4 (access without registration; a decoder built into the device), 5.7.1 (recognisable presence; placement), 5.7.4 (accessibility of the carrier; of both digital and physical interaction) and 5.8.1 (ISO/IEC-recognised standards; the option of extra accessibility software, split after the adversarial review of PR #1051). The capability rows of Table 1 (6.2.4.1) and Table 2 (6.3.6) are one Criterion each. Three statements without a modal verb are Criteria as well: 4.2 and 5.7.2, because Annex ZA cites them and no other row covers what they say, and 5.4.1, which names the only marking methods allowed. Annex ZA also cites 5.2.2, which only points to the syntaxes of EN 18219; 5.2.1-sub2 asks for them, so 5.2.2 is graded through that row. Optional and recommended clauses and these statements are graded as enablement and never cap a law row (map rule of 2026-10-12).
+# Not extracted, no requirement of their own: the Introduction, clauses 1 (scope: symbology, format, error correction, encoding, print and production quality, durability, recognition marks, placement; architecture, use cases and cryptographic features are outside it), 2 (normative references, forms below), 3 (terms; 3.1 additional software leaves out web browsers, QR scanning by a phone's camera app and the common internet protocols, as in EN 18246), 4.3.3 (who reads carriers and with which devices), 5.2.2 (the syntaxes are those of EN 18219, with examples in Annex A; Annex ZA cites it for ESPR Art. 10(1)(a), graded through 5.2.1-sub2), 5.3.1 to 5.3.3 (reading distances and processes for barcodes, NFC and RAIN RFID; Annex ZA cites 5.3 as a whole, graded through 5.3.4), 5.4.2, 5.4.3 and 5.4.6 (the methods described: direct marking, packaging, embedding; 5.4.3 asks to weigh persistence without a modal verb, which 5.4.1 carries), 5.4.4(1), 5.5.1 (what error correction does; no level is required), 5.5.2(1) (the factors that set a symbol's size), 5.6.2(2), (3) and (5) (the usual print grade 1.5/80 %/660 and industry standards), 5.6.4(2) (product-specific RFID standards, tyres for instance), 6.1(1) and (3), 6.2.1, the descriptive sentences of 6.2.2 and 6.2.3, 6.3.1, 6.3.2.2, 6.3.2.5 and 6.3.3.4 (test methods described, nothing required), 6.3.3.1, 6.3.4.1, 6.3.5 (the RFID privacy impact assessment of EN 16571, described), the informative Annexes A (syntax examples), B (examples and size tables per EN 18219 scheme; B.1 says with "shall" what 5.2.1 and EN18219-4.5.2(1) already require, and an informative annex adds no requirement) and C (implicit and explicit recognition of a DPP carrier, the IEC 61406 frame) and the Bibliography.
+# No Mirrors. 5.3.4-sub1 is close to EN18219-4.6.2(2) (public information reachable without registering, DPP-specific software or credentials) but narrows it to end consumers and to the product identifier, where EN 18219 covers all public access and every unique identifier: a narrower actor list and subject, so an own Criterion (adversarial review of PR #1051). 5.3.4-sub2 is no Mirror of EN18219-4.5.3(1): it asks for a decoder of the carrier that comes with the device's operating system, not for an identifier that works on phones.
+# References (forms decided in #1021, confirmed by this Extract). Read-through, graded on this file's rows: ISO/IEC 18004:2024 (QR Code), through the text's own restatement (the notes of Annexes A to C ask for a quiet zone of four modules; Annex B lists the error-correction levels L, M, Q and H with their module counts) and the Checks carriers.qr-decodes-to-passport-link and carriers.qr-quiet-zone-four-modules; not bought, because no Met rests on its own text. Gap, unread: ISO/IEC 16022:2024 (Data Matrix, 6.2.2, #489), an alternative open-dpp does not offer, which never caps a law row. Not applicable, unread: the RF air interfaces, tag data and test methods ISO/IEC 14443-1 to -4, ISO/IEC 15693-1 to -3, ISO/IEC 18000-3, ISO/IEC 18000-63, ISO/IEC 18046-1 to -3, ISO/IEC 18047-63, ISO/IEC 18092, ISO/IEC 21481, ISO/IEC 15961-2, ISO/IEC 15962 and the GS1 EPC Tag Data Standard 2.3 (the hardware of an RF alternative: tags, readers and what is written to them are the operator's equipment); ISO/IEC 15693-3:2019, which the text dates, was withdrawn on 2026-05-07 and replaced by the 2026 edition; the print-quality methods ISO/IEC 15415:2024, ISO/IEC 15426-2:2023 and ISO/IEC 29158 (undated); the vocabulary ISO/IEC 19762:2025. EN 18219 (undated) is graded by pointing at its rows. Named in the body but listed only in the Bibliography, so no normative reference: ISO/IEC 8859-1 and ISO/IEC 646 (characters for other data, 5.2.3-sub2: graded on ISO/IEC 646, registered as a read-through of EN 18219 through ECMA-6; ISO/IEC 8859-1 unread, because open-dpp writes no character beyond 7 bits), ISO 1073-2 (OCR-B, an example font in 5.7.2), ISO 7000 and IEC 60417 (5.7.3(2): Gap with the optional marking, unread), ISO 19809 and EN 301 549 V3.2.1 (5.7.4, examples to take into account: the physical side is the operator's, the digital side is graded by pointing at the clause 9 rows of the EN301549 file, the same V3.2.1, run 2026-10-11-en18216+en301549+iso21778), EN 16571 and the NFC Forum specifications (RF, Not applicable). ISO/IEC 18975, ISO/IEC 15459-2, -3 and -6 and EN IEC 61406-1 and -2 appear only in the informative annexes and the Bibliography; EN 18219 reads them (#1043).
+# Finding: the footnotes of the text still call EN 18239 and EN 18246 under preparation, as in EN 18219.
+# Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736: Art. 9(2)(b) through 5.1; 9(2)(d) through 4.2, 6.1 and 6.2.4; 10(1)(a) through 5.2.1 and 5.2.2; 10(1)(b) through 5.4, 5.7.1 and 5.7.2; 10(1)(c) through 5.2 and 5.3; 10(1)(g) through 4.2, for access by way of a data carrier only; 12(6)(a) to (c) through 5.2.1. The mandatory clauses among them, which cap the law rows: 5.1, 5.2.1-sub1, 5.2.1-sub2, 5.2.3-sub1, 5.4.5(2), 6.1(2) and 6.2.4.1, and 5.3.4-sub1. This Extract added EN18220 to operationalisedBy of ESPR-Art9(2)(d), 10(1)(g) and 12(6)(a) to (c), the last three Commission rows and Not applicable by rule all the same. The other law rows naming EN18220 are rows its clauses address without presumption (map rule of 2026-10-09): ESPR-Art9(2)(c) (5.7.1, placement), 9(2)(e) and 10(3)(a) (5.4.5, the carrier in digital documents such as a shop page), Annex III second paragraph (6.2.4.1, encoding an ISO/IEC 15459 identifier) and BATT-Art13(6), 13(6)(a), 13(6)(b), 77(3)-sub1 and 77(3)-sub2 (6.2.3, the QR Code; Annex ZA covers ESPR only).
+
+standard: EN18220
+edition: EN 18220:2026
+extractedFrom: standards/EN18220-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4"
+    title: 4 Concepts
+  - id: "5.1"
+    title: 5.1 Requirements, general
+  - id: "5.2"
+    title: 5.2 Data encoding
+  - id: "5.3"
+    title: 5.3 Data carrier reading
+  - id: "5.4"
+    title: 5.4 Marking or embedding methods
+  - id: "5.5"
+    title: 5.5 Dimensional characteristics for barcodes
+  - id: "5.6"
+    title: 5.6 Data carrier quality and performance
+  - id: "5.7"
+    title: 5.7 Data carrier design
+  - id: "5.8"
+    title: 5.8 Other considerations
+  - id: "6.1"
+    title: 6.1 Data carrier technologies, general
+  - id: "6.2"
+    title: 6.2 Two-dimensional barcodes
+  - id: "6.3"
+    title: 6.3 Radio frequency data carriers
+criteria:
+  - id: EN18220-4.1
+    section: "4"
+    clause: "4.1"
+    paraphrase: "Option: when the identifier's online lookup is briefly unavailable and the carrier has room for it (space in a barcode, memory in an RFID tag), further information may be held in the carrier itself."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 828
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: code
+          ref: apps/client/src/components/permalinks/Gs1DataAttributesField.vue
+          note: data attributes entered on a gs1-link permalink
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: gs1-link URL built with the permalink's data attributes, locked once published
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: test
+          ref: apps/main/src/permalink/application/services/permalink.application.service.create-delete.spec.ts
+          note: data attributes stored on create
+      notes: "Optional, graded as enablement; it never caps a law row. A gs1-link permalink can carry GS1 data attributes (type-D Application Identifiers such as an expiry date or a net weight), validated against the vendored GS1 table and written into the query of the Digital Link, so the QR Code holds them next to the key and a scanner reads them without the lookup; open-dpp's own permalink holds the URL alone. Operational like 5.4.5(1): the option holds only when the operator enters the attributes, and no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing, so nothing tells an operator the option exists (#828; graded alike after the adversarial review of PR #1051)."
+  - id: EN18220-4.2
+    section: "4"
+    clause: "4.2"
+    paraphrase: "Statement: the text sets the basic rules for carriers that identify products at model, batch or item level; which level and which carriers a product group uses is for further legislation. Annex ZA maps 4.2 to ESPR-Art9(2)(d) and, for access by way of a carrier only, to ESPR-Art10(1)(g)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 597
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "level derived from the keys present: model, batch or item"
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+      notes: "Statement without a modal verb, cited by Annex ZA (ESPR Art. 9(2)(d); Art. 10(1)(g) for access by way of a carrier): graded as enablement, it does not cap those rows. Credited: with a GS1 identity the carrier holds a Digital Link whose path states the level, GTIN for the model, AI 10 for a batch, AI 21 for an item. Missing: open-dpp's own permalinks state no level, and a passport has no level of its own and may carry identities of several levels, as EN18219-4.4.2(1) found (#597)."
+  - id: EN18220-4.3.1
+    section: "4"
+    clause: "4.3.1"
+    paraphrase: "Recommendation: a carrier stays usable through repeated use, resale, reuse and repair, which depends on how durable the surface it sits on is; where a new passport is needed, a new identifier and carrier follow."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty: how durable the surface carrying the code is through use, resale, reuse and repair follows from the economic operator's marking (5.4). The software side, an identifier that stays and keeps resolving through the life cycle, is EN 18219 4.2 (EN18219-4.2.2 rows)."
+  - id: EN18220-4.3.2
+    section: "4"
+    clause: "4.3.2"
+    paraphrase: "Recommendation: the carrier specification for a product group's DPP takes account of the identifiers and carriers the group already uses, with their industry production specifications (module size, print grade and position, tag frequency or memory), so that a DPP need not bring a new carrier."
+    applicability: commission
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Addressed to whoever specifies the carrier of a product group, which 4.2 and ESPR Art. 9(2)(b) leave to the delegated act: no duty of a DPP system."
+  - id: EN18220-5.1
+    section: "5.1"
+    clause: "5.1"
+    paraphrase: "Each product item carries one data carrier or more, physically on the product itself, on its packaging or on the documents that come with it, made as this text specifies. Annex ZA maps 5.1 to ESPR-Art9(2)(b)."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+      notes: "Software part: a carrier the operator can put on product, packaging or documents. Credited: every permalink, the GS1 Digital Link included, gets a QR Code in the back office, and its URL can be copied. Missing: the code exists only as a canvas in the back office, with no download control (a browser's \"Save image as\" on the canvas yields a 256 px PNG at screen resolution), no SVG, print layout, size choice or server endpoint, so the operator regenerates it elsewhere from the copied URL; the generated image keeps a quiet zone of about one module, not the four ISO/IEC 18004 requires (6.2.3); no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing (#489, #828). Annex ZA maps 5.1 to ESPR Art. 9(2)(b), which waits for the text trigger of #768."
+  - id: EN18220-5.2.1-sub1
+    section: "5.2"
+    clause: 5.2.1, first sentence
+    paraphrase: "The data carrier encodes a unique product identifier through which the DPP can be reached. Annex ZA maps 5.2.1 to ESPR-Art10(1)(a) and 12(6)(a) to (c), and 5.2 to ESPR-Art10(1)(c)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 518
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "decodes batch and serial a second time after the router (bug #1049)"
+        - type: code
+          ref: apps/main/src/presentation-configurations/application/services/presentation-configuration.service.ts
+          note: "delete checks the editing mode only, not the permalinks naming the configuration (bug #1050)"
+        - type: test
+          ref: apps/e2e/tests/passport-identity/permalink-crud.spec.ts
+          note: the QR dialog shows the permalink's URL
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): three published passports under GTIN 04006381333931 with gs1-link permalinks, serials AAUJC7, A%41UJC7 and 10%UJC7; the anonymous scan of /gs1/v1/01/04006381333931/21/A%2541UJC7 answered 302 to the public view of the AAUJC7 passport, the scan of .../21/10%25UJC7 answered 404 (bug #1049)."
+          date: 2026-10-12
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): a blank passport, published; anonymous GET /api/v2/p/<permalink id> answered 200; DELETE /api/v2/passports/<id>/presentation-configurations/<the configuration the permalink names> answered 204; the same GET then answered 404 "PresentationConfigurationDoc could not be found." (bug #1050).'
+          date: 2026-10-12
+      notes: "Credited: each QR Code holds a unique product identifier open-dpp issues, the permalink URL or the GS1 Digital Link (EN18219-4.3.2(2)); an independent decoder reads both of the subject's codes back as their URLs, and both open the passport without an account (Check carriers.qr-decodes-to-passport-link). Missing: two defects cut the path from carrier to passport: a Digital Link whose batch or serial holds a percent sign (CSET 82 allows it) resolves to the passport of another key or to nothing, because the resolver decodes twice (bug #1049); deleting the presentation configuration a published permalink names makes that permalink answer 404 for good (bug #1050). The item key can also point at two passports (bug #1046, EN18219-4.1.2(1)). The presentation-mode dialog encodes the newest permalink, so the code it shows can change after publication, each URL staying valid. Annex ZA maps 5.2.1 to ESPR Art. 10(1)(a) and 12(6), and 5.2 to 10(1)(c) (#518)."
+  - id: EN18220-5.2.1-sub2
+    section: "5.2"
+    clause: 5.2.1, second sentence
+    paraphrase: "What the carrier holds follows the rules of the unique identifier's scheme, including its syntax where one applies, so that systems interoperate; the syntaxes are those of EN 18219 (5.2.2, which Annex ZA also maps to ESPR-Art10(1)(a))."
+    applicability: software
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 518
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "decodes batch and serial a second time after the router (bug #1049)"
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): three published passports under GTIN 04006381333931 with gs1-link permalinks, serials AAUJC7, A%41UJC7 and 10%UJC7; the anonymous scan of /gs1/v1/01/04006381333931/21/A%2541UJC7 answered 302 to the public view of the AAUJC7 passport, the scan of .../21/10%25UJC7 answered 404 (bug #1049)."
+          date: 2026-10-12
+      notes: "Graded by pointing at EN 18219. Credited: the QR Code holds the GS1 Digital Link as plain URL text in its uncompressed canonical form, which the GS1 Syntax Engine accepts (Check identifiers.gs1-syntax-valid, EN18219-5.2.2.1(b)). Missing: open-dpp's own permalink follows none of the schemes of EN 18219 (EN18219-4.5.2(4), #518); the resolver does not undo the Digital Link's percent-encoding exactly once (bug #1049); whether the Digital Link meets GS1 Digital Link 1.6.0 and ISO/IEC 18975 in full is read in #1043 (EN18219-5.1, unassessed)."
+  - id: EN18220-5.2.3-sub1
+    section: "5.2"
+    clause: 5.2.3, first sentence
+    paraphrase: "The carrier supports the character sets that the identifier schemes of EN 18219 require."
+    applicability: software
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: code
+          ref: packages/dto/src/shared/permalink-base-url.schema.ts
+          note: "base URLs canonicalised by the URL parser: punycode host, percent-encoded path"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: manual
+          ref: "Decoded 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the QR Code of a draft's gs1-link permalink with batch Q/1&2%3\"<>-._ (CSET 82 characters, percent escapes in the Digital Link) came back from jsQR and from Apple's Vision framework exactly as the publicUrl .../10/Q%2F1%262%253%22%3C%3E-._/21/... ."
+          date: 2026-10-12
+      notes: "The schemes of EN 18219 need 7-bit characters (EN18219-4.3.2(1)), and every identifier open-dpp writes into the code is 7-bit: digits for the GTIN, CSET 82 percent-encoded for batch and serial, lower-case letters, digits and hyphens for slugs, UUIDs, ASCII base URLs. The QR Code takes them in byte mode (qrcode writes UTF-8 without an ECI, the same bytes for 7-bit text), and the decoders return each URL unchanged (Check carriers.qr-decodes-to-passport-link; a Digital Link full of CSET 82 characters and percent escapes, decoded by jsQR and Apple's Vision framework). That a base URL may keep | ^ [ ] raw is a syntax matter of the identifier (EN18219-4.3.2(1), bug #1048), not of the carrier's character set."
+  - id: EN18220-5.2.3-sub2
+    section: "5.2"
+    clause: 5.2.3, second sentence
+    paraphrase: "Option: data other than the identifier may be encoded with the characters of ISO/IEC 8859-1 or ISO/IEC 646."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: code
+          ref: apps/client/src/components/permalinks/Gs1DataAttributesField.vue
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+      notes: Optional, graded as enablement. The other data open-dpp can put into the carrier, GS1 data attributes in the Digital Link query (4.1), are validated against their GS1 patterns (digits or CSET 82, whose characters are all invariant characters of ISO/IEC 646) and percent-encoded, so they stay within ISO/IEC 646.
+  - id: EN18220-5.3.4-sub1
+    section: "5.3"
+    clause: 5.3.4, first sentence
+    paraphrase: "For consumers, the unique product identifier opens the public DPP information without registering, downloading DPP-specific software or entering credentials. Annex ZA maps 5.3 to ESPR-Art10(1)(c)."
+    applicability: software
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: "@OptionalAuth on the public /p routes"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "@OptionalAuth on every resolver route"
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+      notes: "Own Criterion since the adversarial review of PR #1051 (narrower than EN18219-4.6.2(2), which it resembles). A consumer who scans the carrier reaches the public passport without registering, installing anything or signing in: the resolver and the public view are anonymous and render in a stock browser (Checks access.anonymous-reads-published, access.public-view-renders-in-plain-browser), and the URLs decoded from both of the subject's codes open without an account (Check carriers.qr-decodes-to-passport-link). Identifiers that do not resolve at all because of bugs #1049 and #1050 are graded in 5.2.1-sub1; they raise no registration or credential barrier."
+  - id: EN18220-5.3.4-sub2
+    section: "5.3"
+    clause: 5.3.4, second sentence
+    paraphrase: "Recommendation: on smart devices, the software that decodes the carrier comes with the operating system, so nothing has to be installed to read it."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: manual
+          ref: "Decoded 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the PNG images of the canvas (toDataURL) of the conformance subject's two permalinks and of a draft's Digital Link with batch Q/1&2%3\"<>-._ were read by Apple's Vision framework (VNDetectBarcodesRequest, macOS 27, the decoder family of the iPhone camera) and by jsQR; both returned each URL unchanged, symbology QR."
+          date: 2026-10-12
+      notes: "Recommendation, graded as enablement. open-dpp's only carrier is a QR Code holding a plain URL in byte mode, the symbology whose decoding comes with the camera apps of the major phone platforms (Table 1 rates its native support pervasive); Apple's Vision framework, the decoder family of the iPhone camera, and jsQR read all of the codes tried (manual decode; Check carriers.qr-decodes-to-passport-link). Not exercised: a camera scan of a printed code; the quiet zone of about one module (6.2.3) leaves less margin than ISO/IEC 18004 expects there."
+  - id: EN18220-5.4.1
+    section: "5.4"
+    clause: "5.4.1"
+    paraphrase: "Statement: the carrier is applied by one of the allowed methods only: marked on the product item, on the packaging, on a label, in an accompanying document, or embedded in the product; the method is chosen with the carrier's persistence in mind, since a lost, damaged or removed mark breaks the link to the identifier. Annex ZA maps 5.4 to ESPR-Art10(1)(b)."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty: choosing and applying the marking method (on the item, packaging, label, document or embedded) and weighing its persistence is the economic operator's physical work. The software precondition, a carrier the operator can apply by any of these methods, is graded in 5.1, 5.4.5 and 5.5.2(2)."
+  - id: EN18220-5.4.4(2)
+    section: "5.4"
+    clause: 5.4.4(2)
+    paraphrase: "Recommendation: the economic operator assesses how the carrier is printed, affixed or integrated on packaging or item, for what may affect its durability and persistence."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty: assessing how the carrier is printed, affixed or integrated is the economic operator's, by the text's own words."
+  - id: EN18220-5.4.5(1)
+    section: "5.4"
+    clause: 5.4.5(1)
+    paraphrase: "Option: the product identifier may be given in a document that comes with the product, on paper or in digital form."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 828
+      evidence:
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: members list a passport's permalinks with their public URLs
+      notes: "Optional, graded as enablement. Software part: the identifier in a form the operator can put into a paper or digital document. Credited: the back office shows each permalink's URL and the Digital Link with a copy button, and members can list them through the API, so the identifier can go into a manual, receipt, shop page or e-mail. Missing: no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing, so an operator has no guide to doing so (#828, as ESPR-Art9(2)(e))."
+  - id: EN18220-5.4.5(2)
+    section: "5.4"
+    clause: 5.4.5(2)
+    paraphrase: "Where accompanying documentation is the only place the product identifier appears, the data carrier itself is included in it; on paper (user manual, warranty, printed receipt, conformity documents) or digital (shop web page, digital receipt, customer account, e-mail)."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+      notes: "Software part: a carrier image to put into paper or digital documentation (shop page, digital receipt, e-mail). The QR Code exists only as a canvas in the back office: no download control (a browser's \"Save image as\" on the canvas yields a 256 px PNG at screen resolution), no SVG, print layout or server endpoint to embed, so the operator regenerates the code elsewhere from the copied URL (#489). Annex ZA maps 5.4 to ESPR Art. 10(1)(b); this is its mandatory clause."
+  - id: EN18220-5.5.2(2)
+    section: "5.5"
+    clause: 5.5.2(2)
+    paraphrase: "The X-dimension (module size) is chosen so that the barcode scans reliably in the environments it is meant for, such as point of sale or consumers' phones; a smaller module gives a denser symbol that low-resolution scanners and printers handle worse."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Gap
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+      notes: "Software part: an output the operator can produce at the module size its scanning environment needs. None exists: the code is drawn at a fixed pixel size (256 px, or 55 % of the window in presentation mode) with fractional module widths that come out one pixel uneven, and there is no vector output, size, resolution or module-size choice (#489)."
+  - id: EN18220-5.6.1
+    section: "5.6"
+    clause: "5.6.1"
+    paraphrase: "The DPP data carrier reaches the minimum quality needed to perform in the environment or environments it targets."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Measured 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the canvas of both of the conformance subject's permalinks (open-dpp link and GS1 Digital Link) shows a light margin of 0.96 modules around the symbol (Check carriers.qr-quiet-zone-four-modules); qrcode 1.5.4 itself defaults to 4 when no margin is passed."
+          date: 2026-10-12
+      notes: "Software part: a symbol that meets its symbology and can be reproduced at the quality its environment needs. Credited: the content encodes correctly with error correction M and decodes (Check carriers.qr-decodes-to-passport-link). Missing: the generated image keeps a quiet zone of about one module where ISO/IEC 18004 requires four (Check carriers.qr-quiet-zone-four-modules fails; on screen the white dialog around the canvas widens the visible margin, a saved or embedded image keeps the narrow one), and the code exists only at screen resolution, with no output a printer can render at a chosen module size (5.5.2(2)) (#489). Print grading itself is the operator's (5.6.2, 5.6.3)."
+  - id: EN18220-5.6.2(1)
+    section: "5.6"
+    clause: 5.6.2(1)
+    paraphrase: "Where the print quality of 2D symbols is assessed, the method follows ISO/IEC 15415:2024 (grade, measuring aperture and light wavelength)."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Print quality: grading printed 2D symbols with ISO/IEC 15415 is done on the operator's printed carriers; print quality is Not applicable (map rule of 2026-10-12), its reference stays unread."
+  - id: EN18220-5.6.2(4)
+    section: "5.6"
+    clause: 5.6.2(4)
+    paraphrase: "The symbol quality of marks applied directly to an item's surface and read with a 2D imager is assessed with ISO/IEC 29158."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Print quality: direct part marks and their grading with ISO/IEC 29158 are the operator's marking; Not applicable (map rule of 2026-10-12)."
+  - id: EN18220-5.6.3
+    section: "5.6"
+    clause: "5.6.3"
+    paraphrase: "Where the quality of 2D barcode symbols is assessed, the verification follows ISO/IEC 15426-2:2023."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Print quality: verifying printed symbols with ISO/IEC 15426-2 conformant verifiers is the operator's quality control; Not applicable (map rule of 2026-10-12)."
+  - id: EN18220-5.6.4(1)
+    section: "5.6"
+    clause: 5.6.4(1)
+    paraphrase: "Where the performance of RFID carriers (UHF or NFC) is assessed, it is tested per ISO/IEC 18046-1:2011, -2:2020 and -3:2020, or with the NFC Forum's tests of tag performance."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-5.6.4(3)
+    section: "5.6"
+    clause: 5.6.4(3)
+    paraphrase: "Recommendation: a carrier is write-protected once the EN 18219 identifier has been encoded in it."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: Write-protecting a tag after encoding happens in the operator's tagging equipment; open-dpp writes no carrier. The identifier itself is locked once its passport is published (EN18219-4.2.2(1)).
+  - id: EN18220-5.7.1-sub1
+    section: "5.7"
+    clause: 5.7.1, first to fourth sentences
+    paraphrase: "Recommendation: consumers can tell that a DPP carrier is present, through a visible carrier or, for an RFID or NFC tag they cannot see, a mark showing it is there, without having to read brand name or model number on the label. Annex ZA maps 5.7.1 to ESPR-Art10(1)(b)."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty: making the carrier visible, or marking a hidden tag, on product and label is the economic operator's physical design. The optional graphical mark that distinguishes a DPP code, which software could add to the artwork, is graded in 5.7.3."
+  - id: EN18220-5.7.1-sub2
+    section: "5.7"
+    clause: 5.7.1, last sentence
+    paraphrase: "Recommendation: visible carriers are placed as industry standards say, for efficient scanning and for existing safety requirements."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "Operator duty: placing a visible carrier as industry standards say is the economic operator's physical design."
+  - id: EN18220-5.7.2
+    section: "5.7"
+    clause: "5.7.2"
+    paraphrase: "Statement: HRI (human readable interpretation) means printing what the carrier encodes beside it in a typeface that reads well, OCR-B for instance; industries and product-group legislation may set rules for it. Annex ZA maps 5.7.2 to ESPR-Art10(1)(b)."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+      notes: "Statement without a modal verb, cited by Annex ZA (ESPR Art. 10(1)(b)): graded as enablement, it does not cap that row. Software part: the encoded content printed beside the carrier. Credited: on screen the back office shows the URL next to each code, and the identifier list also the GS1 element string. Missing: no carrier artwork exists to carry it, in OCR-B or any font (#489)."
+  - id: EN18220-5.7.3(1)
+    section: "5.7"
+    clause: 5.7.3(1)
+    paraphrase: "Option: a 2D carrier linking to a DPP may carry a graphical mark that sets it apart from other carriers."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Gap
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+      notes: "Optional, graded as enablement; it never caps a law row. No graphical mark distinguishes the code as a DPP carrier: the canvas holds the bare symbol, and no artwork exists to frame (#489)."
+  - id: EN18220-5.7.3(2)
+    section: "5.7"
+    clause: 5.7.3(2)
+    paraphrase: "Recommendation: where the economic operator uses such a mark, it follows ISO 7000 or IEC 60417 symbol 6452 or 6452-1."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Gap
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+      notes: "Recommendation on a feature open-dpp lacks (5.7.3(1)): Gap in that feature's cluster (map rule of 2026-10-12 for conditional clauses). ISO 7000 and IEC 60417 stay unread (#489)."
+  - id: EN18220-5.7.4-sub1
+    section: "5.7"
+    clause: 5.7.4, first sentence
+    paraphrase: "DPP carriers do not hinder users of differing abilities; the guidance to weigh includes ISO 19809 for accessible packaging and EN 301 549 V3.2.1 for digital content on the web and on phones."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 1035
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view a scan opens
+        - type: check
+          ref: a11y.public-view-no-serious-violations
+          result: failed
+          date: 2026-10-12
+      notes: "Software part: what a consumer reaches through the carrier, and a way in without scanning. The code opens the public view, whose web accessibility the EN301549 file grades on clause 9 (run 2026-10-11-en18216+en301549+iso21778: 32 Met, 18 Partial, 1 Gap), with missing text alternatives, accessible names, page language, contrast, carousel pause and status messages (#1035). No readable form of the link travels with the carrier (5.7.2, #489). Accessible packaging (ISO 19809) is the operator's physical design."
+  - id: EN18220-5.7.4-sub2
+    section: "5.7"
+    clause: 5.7.4, second sentence
+    paraphrase: "Accessibility extends to both the digital and the physical interaction with product, packaging and documentation, so that every consumer can get to the DPP information."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 1035
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view a scan opens
+      notes: The physical side (product, packaging, documentation) is the operator's design; the digital side is the public view, Partial as in 5.7.4-sub1 (#1035).
+  - id: EN18220-5.8.1-sub1
+    section: "5.8"
+    clause: 5.8.1, first and second sentences
+    paraphrase: "The standards a DPP relies on for its carrier and for the carrier's quality are ones ISO and IEC recognise; only where needed are other specifications considered, European standards first, then national standards, then industry-forum specifications."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: manual
+          ref: "Decoded 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the PNG images of the canvas (toDataURL) of the conformance subject's two permalinks and of a draft's Digital Link with batch Q/1&2%3\"<>-._ were read by Apple's Vision framework (VNDetectBarcodesRequest, macOS 27, the decoder family of the iPhone camera) and by jsQR; both returned each URL unchanged, symbology QR."
+          date: 2026-10-12
+      notes: open-dpp's only carrier is the QR Code of ISO/IEC 18004, an ISO/IEC standard, so no fallback to other specifications arises; QR decoders read it as such (Check carriers.qr-decodes-to-passport-link; Apple's Vision framework reports symbology QR). Whether the symbol conforms in every point is graded in 6.2.3; the print-quality standards are the operator's (5.6.2, 5.6.3).
+  - id: EN18220-5.8.1-sub2
+    section: "5.8"
+    clause: 5.8.1, third sentence
+    paraphrase: "Option: extra software that improves accessibility may be considered as well."
+    applicability: software
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Gap
+      gapIssue: 1035
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: the public passport view, the only way to the data
+      notes: "Optional, graded as enablement; it never caps a law row. open-dpp offers no additional software that improves access to the passport beyond the web view (a read-aloud mode or an assistive app, for instance); assistive technology of the visitor's own works only as far as the view is accessible (#1035). Split from 5.8.1 after the adversarial review of PR #1051."
+  - id: EN18220-5.8.2
+    section: "5.8"
+    clause: "5.8.2"
+    paraphrase: "Recommendation: the carriers chosen for DPP use are proven on the market, both in producing the carrier and in capturing and processing what it encodes, to keep disruption low."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+      notes: Recommendation, graded as enablement. The QR Code is pervasive in production and capture (Table 1 rates its market adoption and native decoding pervasive); open-dpp draws it with qrcode 1.5.4, a widely used generator, and an independent decoder reads it (Check carriers.qr-decodes-to-passport-link).
+  - id: EN18220-6.1(2)
+    section: "6.1"
+    clause: 6.1(2)
+    paraphrase: "Each carrier technology of clause 6 holds one or more product identifiers that EN 18219 defines as globally unique. Annex ZA maps 6.1 to ESPR-Art9(2)(d)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 518
+      evidence:
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: with a GS1 identity a carrier holds the GS1 Digital Link, a product identifier of scheme 1 of EN 18219 under GS1's Issuing Agency Code registered by ISO/IEC 15459-2 (EN18219-5.2.2.1(b) and (g) Met). Missing: every passport's carriers also hold open-dpp's own permalink, which follows none of EN 18219's schemes (EN18219-4.5.2(4)), and a passport without a GS1 identity has only those; the presentation-mode dialog encodes the newest permalink, often the own one; whether the Digital Link meets scheme 1 in full waits for #1043 (EN18219-5.1) (#518). Annex ZA maps 6.1 to ESPR Art. 9(2)(d), which waits for the text trigger of #768."
+  - id: EN18220-6.2.2
+    section: "6.2"
+    clause: "6.2.2"
+    paraphrase: "A Data Matrix symbol conforms to ISO/IEC 16022:2024."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Gap
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+      notes: "Alternative open-dpp does not offer: no Data Matrix (GS1 DataMatrix included) is rendered, so ISO/IEC 16022 stays unread; never caps a law row (#489)."
+  - id: EN18220-6.2.3
+    section: "6.2"
+    clause: "6.2.3"
+    paraphrase: "A QR Code symbol conforms to ISO/IEC 18004:2024."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Measured 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the canvas of both of the conformance subject's permalinks (open-dpp link and GS1 Digital Link) shows a light margin of 0.96 modules around the symbol (Check carriers.qr-quiet-zone-four-modules); qrcode 1.5.4 itself defaults to 4 when no margin is passed."
+          date: 2026-10-12
+      notes: "ISO/IEC 18004:2024 read through the restatement of EN 18220 (the notes of Annexes A to C ask for a quiet zone of four modules; Annex B lists the error-correction levels L to H). Credited: qrcode 1.5.4 builds a standard symbol (automatic version and mask, byte mode, error correction M, a level Annex B lists) that an independent decoder reads (Check carriers.qr-decodes-to-passport-link). Missing: QrCode.vue passes margin 1, so the generated image keeps a quiet zone of about one module, not four (Check carriers.qr-quiet-zone-four-modules fails) (#489)."
+  - id: EN18220-6.2.4.1
+    section: "6.2"
+    clause: 6.2.4.1, Table 1
+    paraphrase: "A 2D carrier (Data Matrix or QR Code) can encode a URI, an ISO/IEC 15459 identifier and the granularity level of the product. Annex ZA maps 6.2.4 to ESPR-Art9(2)(d)."
+    applicability: software
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "level derived from the keys present: model, batch or item"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+      notes: "The capability rows of Table 1 for the QR Code open-dpp uses: it encodes a URI, the GS1 key (GS1 holds Issuing Agency Codes 0 to 9 under ISO/IEC 15459-2, EN18219-5.2.2.1(g)) and the level through AI 10 and 21 in the Digital Link; the subject's item-level link comes back whole from the decoder (Check carriers.qr-decodes-to-passport-link). Whether the GS1 key meets ISO/IEC 15459-3, -4 and -6 in full is EN 18219's, read in #1043."
+  - id: EN18220-6.3.2.1
+    section: "6.3"
+    clause: "6.3.2.1"
+    paraphrase: "HF RFID carriers comply with ISO/IEC 14443-1 to -4, ISO/IEC 15693-1 to -3 or ISO/IEC 18000-3 in the editions the text dates."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.2.3
+    section: "6.3"
+    clause: "6.3.2.3"
+    paraphrase: "Data on an HF RFID tag are encoded per ISO/IEC 15961-2:2019 and ISO/IEC 15962:2022."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.2.4
+    section: "6.3"
+    clause: "6.3.2.4"
+    paraphrase: "The HF RFID air interface protocol follows ISO/IEC 14443-1 to -4, ISO/IEC 15693-1 to -3 or ISO/IEC 18000-3."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.3.2
+    section: "6.3"
+    clause: "6.3.3.2"
+    paraphrase: "The NFC air interface protocols follow ISO/IEC 18092:2023 and ISO/IEC 21481:2021."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.3.3
+    section: "6.3"
+    clause: "6.3.3.3"
+    paraphrase: "Data on an NFC tag are encoded per ISO/IEC 15961-2:2019 and ISO/IEC 15962:2022; the NFC Forum specifications say how to encode them for native reading by smart devices."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.4.2
+    section: "6.3"
+    clause: "6.3.4.2"
+    paraphrase: "The RAIN RFID (UHF) air interface protocol follows ISO/IEC 18000-63:2021."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.4.3
+    section: "6.3"
+    clause: "6.3.4.3"
+    paraphrase: "RAIN RFID data are encoded per ISO/IEC 18000-63:2021: with the numbering-system toggle bit at 0 as the GS1 EPC Tag Data Standard 2.3 describes, at 1 as a UII registered under ISO/IEC 15961-2:2019."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.4.4
+    section: "6.3"
+    clause: "6.3.4.4"
+    paraphrase: "RAIN RFID tags and readers are tested for air interface compliance with ISO/IEC 18047-63:2023."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."
+  - id: EN18220-6.3.6
+    section: "6.3"
+    clause: 6.3.6, Table 2
+    paraphrase: "An RF carrier (RAIN RFID, or NFC and HF RFID) can encode a URI (for RAIN RFID: with enough memory), an ISO/IEC 15459 identifier and the granularity level, as its own standards define."
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: false
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: tags, readers and what is written to them are the operator's equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12). open-dpp hands the operator the passport's URL to write into a tag."

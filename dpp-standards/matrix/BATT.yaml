@@ -24,17 +24,31 @@ criteria:
     operationalisedBy:
       - EN18220
     assessment:
-      date: 2026-09-06
-      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Partial
       operational: true
+      status: Partial
+      gapIssue: 489
       evidence:
         - type: code
           ref: apps/client/src/components/QrCode.vue
-          note: client-side QR generation
-      notes: "Client-side QR generation exists, but not the Annex VI Part C battery-label format (high contrast, specified layout). Tracked by #489."
-      gapIssue: 489
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Decoded 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the PNG images of the canvas (toDataURL) of the conformance subject's two permalinks and of a draft's Digital Link with batch Q/1&2%3\"<>-._ were read by Apple's Vision framework (VNDetectBarcodesRequest, macOS 27, the decoder family of the iPhone camera) and by jsQR; both returned each URL unchanged, symbology QR."
+          date: 2026-10-12
+      notes: "Re-graded with EN 18220 (run 2026-10-12-en18220). Software part: the QR Code a battery carries from 18 February 2027, high contrast and readable by common hand-held readers (Annex VI Part C). Credited: a black-on-white QR Code of every permalink and of the Digital Link, read by an independent decoder and by Apple's Vision framework (Check carriers.qr-decodes-to-passport-link; manual decode). Missing: the generated image keeps a quiet zone of about one module where ISO/IEC 18004 requires four (EN18220-6.2.3), it exists only at screen resolution with no download control (a browser's \"Save image as\" on the canvas yields a 256 px PNG at screen resolution) and no print layout or size choice (EN18220-5.1, 5.5.2(2)), and nothing follows the battery label layout of Annex VI Part C (#489)."
   - id: BATT-Art13(6)(a)
     section: Art13
     clause: Art. 13(6)(a)
@@ -48,23 +62,43 @@ criteria:
       - EN18220
       - EN18219
     assessment:
-      date: 2026-09-06
-      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
-      operational: true
+      operational: false
+      status: Partial
+      gapIssue: 518
       evidence:
         - type: code
-          ref: apps/client/src/components/QrCode.vue
-          note: QR code of the permalink/GS1 link
-        - type: code
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
-          note: resolves the scanned key to the passport
+          note: "decodes batch and serial a second time after the router (bug #1049)"
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/main/src/presentation-configurations/application/services/presentation-configuration.service.ts
+          note: "delete checks the editing mode only, not the permalinks naming the configuration (bug #1050)"
         - type: test
           ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
-        - type: doc
-          ref: docs/guides/passports.md
-      notes: A scanned QR code carrying the GS1 Digital Link resolves to the passport's public presentation view; the resolver E2E test proves the chain. The Annex VI Part C carrier format itself is tracked as a Gap (Art. 13(6) chapeau).
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): three published passports under GTIN 04006381333931 with gs1-link permalinks, serials AAUJC7, A%41UJC7 and 10%UJC7; the anonymous scan of /gs1/v1/01/04006381333931/21/A%2541UJC7 answered 302 to the public view of the AAUJC7 passport, the scan of .../21/10%25UJC7 answered 404 (bug #1049)."
+          date: 2026-10-12
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): a blank passport, published; anonymous GET /api/v2/p/<permalink id> answered 200; DELETE /api/v2/passports/<id>/presentation-configurations/<the configuration the permalink names> answered 204; the same GET then answered 404 "PresentationConfigurationDoc could not be found." (bug #1050).'
+          date: 2026-10-12
+      notes: "Re-graded with EN 18220 (run 2026-10-12-en18220; Met since 2026-09-06). Credited: a scanned QR Code carrying the Digital Link resolves to the passport's public view without an account, and the codes decode to their URLs (Check carriers.qr-decodes-to-passport-link). Missing: the chain from code to passport breaks for some passports: a Digital Link whose batch or serial holds a percent sign resolves to another passport or to nothing (bug #1049), a published permalink stops answering once its presentation configuration is deleted (bug #1050), and one item key can point at two passports (bug #1046) (#518, as ESPR-Art10(1)(a)). The earlier doc evidence, docs/guides/passports.md, says nothing on carriers or identifiers; no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing (#828). The carrier's format is Art. 13(6) (#489)."
   - id: BATT-Art13(6)(b)
     section: Art13
     clause: Art. 13(6)(b)
@@ -76,11 +110,12 @@ criteria:
     operationalisedBy:
       - EN18220
     assessment:
-      date: 2026-09-06
-      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
+      operational: false
       status: Partial
-      operational: true
+      gapIssue: 522
       evidence:
         - type: code
           ref: apps/main/src/templates/domain/template.ts
@@ -88,8 +123,10 @@ criteria:
         - type: code
           ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
           note: full AAS submodel-element type set
-      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
-      gapIssue: 522
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+      notes: "Re-graded with EN 18220 (run 2026-10-12-en18220). Content: the label information, declaration of conformity, due-diligence report and waste information are modellable with the generic AAS templates, but open-dpp ships no battery template, so none is provided (#522). The way from the QR Code to that information is as in Art. 13(6)(a), with bugs #1049 and #1050."
   - id: BATT-Art13(6)(c)
     section: Art13
     clause: Art. 13(6)(c)
@@ -330,27 +367,47 @@ criteria:
       - EN18219
       - EN18220
     assessment:
-      date: 2026-09-06
-      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
-      operational: true
+      operational: false
+      status: Partial
+      gapIssue: 518
       evidence:
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
-          note: QR -> UPI -> passport
+          note: "decodes batch and serial a second time after the router (bug #1049)"
         - type: code
           ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
-          note: operator-attributed UPI, model/batch/item granularity
+          note: "level derived from the keys present: model, batch or item"
+        - type: code
+          ref: apps/main/src/presentation-configurations/application/services/presentation-configuration.service.ts
+          note: "delete checks the editing mode only, not the permalinks naming the configuration (bug #1050)"
         - type: test
           ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
-        - type: doc
-          ref: docs/guides/passports.md
         - type: check
           ref: resolver.redirect-published
           result: passed
           date: 2026-10-12
-      notes: The passport is reached through a GS1 Digital Link QR resolving to a unique product identifier the operator attributes (GTIN/batch/serial, item-level granularity supported). The resolver.redirect-published Check evidences the redirect.
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): three published passports under GTIN 04006381333931 with gs1-link permalinks, serials AAUJC7, A%41UJC7 and 10%UJC7; the anonymous scan of /gs1/v1/01/04006381333931/21/A%2541UJC7 answered 302 to the public view of the AAUJC7 passport, the scan of .../21/10%25UJC7 answered 404 (bug #1049)."
+          date: 2026-10-12
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): a blank passport, published; anonymous GET /api/v2/p/<permalink id> answered 200; DELETE /api/v2/passports/<id>/presentation-configurations/<the configuration the permalink names> answered 204; the same GET then answered 404 "PresentationConfigurationDoc could not be found." (bug #1050).'
+          date: 2026-10-12
+      notes: "Re-graded with EN 18220 (run 2026-10-12-en18220; Met since 2026-09-06). Credited: the passport is reached through a QR Code holding the Digital Link of an identifier the operator attributes (GTIN with batch or serial, item level supported), which redirects to its public view (Checks resolver.redirect-published, carriers.qr-decodes-to-passport-link). Missing: a key with a percent sign resolves to another passport or to nothing (bug #1049), a published permalink breaks when its presentation configuration is deleted (bug #1050), and one item key can point at two passports (bug #1046) (#518, as ESPR-Art10(1)(a)). The earlier doc evidence, docs/guides/passports.md, says nothing on carriers or identifiers; no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing (#828)."
   - id: BATT-Art77(3)-sub2
     section: Art77
     clause: Art. 77(3) second subparagraph
@@ -363,24 +420,26 @@ criteria:
       - EN18219
       - EN18220
     assessment:
-      date: 2026-09-06
-      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
+      operational: false
       status: Partial
-      operational: true
+      gapIssue: 518
       evidence:
         - type: code
-          ref: packages/dto/src/unique-product-identifiers/gs1
-          note: GS1 Digital Link AI table/parser/builder
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
         - type: code
           ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
-          note: operator-attributed UPI
+          note: "level derived from the keys present: model, batch or item"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
           date: 2026-10-12
-      notes: "GS1 Digital Link identifiers are used and validate in the GS1 Syntax Engine (GS1 is an ISO/IEC 15459 issuing scheme); ISO/IEC 15459 conformance is not explicitly asserted and the standard is gated/unread. Tracked by #518."
-      gapIssue: 518
+      notes: "Re-graded with EN 18219 and EN 18220 (runs 2026-10-12-en18219 and 2026-10-12-en18220), as ESPR-AnnexIII-para2. Credited: GS1 identities follow the GS1 system under its Issuing Agency Code registered by ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met) and validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid); the QR Code can carry the GS1 key (EN18220-6.2.4.1 Met). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043), and restricted circulation numbers pass as GTINs (EN18219-4.1.2(2), bug #1046) (#518). The carrier's quiet zone (EN18220-6.2.3, #489) is no ISO/IEC 15459 matter."
   - id: BATT-Art77(3)-sub3
     section: Art77
     clause: Art. 77(3) third subparagraph

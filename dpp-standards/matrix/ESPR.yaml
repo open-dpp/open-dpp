@@ -553,6 +553,7 @@ criteria:
       - 8
     operationalisedBy:
       - EN18219
+      - EN18220
     assessment:
       date: 2026-09-06
       commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
@@ -824,21 +825,38 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
+      operational: false
       status: Partial
+      gapIssue: 518
       evidence:
         - type: code
           ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
-          note: scanned Digital Link -> passport's public view
+          note: "decodes batch and serial a second time after the router (bug #1049)"
         - type: code
           ref: apps/client/src/components/QrCode.vue
-          note: QR code of the identifier URL
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
         - type: code
           ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
           note: identities locked once published
+        - type: code
+          ref: apps/main/src/presentation-configurations/application/services/presentation-configuration.service.ts
+          note: "delete checks the editing mode only, not the permalinks naming the configuration (bug #1050)"
         - type: test
           ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
         - type: test
           ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.percent-in-key-resolves-to-own-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
@@ -851,8 +869,7 @@ criteria:
           ref: resolver.redirect-published
           result: passed
           date: 2026-10-12
-      notes: "Software part credited: every passport gets a unique product identifier and a public URL that a QR code carries; with a GS1 identity the QR holds a Digital Link the built-in resolver redirects to the passport, and identifiers are locked once the passport is published. Capped at Partial by Annex ZA (map rule of 2026-10-10): of the mapped EN 18219 clauses, 4.1.2(1) to (4), 4.2.2(1) to (3), 4.5.2(2) and (4) are Partial (#518, #825, #828; the item key of bug #1046), 4.5.2(1) waits for EN 18220 (#757) and 5.1 for the scheme texts (#1043). Graded with EN 18219 alone; the data-carrier assessment re-grades it with EN 18220."
-      gapIssue: 518
+      notes: "Software part credited: every passport gets a unique product identifier and a public URL that a QR Code carries; with a GS1 identity the code holds a Digital Link the built-in resolver redirects to the passport; an independent decoder reads the codes back and their URLs open the passport (Check carriers.qr-decodes-to-passport-link); identifiers are locked once the passport is published. Capped at Partial by Annex ZA (map rule of 2026-10-10): of the mapped EN 18220 clauses, 5.2.1-sub1 and -sub2 are Partial (a key with a percent sign resolves to another passport or to nothing, bug #1049; a published permalink breaks when its presentation configuration is deleted, bug #1050; the own permalink follows no EN 18219 scheme); of the EN 18219 clauses, 4.1.2(1) to (4), 4.2.2(1) to (3), 4.5.2(1), (2) and (4) are Partial (#518, #825, #828, #489; the item key of bug #1046) and 5.1 waits for the scheme texts (#1043) (#518)."
   - id: ESPR-Art10(1)(b)
     section: Art10
     clause: Art. 10(1)(b)
@@ -862,6 +879,28 @@ criteria:
       - 4
     operationalisedBy:
       - EN18220
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 489
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+      notes: "Software part: a carrier the operator can place on product, packaging or documentation as the delegated act will say. Credited: a QR Code of every permalink and of the Digital Link in the back office, with its URL to copy. Missing: no carrier output to print or embed (no download control, print layout or size choice) and a generated image with a quiet zone of about one module (EN18220-5.1, 6.2.3). Capped at Partial by Annex ZA through EN18220-5.4.5(2), the mandatory clause of 5.4 (Partial); 5.7.2 (Partial) is a statement and 5.4.1 and 5.7.1 are operator duties, none of which caps (#489). No delegated act names the placement yet."
   - id: ESPR-Art10(1)(c)
     section: Art10
     clause: Art. 10(1)(c)
@@ -877,15 +916,27 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
+      operational: false
       status: Partial
+      gapIssue: 518
       evidence:
         - type: code
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
-          note: GS1 AI syntax, GTIN check digit
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
         - type: test
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
-      notes: "The cited harmonised standards now stand for the Annex III standards. Credited: GS1 identities use GS1 Application Identifiers as ISO/IEC 15418 requires (EN18219-5.2.2.1(b) Met) under GS1's registered Issuing Agency Code. Capped at Partial: Annex ZA maps Art. 10(1)(c) to EN18219-5.1 (and the definition 3.1.25), and 5.1 stays unassessed until GS1 Digital Link, ISO/IEC 18975 and ISO/IEC 15459 are read (#1042, #1043); restricted circulation numbers pass (4.1.2(2), bug #1046); the carrier half waits for EN 18220 (#757)."
-      gapIssue: 518
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
+        - type: check
+          ref: carriers.qr-quiet-zone-four-modules
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+      notes: "The cited harmonised standards now stand for the Annex III standards. Credited: GS1 identities use GS1 Application Identifiers as ISO/IEC 15418 requires under GS1's registered Issuing Agency Code (EN18219-5.2.2.1(b) and (g) Met); the carrier takes the identifier's characters (EN18220-5.2.3-sub1 Met) and the identifier opens the public information without an account (EN18220-5.3.4-sub1, a Mirror of EN18219-4.6.2(2), Met). Capped at Partial by Annex ZA: EN18220-5.2.1-sub1 and -sub2 are Partial (bugs #1049, #1050; own permalinks follow no EN 18219 scheme), EN18219-5.1 stays unassessed until GS1 Digital Link, ISO/IEC 18975 and ISO/IEC 15459 are read (#1042, #1043), and restricted circulation numbers pass (EN18219-4.1.2(2), bug #1046). The symbol itself misses the quiet zone of ISO/IEC 18004 (EN18220-6.2.3, #489), a clause Annex ZA does not map to this point (#518)."
   - id: ESPR-Art10(1)(d)
     section: Art10
     clause: Art. 10(1)(d) (as corrected by C2)
@@ -957,6 +1008,7 @@ criteria:
       - 5
     operationalisedBy:
       - EN18239
+      - EN18220
     assessment:
       date: 2026-10-09
       commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
@@ -1007,6 +1059,24 @@ criteria:
     operationalisedBy:
       - EN18220
       - EN18219
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      operational: true
+      status: Partial
+      gapIssue: 828
+      evidence:
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR of the permalink or Digital Link at 256 px, its URL as text and a copy button for the URL
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: presentation-mode QR of the newest permalink; copy button for the URL
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+          note: members list identifiers through the API
+      notes: "Software part: a digital copy of the carrier or of the unique product identifier for dealers and online marketplaces. Credited: the identifier's URL and the Digital Link can be copied in the back office and listed through the API, which the point accepts in place of the carrier. Missing: no image of the carrier to hand over (EN18220-5.4.5(2), #489), no bulk export of identifiers meant for retailers, and no page under docs/ mentions permalinks, the GS1 Digital Link, QR codes, labels or printing. Capped at Partial by Annex ZA through EN18219-4.5.2: 4.5.2(1), (2) and (4) are Partial (#828)."
   - id: ESPR-Art10(3)(b)
     section: Art10
     clause: Art. 10(3)(b)
@@ -1446,6 +1516,8 @@ criteria:
       status: Not applicable
       evidence: []
       notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
+    operationalisedBy:
+      - EN18220
   - id: ESPR-Art12(6)(b)
     section: Art12
     clause: Art. 12(6)(b)
@@ -1458,6 +1530,8 @@ criteria:
       status: Not applicable
       evidence: []
       notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
+    operationalisedBy:
+      - EN18220
   - id: ESPR-Art12(6)(c)
     section: Art12
     clause: Art. 12(6)(c)
@@ -1470,6 +1544,8 @@ criteria:
       status: Not applicable
       evidence: []
       notes: "Commission duty: delegated acts on issuing agencies and on identifiers and carriers operators create themselves; none adopted as of 2026-10-12 (the watch has seen none). Annex ZA marks Art. 12(4) to (6) not applicable."
+    operationalisedBy:
+      - EN18220
   - id: ESPR-Art13(1)
     section: Art13
     clause: Art. 13(1) (four subparagraphs)
@@ -2049,21 +2125,26 @@ criteria:
       date: 2026-10-12
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
+      operational: false
       status: Partial
+      gapIssue: 518
       evidence:
         - type: code
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "uncompressed canonical Digital Link: GTIN-14, AI 10 and 21 in the path, type-D data attributes in the query, RFC 3986 percent-encoding"
         - type: test
           ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
-        - type: manual
-          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
-          date: 2026-10-12
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: toCanvas from qrcode 1.5.4 with margin 1; error correction left at the library default M; canvas only
         - type: check
           ref: identifiers.gs1-syntax-valid
           result: passed
           date: 2026-10-12
-      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met; that restricted circulation numbers pass is graded under 4.1.2(2)). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023); the carrier half waits for EN 18220 (#757). Parts 1 and 5 are not relevant to products."
-      gapIssue: 518
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
+          date: 2026-10-12
+      notes: "Credited: GS1 identities follow the GS1 system, whose Issuing Agency Code is registered under ISO/IEC 15459-2 (EN18219-5.2.2.1(g) Met; that restricted circulation numbers pass is graded under 4.1.2(2)); the QR Code can carry that key (EN18220-6.2.4.1 Met). Missing: conformance with ISO/IEC 15459-3, -4 and -6 is unassessed until the texts are bought (#1042, #1043); the operator and facility identifiers of points (g), (h), (i) and (k) do not exist (#1023). Parts 1 and 5 are not relevant to products. The carrier's quiet zone (EN18220-6.2.3, #489) is no ISO/IEC 15459 matter (#518)."
   - id: ESPR-AnnexIII-para3
     section: AnnexIII
     clause: Annex III third paragraph
