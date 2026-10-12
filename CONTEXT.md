@@ -61,6 +61,17 @@ The living artifact of the Conformance Review: every Criterion with its latest A
 **Criterion**:
 One requirement traced to exactly one standard and clause (or article and paragraph). The unit the matrix is assessed at.
 
+**Referenced standard**:
+A standard that a law or a harmonised standard of the Conformance Review binds normatively, in its list of normative references or by a "shall" in its body. Assessed only within its Reach, and only one hop from the citing text: a standard that a Referenced standard cites in turn is not one.
+_Not to be confused with_: a Declared standard, which no law or harmonised standard cites.
+
+**Reach**:
+The part of a Referenced standard the Conformance Review reads: the clauses a citing clause depends on. The citing clause sets it, not the referenced text. An alternative open-dpp does not offer, or a clause about hardware or printing, puts nothing within Reach.
+
+**Declared standard**:
+A standard open-dpp itself claims to implement, assessed although no law or harmonised standard cites it, by whether open-dpp implements it as declared. Its Gaps never limit the conformance status of a law or harmonised standard. A standard becomes declared only by the owner's decision, never by an Assessment. Today: the Asset Administration Shell.
+_Not to be confused with_: a Referenced standard, which a law or harmonised standard binds.
+
 **Sector law**:
 A Union act outside ESPR that mandates a Digital Product Passport for the products it governs and requires that passport to be registered in the ESPR registry, so that the registry Regulation names it. Enters the Conformance Review on adoption, like a delegated act. Today: the Construction Products Regulation, the Toy Safety Regulation and the Detergents Regulation.
 _Not to be confused with_: a product-group delegated act under ESPR, which adds requirements to ESPR rather than restating them.
