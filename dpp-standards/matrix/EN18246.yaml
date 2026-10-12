@@ -1,9 +1,9 @@
 # Conformance Matrix: EN18246 (EN 18246:2026). Rules: dpp-standards/README.md.
 # Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18246-2026.pdf) on 2026-10-12 (ticket #763); assessments are added in place, one per Criterion.
 # Gated text: every paraphrase is ours, never a sentence of the standard.
-# Clause numbering: one Criterion per paragraph that carries a requirement; "4.7(5)" is the fifth paragraph of 4.7, and paragraphs without a requirement of their own keep their number and are listed below. The five bullets of 4.3 are lettered (a) to (e) in their printed order. 5.4.1 has a single paragraph with two addressees: "-sub1" is the system, "-sub2" the training of stakeholders. Annex A is normative; its key characteristics (A.3) are two Criteria, the mechanism an ESDC provides and the parts it consists of.
-# Not extracted, no requirement of their own: the Introduction, clauses 1 (scope: integrity, authenticity and reliability of DPP data exchange through electronically signed data constructs, ESDCs; system architecture, use cases, secure elements of carriers and cryptographic features of identifiers are out of its scope), 2 (normative references: EN 18216, EN 18219, EN 18220, EN 18221, EN 18239, all assessed as their own texts) and 3 (terms, among them additional software 3.10, which excludes browsers, camera-based QR readers and standard protocols), 4.1(1) (public and controlled data), 4.2(1) and 4.2(2) (pointers to EN 18239 for the actors and to 3.9 and EN 18219 for the operator identifier), 4.4(1) (what communication means here), 4.6(3) (a protection may need further carriers or data sources), 5.1.1 (what clause 5.1 covers: anonymous reads with common devices and authenticated CRUD on controlled data), 5.1.4(1), 5.1.7(2) to (4), 5.1.8(1) and (3), 5.2.1(1) and (2), 5.3.2(2) (risk descriptions and examples), 5.2.1(3) (identification mechanisms may be made stringent; the mechanisms are those of EN 18219 and of 4.5 and 5.3.1), A.1, A.2 and the rest of A.3 (what ESDCs are, that their structure depends on the construct used, and the example technologies ISO 22376, ISO/IEC 20248, W3C Verifiable Credentials, electronic attestations of attributes, electronic seals and signatures), the informative Annexes B (the example ESDCs in detail) and C (fair competition: basic search and reading must not need vendor-specific software, voluntary functions complement and never replace the core ones) and the Bibliography (ETSI EN 319 401 among others).
-# Mirrors: three bullets restate an EN 18239 clause with no delta and carry no Assessment of their own: 4.3(a) mirrors EN18239-5.2(2); 4.3(b) and 5.1.5(2) restate the first and the second sentence of EN18239-5.2(24). 5.2.2(2) is not a Mirror of EN18239-5.2(3): it binds authentication and identification rather than access and management, and adds the proviso that legal requirements are met.
+# Clause numbering: one Criterion per paragraph that carries a requirement; "4.7(6)" is the sixth paragraph of 4.7 (paragraphs as the PDF sets them apart), and paragraphs without a requirement of their own keep their number and are listed below. The five bullets of 4.3 are lettered (a) to (e) in their printed order. A paragraph holding two requirements gets "-sub1" and "-sub2": 5.4.1 (the system; the training of stakeholders) and 5.4.3(4) (accessibility measures and security; alternative ways of access). Annex A is normative; its key characteristics (A.3) are two Criteria, the mechanism an ESDC provides and the parts it consists of.
+# Not extracted, no requirement of their own: the Introduction, clauses 1 (scope: integrity, authenticity and reliability of DPP data exchange through electronically signed data constructs, ESDCs; system architecture, use cases, secure elements of carriers and cryptographic features of identifiers are out of its scope), 2 (normative references: EN 18216, EN 18219, EN 18220, EN 18221, EN 18239, all assessed as their own texts) and 3 (terms, among them additional software 3.10, which excludes browsers, camera-based QR readers and standard protocols), 4.1(1) (public and controlled data), 4.2(1) and 4.2(2) (pointers to EN 18239 for the actors and to 3.9 and EN 18219 for the operator identifier), 4.4(1) (what communication means here), 4.6(3) (a protection may need further carriers or data sources), 4.7(5) (users are not obliged to verify), 5.1.1 (what clause 5.1 covers: anonymous reads with common devices and authenticated CRUD on controlled data), 5.1.4(1), 5.1.7(2) and (3), 5.1.8(1) and (3), 5.2.1(1) and (2), 5.3.2(2) (risk descriptions and examples), 5.2.1(3) (identification mechanisms may be made stringent; the mechanisms are those of EN 18219 and of 4.5 and 5.3.1), A.1, A.2 and the rest of A.3 (what ESDCs are, that their structure depends on the construct used, and the example technologies ISO 22376, ISO/IEC 20248, W3C Verifiable Credentials, electronic attestations of attributes, electronic seals and signatures), the informative Annexes B (the example ESDCs in detail) and C (fair competition: basic search and reading must not need vendor-specific software, voluntary functions complement and never replace the core ones) and the Bibliography (ETSI EN 319 401 among others).
+# Mirrors: three bullets restate an EN 18239 clause with no delta and carry no Assessment of their own: 4.3(a) mirrors EN18239-5.2(2); 4.3(b) and 5.1.5(2) restate the first and the second sentence of EN18239-5.2(24): one-limb Mirrors as the #830 rule admits them, because what grades the target (the request log, #840) grades each sentence alike; split them into own Criteria if the two sentences ever take different statuses. 4.3(b) sits in the clause on public reads, but that is no narrower actor list: the target's second sentence already exempts authenticated services, so for anonymous readers both say the same. 5.2.2(2) is not a Mirror of EN18239-5.2(3): it binds authentication and identification rather than access and management, and adds the proviso that legal requirements are met.
 # Annex ZA (informative) maps a single clause: 4.2 confers presumption of conformity with ESPR Art. 11(a), limited to organisational interoperability for end-to-end communication and data transfer, once the EN is cited in the OJ (not yet: EN 18246 waits for the second implementing decision). The other law rows naming EN18246 in operationalisedBy are rows its clauses address without presumption (map rule of 2026-10-09: Annex ZA plus the links the text supports): ESPR Art. 11(b) and BATT Art. 78(b) (4.3 and 5.4, public access without authentication, software or barriers), ESPR Art. 11(f) and BATT Art. 78(f) (4.1(2), no unauthorised modification), ESPR Art. 11(g) and BATT Art. 78(g) (the text as a whole), ESPR Art. 11(h) and BATT Art. 78(h) (5.1 security and privacy, 5.3 counterfeiting), ESPR Art. 13(2)(a) (verifying authenticity) and REG1778 Art. 8(9)(d) and 9(2)(e) (4.7(1): a DPP verifiable in integrity, which the registry's integrity evidence and the version hash presuppose; the text names neither a hash nor the registry).
 standard: EN18246
 edition: EN 18246:2026
@@ -95,7 +95,7 @@ criteria:
   - id: EN18246-4.2(3)
     section: "4.2"
     clause: 4.2(3)
-    paraphrase: "Every actor who reaches controlled DPP data is identified by a globally unique identifier (for economic operators, the unique economic operator identifier of 3.9 and EN 18219). Annex ZA maps clause 4.2 to ESPR-Art11(a), organisational interoperability only."
+    paraphrase: "Each actor with access to controlled DPP data carries an identifier that no other actor anywhere shares (for economic operators, the unique economic operator identifier of 3.9 and EN 18219). Annex ZA maps clause 4.2 to ESPR-Art11(a), organisational interoperability only."
     applicability: software
     areas:
       - 5
@@ -234,11 +234,11 @@ criteria:
         - type: code
           ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
           note: public routes pass without any credential or challenge
-      notes: "No security measure stands in front of public data: the public routes need no credential, CAPTCHA, client certificate, app attestation or token, so nothing an implementation adds there requires extra software (Check access.public-view-renders-in-plain-browser). Should rate limiting arrive (#1026), it has to keep this property; that is noted on the cluster."
+      notes: "Graded on the outcome (map rule of 2026-10-12, #763). No security measure stands in front of public data: the public routes need no credential, CAPTCHA, client certificate, app attestation or token, so nothing an implementation adds there requires extra software (Check access.public-view-renders-in-plain-browser). Should rate limiting arrive (#1026), it has to keep this property; that is noted on the cluster."
   - id: EN18246-4.4(2)
     section: "4.4"
     clause: 4.4(2)
-    paraphrase: "DPP data are communicated securely, encrypted and authenticated as the relevant standards provide, so that they are not tampered with, read without authorisation or leaked and stay intact and confidential; reading public data needs neither encryption nor authentication."
+    paraphrase: "Exchanges of DPP data are protected by encryption and authentication following the applicable standards, which keeps the data confidential and unaltered and shuts out tampering, unauthorised reading and leaks; for public data neither is required."
     applicability: mixed
     areas:
       - 1
@@ -276,7 +276,7 @@ criteria:
   - id: EN18246-4.4(4)
     section: "4.4"
     clause: 4.4(4)
-    paraphrase: "The responsible parties set up communication channels over which different systems and actors exchange DPP data seamlessly and interoperably, compatible across platforms and with national and international rules, as EN 18216 lays them down."
+    paraphrase: "Those responsible provide channels on which any system or actor can exchange DPP data without friction, across platforms and in line with national and international rules; EN 18216 defines those channels."
     applicability: mixed
     areas:
       - 1
@@ -337,12 +337,12 @@ criteria:
         - type: code
           ref: apps/client/src/components/QrCode.vue
           note: QR code drawn in the browser (qrcode library) from a link
-      notes: A conditional duty on whatever protects the identifier. open-dpp offers no such protection, so no protected identifier exists whose interoperability with EN 18219 could be shown; graded Gap as the conditional EN18239-5.2(12) was. A protection added outside open-dpp would have to keep the GS1 Digital Link resolvable, which the cluster names as a constraint (#1037).
+      notes: "A conditional duty on whatever protects the identifier. open-dpp offers no such protection, so no protected identifier exists whose interoperability with EN 18219 could be shown; graded Gap in the cluster of the missing feature by the map rule of 2026-10-12 (#763: a clause that only constrains a feature open-dpp lacks is Gap in that feature's cluster; one that protects an outcome open-dpp delivers is graded on the outcome). A protection added outside open-dpp would have to keep the GS1 Digital Link resolvable, which the cluster names as a constraint (#1037)."
       gapIssue: 1037
   - id: EN18246-4.5(3)
     section: "4.5"
     clause: 4.5(3)
-    paraphrase: "Every product carries at least one data carrier through which anyone reaches the public DPP data without additional software."
+    paraphrase: "On each product, at least one data carrier opens the public DPP data to every user with standard means only (no additional software in the sense of 3.10)."
     applicability: mixed
     areas:
       - 4
@@ -368,7 +368,7 @@ criteria:
   - id: EN18246-4.5(4)
     section: "4.5"
     clause: 4.5(4)
-    paraphrase: "Optional: the DPP data may flag the unique identifier as protected and give the user explicit steps to check it."
+    paraphrase: "Optional: the passport may say that its identifier is protected and walk the user through checking it."
     applicability: software
     areas:
       - 4
@@ -408,8 +408,8 @@ criteria:
   - id: EN18246-4.6(2)
     section: "4.6"
     clause: 4.6(2)
-    paraphrase: "Any solution that secures the physical authenticity of the data carrier stays fully interoperable with the data carriers of EN 18220."
-    applicability: software
+    paraphrase: "Any way of proving that the physical data carrier is genuine remains fully compatible with the EN 18220 data carriers."
+    applicability: mixed
     areas:
       - 4
       - 10
@@ -422,12 +422,12 @@ criteria:
         - type: code
           ref: apps/client/src/components/QrCode.vue
           note: QR code drawn in the browser (qrcode library) from a link
-      notes: "A conditional duty on whatever secures the carrier's physical authenticity. open-dpp provides no such solution, so none can be shown to work with EN 18220 carriers; graded Gap as 4.5(2). EN 18220 itself is assessed in #757 (#1037)."
+      notes: "A conditional duty on whatever secures the carrier's physical authenticity. open-dpp provides no such solution, so none can be shown to work with EN 18220 carriers; graded Gap in the cluster of the missing feature by the map rule of 2026-10-12 (#763: a clause that only constrains a feature open-dpp lacks is Gap in that feature's cluster; one that protects an outcome open-dpp delivers is graded on the outcome). EN 18220 itself is assessed in #757 (#1037)."
       gapIssue: 1037
   - id: EN18246-4.6(4)
     section: "4.6"
     clause: 4.6(4)
-    paraphrase: "A protected data carrier still lets anyone reach the public DPP data without additional software."
+    paraphrase: "Protecting a data carrier must not take from any user the access to public DPP data with standard means (no additional software in the sense of 3.10)."
     applicability: mixed
     areas:
       - 4
@@ -441,7 +441,7 @@ criteria:
         - type: code
           ref: apps/client/src/components/QrCode.vue
           note: QR code drawn in the browser (qrcode library) from a link
-      notes: A conditional duty on a protected carrier. open-dpp offers no protected carrier, so this cannot be shown; a plain QR code from open-dpp stays readable by any camera when an operator adds physical protection around it, but a signed or sealed carrier (Annex B) would need a design that keeps the public URL readable without an app, which the cluster carries (#1037).
+      notes: "A conditional duty on a protected carrier. open-dpp offers no protected carrier, so this cannot be shown; graded Gap in the cluster of the missing feature by the map rule of 2026-10-12 (#763: a clause that only constrains a feature open-dpp lacks is Gap in that feature's cluster; one that protects an outcome open-dpp delivers is graded on the outcome); a plain QR code from open-dpp stays readable by any camera when an operator adds physical protection around it, but a signed or sealed carrier (Annex B) would need a design that keeps the public URL readable without an app, which the cluster carries (#1037)."
       gapIssue: 1037
   - id: EN18246-4.6(5)
     section: "4.6"
@@ -537,7 +537,7 @@ criteria:
   - id: EN18246-4.7(4)
     section: "4.7"
     clause: 4.7(4)
-    paraphrase: "A verifier checks the validity and integrity of DPP data free of charge and without restriction; no user has to verify."
+    paraphrase: "Checking whether DPP data are valid and intact costs the verifier nothing and is not restricted in any way."
     applicability: software
     areas:
       - 10
@@ -550,12 +550,12 @@ criteria:
         - type: manual
           ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
           date: 2026-10-12
-      notes: "There is nothing to verify: with no signature, seal or hash on passport data (4.7(1)), no verifier can check validity and integrity, free of charge or otherwise (#824)."
+      notes: "There is nothing a verifier could check: with no signature, seal or hash on passport data (4.7(1)), validity and integrity cannot be checked at all, so free and unrestricted checking is not available either (#824)."
       gapIssue: 824
-  - id: EN18246-4.7(5)
+  - id: EN18246-4.7(6)
     section: "4.7"
-    clause: 4.7(5)
-    paraphrase: "Every creation, change and deletion of data is logged so that it cannot be repudiated, and the integrity of the log holds over time. Recommended: the log is tamper-proof and that integrity can be shown without supporting documents or offline procedures."
+    clause: 4.7(6)
+    paraphrase: "A log entry nobody can later disown is written for each creation, change and deletion of data, and the log stays provably intact over time. Recommended: the log cannot be tampered with, and its intactness can be shown from the log alone, with no extra documents or offline steps."
     applicability: software
     areas:
       - 10
@@ -582,10 +582,10 @@ criteria:
           date: 2026-10-12
       notes: "Credited: changes of passport and template content, editing mode and element access rules are logged with user and time, and members can list and download the log. Missing: creation, status changes (bug #1032) and deletion of a passport are not logged; the records carry no hash chain or signature, can be altered in the database, and are deleted together with a deleted draft, so neither non-repudiation nor integrity over time holds (#1024)."
       gapIssue: 1024
-  - id: EN18246-4.7(6)
+  - id: EN18246-4.7(7)
     section: "4.7"
-    clause: 4.7(6)
-    paraphrase: "The editor responsible for a change can be identified through a globally unique operator identifier."
+    clause: 4.7(7)
+    paraphrase: "Whoever is responsible for a change is named in it by an operator identifier that is unique worldwide."
     applicability: software
     areas:
       - 5
@@ -604,10 +604,10 @@ criteria:
           note: users known by internal id, name and e-mail
       notes: The editor of a recorded change is identified only by an internal user id (with name and e-mail in the account); no globally unique operator identifier exists for users or organisations (#1023, as EN18239-5.2(1)).
       gapIssue: 1023
-  - id: EN18246-4.7(7)
+  - id: EN18246-4.7(8)
     section: "4.7"
-    clause: 4.7(7)
-    paraphrase: "Every event that changes a DPP while it is in operation is logged in an audit-proof way, and the relevant parties can reach that log."
+    clause: 4.7(8)
+    paraphrase: "While a DPP is in use, each event that alters it goes into a log fit for audit, which the parties concerned can consult."
     applicability: software
     areas:
       - 6
@@ -641,7 +641,7 @@ criteria:
       date: 2026-10-12
       commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
       validator: agent:conformance-review
-      status: Partial
+      status: Gap
       evidence:
         - type: code
           ref: apps/main/src/common/middleware/logger.middleware.ts
@@ -655,7 +655,7 @@ criteria:
         - type: manual
           ref: "Against the ea05ef20 Instance: every anonymous read of the public view (GET /api/v2/p/<permalink>/shells, /submodels) and the page-view call appear in the backend log with the visitor's IP address and full user agent at debug level, which main.ts always enables."
           date: 2026-10-12
-      notes: "Credited: the public view asks nothing of the visitor, sets no cookie and needs no account (Check privacy.public-view-asks-no-personal-data), and the page-view counter stores no IP address or user. Missing: the request log always records the IP address and user agent of every anonymous visitor, which is personal information collected from people who only read public data; no setting switches it off (#840). The anonymous AI chat, where an organisation enables it, logs each visitor message verbatim (#840)."
+      notes: The clause forbids collecting personal information from people who only read public data, without exception. The public view asks nothing of the visitor, sets no cookie and needs no account (Check privacy.public-view-asks-no-personal-data), and the page-view counter stores no IP address or user, but the request log always records the IP address and user agent of every anonymous visitor, which is personal information collected from exactly those people, and no setting switches it off; so the prohibition is not kept (#840). The anonymous AI chat, where an organisation enables it, logs each visitor message verbatim (#840).
       gapIssue: 840
   - id: EN18246-5.1.3(1)
     section: "5.1"
@@ -702,7 +702,7 @@ criteria:
         - type: code
           ref: apps/main/src/identity/users/presentation/users.controller.ts
           note: verified e-mail change
-      notes: "Credited: users can correct their name and change their e-mail address (with verification). Missing: no self-service deletion of an account (#479), no export of one's data, and the client shows no privacy information; the admin pages cannot delete an account either, so an operator has to remove one in the database. The privacy texts are the operator's, the means to act on requests are the software's."
+      notes: "Credited: users can correct their name and change their e-mail address (with verification). Missing: no self-service deletion of an account (#479), no export of one's data, and the client shows no privacy information; no admin page deletes an account either; the authentication library's admin API is mounted and can presumably remove a user, but only by a hand-made API call. The privacy texts are the operator's, the means to act on requests are the software's."
       gapIssue: 479
   - id: EN18246-5.1.3(3)
     section: "5.1"
@@ -737,7 +737,7 @@ criteria:
   - id: EN18246-5.1.4(2)
     section: "5.1"
     clause: 5.1.4(2)
-    paraphrase: "Recommendation: robust cybersecurity measures, encryption, access control and regular audits among them, guard data against unauthorised access and breaches."
+    paraphrase: "Recommendation: strong cybersecurity measures (for example encryption, access control and regular audits) keep intruders and breaches away from the data."
     applicability: mixed
     areas:
       - 10
@@ -765,7 +765,7 @@ criteria:
   - id: EN18246-5.1.4(3)
     section: "5.1"
     clause: 5.1.4(3)
-    paraphrase: "Organisational data processed, stored or exchanged in the DPP ecosystem are shielded from unauthorised access, disclosure, change and loss, through technical and organisational measures that keep them confidential, intact and available."
+    paraphrase: "Whatever organisational data the DPP ecosystem handles, in processing, storage or exchange, are shielded from unauthorised access, disclosure, change and loss, with technical and organisational measures for their confidentiality, integrity and availability."
     applicability: mixed
     areas:
       - 10
@@ -791,7 +791,7 @@ criteria:
   - id: EN18246-5.1.4(4)
     section: "5.1"
     clause: 5.1.4(4)
-    paraphrase: "Security measures for organisational data are consistent with recognised information-security standards and frameworks, and they keep access to public DPP data secure without needless barriers to interoperability, fair competition or legitimate actors."
+    paraphrase: "The protection of organisational data follows established information-security standards or frameworks, and at the same time keeps public DPP data securely reachable, with no obstacle that would hinder interoperability, competition or legitimate users."
     applicability: mixed
     areas:
       - 10
@@ -816,7 +816,7 @@ criteria:
   - id: EN18246-5.1.4(5)
     section: "5.1"
     clause: 5.1.4(5)
-    paraphrase: "Recommendation: access to organisational data and privileged accounts is governed by privilege configuration, strong authentication of privileged users, a regular review of who holds which access rights, and trusted roles kept apart."
+    paraphrase: "Recommendation: for organisational data and privileged accounts, privileges are configured deliberately, privileged users authenticate strongly, access rights are reviewed periodically and trusted roles are kept separate."
     applicability: mixed
     areas:
       - 5
@@ -945,9 +945,9 @@ criteria:
           note: QR code drawn in the browser (qrcode library) from a link
       notes: "Recommendation, assessed as enablement. Credited: uploads are scanned for malware when the operator configures the scanner, and schema validation rejects malformed input. Missing: the scanner is optional and off in the example stacks, no Content-Security-Policy or other header limits injected code, and nothing helps a visitor tell a genuine passport QR code from a misleading one (#1027; verifiable entry points in #1037)."
       gapIssue: 1027
-  - id: EN18246-5.1.7(5)
+  - id: EN18246-5.1.7(4)
     section: "5.1"
-    clause: 5.1.7(5)
+    clause: 5.1.7(4)
     paraphrase: "Optional: implementations may raise user awareness and safe use, and may rely on entry points to DPP information that are trusted and verifiable."
     applicability: mixed
     areas:
@@ -967,9 +967,9 @@ criteria:
           note: the public passport view
       notes: "Optional. open-dpp gives visitors nothing to tell a genuine entry point from a fake one: the QR code is unsigned, the public view shows no verification mark, and there is no awareness text for scanners (#1037)."
       gapIssue: 1037
-  - id: EN18246-5.1.7(6)
+  - id: EN18246-5.1.7(5)
     section: "5.1"
-    clause: 5.1.7(6)
+    clause: 5.1.7(5)
     paraphrase: "Optional: further protection, for instance malware scanning, monitoring of the network and secure transport protocols, may reduce malicious code and abuse in the systems that serve or read DPP data."
     applicability: mixed
     areas:
@@ -1227,6 +1227,9 @@ criteria:
         - type: code
           ref: apps/client/index.html
           note: no third-party script, font or stylesheet
+        - type: manual
+          ref: "Against the ea05ef20 Instance: the conformance subject's public view renders its trade name, weight and manufacturer in Playwright's stock Chromium and WebKit; Firefox did not start in this environment (the EN 18216 run of 2026-10-11 used it)."
+          date: 2026-10-12
       notes: Reading a passport works in a common web browser with nothing installed (Check access.public-view-renders-in-plain-browser); the EN 18216 run (2026-10-11) used the view in Firefox and WebKit too, language switch and image preview included. The QR code needs only a camera app. Not operational.
   - id: EN18246-5.4.3(1)
     section: "5.4"
@@ -1286,9 +1289,9 @@ criteria:
           note: QR code drawn in the browser (qrcode library) from a link
       notes: Optional. The QR code open-dpp draws is a plain square image with no aid for finding or scanning it (no tactile or high-contrast frame, no accompanying text or placement guidance); such aids are the operator's when printing, and open-dpp offers nothing towards them (#1035).
       gapIssue: 1035
-  - id: EN18246-5.4.3(4)
+  - id: EN18246-5.4.3(4)-sub1
     section: "5.4"
-    clause: 5.4.3(4)
+    clause: 5.4.3(4) first sentence
     paraphrase: "Accessibility measures do not weaken security mechanisms."
     applicability: software
     areas:
@@ -1313,9 +1316,9 @@ criteria:
           ref: "Read the client routes and the public view at ea05ef20: every visitor gets the same two public routes (the passport view and the chat); there is no accessible, simplified or alternative variant, and accessibility is done in the markup of that view (ARIA attributes, keyboard handling). The server applies authentication and element rules to every API call whatever client sends it."
           date: 2026-10-12
       notes: Accessibility in open-dpp lives in the markup of the one public view every visitor gets; no alternative channel, simplified mode or assistive route bypasses authentication or element rules, which the server enforces whatever the client.
-  - id: EN18246-5.4.3(5)
+  - id: EN18246-5.4.3(4)-sub2
     section: "5.4"
-    clause: 5.4.3(5)
+    clause: 5.4.3(4) second sentence
     paraphrase: "Alternative ways of reaching the DPP keep its data intact and authentic."
     applicability: software
     areas:
@@ -1325,7 +1328,7 @@ criteria:
       date: 2026-10-12
       commit: ea05ef20dbe4eaab478330f40ec32ff52081d83a
       validator: agent:conformance-review
-      status: Partial
+      status: Met
       evidence:
         - type: code
           ref: apps/client/src/view/presentation/View.vue
@@ -1333,14 +1336,13 @@ criteria:
         - type: code
           ref: apps/main/src/permalink/presentation/permalink.controller.ts
           note: public passport and AAS read routes are OptionalAuth
-        - type: code
-          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
-          note: export envelope without signature or hash
-      notes: "Credited: the HTML view, the public JSON API and the export are drawn from the same stored data, so no access route alters it. Missing: none of them carries anything that proves the data authentic or intact (4.7(1)), so authenticity cannot be preserved across modalities because it is never established (#824)."
-      gapIssue: 824
-  - id: EN18246-5.4.3(6)
+        - type: manual
+          ref: "Against the ea05ef20 Instance: the conformance subject's public view (Chromium and WebKit) and its public JSON (GET /api/v2/p/<permalink>/submodels) show the same trade name and weight; the view renders the JSON it fetches, unchanged."
+          date: 2026-10-12
+      notes: "Graded on the outcome (map rule of 2026-10-12, #763). open-dpp has no separate accessible variant (see 5.4.3(4)-sub1), and the ways it does offer to reach a passport, the HTML view and the public JSON API, render the same stored data without altering it, so no access route weakens integrity. That the data carry no proof of authenticity at all is recorded once, under 4.7(1) (#824)."
+  - id: EN18246-5.4.3(5)
     section: "5.4"
-    clause: 5.4.3(6)
+    clause: 5.4.3(5)
     paraphrase: "Recommendation: security mechanisms do not keep persons with disabilities from DPP information."
     applicability: software
     areas:
@@ -1379,12 +1381,12 @@ criteria:
         - type: manual
           ref: "Searched apps/main/src and packages at ea05ef20 for signing, hashing, certificate and credential code (createSign, createHash, subtle.sign, X.509, JWS, verifiable credentials): the only hits are the OAuth Provider's token signing and test helpers; passport data, exports and the activity history are never signed or hashed."
           date: 2026-10-12
-      notes: "open-dpp produces no ESDC or any other signed construct: no issuer signature to confirm integrity and provenance, no non-repudiation of the issuer, and no check of the issuer's authority against a trusted list (#824)."
+      notes: "Annex A is normative but states what an ESDC provides rather than imposing a duty with a requirement verb; read as what an ESDC must provide where one is used, the means the scope of EN 18246 builds its framework on (4.7(3) also admits signatures, seals and attestations, of which open-dpp has none either). Annex ZA maps nothing here, so these rows cap no law row. open-dpp produces no ESDC or any other signed construct: no issuer signature to confirm integrity and provenance, no non-repudiation of the issuer, and no check of the issuer's authority against a trusted list (#824)."
       gapIssue: 824
   - id: EN18246-A.3(2)
     section: A
     clause: A.3, second list
-    paraphrase: "An ESDC names its issuer by a recognised identifier (EN 18219) tied to the signing key or certificate (for core product data, normally the economic operator that puts the product on the market), names its subject by a globally unique product identifier, holds the data about that subject, and is signed with the issuer's private key under a certificate managed in a recognised trust framework; the DPP ESDC is signed electronically by the responsible economic operator or its authorised representative."
+    paraphrase: "An ESDC names its issuer by a recognised identifier (EN 18219) tied to the signing key or certificate (for core product data, normally the economic operator that puts the product on the market), names its subject by the product's unique identifier, holds the data about that subject, and carries a signature made with the issuer's private key, whose certificate a recognised trust scheme manages; for a DPP, the economic operator responsible for it, or its authorised representative, signs electronically."
     applicability: software
     areas:
       - 10
@@ -1401,5 +1403,5 @@ criteria:
         - type: code
           ref: apps/main/src/identity/users/domain/user.ts
           note: users known by internal id, name and e-mail
-      notes: "No signed data construct exists, so none of its parts do either: no issuer identified by an EN 18219 identifier bound to a signing key or certificate, no signature by the economic operator or its authorised representative, no trust framework; the subject's GS1 identity and the data are there, unsigned (#824; operator identifier in #1023)."
+      notes: "No signed data construct exists, so none of its parts do either: no issuer identified by an EN 18219 identifier bound to a signing key or certificate, no signature by the economic operator or its authorised representative, no trust framework; the subject's GS1 identity and the data are there, unsigned. Read as A.3(1) (#824; operator identifier in #1023)."
       gapIssue: 824
