@@ -3,7 +3,10 @@
 # against the issue this workflow opens, because the gated standard texts live outside the repository.
 #
 # - workflow_dispatch: validates the matrix files, runs the Cellar watch query and the automated
-#   checks, and opens one "Validation Run requested" issue with the results.
+#   checks, and opens one "Validation Run requested" issue with the results. The Checks run against
+#   an Instance built from the `instance` input (default main), the commit an Assessment records,
+#   and come from this workflow's own checkout (wayfinder ticket #820). They never run per PR: many
+#   Checks fail by design, as the evidence of known Gaps.
 # - schedule (weekly): runs the Cellar watch query alone and opens or updates one "Standards watch"
 #   issue when an act is unseen by dpp-standards/watch-state.yaml. A quiet week leaves no issue.
 #   GitHub fires a schedule from the default branch only, so it is live once dpp-standards/ is on
@@ -28,6 +31,10 @@ on:
         description: "Run the automated conformance checks"
         type: boolean
         default: true
+      instance:
+        description: "open-dpp commit, branch or tag the Instance under test is built from"
+        required: false
+        default: main
       watch:
         description: "Run the Cellar watch query"
         type: boolean
@@ -91,18 +98,105 @@ jobs:
     name: Automated conformance checks
     if: ${{ github.event_name == 'workflow_dispatch' && !inputs.standards_watch && inputs.checks }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The Instance's env, after the E2E workflow on main: it follows the env schema of the commit
+    # under test, which is main's by default.
+    env:
+      OPEN_DPP_PORT: "3000"
+      OPEN_DPP_URL: "http://localhost:3000"
+      OPEN_DPP_MONGODB_PORT: "27017"
+      OPEN_DPP_MONGODB_HOST: "localhost"
+      OPEN_DPP_MONGODB_USER: "admin"
+      OPEN_DPP_MONGODB_PASSWORD: "test-mongo-password"
+      OPEN_DPP_MONGODB_DATABASE: "management"
+      OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
+      OPEN_DPP_S3_ENDPOINT: "localhost"
+      OPEN_DPP_S3_PORT: "9000"
+      OPEN_DPP_S3_SSL: "false"
+      OPEN_DPP_S3_ACCESS_KEY: "rustfsadmin"
+      OPEN_DPP_S3_SECRET_KEY: "test-rustfs-password"
+      OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
+      OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
+      OPEN_DPP_MAIL_HOST: "localhost"
+      OPEN_DPP_MAIL_PORT: "8026"
+      OPEN_DPP_MAIL_USER: "admin"
+      OPEN_DPP_MAIL_PASSWORD: "admin"
+      OPEN_DPP_MAIL_SENDER_ADDRESS: "open-dpp"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: "admin:admin"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: "true"
+      OPEN_DPP_AUTH_SECRET: "change-this-to-a-good-secret"
+      OPEN_DPP_AUTH_CLOUD_ENABLED: "false"
+      OPEN_DPP_INSTANCE_SIGNUP_ENABLED: "true"
+      OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: "true"
+      VITE_API_ROOT: "http://localhost:3000/api"
     steps:
-      # v1 (wayfinder ticket #755) runs the Checks locally: `pnpm --filter e2e conformance` against a
-      # live Instance, then `matrix:fold`. Wiring them into this job (boot the app as e2e.yml does,
-      # run the conformance projects, upload apps/e2e/conformance-report.*) is the CI follow-up ticket.
-      - name: Record that the Checks run locally in v1
+      # This checkout holds the Checks and the action; instance/ holds the code under test, the same
+      # split as a local run against a git worktree at the assessed commit.
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.instance }}
+          path: instance
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            instance/pnpm-lock.yaml
+      - name: Start the Instance under test
+        uses: ./.github/actions/start-instance
+        with:
+          path: instance
+      - name: Install the Checks
         run: |
-          echo "No automated Check ran in CI: v1 runs the conformance project locally (dpp-standards/PLAYBOOK.md, section Checks) and folds the report with matrix:fold." > checks.md
+          pnpm install --frozen-lockfile
+          pnpm --filter @open-dpp/env build
+          pnpm --filter e2e exec playwright install --with-deps chromium
+      # Failing Checks are findings, not a broken job; the next step fails it only when no report was
+      # written (no Check ran). The e2e package parses this checkout's env schema, which still
+      # requires the ClamAV pair while the branch lags main; the Instance runs without ClamAV.
+      - name: Run the Checks
+        continue-on-error: true
+        env:
+          OPEN_DPP_CLAMAV_URL: "http://localhost"
+          OPEN_DPP_CLAMAV_PORT: "20006"
+        run: OPEN_DPP_COMMIT=$(git -C instance rev-parse HEAD) pnpm --filter e2e conformance
+      - name: Require a Check report
+        run: |
+          if [ ! -f apps/e2e/conformance-report.json ]; then
+            echo "::error::No Check report: no Check ran (see the Run the Checks step)."
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: validation-run-checks
-          path: checks.md
+          path: |
+            apps/e2e/conformance-report.json
+            apps/e2e/conformance-report.md
           retention-days: 30
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-playwright-report
+          path: |
+            apps/e2e/playwright-report
+            apps/e2e/test-results
+          retention-days: 7
+      - name: Instance logs
+        if: failure()
+        run: |
+          echo "::group::backend"
+          cat /tmp/app.log
+          echo "::endgroup::"
+          echo "::group::frontend"
+          cat /tmp/vite.log
+          echo "::endgroup::"
+          echo "::group::infrastructure"
+          docker compose -f instance/docker-compose.dev.yml logs --no-color
+          echo "::endgroup::"
 
   request:
     name: Open the Validation Run request
@@ -127,10 +221,20 @@ jobs:
           TEST: ${{ needs.validate.outputs.test }}
           WATCH_RESULT: ${{ needs.watch.result }}
           CHECKS_RESULT: ${{ needs.checks.result }}
+          INSTANCE: ${{ inputs.instance }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           section() { if [ -f "results/$1" ]; then cat "results/$1"; else echo "$2"; fi; }
           today=$(date -u +%F)
+          if [ -f results/conformance-report.json ]; then
+            checks_line=$(jq -r '[.checks[].status] | group_by(.) | map("\(length) \(.[0])") | join(", ")' results/conformance-report.json)
+            commit=$(jq -r .commit results/conformance-report.json)
+            fold_line="The Check report is the \`validation-run-checks\` artefact of the workflow run, against \`$INSTANCE\` at \`$commit\`. When the run assesses that commit, fold it instead of running the Checks locally: \`pnpm --filter @open-dpp/dpp-standards matrix:fold <absolute path to conformance-report.json>\`."
+          elif [ "$CHECKS_RESULT" = skipped ]; then
+            checks_line="skipped"
+          else
+            checks_line="no report, job $CHECKS_RESULT; see the workflow run"
+          fi
           {
             echo "## Validation Run requested"
             echo
@@ -143,18 +247,19 @@ jobs:
             echo
             section watch.md "Skipped."
             echo
-            echo "### Automated checks ($CHECKS_RESULT)"
+            echo "### Automated checks ($checks_line)"
             echo
-            section checks.md "Skipped."
+            section conformance-report.md "No Check ran."
             echo
             echo "### Next step (a human, locally)"
             echo
             echo "Open the run with the \`conformance-review\` skill, procedure **Re-validate** in \`dpp-standards/PLAYBOOK.md\`:"
             echo
             echo '```'
-            echo "pnpm --filter @open-dpp/dpp-standards matrix:run --trigger code --sources $SCOPE --detail \"${REASON:-requested run}\" --requested-by <this issue>"
+            echo "pnpm --filter @open-dpp/dpp-standards matrix:run --trigger code --sources $SCOPE --commit ${commit:-<sha on main>} --detail \"${REASON:-requested run}\" --requested-by <this issue>"
             echo '```'
             echo
+            if [ -n "${fold_line:-}" ]; then echo "$fold_line"; echo; fi
             echo "The run's PR closes this issue."
           } > body.md
           gh issue create --title "Validation Run requested: $SCOPE, $today" --label conformance --body-file body.md
