@@ -38,6 +38,35 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
+        - type: check
+          ref: api.read-dpp-by-id
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: api.read-dpp-ids-by-product-ids
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET /api/v1/dpps/<passport id> and /api/v2/v1/dpps/<passport id> answered 404; POST /api/v1/dppsByProductIds answered 404 (Checks api.read-dpp-by-id, api.read-dpp-ids-by-product-ids); the served OpenAPI document (110 paths) names no dpps path."
+          date: 2026-10-12
+      notes: "Mandatory. Credited: open-dpp's own API covers two of the three reads in its own shapes. Members read a passport by id, the public reads a published passport through routes keyed by its permalink (Check access.anonymous-reads-published), and the GS1 resolver takes a product identifier to the current passport's view (4.2, 4.3). Missing: none of the three methods is served (Checks api.read-dpp-by-id and api.read-dpp-ids-by-product-ids answer 404); ReadDPPIdsByProductIds has no counterpart at all (4.5(1)); open-dpp cannot act as the back-up DPP service provider that serves them as well (#596). Operational, because the operator has to run the API where the registry entry points (7.1). Annex ZA maps 4.5 (and clause 4 for ESPR-Art11(a)) to ESPR Art. 10(1)(d), (f), 10(3)(a), (b), 11(a) and (b), so this row caps them through 4.5(1)."
   - id: EN18222-4.1(3)
     section: "4.1"
     clause: "4.1(3)"
@@ -45,6 +74,20 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+      notes: "Recommendation, graded as enablement; it never caps a law row. Credited: one element of a passport can be read by submodel id and idShort path, by members and, for a published passport, by anyone (6.2). Missing: no ReadDataElement at the EN 18222 path with a JSONPath (8.1(5), 8.4), and no back-up DPP service provider that offers it (#596)."
   - id: EN18222-4.1(4)
     section: "4.1"
     clause: "4.1(4)"
@@ -53,6 +96,23 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: create in one transaction; delete only in Draft, hard delete with identifiers, permalinks and activity history
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: "Recommendation, graded as enablement; it never caps a law row. Credited: members create passports and delete drafts through open-dpp's own routes (4.6, 4.8). Missing: neither at the EN 18222 paths (8.2); ReadDPPVersionByIdAndDate has no counterpart, since open-dpp keeps no versions (4.4, #1029); no back-up DPP service provider offers any of them (#596)."
   - id: EN18222-4.1(5)
     section: "4.1"
     clause: "4.1(5)"
@@ -61,6 +121,23 @@ criteria:
     areas:
       - 1
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: element-level rules per role tuple (admin, owner, member, user, anonymous)
+      notes: "Mandatory where its condition holds. open-dpp gives update rights only to members of the owning organisation: element-level rules know roles (owner, member, user, anonymous), not named third parties such as repairers or recyclers (#821, #1023), and API keys act with their user's full rights. An operator who lets a third party update parts of a passport has to make it a member. Credited: members update any part through the AAS routes (4.7(1)). Missing: UpdateDPPById itself (8.2)."
   - id: EN18222-4.1(6)
     section: "4.1"
     clause: "4.1(6)"
@@ -69,6 +146,20 @@ criteria:
     areas:
       - 1
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+      notes: "Recommendation under the condition of 4.1(5), graded as enablement. Credited: members update one element by idShort path, its value alone or the element (6.3). Missing: UpdateDataElement at the EN 18222 path with a JSONPath (8.1(5), 8.4), and update rights for named third parties (#821, #1023)."
   - id: EN18222-4.1(9)
     section: "4.1"
     clause: "4.1(9)"
@@ -76,6 +167,21 @@ criteria:
     applicability: software
     areas:
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1034
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: check
+          ref: format.digital-link-negotiates-representation
+          result: failed
+          date: 2026-10-12
+      notes: Recommendation, conditional on several response types, graded as enablement; it never caps a law row. The API answers JSON only (a ZIP or a file where a route downloads one), and nothing selects a representation by the Accept header (Check format.digital-link-negotiates-representation fails). Under the map rule for conditional clauses the row is Gap in the content-negotiation cluster, as EN18216-5(b) to (d) are (#1034).
   - id: EN18222-4.2
     section: "4.2"
     clause: "4.2"
@@ -84,6 +190,52 @@ criteria:
     areas:
       - 1
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: element-level rules per role tuple (admin, owner, member, user, anonymous)
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: 403 for an unreadable element
+        - type: check
+          ref: api.read-dpp-by-id
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: |-
+        Mandatory through 4.1(2). Credited:
+        - members read a passport by its id, though GET /passports/:id lists its shells and submodels by id only, and the content comes from the export (open-dpp's own format 6.0) or the AAS routes;
+        - anyone reads a published passport's content through AAS routes keyed by its permalink (Check access.anonymous-reads-published);
+        - element-level rules per role decide what a reader sees, and an element they may not read is left out or refused.
+        Missing:
+        - no read by DPP id at v1/dpps/{dppId} (Check api.read-dpp-by-id answers 404), and no public read by the passport's id at all;
+        - the answer is an AAS environment or open-dpp's export, not EN 18223's DigitalProductPassport (the payload types are EN 18223's, assessed in #762);
+        - the status codes and result object of 7.2 are not met (7.2(3), 7.2(6)).
   - id: EN18222-4.3
     section: "4.2"
     clause: "4.3"
@@ -93,6 +245,36 @@ criteria:
       - 1
       - 3
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+          note: members map one identifier uuid to its passport (referenceId)
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+        - type: check
+          ref: format.digital-link-negotiates-representation
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-10-12
+      notes: |-
+        Mandatory through 4.1(2). Credited: the GS1 resolver takes a product identifier (a GS1 key in Digital Link form) to the one passport behind it. open-dpp keeps no versions, so that passport is always the current one. Published passports resolve for anyone, others only for members (Check resolver.redirect-published). Members can also map an identifier's uuid to its passport. Missing:
+        - the resolver answers with a redirect to the HTML view, not with the passport, and no JSON answer exists (Check format.digital-link-negotiates-representation fails, #1034);
+        - only GS1 keys resolve; open-dpp's own identifiers lead to a passport only as permalinks;
+        - the resolver decodes batch and serial twice (bug #1049);
+        - how far the identifiers meet EN 18219 is graded on its rows (#518);
+        - the payload types are EN 18223's, assessed in #762.
   - id: EN18222-4.4
     section: "4.2"
     clause: "4.4"
@@ -101,6 +283,23 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1029
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: change events only; creation and deletion not recorded
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: create in one transaction; delete only in Draft, hard delete with identifiers, permalinks and activity history
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: Recommendation (4.1(4)), optional for the economic operator; it never caps a law row. open-dpp keeps only a passport's current state. The activity history holds change events without a baseline (creation is not recorded), offers no state at a point in time, and is deleted with the passport. No route takes a date, and there is no EN 18222 path (8.2). The archive of versions it needs is the version-archive cluster, as EN18221-4.2(7) (#1029). ISO 8601-1 stays unread under the map rule for conditional clauses.
   - id: EN18222-4.5(1)
     section: "4.2"
     clause: "4.5(1)"
@@ -110,6 +309,30 @@ criteria:
       - 1
       - 3
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+          note: members map one identifier uuid to its passport (referenceId)
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: check
+          ref: api.read-dpp-ids-by-product-ids
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET /api/v1/dpps/<passport id> and /api/v2/v1/dpps/<passport id> answered 404; POST /api/v1/dppsByProductIds answered 404 (Checks api.read-dpp-by-id, api.read-dpp-ids-by-product-ids); the served OpenAPI document (110 paths) names no dpps path."
+          date: 2026-10-12
+      notes: "Mandatory through 4.1(2). No route takes a set of product identifiers and returns the passports behind them: Check api.read-dpp-ids-by-product-ids answers 404, and the passport list filters by status, template and creation date only. One identifier at a time, a member can read an identifier's passport id (GET /unique-product-identifiers/:id), and anyone can follow a GS1 key through the resolver to a published passport's view. Annex ZA maps 4.5 (and clause 4 for ESPR-Art11(a)) to ESPR Art. 10(1)(d), (f), 10(3)(a), (b), 11(a) and (b); this Gap keeps all six at most Partial."
   - id: EN18222-4.5(2)
     section: "4.2"
     clause: "4.5(2)"
@@ -117,6 +340,20 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/pagination/pagination.ts
+          note: cursor base64url {createdAt, id}; an empty cursor reads the first page
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): an unknown passport id answered 404 {statusCode, timestamp, path, message}; an unknown route 404 {message, error, statusCode}; a request without credentials to GET /api/v2/passports/<id> 403 "Forbidden resource"; GET /api/v2/passports?limit=1&cursor= answered 200 with the first page.'
+          date: 2026-10-12
+      notes: "A constraint on ReadDPPIdsByProductIds, which open-dpp lacks: Gap in its cluster (map rule for conditional clauses). open-dpp's own lists page with limit and an opaque cursor, but limit has no upper bound and an empty cursor is taken as the first page rather than refused (manual check), so the pattern would not carry over as it is."
   - id: EN18222-4.6
     section: "4.6"
     clause: "4.6"
@@ -125,6 +362,38 @@ criteria:
     areas:
       - 1
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: create in one transaction; delete only in Draft, hard delete with identifiers, permalinks and activity history
+        - type: code
+          ref: apps/main/src/policy/presentation/policy.guard.ts
+          note: quota exceeded answers 429
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: |-
+        Recommendation (4.1(4)), graded as enablement; it never caps a law row. Credited:
+        - members create a passport, blank or from a template, or by importing an open-dpp export, in one transaction;
+        - membership and the organisation's quota decide whether creation is allowed;
+        - the answer is 201 with the new passport, its id included.
+        Missing:
+        - no CreateDPP at POST v1/dpps (8.2);
+        - the input is not a DPP (EN 18223), but a template id or a blank shell, or open-dpp's own export for an import;
+        - the right to create is not limited by role (any member may create);
+        - a quota refusal answers 429, a code outside Table 15 (7.2(6));
+        - the payload types are EN 18223's, assessed in #762.
   - id: EN18222-4.7(1)
     section: "4.6"
     clause: "4.7(1)"
@@ -133,6 +402,41 @@ criteria:
     areas:
       - 1
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: element-level rules per role tuple (admin, owner, member, user, anonymous)
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft, Published, Archived; Archived blocks edits
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: 403 for an unreadable element
+      notes: |-
+        Mandatory through 4.1(5), where its condition holds. Credited:
+        - members change any part of a passport through the AAS routes, one element or a submodel's values at a time;
+        - element-level edit rules refuse an element the caller may not edit;
+        - each change runs in a transaction and is recorded in the activity history;
+        - a passport stays editable until it is archived.
+        Missing:
+        - no partial update of the passport as a whole: no merge patch, and a change that spans submodels needs several requests;
+        - no PATCH v1/dpps/{dppId} (8.2);
+        - the answer is the changed element or submodel, not the updated DPP, and failures do not use the result object of 7.2;
+        - update rights reach members only (4.1(5)).
   - id: EN18222-4.7(3)
     section: "4.6"
     clause: "4.7(3)"
@@ -141,6 +445,27 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+        - type: code
+          ref: apps/main/src/bulk-import/application/services/bulk-import-run.service.ts
+          note: a row's values go through modifyValueOfMultipleSubmodels
+        - type: check
+          ref: api.update-all-or-nothing
+          result: passed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: "Recommendation, graded as enablement; it never caps a law row. Credited: each update request runs in one transaction, and the values are checked before anything is saved, so a request with one invalid part is refused as a whole and changes nothing (Check api.update-all-or-nothing). Missing: a change that spans submodels needs several requests, each atomic on its own; the bulk import updates a row's submodels one transaction each, so a failure on a later submodel leaves the earlier ones changed."
   - id: EN18222-4.7(4)
     section: "4.6"
     clause: "4.7(4)"
@@ -157,6 +482,28 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: create in one transaction; delete only in Draft, hard delete with identifiers, permalinks and activity history
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft, Published, Archived; Archived blocks edits
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: "Recommendation (4.1(4)), graded as enablement; it never caps a law row. Credited: members delete a passport by its id (204), and only drafts can be deleted (403 otherwise), so a published passport cannot vanish by mistake. Missing: no DeleteDPPById at DELETE v1/dpps/{dppId} (8.2). At the end of its life a published passport can only be archived (the BATT-Art77(8) and #825 side). The right to delete is not limited by role. A deletion removes the passport with its identifiers, permalinks and activity history and leaves no trace."
   - id: EN18222-5.1
     section: "5"
     clause: "5.1"
@@ -164,6 +511,13 @@ criteria:
     applicability: commission
     areas:
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: the DPP registry offers RegisterProductDPP. The client side, a DPP system that registers its passports, is graded on ESPR-Art13(4), REG1778-Art3(b), 8(6) and 8(10): open-dpp exports a registry file for upload and calls no registry API. The content of the registry entry is graded in 7.1."
   - id: EN18222-5.2
     section: "5"
     clause: "5.2"
@@ -171,6 +525,13 @@ criteria:
     applicability: commission
     areas:
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: the registry serves the method and issues the registration identifier. See 5.1 for the client side and 7.1 for the entry."
   - id: EN18222-6.1
     section: "6"
     clause: "6.1"
@@ -178,6 +539,20 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+      notes: "Optional, graded as enablement; it never caps a law row. Credited: open-dpp, as custodian, offers element-level read and update in its own shape (6.2, 6.3). Missing: the EN 18222 methods and paths (8.4), and an archiving-service role, which open-dpp does not have (EN 18221, #1029, #596)."
   - id: EN18222-6.2
     section: "6"
     clause: "6.2"
@@ -185,6 +560,31 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+        - type: test
+          ref: apps/main/src/aas/presentation/aas.decorator.spec.ts
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: 403 for an unreadable element
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET .../submodels/<base64 id>/submodel-elements/Weight answered 200 with the element; the same element addressed as the RFC 9535 Normalized Path $['Weight'] answered 404 \"Submodel element with idShortPath $['Weight'] not found\"."
+          date: 2026-10-12
+      notes: "Recommendation (4.1(3)), graded as enablement. Credited: one element is read by submodel id and dot-separated idShort path, by members and, for a published passport, by anyone, under the element-level read rules. A value-only variant also exists. Missing: the path is not a JSONPath relative to the passport (8.1(5); a Normalized Path answers 404) and needs the submodel's id in standard base64. The answer is an AAS element, not EN 18223's DataElement (the payload types are EN 18223's, assessed in #762). There is no EN 18222 path (8.4)."
   - id: EN18222-6.3
     section: "6"
     clause: "6.3"
@@ -193,6 +593,29 @@ criteria:
     areas:
       - 1
       - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: each mutation in one MongoDB transaction with its activity; element-level ability on read and edit; modifyValueOfMultipleSubmodels commits per submodel
+        - type: code
+          ref: apps/main/src/aas/domain/value-modifier-visitor.ts
+          note: value updates of Blob, Entity, Range and relationship elements refused as not supported
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: element-level rules per role tuple (admin, owner, member, user, anonymous)
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: 403 for an unreadable element
+      notes: "Recommendation (4.1(6)), graded as enablement. Credited: members update one element by idShort path, either the element or its value alone, and can add or delete elements. Edit rules apply per element, each change is atomic, and it is recorded in the activity history. Missing: JSONPath addressing (8.1(5)) and the EN 18222 path (8.4). The value-only update refuses Blob, Entity, Range and relationship elements. Third parties cannot get update rights (4.1(6))."
   - id: EN18222-7.1
     section: "7"
     clause: "7.1"
@@ -203,6 +626,20 @@ criteria:
       - 2
       - 3
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/registry-export-item.ts
+          note: the registry file holds the oldest permalink URL as the unique product identifier only
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+      notes: "Credited: identifiers are strings (UUIDs, permalink slugs, GS1 Digital Links). Missing: the registry entry cannot be filled. open-dpp's registry file names only the unique product identifier, taken from the oldest permalink. It has no passport id, no unique operator identifier, neither the economic operator's nor the back-up operator's (no such identifiers exist, #1023, #596), and no DPP API endpoint (no EN 18222 API exists). The DigitalProductPassport, DataElement, Identifier and Timestamp types are EN 18223's: graded on its rows in #762, and this row is re-read then."
   - id: EN18222-7.2(1)
     section: "7"
     clause: "7.2(1)"
@@ -210,6 +647,23 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: error body {statusCode, timestamp, path, message}
+        - type: code
+          ref: packages/exception/src/zod-validation.pipeline.ts
+          note: 400 {message, errors}
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): an unknown passport id answered 404 {statusCode, timestamp, path, message}; an unknown route 404 {message, error, statusCode}; a request without credentials to GET /api/v2/passports/<id> 403 "Forbidden resource"; GET /api/v2/passports?limit=1&cursor= answered 200 with the first page.'
+          date: 2026-10-12
+      notes: "Recommendation, graded as enablement. Credited: a failed request carries a message that says why (the cause, or the validation issues of the input). Missing: the message does not come as the result object of Tables 12 to 14 (7.2(3)), and error bodies come in three different shapes (own filters, validation, framework defaults)."
   - id: EN18222-7.2(2)
     section: "7"
     clause: "7.2(2)"
@@ -217,6 +671,26 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: error body {statusCode, timestamp, path, message}
+        - type: code
+          ref: packages/exception/src/zod-validation.pipeline.ts
+          note: 400 {message, errors}
+        - type: check
+          ref: api.error-answer-error-only
+          result: passed
+          date: 2026-10-12
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): an unknown passport id answered 404 {statusCode, timestamp, path, message}; an unknown route 404 {message, error, statusCode}; a request without credentials to GET /api/v2/passports/<id> 403 "Forbidden resource"; GET /api/v2/passports?limit=1&cursor= answered 200 with the first page.'
+          date: 2026-10-12
+      notes: Option, graded as enablement. A failed request is answered with an error object alone, without any payload of the method (Check api.error-answer-error-only).
   - id: EN18222-7.2(3)
     section: "7"
     clause: "7.2(3)"
@@ -224,6 +698,23 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: error body {statusCode, timestamp, path, message}
+        - type: code
+          ref: packages/exception/src/zod-validation.pipeline.ts
+          note: 400 {message, errors}
+        - type: code
+          ref: apps/main/src/common/middleware/correlation-id.middleware.ts
+          note: x-correlation-id as a response header only
+      notes: "No result object of typed messages exists: error bodies carry one message string (or validation issues), no message type (Info, Warning, Error, Exception), no per-message code, no correlation identifier (open-dpp sends one only as the x-correlation-id response header) and a timestamp only in some error bodies. ISO 8601-1 for the message timestamp stays unread under the map rule for conditional clauses."
   - id: EN18222-7.2(6)
     section: "7"
     clause: "7.2(6)"
@@ -231,6 +722,41 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: a request without credentials ends in 403
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: error body {statusCode, timestamp, path, message}
+        - type: code
+          ref: apps/main/src/policy/presentation/policy.guard.ts
+          note: quota exceeded answers 429
+        - type: code
+          ref: apps/main/src/main.ts
+          note: global prefix /api; URI versions v1 and v2 for every controller; unversioned /api paths answer 308 to v1
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
+        - type: check
+          ref: api.missing-credentials-answer-401
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: 'Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): an unknown passport id answered 404 {statusCode, timestamp, path, message}; an unknown route 404 {message, error, statusCode}; a request without credentials to GET /api/v2/passports/<id> 403 "Forbidden resource"; GET /api/v2/passports?limit=1&cursor= answered 200 with the first page.'
+          date: 2026-10-12
+      notes: |-
+        Credited: the routes that come closest to the methods answer 200, 201, 204, 400, 403, 404, 409 and 500 in the senses Table 15 gives them. Missing:
+        - a request without credentials is answered 403 where the table maps missing credentials to 401 (Check api.missing-credentials-answer-401 fails);
+        - codes outside the table appear: 302 from the resolver, 308 for unversioned /api paths, 413 for an oversized body, 429 for an exceeded quota;
+        - a method a route does not offer is answered 404, never 405;
+        - the generic status codes are not carried in any result object (7.2(3)).
   - id: EN18222-8.1(4)
     section: "8.1"
     clause: "8.1(4)"
@@ -239,6 +765,20 @@ criteria:
     areas:
       - 1
       - 13
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: global prefix /api; URI versions v1 and v2 for every controller; unversioned /api paths answer 308 to v1
+        - type: code
+          ref: packages/dto/src/api-version.dto.ts
+          note: API versions v1 and v2, v2 the latest
+      notes: "Credited: open-dpp versions its own API in the path (/api/v1 and /api/v2, served side by side). Missing: the EN 18222 paths do not exist (8.2), and an unversioned /api path redirects to v1, the oldest version, not the latest."
   - id: EN18222-8.1(5)
     section: "8.1"
     clause: "8.1(5)"
@@ -246,6 +786,22 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: test
+          ref: apps/main/src/aas/presentation/aas.decorator.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET .../submodels/<base64 id>/submodel-elements/Weight answered 200 with the element; the same element addressed as the RFC 9535 Normalized Path $['Weight'] answered 404 \"Submodel element with idShortPath $['Weight'] not found\"."
+          date: 2026-10-12
+      notes: "Mandatory for the element paths, a clause Annex ZA does not map. RFC 9535 (February 2024) is read through: a path takes the form of a Normalized Path (2.7: bracket notation from the root $, names in single quotes, array indexes). open-dpp addresses an element by submodel id plus a dot-separated idShort path, in which brackets are literal characters. No JSONPath is parsed anywhere on the server, and $['Weight'] answers 404 (manual check)."
   - id: EN18222-8.1(6)
     section: "8.1"
     clause: "8.1(6)"
@@ -254,6 +810,28 @@ criteria:
     areas:
       - 1
       - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
+        - type: code
+          ref: packages/api-client/src/dpp/aas/aasNamespace.ts
+          note: AAS path segments interpolated without encoding
+      notes: |-
+        Recommendation, graded as enablement. Credited: the ids open-dpp puts in paths are mostly safe as they are (UUIDs and slugs), and the router decodes a percent-encoded parameter once. Missing:
+        - AAS ids travel in standard base64, whose + and / need escaping; the IDTA convention is base64url;
+        - open-dpp's api-client inserts them unescaped;
+        - the GS1 resolver decodes batch and serial a second time (bug #1049);
+        - the EN 18222 paths themselves do not exist (8.2).
   - id: EN18222-8.1(7)
     section: "8.1"
     clause: "8.1(7)"
@@ -262,6 +840,20 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public AAS reads keyed by the permalink id, published passports only; no write routes
+      notes: "No route takes a representation parameter. Reads answer AAS JSON or open-dpp's export, neither of them the compressed or full representation of EN 18223 (the payload types are EN 18223's, assessed in #762)."
   - id: EN18222-8.2
     section: "8.2"
     clause: "8.2"
@@ -270,6 +862,31 @@ criteria:
     areas:
       - 1
       - 13
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: global prefix /api; URI versions v1 and v2 for every controller; unversioned /api paths answer 308 to v1
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: check
+          ref: api.read-dpp-by-id
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: api.read-dpp-ids-by-product-ids
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET /api/v1/dpps/<passport id> and /api/v2/v1/dpps/<passport id> answered 404; POST /api/v1/dppsByProductIds answered 404 (Checks api.read-dpp-by-id, api.read-dpp-ids-by-product-ids); the served OpenAPI document (110 paths) names no dpps path."
+          date: 2026-10-12
+      notes: None of the seven paths of Table 16 is served under the API root, versioned or not (Checks api.read-dpp-by-id and api.read-dpp-ids-by-product-ids answer 404; the OpenAPI document names no dpps path). The nearest routes of open-dpp's own API are listed on the method rows 4.2 to 4.8.
   - id: EN18222-8.3
     section: "8.2"
     clause: "8.3"
@@ -277,6 +894,13 @@ criteria:
     applicability: commission
     areas:
       - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "Commission duty: the registry serves POST v1/registerDPP. open-dpp calls no registry API (see 5.1)."
   - id: EN18222-8.4
     section: "8.2"
     clause: "8.4"
@@ -285,3 +909,20 @@ criteria:
     areas:
       - 1
       - 13
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      gapIssue: 1052
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: idShortPath of dot-separated idShorts; AAS ids as UUID or standard base64
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: "members: GET /passports/:id (ids only), GET /:id/export (full, own format 6.0), POST /passports, DELETE /:id, AAS routes"
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): GET .../submodels/<base64 id>/submodel-elements/Weight answered 200 with the element; the same element addressed as the RFC 9535 Normalized Path $['Weight'] answered 404 \"Submodel element with idShortPath $['Weight'] not found\"."
+          date: 2026-10-12
+      notes: Neither path of Table 18 is served. Element reads and updates exist only under open-dpp's AAS routes, by submodel id and idShort path (6.2, 6.3).

@@ -239,6 +239,47 @@ criteria:
       - 1
       - 4
       - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      gapIssue: 1029
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: permalink URL frozen at publication
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "302 to the HTML view; decodes batch and serial a second time (bug #1049)"
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: create in one transaction; delete only in Draft, hard delete with identifiers, permalinks and activity history
+        - type: code
+          ref: apps/main/src/activity-history/domain/activities/activity-types.ts
+          note: change events only; creation and deletion not recorded
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: updatedAt set at creation only
+        - type: check
+          ref: carriers.qr-decodes-to-passport-link
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-survives-config-deletion
+          result: failed
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) as an organisation member: POST /api/v2/passports answered 201 with the whole passport, its id included; GET /api/v2/passports/<id> answered the passport with its shells and submodels as ids only; a PATCH of a submodel's values holding a valid and an invalid value answered 400 and left both values unchanged; updatedAt stayed at the creation time after the edits; DELETE of the published conformance subject answered 403 (\"Only passports with the status Draft can be deleted\"), DELETE of the draft 204, a later GET 404."
+          date: 2026-10-12
+      notes: |-
+        Graded on both halves after the EN 18220 and EN 18222 runs.
+        EN 18220 half, credited: a carrier needs its identifier stored and resolvable. The permalink URL is frozen at publication, and the GS1 key is stored and resolves (Check carriers.qr-decodes-to-passport-link).
+        EN 18220 half, missing: a frozen permalink depends on a presentation configuration that can still be deleted, after which it answers 404 (bug #1050, Check identifiers.published-permalink-survives-config-deletion fails).
+        EN 18222 half, credited: the passport, its identifiers and its elements are stored so that a read by id, a resolution by product identifier and an element read by path are possible. Each identifier records its passport, which a lookup by a set of product identifiers (EN18222-4.5(1)) could build on.
+        EN 18222 half, missing:
+        - no versions are stored, so ReadDPPVersionByIdAndDate cannot be served (EN18222-4.4, #1029);
+        - updatedAt never changes and lists filter by creation date only, so nothing tells a client when a passport last changed.
   - id: EN18221-4.2(2)
     section: "4.2"
     clause: 4.2(2)
