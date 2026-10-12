@@ -1,0 +1,506 @@
+# Conformance Matrix: EN18246 (EN 18246:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18246-2026.pdf) on 2026-10-12 (ticket #763); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: one Criterion per paragraph that carries a requirement; "4.7(5)" is the fifth paragraph of 4.7, and paragraphs without a requirement of their own keep their number and are listed below. The five bullets of 4.3 are lettered (a) to (e) in their printed order. 5.4.1 has a single paragraph with two addressees: "-sub1" is the system, "-sub2" the training of stakeholders. Annex A is normative; its key characteristics (A.3) are two Criteria, the mechanism an ESDC provides and the parts it consists of.
+# Not extracted, no requirement of their own: the Introduction, clauses 1 (scope: integrity, authenticity and reliability of DPP data exchange through electronically signed data constructs, ESDCs; system architecture, use cases, secure elements of carriers and cryptographic features of identifiers are out of its scope), 2 (normative references: EN 18216, EN 18219, EN 18220, EN 18221, EN 18239, all assessed as their own texts) and 3 (terms, among them additional software 3.10, which excludes browsers, camera-based QR readers and standard protocols), 4.1(1) (public and controlled data), 4.2(1) and 4.2(2) (pointers to EN 18239 for the actors and to 3.9 and EN 18219 for the operator identifier), 4.4(1) (what communication means here), 4.6(3) (a protection may need further carriers or data sources), 5.1.1 (what clause 5.1 covers: anonymous reads with common devices and authenticated CRUD on controlled data), 5.1.4(1), 5.1.7(2) to (4), 5.1.8(1) and (3), 5.2.1(1) and (2), 5.3.2(2) (risk descriptions and examples), 5.2.1(3) (identification mechanisms may be made stringent; the mechanisms are those of EN 18219 and of 4.5 and 5.3.1), A.1, A.2 and the rest of A.3 (what ESDCs are, that their structure depends on the construct used, and the example technologies ISO 22376, ISO/IEC 20248, W3C Verifiable Credentials, electronic attestations of attributes, electronic seals and signatures), the informative Annexes B (the example ESDCs in detail) and C (fair competition: basic search and reading must not need vendor-specific software, voluntary functions complement and never replace the core ones) and the Bibliography (ETSI EN 319 401 among others).
+# Mirrors: three bullets restate an EN 18239 clause with no delta and carry no Assessment of their own: 4.3(a) mirrors EN18239-5.2(2); 4.3(b) and 5.1.5(2) restate the first and the second sentence of EN18239-5.2(24). 5.2.2(2) is not a Mirror of EN18239-5.2(3): it binds authentication and identification rather than access and management, and adds the proviso that legal requirements are met.
+# Annex ZA (informative) maps a single clause: 4.2 confers presumption of conformity with ESPR Art. 11(a), limited to organisational interoperability for end-to-end communication and data transfer, once the EN is cited in the OJ (not yet: EN 18246 waits for the second implementing decision). The other law rows naming EN18246 in operationalisedBy are rows its clauses address without presumption (map rule of 2026-10-09: Annex ZA plus the links the text supports): ESPR Art. 11(b) and BATT Art. 78(b) (4.3 and 5.4, public access without authentication, software or barriers), ESPR Art. 11(f) and BATT Art. 78(f) (4.1(2), no unauthorised modification), ESPR Art. 11(g) and BATT Art. 78(g) (the text as a whole), ESPR Art. 11(h) and BATT Art. 78(h) (5.1 security and privacy, 5.3 counterfeiting), ESPR Art. 13(2)(a) (verifying authenticity) and REG1778 Art. 8(9)(d) and 9(2)(e) (4.7(1): a DPP verifiable in integrity, which the registry's integrity evidence and the version hash presuppose; the text names neither a hash nor the registry).
+standard: EN18246
+edition: EN 18246:2026
+extractedFrom: standards/EN18246-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4.1"
+    title: 4.1 General
+  - id: "4.2"
+    title: 4.2 Actors of the system
+  - id: "4.3"
+    title: 4.3 Access to public DPP data
+  - id: "4.4"
+    title: 4.4 Communication
+  - id: "4.5"
+    title: 4.5 Product identifier as stored in data carrier
+  - id: "4.6"
+    title: 4.6 Data carrier authenticity
+  - id: "4.7"
+    title: 4.7 DPP authenticity and data integrity
+  - id: "5.1"
+    title: 5.1 Risk on data security and privacy
+  - id: "5.2"
+    title: 5.2 Risk and requirements on identification
+  - id: "5.3"
+    title: 5.3 Risk to products
+  - id: "5.4"
+    title: 5.4 Risk and requirements to prevent exclusion
+  - id: A
+    title: Annex A (normative) Electronically signed data constructs (ESDCs)
+criteria:
+  - id: EN18246-4.1(2)
+    section: "4.1"
+    clause: 4.1(2)
+    paraphrase: "All DPP data are protected against modification by anyone not entitled to make it, and every item of data can be traced back to a source that can be verified."
+    applicability: software
+    areas:
+      - 10
+      - 5
+  - id: EN18246-4.1(3)
+    section: "4.1"
+    clause: 4.1(3)
+    paraphrase: "The mechanisms that keep DPP data intact and authentic work independently of whatever secures the channel the data travel over, so transport security alone does not satisfy them."
+    applicability: software
+    areas:
+      - 10
+  - id: EN18246-4.2(3)
+    section: "4.2"
+    clause: 4.2(3)
+    paraphrase: "Every actor who reaches controlled DPP data is identified by a globally unique identifier (for economic operators, the unique economic operator identifier of 3.9 and EN 18219). Annex ZA maps clause 4.2 to ESPR-Art11(a), organisational interoperability only."
+    applicability: software
+    areas:
+      - 5
+      - 10
+  - id: EN18246-4.2(4)
+    section: "4.2"
+    clause: 4.2(4)
+    paraphrase: "Authentication follows the level of assurance the access requires (levels of assurance in the sense of ISO/IEC 29115)."
+    applicability: software
+    areas:
+      - 10
+      - 5
+  - id: EN18246-4.3(a)
+    section: "4.3"
+    clause: 4.3(a)
+    paraphrase: "Reading public DPP data needs no authentication. Restates EN18239-5.2(2)."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    mirrors: EN18239-5.2(2)
+  - id: EN18246-4.3(b)
+    section: "4.3"
+    clause: 4.3(b)
+    paraphrase: "Measures keep the users of public DPP data from being profiled. Restates the first sentence of EN18239-5.2(24)."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    mirrors: EN18239-5.2(24)
+  - id: EN18246-4.3(c)
+    section: "4.3"
+    clause: 4.3(c)
+    paraphrase: "Recommendation: the access control in front of DPP data copes with a large volume of requests and the service stays usable and stable under it."
+    applicability: mixed
+    areas:
+      - 10
+      - 11
+  - id: EN18246-4.3(d)
+    section: "4.3"
+    clause: 4.3(d)
+    paraphrase: "Public DPP data can be reached without any additional software (3.10: a web browser, a camera-based QR reader and the usual internet protocols do not count as additional software)."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-4.3(e)
+    section: "4.3"
+    clause: 4.3(e)
+    paraphrase: "Whatever extra security measure is added, public DPP data stay reachable without additional software."
+    applicability: software
+    areas:
+      - 10
+      - 11
+  - id: EN18246-4.4(2)
+    section: "4.4"
+    clause: 4.4(2)
+    paraphrase: "DPP data are communicated securely, encrypted and authenticated as the relevant standards provide, so that they are not tampered with, read without authorisation or leaked and stay intact and confidential; reading public data needs neither encryption nor authentication."
+    applicability: mixed
+    areas:
+      - 1
+      - 10
+  - id: EN18246-4.4(3)
+    section: "4.4"
+    clause: 4.4(3)
+    paraphrase: "Recommendation: DPP service providers apply the requirements ETSI EN 319 401:2024 sets for trust service providers (general policy requirements of an organisation offering trust services)."
+    applicability: operator
+  - id: EN18246-4.4(4)
+    section: "4.4"
+    clause: 4.4(4)
+    paraphrase: "The responsible parties set up communication channels over which different systems and actors exchange DPP data seamlessly and interoperably, compatible across platforms and with national and international rules, as EN 18216 lays them down."
+    applicability: mixed
+    areas:
+      - 1
+      - 2
+  - id: EN18246-4.5(1)
+    section: "4.5"
+    clause: 4.5(1)
+    paraphrase: "Recommendation: where relevant and appropriate, security measures protect the product identifier held in the data carrier so that its authenticity and integrity can be relied on."
+    applicability: mixed
+    areas:
+      - 3
+      - 4
+      - 10
+  - id: EN18246-4.5(2)
+    section: "4.5"
+    clause: 4.5(2)
+    paraphrase: "Any way of making the product identifier authentic and tamper-evident remains fully interoperable with the EN 18219 unique identifiers."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18246-4.5(3)
+    section: "4.5"
+    clause: 4.5(3)
+    paraphrase: "Every product carries at least one data carrier through which anyone reaches the public DPP data without additional software."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+  - id: EN18246-4.5(4)
+    section: "4.5"
+    clause: 4.5(4)
+    paraphrase: "Optional: the DPP data may flag the unique identifier as protected and give the user explicit steps to check it."
+    applicability: software
+    areas:
+      - 4
+      - 8
+  - id: EN18246-4.6(1)
+    section: "4.6"
+    clause: 4.6(1)
+    paraphrase: "Optional: the economic operator can add a security feature to the data carrier; the DPP may then explain how that feature is inspected."
+    applicability: mixed
+    areas:
+      - 4
+      - 8
+  - id: EN18246-4.6(2)
+    section: "4.6"
+    clause: 4.6(2)
+    paraphrase: "Any solution that secures the physical authenticity of the data carrier stays fully interoperable with the data carriers of EN 18220."
+    applicability: software
+    areas:
+      - 4
+      - 10
+  - id: EN18246-4.6(4)
+    section: "4.6"
+    clause: 4.6(4)
+    paraphrase: "A protected data carrier still lets anyone reach the public DPP data without additional software."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+  - id: EN18246-4.6(5)
+    section: "4.6"
+    clause: 4.6(5)
+    paraphrase: "Optional: the DPP data may flag the data carrier or carriers as protected and give the user explicit steps to check them."
+    applicability: software
+    areas:
+      - 4
+      - 8
+  - id: EN18246-4.7(1)
+    section: "4.7"
+    clause: 4.7(1)
+    paraphrase: "The authenticity and integrity of a DPP's data can be verified; in regulated situations, cross-border ones for instance, that verification costs nothing and uses interoperable mechanisms."
+    applicability: software
+    areas:
+      - 10
+  - id: EN18246-4.7(2)
+    section: "4.7"
+    clause: 4.7(2)
+    paraphrase: "Every actor supplying DPP data authenticates by proving it holds a digital certificate, issued after identity proofing that suits the relevant legal acts."
+    applicability: software
+    areas:
+      - 10
+      - 5
+  - id: EN18246-4.7(3)
+    section: "4.7"
+    clause: 4.7(3)
+    paraphrase: "Each change to DPP data, from the first creation to deletion, is tied to the authenticated identity of whoever made it, for instance by valid digital certificates, so that the change cannot be denied later; certificate-based digital signatures, seals, electronic attestations of attributes or ESDCs are named as ways to do it."
+    applicability: software
+    areas:
+      - 10
+      - 6
+  - id: EN18246-4.7(4)
+    section: "4.7"
+    clause: 4.7(4)
+    paraphrase: "A verifier checks the validity and integrity of DPP data free of charge and without restriction; no user has to verify."
+    applicability: software
+    areas:
+      - 10
+  - id: EN18246-4.7(5)
+    section: "4.7"
+    clause: 4.7(5)
+    paraphrase: "Every creation, change and deletion of data is logged so that it cannot be repudiated, and the integrity of the log holds over time. Recommended: the log is tamper-proof and that integrity can be shown without supporting documents or offline procedures."
+    applicability: software
+    areas:
+      - 10
+      - 6
+  - id: EN18246-4.7(6)
+    section: "4.7"
+    clause: 4.7(6)
+    paraphrase: "The editor responsible for a change can be identified through a globally unique operator identifier."
+    applicability: software
+    areas:
+      - 5
+      - 10
+  - id: EN18246-4.7(7)
+    section: "4.7"
+    clause: 4.7(7)
+    paraphrase: "Every event that changes a DPP while it is in operation is logged in an audit-proof way, and the relevant parties can reach that log."
+    applicability: software
+    areas:
+      - 6
+      - 10
+  - id: EN18246-5.1.2
+    section: "5.1"
+    clause: 5.1.2
+    paraphrase: "Nothing collects personal information from natural persons who only read public data; authentication data may be asked for only where restricted data are accessed."
+    applicability: software
+    areas:
+      - 10
+      - 11
+  - id: EN18246-5.1.3(1)
+    section: "5.1"
+    clause: 5.1.3(1)
+    paraphrase: "Personal data collected for permitted reasons are protected against loss, against access that is not allowed and against any use those reasons do not cover."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18246-5.1.3(2)
+    section: "5.1"
+    clause: 5.1.3(2)
+    paraphrase: "The implementation, the operator or both offer the information about, correction of and deletion of personal data that the law requires."
+    applicability: mixed
+    areas:
+      - 5
+  - id: EN18246-5.1.3(3)
+    section: "5.1"
+    clause: 5.1.3(3)
+    paraphrase: "The DPP service uses no external analytics tool, and what it returns to the user refers to no external component."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.1.4(2)
+    section: "5.1"
+    clause: 5.1.4(2)
+    paraphrase: "Recommendation: robust cybersecurity measures, encryption, access control and regular audits among them, guard data against unauthorised access and breaches."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18246-5.1.4(3)
+    section: "5.1"
+    clause: 5.1.4(3)
+    paraphrase: "Organisational data processed, stored or exchanged in the DPP ecosystem are shielded from unauthorised access, disclosure, change and loss, through technical and organisational measures that keep them confidential, intact and available."
+    applicability: mixed
+    areas:
+      - 10
+      - 6
+  - id: EN18246-5.1.4(4)
+    section: "5.1"
+    clause: 5.1.4(4)
+    paraphrase: "Security measures for organisational data are consistent with recognised information-security standards and frameworks, and they keep access to public DPP data secure without needless barriers to interoperability, fair competition or legitimate actors."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18246-5.1.4(5)
+    section: "5.1"
+    clause: 5.1.4(5)
+    paraphrase: "Recommendation: access to organisational data and privileged accounts is governed by privilege configuration, strong authentication of privileged users, a regular review of who holds which access rights, and trusted roles kept apart."
+    applicability: mixed
+    areas:
+      - 5
+      - 10
+  - id: EN18246-5.1.5(1)
+    section: "5.1"
+    clause: 5.1.5(1)
+    paraphrase: "Wherever technically feasible, profiling that combines a visitor's IP address, HTTP request data and behaviour with their DPP access is prevented from the outset."
+    applicability: software
+    areas:
+      - 10
+      - 11
+  - id: EN18246-5.1.5(2)
+    section: "5.1"
+    clause: 5.1.5(2)
+    paraphrase: "Users may be profiled only where a specific service strictly requires authentication. Restates the second sentence of EN18239-5.2(24)."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    mirrors: EN18239-5.2(24)
+  - id: EN18246-5.1.6(1)
+    section: "5.1"
+    clause: 5.1.6(1)
+    paraphrase: "While serving public data, the DPP system never asks the user's device for personal data or personally identifiable information."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.1.6(2)
+    section: "5.1"
+    clause: 5.1.6(2)
+    paraphrase: "The system leaves the advanced functions of the user's device alone: it does not locate the device, send notifications, read context or network information, handle calls or messages, install applications or change network configuration or device settings."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.1.7(1)
+    section: "5.1"
+    clause: 5.1.7(1)
+    paraphrase: "Recommendation: protection against phishing, quishing (QR codes or other carriers that lead to malicious or misleading sites) and malicious code lowers the risk of unauthorised access, breaches, fraud and misuse aimed at the users of the DPP system."
+    applicability: mixed
+    areas:
+      - 10
+      - 4
+  - id: EN18246-5.1.7(5)
+    section: "5.1"
+    clause: 5.1.7(5)
+    paraphrase: "Optional: implementations may raise user awareness and safe use, and may rely on entry points to DPP information that are trusted and verifiable."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+  - id: EN18246-5.1.7(6)
+    section: "5.1"
+    clause: 5.1.7(6)
+    paraphrase: "Optional: further protection, for instance malware scanning, monitoring of the network and secure transport protocols, may reduce malicious code and abuse in the systems that serve or read DPP data."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18246-5.1.8(2)
+    section: "5.1"
+    clause: 5.1.8(2)
+    paraphrase: "Recommendation: robust anti-scraping mechanisms, rate limiting and access control for instance, mitigate the mass extraction of DPP data; the DPP system may let beneficial search engines index DPP data."
+    applicability: mixed
+    areas:
+      - 10
+      - 11
+  - id: EN18246-5.2.1(4)
+    section: "5.2"
+    clause: 5.2.1(4)
+    paraphrase: "Identifiers and data carriers follow EN 18219 and EN 18220."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18246-5.2.2(1)
+    section: "5.2"
+    clause: 5.2.2(1)
+    paraphrase: "Any actor whose access goes beyond reading public DPP data can be identified in the way EN 18239 sets out (a globally unique operator identifier, EN18239-5.2(1))."
+    applicability: software
+    areas:
+      - 5
+  - id: EN18246-5.2.2(2)
+    section: "5.2"
+    clause: 5.2.2(2)
+    paraphrase: "Authentication and identification are not restricted because of where a natural or legal person is located, provided legal requirements are met. Related: EN18239-5.2(3), access and management not refused by location or jurisdiction."
+    applicability: software
+    areas:
+      - 5
+  - id: EN18246-5.3.1(1)
+    section: "5.3"
+    clause: 5.3.1(1)
+    paraphrase: "Recommendation: where relevant, a counterfeiting risk assessment weighs the risk and its possible impact on how far the DPP data and the product can be trusted."
+    applicability: operator
+  - id: EN18246-5.3.1(2)
+    section: "5.3"
+    clause: 5.3.1(2)
+    paraphrase: "Optional: where the risk is high, proportionate mitigation may be put in place, such as authentication elements on the data carrier that stakeholders including consumers can verify, through visible indicators or an authentication service linked to the DPP."
+    applicability: mixed
+    areas:
+      - 4
+      - 10
+  - id: EN18246-5.3.2(1)
+    section: "5.3"
+    clause: 5.3.2(1)
+    paraphrase: "Retrospective tampering is prevented by recording changes to regulatory-relevant content as EN 18221 requires (its archive of versions)."
+    applicability: software
+    areas:
+      - 6
+      - 10
+  - id: EN18246-5.3.2(3)
+    section: "5.3"
+    clause: 5.3.2(3)
+    paraphrase: "Recommendation: where the value justifies the cost, the DPP actors' systems detect potentially suspicious requests and set off measures such as alerts or further investigation."
+    applicability: mixed
+    areas:
+      - 10
+  - id: EN18246-5.4.1-sub1
+    section: "5.4"
+    clause: 5.4.1 first sentence
+    paraphrase: "The system is accessible to every user, whatever their technical means, disability or socio-economic situation."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.4.1-sub2
+    section: "5.4"
+    clause: 5.4.1 second sentence
+    paraphrase: "Recommendation: stakeholders are trained to understand and meet the diverse needs of users, so nobody is left out."
+    applicability: operator
+  - id: EN18246-5.4.2(1)
+    section: "5.4"
+    clause: 5.4.2(1)
+    paraphrase: "Any natural person can open the DPP they are looking for whenever they want, from a smartphone, tablet, computer or other internet-connected device."
+    applicability: mixed
+    areas:
+      - 11
+  - id: EN18246-5.4.2(2)
+    section: "5.4"
+    clause: 5.4.2(2)
+    paraphrase: "The essential functions are easy to reach in commonly available web browsers, without installing or using additional software."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.4.3(1)
+    section: "5.4"
+    clause: 5.4.3(1)
+    paraphrase: "Implementations make public DPP content perceivable, understandable, navigable and operable for persons with disabilities."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.4.3(2)
+    section: "5.4"
+    clause: 5.4.3(2)
+    paraphrase: "Optional: compatibility with assistive technologies and an adaptable presentation of DPP content may support accessibility."
+    applicability: software
+    areas:
+      - 11
+  - id: EN18246-5.4.3(3)
+    section: "5.4"
+    clause: 5.4.3(3)
+    paraphrase: "Optional: the data carrier may have features that make it easier to find and to scan."
+    applicability: mixed
+    areas:
+      - 4
+  - id: EN18246-5.4.3(4)
+    section: "5.4"
+    clause: 5.4.3(4)
+    paraphrase: "Accessibility measures do not weaken security mechanisms."
+    applicability: software
+    areas:
+      - 10
+      - 11
+  - id: EN18246-5.4.3(5)
+    section: "5.4"
+    clause: 5.4.3(5)
+    paraphrase: "Alternative ways of reaching the DPP keep its data intact and authentic."
+    applicability: software
+    areas:
+      - 10
+      - 11
+  - id: EN18246-5.4.3(6)
+    section: "5.4"
+    clause: 5.4.3(6)
+    paraphrase: "Recommendation: security mechanisms do not keep persons with disabilities from DPP information."
+    applicability: software
+    areas:
+      - 10
+      - 11
+  - id: EN18246-A.3(1)
+    section: A
+    clause: A.3, first list
+    paraphrase: "An ESDC lets a verifier confirm that DPP data were not altered after issuance, confirm who issued them and so where they come from, hold the issuer to the issuance (non-repudiation), and check the issuer's authority and accreditation through its certificate's status against a trusted list or another governance scheme."
+    applicability: software
+    areas:
+      - 10
+  - id: EN18246-A.3(2)
+    section: A
+    clause: A.3, second list
+    paraphrase: "An ESDC names its issuer by a recognised identifier (EN 18219) tied to the signing key or certificate (for core product data, normally the economic operator that puts the product on the market), names its subject by a globally unique product identifier, holds the data about that subject, and is signed with the issuer's private key under a certificate managed in a recognised trust framework; the DPP ESDC is signed electronically by the responsible economic operator or its authorised representative."
+    applicability: software
+    areas:
+      - 10
+      - 3
