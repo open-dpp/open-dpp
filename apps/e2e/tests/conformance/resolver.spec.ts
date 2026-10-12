@@ -12,7 +12,17 @@ check(
     id: "resolver.redirect-published",
     title:
       "a scanned key of a published passport redirects to its public view, query passed through",
-    criteria: ["ESPR-Art10(1)(a)", "ESPR-Art9(2)(e)", "BATT-Art77(3)-sub1", "CPR-Art76(2)(c)", "DET-Art21(4)(f)", "TOYS-Art19(7)"],
+    criteria: [
+      "ESPR-Art10(1)(a)",
+      "ESPR-Art9(2)(e)",
+      "BATT-Art77(3)-sub1",
+      "CPR-Art76(2)(c)",
+      "DET-Art21(4)(f)",
+      "TOYS-Art19(7)",
+      "EN18219-4.3.2(2)",
+      "EN18219-4.4.3(2)",
+      "EN18219-4.6.2(2)",
+    ],
   },
   async ({ browser }) => {
     const subject = readSubject();

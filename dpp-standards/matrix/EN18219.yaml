@@ -1,0 +1,1644 @@
+# Conformance Matrix: EN18219 (EN 18219:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18219-2026.pdf) on 2026-10-12 (ticket #756); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: the requirements of 4.1.2 to 4.6.2 and the guidelines of 4.3.3 to 4.5.3 are numbered lists, one Criterion per numbered item ("4.1.2(1)"); the scheme requirements of clauses 5 and 6 are lettered lists, one Criterion per lettered item ("5.2.2.1(d)"), as EN 18239 5.2 and EN 18246 4.3 were extracted. A list that offers a choice of one option is one Criterion: 5.4.3 (one of three DID methods) and 6.2.3 (ISO/IEC 18975 or EN IEC 61406-2). Guidelines (may, should) are graded as enablement and never cap a law row (map rule of 2026-10-12).
+# Not extracted, no requirement of their own: the Introduction (0.2: the schemes of clauses 5 and 6 are alternatives, each acceptable when its own rules and clause 4 are both met), clause 1 (scope: product, operator and facility identifiers at three granularity levels, from issuing agencies, self-issuing systems or both), 2 (normative references, forms below), 3 (terms; 3.1.25 defines the unique product identifier as a unique string that also gives a web link to the DPP, which Annex ZA cites for ESPR Art. 10(1)(c) and which 4.3.2(2) grades), the principles 4.1.1 to 4.6.1 (intent only; 4.2.1 makes the economic operator responsible for recording and keeping its identifiers, itself or by way of a DPP service provider, and 4.6.1 restates what 4.6.2(2) requires), the scheme descriptions 5.2.1, 5.3.1, 5.4.1, 5.5.1, 5.6.1, 6.2.1, 6.3.1, 6.4.1 and 6.5.1, the example list of 6.2.3 (LEI, ASC DI, GS1 AI and PEPPOL identifiers for operators), the informative Annexes A (choosing the granularity level; A.6 repeats 4.4.2(3)), B and C (overview tables and examples per scheme for products and for operators and facilities) and the Bibliography.
+# References (forms decided in #1021, confirmed by this Extract). Read-through, graded on this file's rows: ISO/IEC 646:1991 (through ECMA-6), ISO/IEC 10646:2020 and RFC 3986 (4.3.2(1)); ISO/IEC 15418:2016 (through the GS1 General Specifications 25.0 for AIs 01, 10 and 21, 5.2.2.1(b)); ISO/IEC 15459-2:2015 (through the AIM register of Issuing Agency Codes, version 2026-06-16, where GS1 holds codes 0 to 9, 5.2.2.1(g)). Read later in #1043: GS1 Digital Link URI Syntax 1.6.0, ISO/IEC 18975:2024 and ISO/IEC 15459-3, -4 and -6 (files of their own, the ISO texts after the purchase #1042) and EN IEC 61406-1:2022 (read-through); the rows resting on them stay unassessed: 5.1, 5.2.2.1(a), (c), (d), (f), 5.3.2.1(a) and 5.3.3(a). Gap, unread (alternatives open-dpp does not offer; they never cap a law row): EN IEC 61406-2:2024, ISO/IEC 6523-1:2023 and -2:2025, ISO 26324:2025, W3C DIDs v1.0, DID Resolution v0.3, VC Data Model 2.0, ISO/IEC 15434:2025, DIN 16598:2022 and the GS1 General Specifications for the GS1 operator and facility scheme. Not applicable, unread: ISO/IEC 15961-1:2021, ISO/IEC 17360:2023 and the GS1 EPC Tag Data Standard 2.3 (RFID encoding, the hardware side of an RF alternative) and ISO/IEC 19762:2025 (vocabulary). ISO 3166-1 and ISO 639-1, listed in the ticket as bound in the body, appear only in the informative Annexes B and C (a country-of-origin element in a 2D example, VAT number prefixes) and move down to Not applicable, unread. EN 18220 (undated) is graded by pointing at its rows: 4.5.2(1) waits for them (#757). RAIN RFID (corrected after the adversarial review of PR #1047): the allocation rules 5.5.2.1(a), (c) and (d) are software rows graded like their twins 5.2.2.1(a), (f) and (g), because the identifier a tag carries is the one open-dpp issues; only the tag encoding 5.5.2.1(b) and the RFID guidelines 5.5.3(a) and (b) are the operator's equipment, Not applicable.
+# Finding: the text dates the GS1 Digital Link URI Syntax 1.6.0 to 2022 (clause 2 and 5.2.2.1(d)), but GS1 published 1.6.0 on 2025-03-06 and ratified 1.7.0 in August 2026; #1043 reads 1.6.0, the cited edition, and records the delta. The text's footnotes still call EN 18239 and EN 18246 under preparation.
+# Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736: Art. 10(1)(a) through 4.1.2, 4.2.2, 4.5.2 and 5.1; 10(1)(c) through 5.1 and 3.1.25; 10(1)(d) through 4.3.2, 4.4.2, 4.5.2 and 4.6.2; 10(1)(f) through 4.4.2; 10(3)(a) through 4.5.2; 11(a) through 4.5.2 and 4.6.2; 11(b) through 4.6.2; 11(d) through 4.4.2; 11(e) through 4.2.2, for the identifier's persistence only; 12(1) to (3) through 6.1. It marks every other point of Art. 10, 11 and 12 not applicable, so this Extract added EN18219 to operationalisedBy of ESPR-Art10(1)(d), 10(3)(a), 11(a), 11(b) and 11(e), and removed it from the Commission rows ESPR-Art12(4)(a), (b) and 12(5)(a) to (e), which the text does not touch. The other law rows naming EN18219 are rows its clauses address without presumption (map rule of 2026-10-09): ESPR-Art9(2)(d) and Annex III (b), (c), (g), (h), (i), (k) and second paragraph (4.4, clauses 5 and 6), BATT-Art13(6)(a), 77(2)-sub1, 77(3)-sub1, 77(3)-sub2 and 77(7)-sub1, REG1778-Art8(3), (4), (5), 8(7)(c) and 9(2)(a).
+
+standard: EN18219
+edition: EN 18219:2026
+extractedFrom: standards/EN18219-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4.1"
+    title: 4.1 Global uniqueness
+  - id: "4.2"
+    title: 4.2 Persistence
+  - id: "4.3"
+    title: 4.3 Syntax
+  - id: "4.4"
+    title: 4.4 Granularity
+  - id: "4.5"
+    title: 4.5 Interoperability
+  - id: "4.6"
+    title: 4.6 Openness
+  - id: "5.1"
+    title: "5.1 ID schemes for products: general"
+  - id: "5.2"
+    title: "5.2 ID scheme 1: web enabled, structured path and query ID for products"
+  - id: "5.3"
+    title: "5.3 ID scheme 2: Identification Link (IL) string for products"
+  - id: "5.4"
+    title: "5.4 ID scheme 3: Decentralized identifiers (DID) for products"
+  - id: "5.5"
+    title: "5.5 ID scheme 4: identification for products and product groups (RAIN RFID, 2D symbols)"
+  - id: "5.6"
+    title: "5.6 ID scheme 5: Digital Object Identifier (DOI) for products"
+  - id: "6.1"
+    title: "6.1 ID schemes for economic operators and facilities: general"
+  - id: "6.2"
+    title: "6.2 ID scheme 6: economic operator identification using ISO/IEC 6523"
+  - id: "6.3"
+    title: "6.3 ID scheme 7: economic operator and facility identification per ISO/IEC 15418"
+  - id: "6.4"
+    title: "6.4 ID scheme 8: economic operator identification using decentralized identifiers (DID)"
+  - id: "6.5"
+    title: "6.5 ID scheme 9: economic operator identification using Digital Object Identifiers (DOI)"
+criteria:
+  - id: EN18219-4.1.2(1)
+    section: "4.1"
+    clause: 4.1.2(1)
+    paraphrase: An identifier is never used for a second, different object (no reassignment). Annex ZA maps 4.1.2 to ESPR-Art10(1)(a).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: a GS1 identity can be changed or deleted only while its passport is a draft
+        - type: code
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts
+          note: instance-wide unique index on type and canonical value
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: a published permalink cannot be deleted; its URL is frozen at publication
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: only draft passports can be deleted
+        - type: test
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
+          note: update and delete on a published passport refused; duplicate key refused
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+          note: duplicate full key rejected by the unique index
+        - type: test
+          ref: apps/main/src/permalink/domain/permalink.spec.ts
+          note: published URL immutable, slug locked once published
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's GTIN 04006381333931 and serial went to a second passport under batch B1 (201); once that passport was published, /gs1/v1/01/04006381333931/21/<serial> redirected to the subject's view and /gs1/v1/01/04006381333931/10/B1/21/<serial> to the second passport's view."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.gs1-identity-unique
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.item-key-single-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-identity-locked
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-locked
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: an identifier open-dpp issues is never moved to another passport. A GS1 identity (GTIN with optional batch and serial) is unique across the instance and, once its passport is published, can be neither changed nor deleted; published permalinks keep their frozen URL and can be neither deleted nor re-slugged; published passports cannot be deleted, so nothing frees their identifiers (Checks identifiers.gs1-identity-unique, identifiers.published-identity-locked, identifiers.published-permalink-locked). Before publication a draft's identity can still be edited or deleted and its key reused, but a draft does not resolve (resolver.draft-hidden), so nothing has been issued yet. Missing: the item key (a GTIN with a serial) is not protected as such: the same GTIN and serial can be assigned to a second passport under a batch and then identify that passport as well (manual check, Check identifiers.item-key-single-passport fails; bug #1046). Whether a GTIN is used for another object outside the instance depends on the GS1 allocation the operator follows (4.1.2(2)) (#518)."
+      gapIssue: 518
+  - id: EN18219-4.1.2(2)
+    section: "4.1"
+    clause: 4.1.2(2)
+    paraphrase: An identifier is unique worldwide within the domain it serves and means one and the same thing in every context it can turn up in (distinct).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: normalizeToGtin14 checks digits, length and the mod-10 check digit only
+        - type: code
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts
+          note: uniqueness of the canonical Digital Link path, per instance
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+          note: global uniqueness of a bare GTIN and of a full key within the instance
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): POST /unique-product-identifiers with GTIN 2001234567893 (GS1 prefix 20, a restricted circulation number) on a draft passport answered 201 and the Digital Link .../01/02001234567893/21/RCN1 (Check identifiers.restricted-gtin-refused fails for the same reason)."
+          date: 2026-10-12
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's GTIN 04006381333931 and serial went to a second passport under batch B1 (201); once that passport was published, /gs1/v1/01/04006381333931/21/<serial> redirected to the subject's view and /gs1/v1/01/04006381333931/10/B1/21/<serial> to the second passport's view."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.item-key-single-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.restricted-gtin-refused
+          result: failed
+          date: 2026-10-12
+      notes: "Credited: a GS1 identity is unique within the instance (one canonical value maps to exactly one passport), the GTIN is unique worldwide when the operator takes it from its own GS1 licence, and open-dpp's own identifiers are random UUIDs or instance-unique slugs under the instance's or the operator's domain. Missing: (1) restricted circulation numbers (GS1 prefixes 02, 04 and 20 to 29), which are unique only within a region or a company, pass as GS1 identities (manual check, Check identifiers.restricted-gtin-refused); (2) uniqueness is checked on the whole path, so the same GTIN and serial, which name one item, can go to a second passport under a batch and then resolve to two passports depending on whether the batch is in the link (manual check, Check identifiers.item-key-single-passport); (3) nothing ties a GTIN to the operator's GS1 company prefix, so two organisations or two instances can claim the same key; (4) no operator documentation says that GTINs must come from the operator's own licence (#518; bug #1046 for (1) and (2); the guide itself sits with #828)."
+      gapIssue: 518
+  - id: EN18219-4.1.2(3)
+    section: "4.1"
+    clause: 4.1.2(3)
+    paraphrase: Once issued, an identifier never identifies another object as well, neither alongside the first nor after it (non-coexistence).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts
+          note: unique index on the canonical value, which includes the batch
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: identities locked once the passport is published
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+          note: a duplicate full key is rejected; two passports may share a GTIN with different serials
+        - type: test
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
+          note: update and delete refused on a published passport
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's GTIN 04006381333931 and serial went to a second passport under batch B1 (201); once that passport was published, /gs1/v1/01/04006381333931/21/<serial> redirected to the subject's view and /gs1/v1/01/04006381333931/10/B1/21/<serial> to the second passport's view."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.gs1-identity-unique
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.item-key-single-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-identity-locked
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: once issued (the passport is published), an identifier stays with its passport: the identical key cannot be assigned again (Check identifiers.gs1-identity-unique) and the published identity cannot be changed or deleted (Check identifiers.published-identity-locked). Missing: an item key coexists with a second object when the same GTIN and serial are assigned to another passport with a batch added; open-dpp treats the two paths as different identities and the resolver serves both (manual check, Check identifiers.item-key-single-passport fails; bug #1046) (#518)."
+      gapIssue: 518
+  - id: EN18219-4.1.2(4)
+    section: "4.1"
+    clause: 4.1.2(4)
+    paraphrase: The identification scheme behind an identifier is made known to registries, so that uniqueness holds across domains (cross-domain identification).
+    applicability: software
+    areas:
+      - 3
+      - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/registry-export-item.ts
+          note: "the item carries one uniqueProductIdentifier: the published URL of the passport's oldest permalink"
+        - type: code
+          ref: apps/main/src/passports/domain/registry-export-file.ts
+          note: file of up to 100 items, product group fixed to batteries, no scheme field
+        - type: test
+          ref: apps/main/src/passports/domain/registry-export-item.spec.ts
+      notes: "Credited: since the registry export (#579, on main since dad48246) the operator can download, for published passports, registry upload files that carry each passport's unique product identifier. Missing: the file names no identification scheme, so a registry learns the value but not the scheme it follows, and the value is the published URL of the passport's oldest permalink (a heuristic marked temporary in the code), which is the open-dpp /p/ link even when the passport also has a GS1 Digital Link (#518). The upload itself is the operator's manual step."
+      gapIssue: 518
+  - id: EN18219-4.2.2(1)
+    section: "4.2"
+    clause: 4.2.2(1)
+    paraphrase: Once assigned, the identifier stays unchanged and keeps referring, without ambiguity, to the same object for the object's whole life cycle (consistency). Annex ZA maps 4.2.2 to ESPR-Art10(1)(a) and, for the identifier's persistence only, to ESPR-Art11(e).
+    applicability: software
+    areas:
+      - 3
+      - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/domain/permalink.ts
+          note: "withPublishedUrl: the public URL is frozen once and is immutable; slug, base URL and configuration locked"
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: freezeAllForPassport at publication
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: GS1 identity locked once the passport leaves draft
+        - type: test
+          ref: apps/main/src/permalink/domain/permalink.spec.ts
+          note: frozen URL immutable, slug locked
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing freezes the public URLs
+        - type: test
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
+          note: update refused on a published passport
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001): the conformance subject's GTIN 04006381333931 and serial went to a second passport under batch B1 (201); once that passport was published, /gs1/v1/01/04006381333931/21/<serial> redirected to the subject's view and /gs1/v1/01/04006381333931/10/B1/21/<serial> to the second passport's view."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.item-key-single-passport
+          result: failed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-identity-locked
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.published-permalink-locked
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: at publication every permalink's public URL is frozen (later changes to the organisation's or the instance's base URL do not alter it) and the GS1 identity is locked, so the identifier stays the same and keeps resolving to the same passport (Checks identifiers.published-identity-locked, identifiers.published-permalink-locked); archiving and restoring never move it. Missing: the item key does not keep referring to one passport without ambiguity, because the same GTIN and serial can be given to a second passport under a batch, and the link with the batch then opens that passport (bug #1046) (#518). Not graded here: whether the identifier outlives the instance or follows the passport to another platform (4.2.2(3), 4.5.3(2))."
+      gapIssue: 518
+  - id: EN18219-4.2.2(2)
+    section: "4.2"
+    clause: 4.2.2(2)
+    paraphrase: The identifier is kept at least for its expected lifetime, or as long as applicable law requires (preservation).
+    applicability: software
+    areas:
+      - 3
+      - 6
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: only draft passports can be deleted
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: identities of non-draft passports cannot be deleted
+        - type: test
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
+      notes: "Credited: identifiers live as long as their passport: a published passport cannot be deleted, archiving keeps its identities and a restore brings it back. Missing: open-dpp knows no expected duration or legal retention period for a passport or its identifiers and keeps them only while the operator runs the instance; an archived passport leaves the public view (#825, as the lifetime rows of EN 18221)."
+      gapIssue: 825
+  - id: EN18219-4.2.2(3)
+    section: "4.2"
+    clause: 4.2.2(3)
+    paraphrase: The identifier stays available even after insolvency, liquidation or cessation of activity (permanence). A note adds that the EU DPP registry gives identifiers of products on the EU market a minimum of preservation and permanence.
+    applicability: software
+    areas:
+      - 3
+      - 6
+      - 7
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/registry-export-item.ts
+          note: registry upload file with the unique product identifier
+        - type: code
+          ref: packages/dto/src/branding/branding.dto.ts
+          note: "permalinkBaseUrl: an organisation can put its links under its own domain"
+        - type: code
+          ref: apps/main/src/permalink/application/services/base-url-resolver.service.ts
+          note: fallback to the instance base URL
+      notes: "Credited: the registry export lets the operator hand each published passport's identifier to the EU registry, which by the note gives it a minimum of preservation and permanence, and an organisation can put its permalinks and Digital Links under a domain of its own, which survives a change of provider. Missing: nothing keeps an identifier resolving once the operator or its instance is gone: no back-up copy or back-up provider (#596), no handover or continuity arrangement (#825); by default the links live on the instance's domain. Annex ZA maps 4.2.2 to ESPR Art. 11(e) for the identifier's persistence."
+      gapIssue: 825
+  - id: EN18219-4.3.2(1)
+    section: "4.3"
+    clause: 4.3.2(1)
+    paraphrase: The identifier is made only of characters of ISO/IEC 646:1991; used as a URI it follows RFC 3986, leaving unreserved characters as they are and percent-encoding every other ISO/IEC 10646 character (character set). Annex ZA maps 4.3.2 to ESPR-Art10(1)(d).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: CSET 82 for batch and serial, digits for the GTIN, RFC 3986 percent-encoding (encodeURIComponent plus !'()*)
+        - type: code
+          ref: packages/dto/src/permalinks/permalink.dto.ts
+          note: "slug: lower-case letters, digits and hyphens; permalink ids are UUIDs"
+        - type: code
+          ref: packages/dto/src/shared/permalink-base-url.schema.ts
+          note: base URLs canonicalised through the URL parser (punycode host, percent-encoded path)
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+          note: RFC 3986 canonical encoding
+        - type: test
+          ref: packages/dto/src/shared/permalink-base-url.schema.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 with packages/dto built from dad48246: PermalinkBaseUrlSchema keeps https://brand.example/dpp|eu, .../dpp^eu and .../p[1] unchanged, while it encodes a space as %20."
+          date: 2026-10-12
+        - type: check
+          ref: identifiers.uris-ascii-rfc3986
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: every identifier open-dpp builds itself is 7-bit: GTINs are digits, batch and serial are restricted to GS1 CSET 82 (which uses only invariant characters of ISO/IEC 646, read through ECMA-6), slugs to lower-case letters, digits and hyphens, permalink ids are UUIDs, and base URLs pass the WHATWG URL parser, which turns an internationalised host into punycode and percent-encodes the path. In URIs, batch, serial and data-attribute values are percent-encoded except for the RFC 3986 unreserved characters, which stay as they are (Check identifiers.uris-ascii-rfc3986 with a batch of / & % \" < >). Encoding characters of ISO/IEC 10646 beyond ASCII never arises, because no identifier component admits them. Missing: a base URL (the organisation's, a permalink's own or the instance's) may hold |, ^, [ or ] in its path, which the URL parser leaves unencoded, so permalinks and Digital Links under such a base are no RFC 3986 URIs (manual check; bug #1048) (#518)."
+      gapIssue: 518
+  - id: EN18219-4.3.2(2)
+    section: "4.3"
+    clause: 4.3.2(2)
+    paraphrase: The unique product identifier is a URL, or becomes one through a conversion method the chosen scheme specifies, so that web systems can use it (web use).
+    applicability: software
+    areas:
+      - 3
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: buildGs1DigitalLink; formatGs1ElementString for the element string
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: "resolvePublicUrl: <base>/<slug or id>"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: resolves the Digital Link to the passport's public view
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-10-12
+      notes: "Every unique product identifier open-dpp issues is a URL: the passport's permalink URL and, with a GS1 identity, a GS1 Digital Link URI; the GS1 element string the back office shows turns into that Digital Link by the GS1 rules. Both open in a browser (Check resolver.redirect-published). Whether the URL forms conform to their schemes is graded under 5.2.2.1 and 5.3.2.1."
+  - id: EN18219-4.3.3(1)
+    section: "4.3"
+    clause: 4.3.3(1)
+    paraphrase: "Guideline: the identifier may follow a structure its scheme defines, which makes it easier for other systems to parse and recognise (structure)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: Digital Link path 01/{gtin14}[/10/{batch}][/21/{serial}] in canonical order
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table.ts
+          note: vendored GS1 AI table with per-AI syntax
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+      notes: "Optional, graded as enablement: GS1 identities follow the Digital Link structure (primary key 01, qualifiers 10 and 21 in canonical order) and validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid); open-dpp's own permalink ids are unstructured UUIDs or slugs, which the guideline permits."
+  - id: EN18219-4.3.3(2)
+    section: "4.3"
+    clause: 4.3.3(2)
+    paraphrase: "Guideline: identifiers may vary in length (variable length)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GTIN-8 to GTIN-14 accepted, batch and serial 1 to 20 characters
+        - type: code
+          ref: packages/dto/src/permalinks/permalink.dto.ts
+          note: slugs of 2 to 64 characters
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+      notes: "Optional, graded as enablement: identifiers vary in length (GTINs of 8 to 14 digits normalised to 14, batch and serial of 1 to 20 characters, slugs of 2 to 64)."
+  - id: EN18219-4.4.2(1)
+    section: "4.4"
+    clause: 4.4.2(1)
+    paraphrase: "Each product identifier is unique at least at the finest level it serves: model, batch or item (granularity). Annex ZA maps 4.4.2 to ESPR-Art10(1)(d), 10(1)(f) and 11(d)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "granularity derived from the keys present: model, batch or item"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts
+          note: the full key is unique in the instance
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+      notes: "Credited: a GS1 identity is unique at the level its keys express (GTIN for the model, plus AI 10 for a batch, plus AI 21 for an item) and the back office shows the implied level. Missing: a passport has no level of its own and may carry identities of several levels at once, and open-dpp's own UUID identifiers and permalinks express no level, so nothing says which level a passport serves; the item key itself is not unique across batches (4.1.2(3)) (#597)."
+      gapIssue: 597
+  - id: EN18219-4.4.2(2)
+    section: "4.4"
+    clause: 4.4.2(2)
+    paraphrase: Once the product is on the market or in service, its identifier keeps the granularity level it had (granularity consistency).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: identities locked once published; a GS1 identity can still be added to a published passport
+        - type: test
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
+          note: creating a GS1 identity on a published passport succeeds
+        - type: check
+          ref: identifiers.published-identity-locked
+          result: passed
+          date: 2026-10-12
+      notes: "Credited: once the passport is published, a GS1 identity can be neither changed nor deleted, so the level its keys express stays fixed (Check identifiers.published-identity-locked). Missing: a published passport can still gain GS1 identities of another level, and the passport records no level, so the level of the product the passport stands for is not kept consistent (#597)."
+      gapIssue: 597
+  - id: EN18219-4.4.2(3)
+    section: "4.4"
+    clause: 4.4.2(3)
+    paraphrase: If the level has to change and the existing identifier cannot express it, a new or extended identifier is assigned and linked to the old one, so traceability is kept (change in granularity).
+    applicability: software
+    areas:
+      - 3
+      - 9
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts
+          note: a further GS1 identity can be added to an existing passport
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+      notes: "Credited: a finer identity can be added to the existing passport, which ties it to the earlier identity through the passport. Missing: a change of level normally means new batch or item passports, and passports cannot link to one another, so nothing ties a new batch or item identifier to the model identifier it refines (#597, as REG1778-Art8(4) and (5))."
+      gapIssue: 597
+  - id: EN18219-4.4.3(1)
+    section: "4.4"
+    clause: 4.4.3(1)
+    paraphrase: "Guideline: where the law leaves the level open (model, batch or item), the operator may pick a finer one than required, for traceability or operational needs (granularity level)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: batch (AI 10) and serial (AI 21) qualifiers
+        - type: test
+          ref: apps/main/src/unique-product-identifier/application/services/upi-collection.service.spec.ts
+          note: a GS1 identity with batch and serial
+      notes: "Optional, graded as enablement: the operator can identify a passport at batch or item level instead of the model alone."
+  - id: EN18219-4.4.3(2)
+    section: "4.4"
+    clause: 4.4.3(2)
+    paraphrase: "Guideline: a resolver may be used to resolve the identifier (resolver)."
+    applicability: software
+    areas:
+      - 3
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GET /gs1/v1/01/:gtin[/10/:batch][/21/:serial]
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-10-12
+      notes: "Optional, graded as enablement: open-dpp ships a resolver for its GS1 Digital Links that redirects a scanned key of a published passport to its public view (Check resolver.redirect-published); its conformance to ISO/IEC 18975 and GS1 Digital Link is graded in #1043."
+  - id: EN18219-4.4.3(3)
+    section: "4.4"
+    clause: 4.4.3(3)
+    paraphrase: "Guideline: one hierarchical identifier format may express several levels at once, such as model, batch and item (hierarchy)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "buildGs1DigitalLinkPath: model, batch and item keys in one path"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+      notes: "Optional, graded as enablement: the Digital Link path expresses model, batch and item in one hierarchical form (01, then 10, then 21), validated by the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid)."
+  - id: EN18219-4.5.2(1)
+    section: "4.5"
+    clause: 4.5.2(1)
+    paraphrase: The unique product identifier can be read from a data carrier as EN 18220 specifies it, which ties the identifier to the DPP (data carrier). Annex ZA maps 4.5.2 to ESPR-Art10(1)(a), 10(1)(d), 10(3)(a) and 11(a).
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-4.5.2(2)
+    section: "4.5"
+    clause: 4.5.2(2)
+    paraphrase: Retailers and online marketplaces are given the unique product identifier so that consumers can reach the product's DPP through them (digital access).
+    applicability: mixed
+    areas:
+      - 3
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: public URL or Digital Link with a copy button and a QR code
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts
+          note: members list identifiers through the API
+      notes: "Software part: a digital form of the identifier the operator can hand to retailers and marketplaces. Credited: the back office shows each identifier's public URL and Digital Link with a copy button and a QR code, and members can list identifiers through the API. Missing: no bulk export of identifiers meant for retailers and no download of the carrier image, and no operator documentation on sharing them before a sale, the same gap as ESPR-Art9(2)(e) and CPR-Art77(3) (#828)."
+      gapIssue: 828
+  - id: EN18219-4.5.2(3)
+    section: "4.5"
+    clause: 4.5.2(3)
+    paraphrase: "The unique product identifier is encoded in a syntax that external devices handle: professional scanners, smartphones and similar consumer devices (compatibility)."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of the identifier URL
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GS1 Digital Link URI
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+      notes: "Identifiers are web URLs in standard QR codes: a phone camera opens them in the browser, and GS1 Digital Links validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), GS1's reference implementation for processing Application Identifier data in scanners and applications. HTTPS depends on the operator's TLS set-up (#1027). The carrier itself is EN 18220's (#757)."
+  - id: EN18219-4.5.2(4)
+    section: "4.5"
+    clause: 4.5.2(4)
+    paraphrase: Wherever possible, identifiers of existing schemes can be used inside one of the schemes of this document (existing ID).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: internal UUID and GS1 only"
+      notes: "Credited: an existing GS1 GTIN, with batch or serial, becomes the identity within scheme 1. Missing: no other existing scheme can be used: ASC MH10.8.2 Data Identifiers, Identification Link strings that embed an existing part or serial number, DOIs or DIDs (#518)."
+      gapIssue: 518
+  - id: EN18219-4.5.3(1)
+    section: "4.5"
+    clause: 4.5.3(1)
+    paraphrase: "Guideline: the unique product identifier works without further steps on today's phones and comparable consumer devices, across the major operating systems and browsers (smartphones and similar devices)."
+    applicability: software
+    areas:
+      - 3
+      - 4
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code holding a plain web URL
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12 against an Instance built from dad48246 (worktree, port 3001) with Playwright: the subject's Digital Link, opened anonymously, redirected to the public view and showed the passport content, without cookies, in WebKit desktop, WebKit with the iPhone 14 profile and Chromium with the Pixel 7 profile. Firefox (Gecko) could not be started headless in that environment and is untested."
+          date: 2026-10-12
+        - type: check
+          ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: access.public-view-renders-on-phone
+          result: passed
+          date: 2026-10-12
+      notes: "Optional, graded as enablement: the QR code holds a plain web URL that the camera apps of the major phone platforms open in the default browser, and the public view renders without further software in the engines behind the major platforms: Chromium on desktop and an Android phone profile (Checks access.public-view-renders-in-plain-browser, access.public-view-renders-on-phone), WebKit on desktop and an iPhone profile (manual check). Firefox and a real camera scan were not exercised."
+  - id: EN18219-4.5.3(2)
+    section: "4.5"
+    clause: 4.5.3(2)
+    paraphrase: "Guideline: the identifier scheme serves the intended systems, services, platforms and third parties without the identifier losing its meaning or function (portability)."
+    applicability: software
+    areas:
+      - 3
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: import creates a fresh internal identifier and permalinks
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-v6.schema.ts
+          note: the export envelope carries no identifier, GS1 identity or permalink
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: AAS globalAssetId is a random UUID
+        - type: code
+          ref: packages/dto/src/branding/branding.dto.ts
+          note: permalinkBaseUrl for an own domain
+      notes: "Credited: a GS1 Digital Link keeps its meaning on any platform (the GS1 key identifies the product, not the host), and an organisation can put its links under its own domain. Missing: the passport export carries neither the GS1 identity nor the permalinks, an import mints a new internal identifier and permalink, and the AAS asset id is a random UUID unrelated to the product identifier, so the identifier does not travel with the passport to another platform (#823)."
+      gapIssue: 823
+  - id: EN18219-4.6.2(1)
+    section: "4.6"
+    clause: 4.6.2(1)
+    paraphrase: The scheme and the identifier rest on a system whose policies, processes and standards anyone can study, influence and use on fair, reasonable and non-discriminatory terms (transparency). Annex ZA maps 4.6.2 to ESPR-Art10(1)(d), 11(a) and 11(b).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+        - type: code
+          ref: packages/dto/src/permalinks/permalink.dto.ts
+          note: the permalink format, defined in source only
+        - type: manual
+          ref: "Checked 2026-10-12: the GS1 Digital Link URI Syntax is published royalty-free at ref.gs1.org; open-dpp's permalink format is defined only in its LGPL-3.0 source and described in no document under docs/."
+          date: 2026-10-12
+      notes: "Credited: open-dpp builds GS1 identities on GS1 standards, which are public and royalty-free (GTINs themselves come with a GS1 licence on GS1's terms), and its own code is open source. Missing: its own identifier scheme (permalink URLs with a random id or a chosen slug, locked at publication) has no published policy beyond the source, so operators and third parties cannot study its rules (#828)."
+      gapIssue: 828
+  - id: EN18219-4.6.2(2)
+    section: "4.6"
+    clause: 4.6.2(2)
+    paraphrase: For public information, consumers above all, the identifier works without registering, installing DPP-specific software or giving credentials (consumer usage).
+    applicability: software
+    areas:
+      - 3
+      - 5
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: "@OptionalAuth on every resolver route"
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: "@OptionalAuth on the public /p routes"
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: access.public-view-renders-in-plain-browser
+          result: passed
+          date: 2026-10-12
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-10-12
+      notes: "Opening or scanning the identifier needs no account, app or credentials: the resolver and the public view are anonymous and render in a stock browser (Checks access.anonymous-reads-published, access.public-view-renders-in-plain-browser, resolver.redirect-published)."
+  - id: EN18219-4.6.2(3)
+    section: "4.6"
+    clause: 4.6.2(3)
+    paraphrase: The identifier creates no vendor lock-in and limits its use only where global uniqueness and interoperability technically require it (no undue restrictions).
+    applicability: software
+    areas:
+      - 3
+      - 2
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/branding/branding.dto.ts
+          note: permalinkBaseUrl
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/export-schemas/aas-export-v6.schema.ts
+          note: no identifiers in the export
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: import mints new identifiers
+      notes: "Credited: GS1 identities are vendor-neutral keys any resolver can serve, open-dpp is open source, and an organisation can place its links on its own domain and keep them when it changes provider. Missing: by default the links live on the instance's domain, export and import drop the identifiers, and no documentation tells the operator to use an own domain to avoid lock-in (#823; the guide sits with #828)."
+      gapIssue: 823
+  - id: EN18219-5.1
+    section: "5.1"
+    clause: "5.1"
+    paraphrase: A product has a unique product identifier that meets clause 4 and follows one of the five product schemes of clause 5. Annex ZA maps 5.1 to ESPR-Art10(1)(a) and 10(1)(c).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(a)
+    section: "5.2"
+    clause: 5.2.2.1(a)
+    paraphrase: "Scheme 1, structured path: the identifier follows ISO/IEC 15459-4:2014 for individual products or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(b)
+    section: "5.2"
+    clause: 5.2.2.1(b)
+    paraphrase: "Scheme 1, structured path: the identifier uses GS1 Application Identifiers or ASC MH10.8.2 Data Identifiers as ISO/IEC 15418:2016 defines them."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: AI 01 normalised to a 14-digit GTIN with mod-10 check; AIs 10 and 21 as CSET 82 up to 20 characters
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table.ts
+          note: vendored GS1 AI table for data attributes
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table.spec.ts
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-10-12
+      notes: "open-dpp uses GS1 Application Identifiers as the GS1 General Specifications 25.0 define them, the list ISO/IEC 15418 delegates to (read through): AI 01 as a 14-digit GTIN with a mod-10 check digit, AIs 10 and 21 as up to 20 characters of CSET 82, and data attributes checked against the vendored GS1 AI table; the GS1 Syntax Engine accepts the subject's identity (Check identifiers.gs1-syntax-valid). The other option, ASC MH10.8.2 Data Identifiers, is not offered (5.2.2.1(e))."
+  - id: EN18219-5.2.2.1(c)
+    section: "5.2"
+    clause: 5.2.2.1(c)
+    paraphrase: "Scheme 1, structured path: the identifier is encoded and resolved over HTTPS by the structured path approach of ISO/IEC 18975:2024."
+    applicability: software
+    areas:
+      - 3
+      - 11
+  - id: EN18219-5.2.2.1(d)
+    section: "5.2"
+    clause: 5.2.2.1(d)
+    paraphrase: "Scheme 1, structured path, with GS1 Application Identifiers: the identifier conforms to the GS1 Digital Link URI Syntax 1.6.0 (dated 2022 in the text)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(e)
+    section: "5.2"
+    clause: 5.2.2.1(e)
+    paraphrase: "Scheme 1, structured path, with ASC MH10.8.2 Data Identifiers: the identifier conforms to EN IEC 61406-2:2024 or ISO/IEC 18975:2024."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "ASC MH10.8.2 Data Identifiers are not offered, so the Data Identifier branch of scheme 1 (EN IEC 61406-2 or ISO/IEC 18975) is unavailable (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.2.2.1(f)
+    section: "5.2"
+    clause: 5.2.2.1(f)
+    paraphrase: "Scheme 1, structured path: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(g)
+    section: "5.2"
+    clause: 5.2.2.1(g)
+    paraphrase: "Scheme 1, structured path: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "identities are GTINs only: digits, normalised to GTIN-14"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12: the AIM register of Issuing Agency Codes for ISO/IEC 15459, version 2026-06-16, lists GS1 Global Office with the codes 0 to 9."
+          date: 2026-10-12
+      notes: "Read through the AIM register of Issuing Agency Codes (version 2026-06-16): GS1 holds the codes 0 to 9, which every GTIN begins with, so each GS1 identity open-dpp issues uses GS1's registered Issuing Agency Code; no other issuing agency is offered. That restricted circulation numbers pass is a matter of global uniqueness under the GS1 General Specifications, graded under 4.1.2(2) (bug #1046), not of the agency code."
+  - id: EN18219-5.2.2.2(a)
+    section: "5.2"
+    clause: 5.2.2.2(a)
+    paraphrase: "Scheme 1, query string: the identifier follows ISO/IEC 15459-4:2014 for individual products and/or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "The query string scheme rests on ASC MH10.8.2 Data Identifiers, which open-dpp does not offer; this point (ISO/IEC 15459-4 and -6) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.2.2.2(b)
+    section: "5.2"
+    clause: 5.2.2.2(b)
+    paraphrase: "Scheme 1, query string: the identifier uses ASC MH10.8.2 Data Identifiers as ISO/IEC 15418:2016 defines them."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "The query string scheme rests on ASC MH10.8.2 Data Identifiers, which open-dpp does not offer; this point (ASC MH10.8.2 Data Identifiers) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.2.2.2(c)
+    section: "5.2"
+    clause: 5.2.2.2(c)
+    paraphrase: "Scheme 1, query string: the identifier is encoded and resolved over HTTPS by the query approach of ISO/IEC 18975:2024."
+    applicability: software
+    areas:
+      - 3
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "The query string scheme rests on ASC MH10.8.2 Data Identifiers, which open-dpp does not offer; this point (the ISO/IEC 18975 query approach) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.2.2.2(d)
+    section: "5.2"
+    clause: 5.2.2.2(d)
+    paraphrase: "Scheme 1, query string: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "The query string scheme rests on ASC MH10.8.2 Data Identifiers, which open-dpp does not offer; this point (ISO/IEC 15459-3) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.2.2.2(e)
+    section: "5.2"
+    clause: 5.2.2.2(e)
+    paraphrase: "Scheme 1, query string: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "The query string scheme rests on ASC MH10.8.2 Data Identifiers, which open-dpp does not offer; this point (a registered Issuing Agency Code) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.3.2.1(a)
+    section: "5.3"
+    clause: 5.3.2.1(a)
+    paraphrase: "Scheme 2, items only: where a unique character string is enough and nothing about syntax or meaning has to be encoded, the identifier follows EN IEC 61406-1:2022, optionally with EN IEC 61406-2:2024."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.3.2.2(a)
+    section: "5.3"
+    clause: 5.3.2.2(a)
+    paraphrase: "Scheme 2, model, batch and item: where standardised syntax and meaning have to be encoded, the identifier follows EN IEC 61406-1:2022 together with EN IEC 61406-2:2024."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Identification Links with EN IEC 61406-2 syntax and semantics are not offered: open-dpp's own links carry no Data Identifiers (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.3.2.2(b)
+    section: "5.3"
+    clause: 5.3.2.2(b)
+    paraphrase: "Scheme 2, model, batch and item: the identifier carries ASC MH10.8.2 Data Identifiers per ISO/IEC 15418:2016 to state model, batch and item."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Identification Links carrying ASC MH10.8.2 Data Identifiers for model, batch and item are not offered (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.3.3(a)
+    section: "5.3"
+    clause: 5.3.3(a)
+    paraphrase: "Guideline: an EN IEC 61406-1:2022 Identification Link is recommended where the string has to stay short (a 96-bit RFID chip, a compact 2D code on a small product), or where model and serial number are to be hidden behind a random alphanumeric string so that serial numbers cannot be enumerated."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.3.3(b)
+    section: "5.3"
+    clause: 5.3.3(b)
+    paraphrase: "Guideline: an EN IEC 61406-2:2024 Identification Link is recommended for full model, batch and item identification that stays semantically interoperable with existing schemes; it can also tell what kind of object it names (product, person, location, document) and carry further data elements or classifications."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Recommended for full model, batch and item identification; EN IEC 61406-2 Identification Links are not offered (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.4.2(a)
+    section: "5.4"
+    clause: 5.4.2(a)
+    paraphrase: "Scheme 3: the identifier follows W3C Decentralized Identifiers (DIDs) v1.0 for its syntax, its core properties and its resolution to the resource it stands for."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Decentralized identifiers for products are not offered (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.4.3
+    section: "5.4"
+    clause: 5.4.3
+    paraphrase: "Guideline: one of the DID methods did:web, did:ethr or did:ebsi is recommended."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Recommended DID methods for scheme 3; a conditional clause on a feature open-dpp lacks, Gap in that feature's cluster (map rule of 2026-10-12) (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.5.2.1(a)
+    section: "5.5"
+    clause: 5.5.2.1(a)
+    paraphrase: "Scheme 4, RAIN RFID (UHF, ISO/IEC 18000-63): the identifier follows ISO/IEC 15459-4:2014 for products and/or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.1(b)
+    section: "5.5"
+    clause: 5.5.2.1(b)
+    paraphrase: "Scheme 4, RAIN RFID: the data are structured and represented per ISO/IEC 15961-1:2021, ISO/IEC 17360:2023 or the GS1 EPC Tag Data Standard 2.3."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: encoding identifiers into RAIN RFID tags happens in the operator's tagging equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12)."
+  - id: EN18219-5.5.2.1(c)
+    section: "5.5"
+    clause: 5.5.2.1(c)
+    paraphrase: "Scheme 4, RAIN RFID: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.1(d)
+    section: "5.5"
+    clause: 5.5.2.1(d)
+    paraphrase: "Scheme 4, RAIN RFID: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: "identities are GTINs only: digits, normalised to GTIN-14"
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+        - type: manual
+          ref: "Checked 2026-10-12: the AIM register of Issuing Agency Codes for ISO/IEC 15459, version 2026-06-16, lists GS1 Global Office with the codes 0 to 9."
+          date: 2026-10-12
+      notes: "Twin of 5.2.2.1(g): the identifier an operator encodes in a RAIN RFID tag is the GS1 identity open-dpp issues, which uses GS1's registered Issuing Agency Code (codes 0 to 9 in the AIM register of 2026-06-16). The tag encoding itself (5.5.2.1(b)) is the operator's equipment. 5.5.2.1(a) and (c) wait for ISO/IEC 15459-4, -6 and -3 (#1043), as their twins do."
+  - id: EN18219-5.5.2.2(a)
+    section: "5.5"
+    clause: 5.5.2.2(a)
+    paraphrase: "Scheme 4, 2D symbols: the identifier follows ISO/IEC 15459-4:2014 for products and/or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of a URL, nothing else
+      notes: "2D symbols carrying structured ASC MH10.8.2 Data Identifier data are not offered: open-dpp renders only QR codes holding a URL. This point (ISO/IEC 15459-4 and -6) belongs to that scheme (#489, the 2D carrier cluster). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 489
+  - id: EN18219-5.5.2.2(b)
+    section: "5.5"
+    clause: 5.5.2.2(b)
+    paraphrase: "Scheme 4, 2D symbols: ASC MH10.8.2 Data Identifiers per ISO/IEC 15418:2016 give the data their meaning."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of a URL, nothing else
+      notes: "2D symbols carrying structured ASC MH10.8.2 Data Identifier data are not offered: open-dpp renders only QR codes holding a URL. This point (ASC MH10.8.2 Data Identifiers) belongs to that scheme (#489, the 2D carrier cluster). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 489
+  - id: EN18219-5.5.2.2(c)
+    section: "5.5"
+    clause: 5.5.2.2(c)
+    paraphrase: "Scheme 4, 2D symbols: structured data identifiers are carried in the transfer syntax for high-capacity ADC media of ISO/IEC 15434:2025 or of DIN 16598:2022."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of a URL, nothing else
+      notes: "2D symbols carrying structured ASC MH10.8.2 Data Identifier data are not offered: open-dpp renders only QR codes holding a URL. This point (the ISO/IEC 15434 or DIN 16598 transfer syntax) belongs to that scheme (#489, the 2D carrier cluster). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 489
+  - id: EN18219-5.5.2.2(d)
+    section: "5.5"
+    clause: 5.5.2.2(d)
+    paraphrase: "Scheme 4, 2D symbols: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of a URL, nothing else
+      notes: "2D symbols carrying structured ASC MH10.8.2 Data Identifier data are not offered: open-dpp renders only QR codes holding a URL. This point (ISO/IEC 15459-3) belongs to that scheme (#489, the 2D carrier cluster). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 489
+  - id: EN18219-5.5.2.2(e)
+    section: "5.5"
+    clause: 5.5.2.2(e)
+    paraphrase: "Scheme 4, 2D symbols: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of a URL, nothing else
+      notes: "2D symbols carrying structured ASC MH10.8.2 Data Identifier data are not offered: open-dpp renders only QR codes holding a URL. This point (a registered Issuing Agency Code) belongs to that scheme (#489, the 2D carrier cluster). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 489
+  - id: EN18219-5.5.3(a)
+    section: "5.5"
+    clause: 5.5.3(a)
+    paraphrase: "Guideline: RAIN RFID data may be encoded and decoded per ISO/IEC 15962."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: encoding identifiers into RAIN RFID tags happens in the operator's tagging equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12)."
+  - id: EN18219-5.5.3(b)
+    section: "5.5"
+    clause: 5.5.3(b)
+    paraphrase: "Guideline: an HTTP URI in the format of ISO/IEC 18975:2024 may be encoded in a RAIN RFID tag."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Not applicable
+      evidence: []
+      notes: "RF alternative: encoding identifiers into RAIN RFID tags happens in the operator's tagging equipment, outside a web platform; the hardware parts of RF alternatives are Not applicable and their references stay unread (map rule of 2026-10-12)."
+  - id: EN18219-5.5.3(c)
+    section: "5.5"
+    clause: 5.5.3(c)
+    paraphrase: "Guideline: digital signatures per ISO/IEC 20248 may be added to the identifier data."
+    applicability: software
+    areas:
+      - 3
+      - 4
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: identifiers carry no signature
+      notes: "Optional, graded as enablement: open-dpp signs no identifier or carrier content (ISO/IEC 20248 or otherwise), the protected-carrier cluster of EN 18246 (#1037). ISO/IEC 20248 sits in the Bibliography and stays unread."
+      gapIssue: 1037
+  - id: EN18219-5.6.2(a)
+    section: "5.6"
+    clause: 5.6.2(a)
+    paraphrase: "Scheme 5: model, batch or item identification follows ISO 26324:2025 (Digital Object Identifier)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Digital Object Identifiers for products are not offered; this point (ISO 26324) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.6.2(b)
+    section: "5.6"
+    clause: 5.6.2(b)
+    paraphrase: "Scheme 5: the DOI states whether it names the model, the batch or the item."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Digital Object Identifiers for products are not offered; this point (the declared level) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-5.6.2(c)
+    section: "5.6"
+    clause: 5.6.2(c)
+    paraphrase: "Scheme 5: the DOI begins with doi.org written in lower case."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "identifier types: OPEN_DPP_UUID and GS1 (GTIN, batch, serial) only"
+      notes: "Digital Object Identifiers for products are not offered; this point (the doi.org prefix) belongs to that scheme (#518). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 518
+  - id: EN18219-6.1
+    section: "6.1"
+    clause: "6.1"
+    paraphrase: Where the law requires them, an economic operator and a facility each have a unique identifier that meets clause 4 and follows one of the four schemes of clause 6. Annex ZA maps 6.1 to ESPR-Art12(1), (2) and (3).
+    applicability: mixed
+    areas:
+      - 3
+      - 5
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Software part: hold an operator's and a facility's identifier from a registered scheme and use it in passports. open-dpp knows organisations only by internal ids and names, holds no operator or facility identifier in any of the four schemes, and an identifier typed into a passport property is unvalidated text (#1023). Annex ZA maps 6.1 to ESPR Art. 12(1) to (3)."
+      gapIssue: 1023
+  - id: EN18219-6.2.2(a)
+    section: "6.2"
+    clause: 6.2.2(a)
+    paraphrase: "Scheme 6: ISO/IEC 6523-1:2023 keeps operator identifier schemes apart from one another."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "ISO/IEC 6523 operator identifiers (ICD-qualified) are not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.2.2(b)
+    section: "6.2"
+    clause: 6.2.2(b)
+    paraphrase: "Scheme 6: the identifier comes from a scheme registered under ISO/IEC 6523-2:2025."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "ISO/IEC 6523 operator identifiers from a registered scheme are not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.2.2(c)
+    section: "6.2"
+    clause: 6.2.2(c)
+    paraphrase: "Scheme 6: operator and facility identifiers are built and resolved as the registered scheme specifies."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Building and resolving ISO/IEC 6523 operator and facility identifiers is not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.2.3
+    section: "6.2"
+    clause: 6.2.3
+    paraphrase: "Guideline: where useful, the operator may also encode and resolve the identifier over HTTP per ISO/IEC 18975:2024, or build it as a URL per EN IEC 61406-2:2024."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Optional HTTP or URL forms of an ISO/IEC 6523 identifier; a conditional clause on a feature open-dpp lacks (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.3.2(a)
+    section: "6.3"
+    clause: 6.3.2(a)
+    paraphrase: "Scheme 7: operator and facility identifiers use GS1 Application Identifiers or ASC MH10.8.2 Data Identifiers per ISO/IEC 15418:2016."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Operator and facility identifiers with GS1 AIs (GLN and related keys) or ASC Data Identifiers are not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.3.2(b)
+    section: "6.3"
+    clause: 6.3.2(b)
+    paraphrase: "Scheme 7, with ASC MH10.8.2 Data Identifiers: the identifiers conform to EN IEC 61406-2:2024 (one of three alternatives with (c) and (d))"
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "The EN IEC 61406-2 branch for operator and facility identifiers is not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.3.2(c)
+    section: "6.3"
+    clause: 6.3.2(c)
+    paraphrase: "Scheme 7, with ASC MH10.8.2 Data Identifiers: the identifiers conform to ISO/IEC 15459-3:2014 and ISO/IEC 18975:2024 and use a scheme registered under ISO/IEC 15459-2:2015 (alternative to (b) and (d))"
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "The ISO/IEC 15459-3 and ISO/IEC 18975 branch for operator and facility identifiers with Data Identifiers is not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.3.2(d)
+    section: "6.3"
+    clause: 6.3.2(d)
+    paraphrase: "Scheme 7, with GS1 Application Identifiers: the identifiers conform to the GS1 General Specifications 25.0 (as ISO/IEC 15459-3 applies) and the GS1 Digital Link URI Syntax 1.6.0 (as ISO/IEC 18975 applies) and use a GS1 scheme registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "The GS1 branch for operator and facility identifiers (GLN under the GS1 General Specifications and Digital Link) is not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.4.2(a)
+    section: "6.4"
+    clause: 6.4.2(a)
+    paraphrase: "Scheme 8: self-sovereign operator identities, key pairs included, follow W3C Decentralized Identifiers (DIDs) v1.0."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Operator DIDs are not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.4.2(b)
+    section: "6.4"
+    clause: 6.4.2(b)
+    paraphrase: "Scheme 8: verifiable credentials are bound to the operator or facility DID per the W3C Verifiable Credentials Data Model 2.0."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Verifiable credentials bound to an operator or facility DID are not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.4.2(c)
+    section: "6.4"
+    clause: 6.4.2(c)
+    paraphrase: "Scheme 8: the DID document is found by W3C DID Resolution v0.3."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "DID resolution is not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.4.3(a)
+    section: "6.4"
+    clause: 6.4.3(a)
+    paraphrase: "Guideline: trusted company registries (national registers, or GLEIF issuing a vLEI) may bind the DID to the company."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Binding an operator DID to a company register (vLEI); a conditional clause on a feature open-dpp lacks (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.4.3(b)
+    section: "6.4"
+    clause: 6.4.3(b)
+    paraphrase: "Guideline: further verifiable credentials (the legal person identifier of the EU Digital Identity Wallet, sustainability disclosures, certificates) may be attached to the operator DID to build a provenance chain."
+    applicability: software
+    areas:
+      - 3
+      - 10
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Further credentials on an operator DID; a conditional clause on a feature open-dpp lacks (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.5.2(a)
+    section: "6.5"
+    clause: 6.5.2(a)
+    paraphrase: "Scheme 9, binding the registrant: operator and facility identifiers follow ISO 26324:2025, with enough metadata for the issuing agency to keep the organisation or facility unique."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "DOI-based operator and facility identifiers are not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
+  - id: EN18219-6.5.2(b)
+    section: "6.5"
+    clause: 6.5.2(b)
+    paraphrase: "Scheme 9: the DPP is reached through DOI resolution."
+    applicability: software
+    areas:
+      - 3
+      - 11
+    assessment:
+      date: 2026-10-12
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has an internal id, a name, a slug and a logo; no operator identifier
+      notes: "Reaching the DPP through DOI resolution is not offered (#1023). An alternative open-dpp does not offer: its references stay unread and it never caps a law row (map rule of 2026-10-12)."
+      gapIssue: 1023
