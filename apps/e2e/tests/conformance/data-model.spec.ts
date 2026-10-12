@@ -4,76 +4,18 @@
  * Table 1. Probes that write create a blank draft passport and delete it again. Added in wayfinder
  * ticket #762.
  */
-import type { APIRequestContext, Browser } from "@playwright/test";
+import type { Browser } from "@playwright/test";
 import { ApiBase } from "../config";
 import { newAnonymousContext } from "../helpers/anonymous";
-import { ORG_ID_HEADER } from "../helpers/passport";
 import { check, expect } from "./checks";
+import { base64, orgHeaders, withDraft } from "./draft";
 import { readSubject } from "./subject";
 import { CONTENT_SUBMODEL_ID_SHORT } from "./subject-content";
 
-const orgHeaders = (orgId: string) => ({ [ORG_ID_HEADER]: orgId });
 const permalinkOf = (publicUrl: string): string => publicUrl.split("/p/")[1].split(/[?#]/)[0];
-const base64 = (id: string): string => Buffer.from(id).toString("base64");
 
 /** RFC 9562 version 4: 122 random bits. */
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-
-type Draft = {
-  passportId: string;
-  /** Base URL of the draft's empty probe submodel. */
-  submodelUrl: string;
-  addElement: (element: Record<string, unknown>) => ReturnType<APIRequestContext["post"]>;
-  addSubmodel: (submodel: Record<string, unknown>) => ReturnType<APIRequestContext["post"]>;
-  elementIdShorts: () => Promise<string[]>;
-  remove: () => Promise<void>;
-};
-
-/** A blank draft passport with one empty submodel, deleted again by `remove`. */
-const blankDraft = async (request: APIRequestContext, orgId: string): Promise<Draft> => {
-  const headers = orgHeaders(orgId);
-  const created = await request.post(`${ApiBase}/passports`, {
-    headers,
-    data: { environment: { assetAdministrationShells: [{}] } },
-  });
-  expect(created.status(), "a blank draft passport should be created").toBe(201);
-  const { id: passportId } = (await created.json()) as { id: string };
-  const addSubmodel = (submodel: Record<string, unknown>) =>
-    request.post(`${ApiBase}/passports/${passportId}/submodels`, { headers, data: submodel });
-  const probe = await addSubmodel({ idShort: "ModelProbe", submodelElements: [] });
-  expect(probe.status(), "the probe submodel should be added").toBe(201);
-  const { id: submodelId } = (await probe.json()) as { id: string };
-  const submodelUrl = `${ApiBase}/passports/${passportId}/submodels/${base64(submodelId)}`;
-  return {
-    passportId,
-    submodelUrl,
-    addSubmodel,
-    addElement: (element) =>
-      request.post(`${submodelUrl}/submodel-elements`, { headers, data: element }),
-    elementIdShorts: async () => {
-      const response = await request.get(`${submodelUrl}/submodel-elements`, { headers });
-      const { result } = (await response.json()) as { result: { idShort: string }[] };
-      return result.map((e) => e.idShort);
-    },
-    remove: async () => {
-      const deleted = await request.delete(`${ApiBase}/passports/${passportId}`, { headers });
-      expect(deleted.ok(), `the draft passport ${passportId} should be deleted again`).toBeTruthy();
-    },
-  };
-};
-
-/** Runs `probe` on a fresh blank draft and deletes the draft afterwards, also when the probe fails. */
-const withDraft = async (
-  request: APIRequestContext,
-  probe: (draft: Draft) => Promise<void>,
-): Promise<void> => {
-  const draft = await blankDraft(request, readSubject().orgId);
-  try {
-    await probe(draft);
-  } finally {
-    await draft.remove();
-  }
-};
 
 const property = (idShort: string, valueType: string, value: string) => ({
   modelType: "Property",
@@ -143,7 +85,7 @@ check(
   {
     id: "model.admitted-xsd-types-accepted",
     title: "a property takes every XSD built-in type EN 18223 admits, base64Binary included",
-    criteria: ["EN18223-4.1.2.9", "EN18223-4.1.2.9(d)"],
+    criteria: ["EN18223-4.1.2.9", "EN18223-4.1.2.9(d)", "IDTA01001-DataTypeDefXsd"],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
@@ -178,7 +120,12 @@ check(
   {
     id: "model.excluded-xsd-types-refused",
     title: "a property with an XSD type EN 18223 excludes is refused and nothing is stored",
-    criteria: ["EN18223-4.1.2.9(a)", "EN18223-4.1.2.9(b)", "EN18223-4.1.2.9(c)"],
+    criteria: [
+      "EN18223-4.1.2.9(a)",
+      "EN18223-4.1.2.9(b)",
+      "EN18223-4.1.2.9(c)",
+      "IDTA01001-DataTypeDefXsd",
+    ],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
@@ -197,7 +144,7 @@ check(
   {
     id: "model.element-ids-unique-on-create",
     title: "a submodel posted with two elements of the same id is refused",
-    criteria: ["EN18223-4.1.2.3(elementId)-sub1"],
+    criteria: ["EN18223-4.1.2.3(elementId)-sub1", "IDTA01001-AASd-022"],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
@@ -216,7 +163,7 @@ check(
   {
     id: "model.list-items-one-type",
     title: "a list declared to hold properties refuses a collection among its items",
-    criteria: ["EN18223-4.1.2.1(4)(d)"],
+    criteria: ["EN18223-4.1.2.1(4)(d)", "IDTA01001-AASd-108"],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
@@ -237,7 +184,7 @@ check(
   {
     id: "model.language-tag-with-country",
     title: "a multi-language value takes a language tag with a country code (en-GB, de-AT)",
-    criteria: ["EN18223-4.1.2.8.2"],
+    criteria: ["EN18223-4.1.2.8.2", "IDTA01001-LangStringSet"],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
@@ -297,7 +244,7 @@ check(
   {
     id: "model.typed-values-checked",
     title: "a property value that contradicts its value type is refused",
-    criteria: ["EN18223-4.1.2.5", "EN18223-5.2.3-sub1"],
+    criteria: ["EN18223-4.1.2.5", "EN18223-5.2.3-sub1", "IDTA01001-ValueDataType"],
   },
   async ({ request }) =>
     withDraft(request, async (draft) => {
@@ -357,7 +304,13 @@ check(
     id: "format.compressed-keys-are-element-ids",
     title:
       "the public values read keys each element by its id, nests collections as objects and lists as keyless arrays, without semantic metadata",
-    criteria: ["EN18223-5.2.2(2)", "EN18223-5.2.5-sub1", "EN18223-5.2.6-sub1", "EN18223-5.2.7"],
+    criteria: [
+      "EN18223-5.2.2(2)",
+      "EN18223-5.2.5-sub1",
+      "EN18223-5.2.6-sub1",
+      "EN18223-5.2.7",
+      "IDTA01001-ValueOnly",
+    ],
   },
   async ({ browser }) => {
     const values = await publicValues(browser);
@@ -385,7 +338,7 @@ check(
   {
     id: "format.compressed-values-native-json",
     title: "the public values read gives numbers and booleans as native JSON types",
-    criteria: ["EN18223-5.2.3-sub1"],
+    criteria: ["EN18223-5.2.3-sub1", "IDTA01001-ValueOnly-types"],
   },
   async ({ browser }) => {
     const values = await publicValues(browser);
