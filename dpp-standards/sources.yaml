@@ -106,16 +106,16 @@ sources:
     title: Digital product passport – Unique identifiers
     reference: EN 18219:2026
     publisher: CEN/CENELEC JTC 24
-    edition: EN 18219:2026 (available 2026-05-27)
+    edition: EN 18219:2026 (approved by CEN 2026-05-03, available 2026-05-27; read in the English SIS edition SS-EN 18219:2026, edition 1)
     stage: Published; date of withdrawal of conflicting national standards 2026-11-30
     access: gated
     url: https://www.nen.nl/nen-en-18219-2026-en-352707
     citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
     localFile: standards/EN18219-2026.pdf
-    normativeReferences: [ISO15459, ISO18975, IEC61406, GS1DL]
+    normativeReferences: [ISO646, ISO10646, RFC3986, ISO15418, ISO15459, ISO18975, IEC61406, GS1DL, EN18220]
     watch:
       url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
-      lookFor: An amendment or new edition on the JTC 24 work programme
+      lookFor: An amendment updating the dated GS1 Digital Link reference (the text dates URI Syntax 1.6.0 to 2022, GS1 published it on 2025-03-06 and ratified 1.7.0 in August 2026) or a new edition (Annex ZA presumes conformity with ESPR Art. 10(1)(a), (c), (d), (f), 10(3)(a), 11(a), (b), (d), (e) and 12(1) to (3) through clauses 3.1.25, 4.1.2 to 4.6.2, 5.1 and 6.1)
   - id: EN18220
     tier: B
     title: Digital product passport – Data carriers
@@ -220,13 +220,13 @@ sources:
       url: https://single-market-economy.ec.europa.eu/single-market/goods/european-standards/harmonised-standards/digital-product-passport-dpp_en
       lookFor: The second implementing decision citing EN 18246 in the OJ (Annex ZA presumes conformity with ESPR Art. 11(a) through clause 4.2 only, organisational interoperability), then any amendment or new edition on the JTC 24 work programme; an implementing act on actors' digital credentials (ESPR Art. 11 fourth subparagraph), which would fix the certificates 4.7 asks for
 
-  # ---- Tier C: normative references of the A and B texts, assessed in full --------------------
+  # ---- Tier C: referenced standards of the A and B texts, read as far as the citing clause reaches (#1021), and declared standards
   - id: ISO15459
     tier: C
     title: Information technology – Automatic identification and data capture techniques – Unique identification, Parts 1 to 6
     reference: ISO/IEC 15459-1:2014, -2:2015, -3:2014, -4:2014, -5:2014, -6:2014
     publisher: ISO/IEC
-    edition: 2014 and 2015 editions, all confirmed current in 2025 (the editions ESPR Annex III cites)
+    edition: 2014 and 2015 editions, all confirmed current in 2025 (the editions ESPR Annex III cites); for EN 18219, part 2 is read through the AIM register of Issuing Agency Codes (version 2026-06-16), parts 3, 4 and 6 wait for the purchase (#1042), parts 1 and 5 are Not applicable
     stage: Published, no revision in progress
     access: gated
     url: https://www.iso.org/standard/54779.html
@@ -321,3 +321,51 @@ sources:
     watch:
       url: https://www.iso.org/standard/71616.html
       lookFor: A new edition (none expected)
+  - id: ISO646
+    tier: C
+    title: Information technology – ISO 7-bit coded character set for information interchange
+    reference: ISO/IEC 646:1991 (identical to ECMA-6, 6th edition, December 1991)
+    publisher: ISO/IEC and Ecma International
+    edition: 1991 edition, as EN 18219 4.3.2(1) dates it; read through the free ECMA-6 text (a read-through of EN 18219, no matrix file)
+    stage: Published
+    access: public
+    url: https://ecma-international.org/publications-and-standards/standards/ecma-6/
+    watch:
+      url: https://www.iso.org/standard/4777.html
+      lookFor: A new edition (none expected)
+  - id: ISO10646
+    tier: C
+    title: Information technology – Universal coded character set (UCS)
+    reference: ISO/IEC 10646:2020
+    publisher: ISO/IEC
+    edition: 6th edition 2020, as EN 18219 4.3.2(1) dates it; read through, from the ISO publicly available standards (a read-through of EN 18219, no matrix file)
+    stage: Published; amendments track Unicode
+    access: public
+    url: https://standards.iso.org/ittf/PubliclyAvailableStandards/index.html
+    watch:
+      url: https://standards.iso.org/ittf/PubliclyAvailableStandards/index.html
+      lookFor: An EN 18219 amendment updating the dated reference
+  - id: RFC3986
+    tier: C
+    title: Uniform Resource Identifier (URI) – Generic Syntax
+    reference: IETF RFC 3986 (STD 66), January 2005
+    publisher: IETF
+    edition: RFC 3986, January 2005, as EN 18219 4.3.2(1) dates it (a read-through of EN 18219, no matrix file)
+    stage: Internet Standard
+    access: public
+    url: https://www.rfc-editor.org/rfc/rfc3986
+    watch:
+      url: https://www.rfc-editor.org/rfc/rfc3986
+      lookFor: An RFC obsoleting STD 66
+  - id: ISO15418
+    tier: C
+    title: Information technology – AIDC techniques – GS1 Application Identifiers and ASC MH10 Data Identifiers and maintenance
+    reference: ISO/IEC 15418:2016
+    publisher: ISO/IEC
+    edition: 2016 edition, as EN 18219 dates it; read through for GS1 Application Identifiers in the GS1 General Specifications Release 25.0, the list it delegates to (ASC MH10.8.2 Data Identifiers unread, open-dpp offers none); a read-through of EN 18219, no matrix file
+    stage: Published
+    access: public
+    url: https://ref.gs1.org/standards/genspecs/
+    watch:
+      url: https://ref.gs1.org/standards/genspecs/
+      lookFor: An EN 18219 amendment updating the dated reference, or a GS1 General Specifications release changing AI 01, 10 or 21

@@ -1,0 +1,630 @@
+# Conformance Matrix: EN18219 (EN 18219:2026). Rules: dpp-standards/README.md.
+# Criteria extracted from the final text (English SIS edition, edition 1, git-ignored standards/EN18219-2026.pdf) on 2026-10-12 (ticket #756); assessments are added in place, one per Criterion.
+# Gated text: every paraphrase is ours, never a sentence of the standard.
+# Clause numbering: the requirements of 4.1.2 to 4.6.2 and the guidelines of 4.3.3 to 4.5.3 are numbered lists, one Criterion per numbered item ("4.1.2(1)"); the scheme requirements of clauses 5 and 6 are lettered lists, one Criterion per lettered item ("5.2.2.1(d)"), as EN 18239 5.2 and EN 18246 4.3 were extracted. A list that offers a choice of one option is one Criterion: 5.4.3 (one of three DID methods) and 6.2.3 (ISO/IEC 18975 or EN IEC 61406-2). Guidelines (may, should) are graded as enablement and never cap a law row (map rule of 2026-10-12).
+# Not extracted, no requirement of their own: the Introduction (0.2: the schemes of clauses 5 and 6 are alternatives, each acceptable when its own rules and clause 4 are both met), clause 1 (scope: product, operator and facility identifiers at three granularity levels, from issuing agencies, self-issuing systems or both), 2 (normative references, forms below), 3 (terms; 3.1.25 defines the unique product identifier as a unique string that also gives a web link to the DPP, which Annex ZA cites for ESPR Art. 10(1)(c) and which 4.3.2(2) grades), the principles 4.1.1 to 4.6.1 (intent only; 4.2.1 makes the economic operator responsible for recording and keeping its identifiers, itself or by way of a DPP service provider, and 4.6.1 restates what 4.6.2(2) requires), the scheme descriptions 5.2.1, 5.3.1, 5.4.1, 5.5.1, 5.6.1, 6.2.1, 6.3.1, 6.4.1 and 6.5.1, the example list of 6.2.3 (LEI, ASC DI, GS1 AI and PEPPOL identifiers for operators), the informative Annexes A (choosing the granularity level; A.6 repeats 4.4.2(3)), B and C (overview tables and examples per scheme for products and for operators and facilities) and the Bibliography.
+# References (forms decided in #1021, confirmed by this Extract). Read-through, graded on this file's rows: ISO/IEC 646:1991 (through ECMA-6), ISO/IEC 10646:2020 and RFC 3986 (4.3.2(1)); ISO/IEC 15418:2016 (through the GS1 General Specifications 25.0 for AIs 01, 10 and 21, 5.2.2.1(b)); ISO/IEC 15459-2:2015 (through the AIM register of Issuing Agency Codes, version 2026-06-16, where GS1 holds codes 0 to 9, 5.2.2.1(g)). Read later in #1043: GS1 Digital Link URI Syntax 1.6.0, ISO/IEC 18975:2024 and ISO/IEC 15459-3, -4 and -6 (files of their own, the ISO texts after the purchase #1042) and EN IEC 61406-1:2022 (read-through); the rows resting on them stay unassessed: 5.1, 5.2.2.1(a), (c), (d), (f), 5.3.2.1(a) and 5.3.3(a). Gap, unread (alternatives open-dpp does not offer; they never cap a law row): EN IEC 61406-2:2024, ISO/IEC 6523-1:2023 and -2:2025, ISO 26324:2025, W3C DIDs v1.0, DID Resolution v0.3, VC Data Model 2.0, ISO/IEC 15434:2025, DIN 16598:2022 and the GS1 General Specifications for the GS1 operator and facility scheme. Not applicable, unread: ISO/IEC 15961-1:2021, ISO/IEC 17360:2023 and the GS1 EPC Tag Data Standard 2.3 (RFID encoding, the hardware side of an RF alternative) and ISO/IEC 19762:2025 (vocabulary). ISO 3166-1 and ISO 639-1, listed in the ticket as bound in the body, appear only in the informative Annexes B and C (a country-of-origin element in a 2D example, VAT number prefixes) and move down to Not applicable, unread. EN 18220 (undated) is graded by pointing at its rows: 4.5.2(1) waits for them (#757).
+# Finding: the text dates the GS1 Digital Link URI Syntax 1.6.0 to 2022 (clause 2 and 5.2.2.1(d)), but GS1 published 1.6.0 on 2025-03-06 and ratified 1.7.0 in August 2026; #1043 reads 1.6.0, the cited edition, and records the delta. The text's footnotes still call EN 18239 and EN 18246 under preparation.
+# Annex ZA (informative) maps clauses to ESPR, with presumption of conformity since the OJ citation by Implementing Decision (EU) 2026/1736: Art. 10(1)(a) through 4.1.2, 4.2.2, 4.5.2 and 5.1; 10(1)(c) through 5.1 and 3.1.25; 10(1)(d) through 4.3.2, 4.4.2, 4.5.2 and 4.6.2; 10(1)(f) through 4.4.2; 10(3)(a) through 4.5.2; 11(a) through 4.5.2 and 4.6.2; 11(b) through 4.6.2; 11(d) through 4.4.2; 11(e) through 4.2.2, for the identifier's persistence only; 12(1) to (3) through 6.1. It marks every other point of Art. 10, 11 and 12 not applicable, so this Extract added EN18219 to operationalisedBy of ESPR-Art10(1)(d), 10(3)(a), 11(a), 11(b) and 11(e), and removed it from the Commission rows ESPR-Art12(4)(a), (b) and 12(5)(a) to (e), which the text does not touch. The other law rows naming EN18219 are rows its clauses address without presumption (map rule of 2026-10-09): ESPR-Art9(2)(d) and Annex III (b), (c), (g), (h), (i), (k) and second paragraph (4.4, clauses 5 and 6), BATT-Art13(6)(a), 77(2)-sub1, 77(3)-sub1, 77(3)-sub2 and 77(7)-sub1, REG1778-Art8(3), (4), (5), 8(7)(c) and 9(2)(a).
+
+standard: EN18219
+edition: EN 18219:2026
+extractedFrom: standards/EN18219-2026.pdf
+extractedAt: 2026-10-12
+sections:
+  - id: "4.1"
+    title: 4.1 Global uniqueness
+  - id: "4.2"
+    title: 4.2 Persistence
+  - id: "4.3"
+    title: 4.3 Syntax
+  - id: "4.4"
+    title: 4.4 Granularity
+  - id: "4.5"
+    title: 4.5 Interoperability
+  - id: "4.6"
+    title: 4.6 Openness
+  - id: "5.1"
+    title: "5.1 ID schemes for products: general"
+  - id: "5.2"
+    title: "5.2 ID scheme 1: web enabled, structured path and query ID for products"
+  - id: "5.3"
+    title: "5.3 ID scheme 2: Identification Link (IL) string for products"
+  - id: "5.4"
+    title: "5.4 ID scheme 3: Decentralized identifiers (DID) for products"
+  - id: "5.5"
+    title: "5.5 ID scheme 4: identification for products and product groups (RAIN RFID, 2D symbols)"
+  - id: "5.6"
+    title: "5.6 ID scheme 5: Digital Object Identifier (DOI) for products"
+  - id: "6.1"
+    title: "6.1 ID schemes for economic operators and facilities: general"
+  - id: "6.2"
+    title: "6.2 ID scheme 6: economic operator identification using ISO/IEC 6523"
+  - id: "6.3"
+    title: "6.3 ID scheme 7: economic operator and facility identification per ISO/IEC 15418"
+  - id: "6.4"
+    title: "6.4 ID scheme 8: economic operator identification using decentralized identifiers (DID)"
+  - id: "6.5"
+    title: "6.5 ID scheme 9: economic operator identification using Digital Object Identifiers (DOI)"
+criteria:
+  - id: EN18219-4.1.2(1)
+    section: "4.1"
+    clause: 4.1.2(1)
+    paraphrase: An identifier is never used for a second, different object (no reassignment). Annex ZA maps 4.1.2 to ESPR-Art10(1)(a).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.1.2(2)
+    section: "4.1"
+    clause: 4.1.2(2)
+    paraphrase: An identifier is unique worldwide within the domain it serves and means one and the same thing in every context it can turn up in (distinct).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.1.2(3)
+    section: "4.1"
+    clause: 4.1.2(3)
+    paraphrase: Once issued, an identifier never identifies another object as well, neither alongside the first nor after it (non-coexistence).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.1.2(4)
+    section: "4.1"
+    clause: 4.1.2(4)
+    paraphrase: The identification scheme behind an identifier is made known to registries, so that uniqueness holds across domains (cross-domain identification).
+    applicability: software
+    areas:
+      - 3
+      - 7
+  - id: EN18219-4.2.2(1)
+    section: "4.2"
+    clause: 4.2.2(1)
+    paraphrase: Once assigned, the identifier stays unchanged and keeps referring, without ambiguity, to the same object for the object's whole life cycle (consistency). Annex ZA maps 4.2.2 to ESPR-Art10(1)(a) and, for the identifier's persistence only, to ESPR-Art11(e).
+    applicability: software
+    areas:
+      - 3
+      - 6
+  - id: EN18219-4.2.2(2)
+    section: "4.2"
+    clause: 4.2.2(2)
+    paraphrase: The identifier is kept at least for its expected lifetime, or as long as applicable law requires (preservation).
+    applicability: software
+    areas:
+      - 3
+      - 6
+  - id: EN18219-4.2.2(3)
+    section: "4.2"
+    clause: 4.2.2(3)
+    paraphrase: The identifier stays available even after insolvency, liquidation or cessation of activity (permanence). A note adds that the EU DPP registry gives identifiers of products on the EU market a minimum of preservation and permanence.
+    applicability: software
+    areas:
+      - 3
+      - 6
+      - 7
+  - id: EN18219-4.3.2(1)
+    section: "4.3"
+    clause: 4.3.2(1)
+    paraphrase: The identifier is made only of characters of ISO/IEC 646:1991; used as a URI it follows RFC 3986, leaving unreserved characters as they are and percent-encoding every other ISO/IEC 10646 character (character set). Annex ZA maps 4.3.2 to ESPR-Art10(1)(d).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.3.2(2)
+    section: "4.3"
+    clause: 4.3.2(2)
+    paraphrase: The unique product identifier is a URL, or becomes one through a conversion method the chosen scheme specifies, so that web systems can use it (web use).
+    applicability: software
+    areas:
+      - 3
+      - 11
+  - id: EN18219-4.3.3(1)
+    section: "4.3"
+    clause: 4.3.3(1)
+    paraphrase: "Guideline: the identifier may follow a structure its scheme defines, which makes it easier for other systems to parse and recognise (structure)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.3.3(2)
+    section: "4.3"
+    clause: 4.3.3(2)
+    paraphrase: "Guideline: identifiers may vary in length (variable length)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.4.2(1)
+    section: "4.4"
+    clause: 4.4.2(1)
+    paraphrase: "Each product identifier is unique at least at the finest level it serves: model, batch or item (granularity). Annex ZA maps 4.4.2 to ESPR-Art10(1)(d), 10(1)(f) and 11(d)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.4.2(2)
+    section: "4.4"
+    clause: 4.4.2(2)
+    paraphrase: Once the product is on the market or in service, its identifier keeps the granularity level it had (granularity consistency).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.4.2(3)
+    section: "4.4"
+    clause: 4.4.2(3)
+    paraphrase: If the level has to change and the existing identifier cannot express it, a new or extended identifier is assigned and linked to the old one, so traceability is kept (change in granularity).
+    applicability: software
+    areas:
+      - 3
+      - 9
+  - id: EN18219-4.4.3(1)
+    section: "4.4"
+    clause: 4.4.3(1)
+    paraphrase: "Guideline: where the law leaves the level open (model, batch or item), the operator may pick a finer one than required, for traceability or operational needs (granularity level)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.4.3(2)
+    section: "4.4"
+    clause: 4.4.3(2)
+    paraphrase: "Guideline: a resolver may be used to resolve the identifier (resolver)."
+    applicability: software
+    areas:
+      - 3
+      - 11
+  - id: EN18219-4.4.3(3)
+    section: "4.4"
+    clause: 4.4.3(3)
+    paraphrase: "Guideline: one hierarchical identifier format may express several levels at once, such as model, batch and item (hierarchy)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.5.2(1)
+    section: "4.5"
+    clause: 4.5.2(1)
+    paraphrase: The unique product identifier can be read from a data carrier as EN 18220 specifies it, which ties the identifier to the DPP (data carrier). Annex ZA maps 4.5.2 to ESPR-Art10(1)(a), 10(1)(d), 10(3)(a) and 11(a).
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-4.5.2(2)
+    section: "4.5"
+    clause: 4.5.2(2)
+    paraphrase: Retailers and online marketplaces are given the unique product identifier so that consumers can reach the product's DPP through them (digital access).
+    applicability: mixed
+    areas:
+      - 3
+      - 11
+  - id: EN18219-4.5.2(3)
+    section: "4.5"
+    clause: 4.5.2(3)
+    paraphrase: "The unique product identifier is encoded in a syntax that external devices handle: professional scanners, smartphones and similar consumer devices (compatibility)."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-4.5.2(4)
+    section: "4.5"
+    clause: 4.5.2(4)
+    paraphrase: Wherever possible, identifiers of existing schemes can be used inside one of the schemes of this document (existing ID).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.5.3(1)
+    section: "4.5"
+    clause: 4.5.3(1)
+    paraphrase: "Guideline: the unique product identifier works without further steps on today's phones and comparable consumer devices, across the major operating systems and browsers (smartphones and similar devices)."
+    applicability: software
+    areas:
+      - 3
+      - 4
+      - 11
+  - id: EN18219-4.5.3(2)
+    section: "4.5"
+    clause: 4.5.3(2)
+    paraphrase: "Guideline: the identifier scheme serves the intended systems, services, platforms and third parties without the identifier losing its meaning or function (portability)."
+    applicability: software
+    areas:
+      - 3
+      - 2
+  - id: EN18219-4.6.2(1)
+    section: "4.6"
+    clause: 4.6.2(1)
+    paraphrase: The scheme and the identifier rest on a system whose policies, processes and standards anyone can study, influence and use on fair, reasonable and non-discriminatory terms (transparency). Annex ZA maps 4.6.2 to ESPR-Art10(1)(d), 11(a) and 11(b).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-4.6.2(2)
+    section: "4.6"
+    clause: 4.6.2(2)
+    paraphrase: For public information, consumers above all, the identifier works without registering, installing DPP-specific software or giving credentials (consumer usage).
+    applicability: software
+    areas:
+      - 3
+      - 5
+      - 11
+  - id: EN18219-4.6.2(3)
+    section: "4.6"
+    clause: 4.6.2(3)
+    paraphrase: The identifier creates no vendor lock-in and limits its use only where global uniqueness and interoperability technically require it (no undue restrictions).
+    applicability: software
+    areas:
+      - 3
+      - 2
+  - id: EN18219-5.1
+    section: "5.1"
+    clause: "5.1"
+    paraphrase: A product has a unique product identifier that meets clause 4 and follows one of the five product schemes of clause 5. Annex ZA maps 5.1 to ESPR-Art10(1)(a) and 10(1)(c).
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(a)
+    section: "5.2"
+    clause: 5.2.2.1(a)
+    paraphrase: "Scheme 1, structured path: the identifier follows ISO/IEC 15459-4:2014 for individual products or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(b)
+    section: "5.2"
+    clause: 5.2.2.1(b)
+    paraphrase: "Scheme 1, structured path: the identifier uses GS1 Application Identifiers or ASC MH10.8.2 Data Identifiers as ISO/IEC 15418:2016 defines them."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(c)
+    section: "5.2"
+    clause: 5.2.2.1(c)
+    paraphrase: "Scheme 1, structured path: the identifier is encoded and resolved over HTTPS by the structured path approach of ISO/IEC 18975:2024."
+    applicability: software
+    areas:
+      - 3
+      - 11
+  - id: EN18219-5.2.2.1(d)
+    section: "5.2"
+    clause: 5.2.2.1(d)
+    paraphrase: "Scheme 1, structured path, with GS1 Application Identifiers: the identifier conforms to the GS1 Digital Link URI Syntax 1.6.0 (dated 2022 in the text)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(e)
+    section: "5.2"
+    clause: 5.2.2.1(e)
+    paraphrase: "Scheme 1, structured path, with ASC MH10.8.2 Data Identifiers: the identifier conforms to EN IEC 61406-2:2024 or ISO/IEC 18975:2024."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(f)
+    section: "5.2"
+    clause: 5.2.2.1(f)
+    paraphrase: "Scheme 1, structured path: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.1(g)
+    section: "5.2"
+    clause: 5.2.2.1(g)
+    paraphrase: "Scheme 1, structured path: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.2(a)
+    section: "5.2"
+    clause: 5.2.2.2(a)
+    paraphrase: "Scheme 1, query string: the identifier follows ISO/IEC 15459-4:2014 for individual products and/or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.2(b)
+    section: "5.2"
+    clause: 5.2.2.2(b)
+    paraphrase: "Scheme 1, query string: the identifier uses ASC MH10.8.2 Data Identifiers as ISO/IEC 15418:2016 defines them."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.2(c)
+    section: "5.2"
+    clause: 5.2.2.2(c)
+    paraphrase: "Scheme 1, query string: the identifier is encoded and resolved over HTTPS by the query approach of ISO/IEC 18975:2024."
+    applicability: software
+    areas:
+      - 3
+      - 11
+  - id: EN18219-5.2.2.2(d)
+    section: "5.2"
+    clause: 5.2.2.2(d)
+    paraphrase: "Scheme 1, query string: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.2.2.2(e)
+    section: "5.2"
+    clause: 5.2.2.2(e)
+    paraphrase: "Scheme 1, query string: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.3.2.1(a)
+    section: "5.3"
+    clause: 5.3.2.1(a)
+    paraphrase: "Scheme 2, items only: where a unique character string is enough and nothing about syntax or meaning has to be encoded, the identifier follows EN IEC 61406-1:2022, optionally with EN IEC 61406-2:2024."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.3.2.2(a)
+    section: "5.3"
+    clause: 5.3.2.2(a)
+    paraphrase: "Scheme 2, model, batch and item: where standardised syntax and meaning have to be encoded, the identifier follows EN IEC 61406-1:2022 together with EN IEC 61406-2:2024."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.3.2.2(b)
+    section: "5.3"
+    clause: 5.3.2.2(b)
+    paraphrase: "Scheme 2, model, batch and item: the identifier carries ASC MH10.8.2 Data Identifiers per ISO/IEC 15418:2016 to state model, batch and item."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.3.3(a)
+    section: "5.3"
+    clause: 5.3.3(a)
+    paraphrase: "Guideline: an EN IEC 61406-1:2022 Identification Link is recommended where the string has to stay short (a 96-bit RFID chip, a compact 2D code on a small product), or where model and serial number are to be hidden behind a random alphanumeric string so that serial numbers cannot be enumerated."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.3.3(b)
+    section: "5.3"
+    clause: 5.3.3(b)
+    paraphrase: "Guideline: an EN IEC 61406-2:2024 Identification Link is recommended for full model, batch and item identification that stays semantically interoperable with existing schemes; it can also tell what kind of object it names (product, person, location, document) and carry further data elements or classifications."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.4.2(a)
+    section: "5.4"
+    clause: 5.4.2(a)
+    paraphrase: "Scheme 3: the identifier follows W3C Decentralized Identifiers (DIDs) v1.0 for its syntax, its core properties and its resolution to the resource it stands for."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-5.4.3
+    section: "5.4"
+    clause: 5.4.3
+    paraphrase: "Guideline: one of the DID methods did:web, did:ethr or did:ebsi is recommended."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-5.5.2.1(a)
+    section: "5.5"
+    clause: 5.5.2.1(a)
+    paraphrase: "Scheme 4, RAIN RFID (UHF, ISO/IEC 18000-63): the identifier follows ISO/IEC 15459-4:2014 for products and/or ISO/IEC 15459-6:2014 for groupings."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.1(b)
+    section: "5.5"
+    clause: 5.5.2.1(b)
+    paraphrase: "Scheme 4, RAIN RFID: the data are structured and represented per ISO/IEC 15961-1:2021, ISO/IEC 17360:2023 or the GS1 EPC Tag Data Standard 2.3."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.1(c)
+    section: "5.5"
+    clause: 5.5.2.1(c)
+    paraphrase: "Scheme 4, RAIN RFID: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.1(d)
+    section: "5.5"
+    clause: 5.5.2.1(d)
+    paraphrase: "Scheme 4, RAIN RFID: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.2(a)
+    section: "5.5"
+    clause: 5.5.2.2(a)
+    paraphrase: "Scheme 4, 2D symbols: the identifier follows ISO/IEC 15459-4:2014 for products and/or ISO/IEC 15459-6:2014 for groupings."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.2(b)
+    section: "5.5"
+    clause: 5.5.2.2(b)
+    paraphrase: "Scheme 4, 2D symbols: ASC MH10.8.2 Data Identifiers per ISO/IEC 15418:2016 give the data their meaning."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.2(c)
+    section: "5.5"
+    clause: 5.5.2.2(c)
+    paraphrase: "Scheme 4, 2D symbols: structured data identifiers are carried in the transfer syntax for high-capacity ADC media of ISO/IEC 15434:2025 or of DIN 16598:2022."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.2(d)
+    section: "5.5"
+    clause: 5.5.2.2(d)
+    paraphrase: "Scheme 4, 2D symbols: global uniqueness follows ISO/IEC 15459-3:2014."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.2.2(e)
+    section: "5.5"
+    clause: 5.5.2.2(e)
+    paraphrase: "Scheme 4, 2D symbols: the identifier uses an Issuing Agency Code registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.3(a)
+    section: "5.5"
+    clause: 5.5.3(a)
+    paraphrase: "Guideline: RAIN RFID data may be encoded and decoded per ISO/IEC 15962."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.3(b)
+    section: "5.5"
+    clause: 5.5.3(b)
+    paraphrase: "Guideline: an HTTP URI in the format of ISO/IEC 18975:2024 may be encoded in a RAIN RFID tag."
+    applicability: operator
+    areas:
+      - 3
+      - 4
+  - id: EN18219-5.5.3(c)
+    section: "5.5"
+    clause: 5.5.3(c)
+    paraphrase: "Guideline: digital signatures per ISO/IEC 20248 may be added to the identifier data."
+    applicability: software
+    areas:
+      - 3
+      - 4
+      - 10
+  - id: EN18219-5.6.2(a)
+    section: "5.6"
+    clause: 5.6.2(a)
+    paraphrase: "Scheme 5: model, batch or item identification follows ISO 26324:2025 (Digital Object Identifier)."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.6.2(b)
+    section: "5.6"
+    clause: 5.6.2(b)
+    paraphrase: "Scheme 5: the DOI states whether it names the model, the batch or the item."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-5.6.2(c)
+    section: "5.6"
+    clause: 5.6.2(c)
+    paraphrase: "Scheme 5: the DOI begins with doi.org written in lower case."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.1
+    section: "6.1"
+    clause: "6.1"
+    paraphrase: Where the law requires them, an economic operator and a facility each have a unique identifier that meets clause 4 and follows one of the four schemes of clause 6. Annex ZA maps 6.1 to ESPR-Art12(1), (2) and (3).
+    applicability: mixed
+    areas:
+      - 3
+      - 5
+  - id: EN18219-6.2.2(a)
+    section: "6.2"
+    clause: 6.2.2(a)
+    paraphrase: "Scheme 6: ISO/IEC 6523-1:2023 keeps operator identifier schemes apart from one another."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.2.2(b)
+    section: "6.2"
+    clause: 6.2.2(b)
+    paraphrase: "Scheme 6: the identifier comes from a scheme registered under ISO/IEC 6523-2:2025."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.2.2(c)
+    section: "6.2"
+    clause: 6.2.2(c)
+    paraphrase: "Scheme 6: operator and facility identifiers are built and resolved as the registered scheme specifies."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.2.3
+    section: "6.2"
+    clause: 6.2.3
+    paraphrase: "Guideline: where useful, the operator may also encode and resolve the identifier over HTTP per ISO/IEC 18975:2024, or build it as a URL per EN IEC 61406-2:2024."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.3.2(a)
+    section: "6.3"
+    clause: 6.3.2(a)
+    paraphrase: "Scheme 7: operator and facility identifiers use GS1 Application Identifiers or ASC MH10.8.2 Data Identifiers per ISO/IEC 15418:2016."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.3.2(b)
+    section: "6.3"
+    clause: 6.3.2(b)
+    paraphrase: "Scheme 7, with ASC MH10.8.2 Data Identifiers: the identifiers conform to EN IEC 61406-2:2024 (one of three alternatives with (c) and (d))"
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.3.2(c)
+    section: "6.3"
+    clause: 6.3.2(c)
+    paraphrase: "Scheme 7, with ASC MH10.8.2 Data Identifiers: the identifiers conform to ISO/IEC 15459-3:2014 and ISO/IEC 18975:2024 and use a scheme registered under ISO/IEC 15459-2:2015 (alternative to (b) and (d))"
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.3.2(d)
+    section: "6.3"
+    clause: 6.3.2(d)
+    paraphrase: "Scheme 7, with GS1 Application Identifiers: the identifiers conform to the GS1 General Specifications 25.0 (as ISO/IEC 15459-3 applies) and the GS1 Digital Link URI Syntax 1.6.0 (as ISO/IEC 18975 applies) and use a GS1 scheme registered under ISO/IEC 15459-2:2015."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.4.2(a)
+    section: "6.4"
+    clause: 6.4.2(a)
+    paraphrase: "Scheme 8: self-sovereign operator identities, key pairs included, follow W3C Decentralized Identifiers (DIDs) v1.0."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-6.4.2(b)
+    section: "6.4"
+    clause: 6.4.2(b)
+    paraphrase: "Scheme 8: verifiable credentials are bound to the operator or facility DID per the W3C Verifiable Credentials Data Model 2.0."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-6.4.2(c)
+    section: "6.4"
+    clause: 6.4.2(c)
+    paraphrase: "Scheme 8: the DID document is found by W3C DID Resolution v0.3."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-6.4.3(a)
+    section: "6.4"
+    clause: 6.4.3(a)
+    paraphrase: "Guideline: trusted company registries (national registers, or GLEIF issuing a vLEI) may bind the DID to the company."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-6.4.3(b)
+    section: "6.4"
+    clause: 6.4.3(b)
+    paraphrase: "Guideline: further verifiable credentials (the legal person identifier of the EU Digital Identity Wallet, sustainability disclosures, certificates) may be attached to the operator DID to build a provenance chain."
+    applicability: software
+    areas:
+      - 3
+      - 10
+  - id: EN18219-6.5.2(a)
+    section: "6.5"
+    clause: 6.5.2(a)
+    paraphrase: "Scheme 9, binding the registrant: operator and facility identifiers follow ISO 26324:2025, with enough metadata for the issuing agency to keep the organisation or facility unique."
+    applicability: software
+    areas:
+      - 3
+  - id: EN18219-6.5.2(b)
+    section: "6.5"
+    clause: 6.5.2(b)
+    paraphrase: "Scheme 9: the DPP is reached through DOI resolution."
+    applicability: software
+    areas:
+      - 3
+      - 11

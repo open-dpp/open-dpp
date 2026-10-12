@@ -854,6 +854,7 @@ criteria:
       - EN18222
       - EN18223
       - EN18221
+      - EN18219
   - id: ESPR-Art10(1)(e)
     section: Art10
     clause: Art. 10(1)(e)
@@ -948,6 +949,7 @@ criteria:
       - 3
     operationalisedBy:
       - EN18220
+      - EN18219
   - id: ESPR-Art10(3)(b)
     section: Art10
     clause: Art. 10(3)(b)
@@ -990,6 +992,7 @@ criteria:
       - EN18216
       - EN18239
       - EN18246
+      - EN18219
   - id: ESPR-Art11(b)
     section: Art11
     clause: Art. 11 first subparagraph (b)
@@ -1002,6 +1005,7 @@ criteria:
       - EN18239
       - EN18222
       - EN18246
+      - EN18219
     assessment:
       date: 2026-10-09
       commit: 272eab96e2d191ba9c48edcc3ab4a0822a12b7e4
@@ -1084,6 +1088,7 @@ criteria:
       - 6
     operationalisedBy:
       - EN18221
+      - EN18219
     assessment:
       date: 2026-10-09
       commit: 3e00ddab40f7fbfdb355004bda982b97933bda4a
@@ -1262,8 +1267,6 @@ criteria:
     clause: Art. 12(4)(a)
     paraphrase: Delegated acts set rules for organisations wishing to become an issuing agency for unique identifiers and data carriers.
     applicability: commission
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(4)(b)
     section: Art12
     clause: Art. 12(4)(b)
@@ -1271,22 +1274,16 @@ criteria:
     applicability: commission
     areas:
       - 3
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(5)(a)
     section: Art12
     clause: Art. 12(5)(a)
     paraphrase: Those acts set the criteria to become an issuing agency.
     applicability: commission
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(5)(b)
     section: Art12
     clause: Art. 12(5)(b)
     paraphrase: They set the role of an issuing agency.
     applicability: commission
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(5)(c)
     section: Art12
     clause: Art. 12(5)(c)
@@ -1294,8 +1291,6 @@ criteria:
     applicability: commission
     areas:
       - 3
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(5)(d)
     section: Art12
     clause: Art. 12(5)(d)
@@ -1303,15 +1298,11 @@ criteria:
     applicability: commission
     areas:
       - 3
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(5)(e)
     section: Art12
     clause: Art. 12(5)(e)
     paraphrase: They set rules on data management.
     applicability: commission
-    operationalisedBy:
-      - EN18219
   - id: ESPR-Art12(6)(a)
     section: Art12
     clause: Art. 12(6)(a)
