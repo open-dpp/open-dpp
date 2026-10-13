@@ -8,6 +8,7 @@
 # Normativity: Part 2 has no conformance clause of its own, only the BCP 14 keywords; the profile enumeration says a server listing a profile "implemented all features" of it, and the interface is the unit of compliance statements. Not extracted, no requirement on a server: Terms, Preamble, Introduction, the naming rules and semantic ids of operations (they bind the specification's own operation names), Interactions (exemplary), API Code Generation, Summary and Outlook, Change Log, Bibliography, the UML, class-table and API-table template annexes, the overview of constraints (non-normative), the SerializationModifier examples (their PATCH rules are folded into IDTA01002-Methods-PATCH) and the Conformance Test Corpus (informative; it names no test tool).
 # Text defects found while reading (recorded, not graded): the Submodel Repository Read profile identifier is printed as SubmodelServiceSpecification/SSP-002 (the OpenAPI file has SubmodelRepositoryServiceSpecification/SSP-002); the profile enumeration lacks the 3.2 History profiles and swaps two Submodel Service labels; the default page size is 100 in the text but the OpenAPI Limit parameter has minimum 1 and no default; the result object's attribute is "message" in the text and "messages" in the OpenAPI schema; three clauses state three different rules for modifiers on PUT.
 # References: IDTA-01001 V3.2 (payloads; graded in IDTA01001), IDTA-01004 V3.1 (security; named by the alignment clause, not declared by open-dpp, read through on IDTA01002-Security and IDTA01002-OperationRights only), RFC 4648 (base64url) and RFC 7231 (status codes) are read through on the rows that cite them. RFC 7515 (JWS) belongs to the left-out signature profiles.
+# Grading reading (applied by the first Assess, 2026-10-13): an operation row is Met when open-dpp serves the operation at the specified path with the specified method, parameters, payload and status codes; Partial when the route is served with that method but deviates in parameters, modifiers, envelopes or status codes, or serves a subset of the specified content; Gap when no route serves the operation, even where another route has a similar effect (named in the notes). A filter variant of a listing (by idShort, semanticId, assetIds) is graded on its own effect, so a parameter the server ignores is Gap. A general rule is graded across the routes served; a rule that only constrains a feature open-dpp lacks is Gap in that feature's cluster (map rule of 2026-10-12). Operations on element types open-dpp refuses on write (Operation) are Gap in the coverage cluster #1064; the content formats are graded in IDTA01001, and the rows here that rest on them point at #1065. Evidence is the code at the assessed commit and the Checks of apps/e2e/tests/conformance/aas-api.spec.ts (class aasapi) run against an Instance built from it; aas-test-engines 1.0.3 tests API V3.0 only and stops on the missing modelType of open-dpp's shells, so no external test tool is wrapped (a deviation from the ticket's Checks line).
 
 standard: IDTA01002
 edition: IDTA-01002-3-2 V3.2.0 (July 2026)
@@ -47,6 +48,35 @@ criteria:
     areas:
       - 1
       - 3
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPostSubmodel, ApiPostSubmodelElement and ApiPostSubmodelElementAtIdShortPath
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-json-schema.ts
+          note: SubmodelRequestDtoSchema keeps a posted id and defaults a UUID
+        - type: code
+          ref: apps/main/src/aas/domain/environment.ts
+          note: addSubmodel refuses an id the passport already lists
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: addSubmodelElementOrFail refuses an idShort already used below the parent
+        - type: check
+          ref: aasapi.post-into-list-appends
+          result: passed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.post-same-id-not-duplicated
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: the identifier travels in the payload (a Submodel's id, an element's idShort), a second post of the same id or idShort into the same passport is refused, and an element posted below a SubmodelElementList is appended at its end (Checks aasapi.post-same-id-not-duplicated, aasapi.post-into-list-appends). Missing: an identifiable's id is unique within one passport, not across the repository, so the rule that one system never holds two identifiables with the same id does not hold in full; the details sit in a related private finding until it is fixed. The refusal answers 400 where Part 2 expects 409 (IDTA01002-StatusCodes)."
+      gapIssue: 1069
   - id: IDTA01002-Methods-PUT
     section: general
     clause: General, Design Principles (PUT); Change Log V3.0.4 to V3.1
@@ -54,6 +84,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no PUT decorator on any AAS route
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: PUT only on /:id/status and /:id/editing-mode, open-dpp's own routes
+        - type: check
+          ref: aasapi.put-submodel-replaces
+          result: failed
+          date: 2026-10-13
+      notes: "No AAS route accepts PUT: shells, submodels, asset information, thumbnails, elements and files are never replaced or created by PUT (Check aasapi.put-submodel-replaces answers 404); updates go through PATCH (IDTA01002-Methods-PATCH) and creation through POST, so the 201-or-204 rule of a PUT has nothing to apply to."
+      gapIssue: 1067
   - id: IDTA01002-Methods-PATCH
     section: general
     clause: General, Design Principles (PATCH); Annex SerializationModifier Examples, Description
@@ -61,6 +110,26 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPatchSubmodel, ApiPatchSubmodelElement, ApiPatchSubmodelValue and ApiPatchSubmodelElementValue
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-element-modification-schema.ts
+          note: the Normal-form body is idShort, displayName and description
+        - type: code
+          ref: apps/main/src/aas/domain/value-modifier-visitor.ts
+          note: the Value-Only PATCH replaces values element by element and refuses several types
+        - type: test
+          ref: apps/main/src/aas/domain/value-modifier-visitor.spec.ts
+      notes: "Credited: PATCH updates submodels and elements in place; the Value-Only PATCH (/$value) replaces the values of the elements it names, keeps the structure, fails as a whole when one named element is unknown or mistyped (Check api.update-all-or-nothing of EN 18222) and never adds elements. Missing: the Normal-form PATCH takes idShort, displayName and description only, content=metadata is not offered (IDTA01002-Content-Metadata), Blob, Entity, Range and relationship values are refused by the $value PATCH, and every PATCH answers 200 with the updated resource where Part 2 expects 204 (IDTA01002-StatusCodes)."
+      gapIssue: 1069
   - id: IDTA01002-HTTPS
     section: http
     clause: HTTP/REST API, Design Decisions (transport)
@@ -68,6 +137,24 @@ criteria:
     applicability: mixed
     areas:
       - 10
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: listens on plain HTTP on OPEN_DPP_PORT; TLS is left to a proxy
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: the documented servers are https origins
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: names TLS termination as a production duty the example compose stack lacks; no proxy guide
+      notes: "Mixed clause assessed on the software part, as EN18216-4(1) and EN18216-4(4) were: open-dpp serves plain HTTP and leaves TLS, its version floor and HTTP/2 to a reverse proxy the operator provides; the production guide says TLS termination is needed but ships and documents no proxy configuration (#1027), while the API documentation assumes https origins. The Check transport.tls-1-2-minimum skips on a plain-http Instance and judges a deployed one."
+      gapIssue: 1027
   - id: IDTA01002-IdentifierEncoding
     section: http
     clause: HTTP/REST API, Design Decisions (identifier encoding); Addressing Resources, Note 1
@@ -76,6 +163,28 @@ criteria:
     areas:
       - 1
       - 3
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: "IdBaseSchema: a UUID is taken raw, else standard base64 is decoded, else the raw string is used"
+        - type: test
+          ref: apps/main/src/aas/presentation/aas.decorator.spec.ts
+          note: parses a UUID and a base64-encoded IRI; no base64url case
+        - type: code
+          ref: packages/api-client/src/dpp/aas/aasNamespace.ts
+          note: the shipped client inserts identifiers into paths unencoded
+        - type: check
+          ref: aasapi.base64url-identifier-accepted
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: submodel and shell identifiers are taken from the path, decoded and resolved by the identifier alone; UUIDs pass raw, so open-dpp's own ids work in either encoding. Missing: the decoding is standard base64 (RFC 4648 section 4, with +, / and = padding), not base64url: an IRI whose base64url form differs from its base64 form is not found (Check aasapi.base64url-identifier-accepted), and a padded value is accepted although Part 2 forbids padding; no route takes a comma-separated list of ids; the shipped api-client sends ids unencoded."
+      gapIssue: 1069
   - id: IDTA01002-IdShortPath
     section: http
     clause: HTTP/REST API, Addressing Resources; Design Decisions (idShortPath)
@@ -83,6 +192,29 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/id-short-path.ts
+          note: a dot-separated chain of idShorts, no index segments
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: "IdShortPathParamSchema: dot-separated segments; brackets are literal characters"
+        - type: test
+          ref: apps/main/src/aas/domain/common/id-short-path.spec.ts
+        - type: test
+          ref: apps/main/src/aas/presentation/aas.decorator.spec.ts
+        - type: check
+          ref: aasapi.idshortpath-list-index
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: every element below a submodel is addressed by its dotted idShortPath, rooted at the submodel and descending through the value of collections and lists, and the path is one URL path segment. Missing: a SubmodelElementList item is not addressable by its index in square brackets (Check aasapi.idshortpath-list-index answers 404): list items carry an idShort open-dpp requires, and the resolver matches idShorts only. Tracked with the idShortPath index of Part 1 in #1065."
+      gapIssue: 1065
   - id: IDTA01002-IdShortCaseSensitive
     section: http
     clause: HTTP/REST API, Design Decisions (idShort comparison)
@@ -90,6 +222,24 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: findSubmodelElement compares each segment with the stored idShort by strict equality
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: finds, and fails to find, an element by idShortPath
+        - type: check
+          ref: aasapi.idshort-case-sensitive
+          result: passed
+          date: 2026-10-13
+      notes: "The resolver compares each path segment with the stored idShort by strict string equality, so TradeName and tradename are different paths (Check aasapi.idshort-case-sensitive: 200 against 404)."
   - id: IDTA01002-Superpaths
     section: http
     clause: HTTP/REST API, Design Decisions (superpaths); General, Relation of Interfaces; Service Specifications and Profiles
@@ -97,6 +247,24 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: /shells lists; /submodels/{id}/submodel-elements/{idShortPath} descends; below /shells/{aasId} only open-dpp's PATCH
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+        - type: check
+          ref: aasapi.submodel-refs-superpath
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: the Submodel Repository superpath is served, the Submodel interface being reached below /submodels/{submodelIdentifier} (elements, paths and values), and both repositories share one base, the per-passport URL. Missing: the AAS Repository superpaths; below /shells/{aasIdentifier} open-dpp serves only its own PATCH, so /submodel-refs, /asset-information and the submodels of one shell are not reachable through the shell (Check aasapi.submodel-refs-superpath answers 404), and the shell's submodels attribute is returned inline rather than as /submodel-refs."
+      gapIssue: 1067
   - id: IDTA01002-JSON
     section: http
     clause: Service Specifications and Profiles (SerializationFormat JSON); HTTP/REST API, Payload; Data Types for Payload, File Content
@@ -105,6 +273,28 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/responses/submodel.response.ts
+          note: responses are JSON built from the domain's toPlain
+        - type: code
+          ref: apps/main/src/pagination/paging-result.ts
+          note: the paging envelope is JSON
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: the error envelopes are JSON
+        - type: check
+          ref: format.public-reads-are-json
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: every AAS route exchanges JSON, paging and error envelopes included (Check format.public-reads-are-json). Missing: the payloads deviate from Part 1's JSON mapping (explicit nulls and empty arrays, no modelType on shells and on submodel reads, value types without the xs: prefix: IDTA01001-JSON-rules, #823) and the Value-Only payloads from its Value-Only mapping (every value a string: IDTA01001-ValueOnly, #1065); file content is not served through the AAS routes (IDTA01002-GetFileByPath), so there is no octet-stream answer to judge."
+      gapIssue: 823
   - id: IDTA01002-AASa-002
     section: http
     clause: HTTP/REST API, Mapping of Operations (GetAllSubmodelsBySemanticId), Constraint AASa-002
@@ -113,6 +303,18 @@ criteria:
     areas:
       - 1
       - 8
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no semanticId query parameter
+      notes: "The constraint bounds the base64url-encoded semanticId query parameter of GetAllSubmodelsBySemanticId; open-dpp reads no such parameter (IDTA01002-GetAllSubmodelsBySemanticId), so nothing can honour or break the 3072-character limit. Graded with the missing filter by the map's conditional-clause rule."
+      gapIssue: 1067
   - id: IDTA01002-Versioning
     section: versioning
     clause: HTTP/REST API, API Versioning; Versioning
@@ -121,6 +323,21 @@ criteria:
     areas:
       - 1
       - 13
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/main.ts
+          note: URI versioning with every version as default; /api/<path> redirects 308 to /api/v1/<path>
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: one OpenAPI 3.1 document, versioned with the latest API version
+      notes: "Credited: the API is versioned in the URL by major (/api/v1, /api/v2), the recommended form, both majors are served side by side with the passport base between the version and the functional path, and a machine-readable OpenAPI 3.1 description is served (Check api.openapi-document-served). Missing: the versions are open-dpp's own, without a minor, and nothing states which Part 2 version (api/v3) the AAS routes follow; the OpenAPI document describes the latest major only, omits several AAS routes and advertises write methods on the public base; and there is no /description endpoint (IDTA01002-GetSelfDescription)."
+      gapIssue: 1067
   - id: IDTA01002-Pagination
     section: pagination
     clause: HTTP/REST API, Pagination; Design Decisions (pagination)
@@ -128,6 +345,42 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/pagination/pagination.ts
+          note: "nextPages: the cursor is the id of the page's last item, also on the last page; without a limit everything is returned"
+        - type: code
+          ref: apps/main/src/pagination/paging-result.ts
+          note: result and paging_metadata.cursor
+        - type: code
+          ref: apps/main/src/digital-product-document/presentation/digital-product-document-decorators.ts
+          note: "limit: an optional coerced number without a minimum"
+        - type: test
+          ref: apps/main/src/pagination/pagination.spec.ts
+        - type: check
+          ref: aasapi.pagination-end-without-cursor
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.pagination-limit-minimum-one
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.pagination-walk-deterministic
+          result: passed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.shells-paged-result
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: GetAll answers hold result and paging_metadata, a missing cursor gives the first page, limit caps the page and pages chain through the cursor (Checks aasapi.shells-paged-result, aasapi.pagination-walk-deterministic); without a limit the whole list is returned, a choice the text leaves to the server. Missing: the last page still carries a cursor, and one more request returns an empty page (Check aasapi.pagination-end-without-cursor); the cursor is the raw id or idShort of the last item rather than an opaque token, and an unknown cursor silently restarts at the first item; limit accepts 0 and negative values where the OpenAPI parameter has a minimum of 1 (Check aasapi.pagination-limit-minimum-one); and the envelope is not the Part 2 Result object (IDTA01002-Result)."
+      gapIssue: 1069
   - id: IDTA01002-Pagination-order
     section: pagination
     clause: HTTP/REST API, Pagination (ordering)
@@ -135,6 +388,26 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/pagination/pagination.ts
+          note: pages are slices of the stored order of ids
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: getAasShells, getSubmodels and getSubmodelElements page the environment's or the submodel's own ordered list
+        - type: test
+          ref: apps/main/src/pagination/pagination.spec.ts
+        - type: check
+          ref: aasapi.pagination-walk-deterministic
+          result: passed
+          date: 2026-10-13
+      notes: "Pages are slices of the stored, ordered list of ids or idShorts, so two items never swap between requests and an attribute change moves nothing; a created or deleted item shifts later pages, which the text allows (Check aasapi.pagination-walk-deterministic: two walks with limit 3 reproduce the unpaged order)."
   - id: IDTA01002-AASa-001
     section: pagination
     clause: HTTP/REST API, Pagination, Constraint AASa-001
@@ -142,6 +415,23 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/api-client/src/dpp/aas/aasNamespace.ts
+          note: getShells and getSubmodels pass limit and cursor as axios params, which drops an undefined cursor
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: "CursorQueryParamSchema: an optional string; a missing cursor gives the first page"
+        - type: manual
+          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: the first request of Check aasapi.pagination-walk-deterministic sends limit without a cursor parameter and receives the first page; the shipped api-client builds its query from axios params, where an undefined cursor is omitted."
+          date: 2026-10-13
+      notes: "A constraint on the client: open-dpp's own client omits the cursor parameter when it has none, and the server treats a missing cursor as the first page, so the constraint is honoured on both sides open-dpp ships."
   - id: IDTA01002-Level
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Level; HTTP/REST API, Design Decisions
@@ -149,6 +439,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no level query parameter; the AAS routes read limit, cursor and position only
+        - type: code
+          ref: apps/main/src/aas/domain/json-visitor.ts
+          note: serializes the whole subtree
+        - type: check
+          ref: aasapi.level-core-direct-children-only
+          result: failed
+          date: 2026-10-13
+      notes: "No route reads a level parameter: every read returns the full subtree (deep), and ?level=core is ignored (Check aasapi.level-core-direct-children-only), so a client cannot walk the hierarchy step by step."
+      gapIssue: 1069
   - id: IDTA01002-Content-Metadata
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Content (Metadata); HTTP/REST API, Design Decisions
@@ -157,6 +466,22 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: $value is the only path suffix; /$metadata matches no route
+        - type: check
+          ref: aasapi.metadata-suffix
+          result: failed
+          date: 2026-10-13
+      notes: "No /$metadata route and no content=metadata parameter on reads or PATCH (Check aasapi.metadata-suffix answers 404); the Metadata format itself is missing in Part 1's grading (IDTA01001-Metadata, #1065)."
+      gapIssue: 1065
   - id: IDTA01002-Content-Value
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Content (Value); HTTP/REST API, Design Decisions and Modifier Constraints
@@ -165,6 +490,28 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiGetSubmodelValue, ApiGetSubmodelElementValue, ApiPatchSubmodelValue and ApiPatchSubmodelElementValue
+        - type: code
+          ref: apps/main/src/aas/presentation/responses/value.response.ts
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+        - type: test
+          ref: apps/main/src/aas/domain/value-visitor.spec.ts
+        - type: check
+          ref: aasapi.value-suffix-unnamed-root
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: the /$value suffix is served on submodels and elements for GET and PATCH, JSON only, and returns an unnamed object keyed by idShort with no idShort or modelType at the root (Check aasapi.value-suffix-unnamed-root). Missing: the payload writes every value as a string and deviates from Part 1's Value-Only mapping (IDTA01001-ValueOnly, #1065), level=core has no effect, and the ?content=value form is not read."
+      gapIssue: 1065
   - id: IDTA01002-Content-Reference
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Content (Reference); HTTP/REST API, Design Decisions
@@ -173,6 +520,22 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: /$reference matches no route
+        - type: check
+          ref: aasapi.reference-suffix
+          result: failed
+          date: 2026-10-13
+      notes: "No /$reference route on shells, submodels or elements (Check aasapi.reference-suffix answers 404); the Reference format is missing in Part 1's grading (IDTA01001-ReferenceFormat, #1065)."
+      gapIssue: 1065
   - id: IDTA01002-Content-Path
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Content (Path); HTTP/REST API, Design Decisions
@@ -181,6 +544,22 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: /$path matches no route
+        - type: check
+          ref: aasapi.path-suffix
+          result: failed
+          date: 2026-10-13
+      notes: "No /$path route (Check aasapi.path-suffix answers 404); the Path format is missing in Part 1's grading (IDTA01001-Path, #1065)."
+      gapIssue: 1065
   - id: IDTA01002-Extent
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Extent; HTTP/REST API, Design Decisions (blobs)
@@ -189,6 +568,25 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no extent query parameter
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/blob-json-schema.ts
+          note: "value: base64, nullish, always serialized"
+        - type: check
+          ref: aasapi.extent-default-omits-blob-value
+          result: failed
+          date: 2026-10-13
+      notes: "No route reads an extent parameter: a Blob is returned with its base64 content on every read, so the default withoutBlobValue is not honoured and withBlobValue cannot be asked for (Check aasapi.extent-default-omits-blob-value)."
+      gapIssue: 1069
   - id: IDTA01002-ModifierApplicability
     section: modifiers
     clause: Basic Operation Parameters, Applicability of SerializationModifiers; HTTP/REST API, Mapping of Operations (GetSubmodelElementByPath, Note)
@@ -196,6 +594,24 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: $value on submodels and on elements by path; no suffix on shells
+        - type: code
+          ref: apps/main/src/aas/presentation/responses/value.response.ts
+        - type: check
+          ref: aasapi.undefined-suffix-refused-400
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: the one modifier served, content=value as /$value, is offered where the table admits it, on submodels and on elements by path and not on shells. Missing: level, extent and the other content modifiers do not exist (IDTA01002-Level, IDTA01002-Extent, IDTA01002-Content-Metadata, IDTA01002-Content-Reference, IDTA01002-Content-Path); a suffix an element type does not define is answered 404 as an unknown path instead of 400 with an error description (Check aasapi.undefined-suffix-refused-400); Capability and Operation are refused on write (IDTA01001-Operation, IDTA01001-Capability), so their rule has nothing to apply to."
+      gapIssue: 1069
   - id: IDTA01002-ModifierConstraints
     section: modifiers
     clause: HTTP/REST API, Modifier Constraints; Basic Operation Parameters, Applicability of SerializationModifiers
@@ -203,6 +619,22 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no level, extent or content query parameters to combine; no PUT
+        - type: check
+          ref: aasapi.modifier-combination-refused
+          result: failed
+          date: 2026-10-13
+      notes: "The combination rules constrain modifiers open-dpp does not implement: there is no level, extent or content parameter, /$metadata does not exist and PUT is not served, so no combination is refused (Check aasapi.modifier-combination-refused answers 404). Gap in the HTTP conventions cluster by the map's conditional-clause rule; the one part trivially held is that POST takes no modifiers."
+      gapIssue: 1069
   - id: IDTA01002-StatusCodes
     section: status
     clause: HTTP/REST API, Mapping of Status Codes; Data Types for Payload, Generic Status Codes; the OpenAPI responses of the profiles
@@ -210,6 +642,47 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: DELETE routes answer 204; POST routes 201 and PATCH routes 200 by the framework's default
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: a submodel or shell identifier outside the passport throws BadRequestException (400)
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: a duplicate idShort throws ValueError (400)
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: NotFoundError 404, ForbiddenError 403, ValueError 400; NotSupportedError has no filter
+        - type: check
+          ref: aasapi.created-201-with-location
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.delete-element-204-then-404
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.duplicate-idshort-conflict-409
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.method-not-allowed-405
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: aasapi.unknown-submodel-404
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: 200 with payload on reads, 201 on creation, 204 on deletion, 400 for malformed bodies and failed validation, 401 without credentials, 403 for a refused permission, 404 for a read of an unknown element path (Check aasapi.unknown-element-404). Missing: a submodel or shell identifier the passport does not hold answers 400, not 404 (Check aasapi.unknown-submodel-404), and so does a DELETE of a missing element (Check aasapi.delete-element-204-then-404); a duplicate id or idShort answers 400, not 409 (Check aasapi.duplicate-idshort-conflict-409); 201 comes without a Location header (Check aasapi.created-201-with-location); updates answer 200 with the resource where Part 2 expects 204; a method a resource does not offer answers 404, not 405 (Check aasapi.method-not-allowed-405); a $value PATCH of an element type the value modifier does not support raises a NotSupportedError no filter maps, which the framework answers 500; and 501 is never used for operations outside the served profiles."
+      gapIssue: 1069
   - id: IDTA01002-Result
     section: status
     clause: Data Types for Payload, General Result Object (Result, Message, MessageTypeEnum)
@@ -217,6 +690,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/exception/src/exception.handler.ts
+          note: "{statusCode, timestamp, path, message}"
+        - type: code
+          ref: packages/exception/src/zod-validation.pipeline.ts
+          note: "{message: Validation failed, errors: issues}"
+        - type: check
+          ref: aasapi.error-result-messages
+          result: failed
+          date: 2026-10-13
+      notes: "Errors are answered with NestJS-shaped bodies, {statusCode, timestamp, path, message} from the domain-error filters and {message, errors} from the Zod validation pipe; no Result object with typed Messages, codes, a correlationId or a timestamp per message exists (Check aasapi.error-result-messages)."
+      gapIssue: 1069
   - id: IDTA01002-Security
     section: security
     clause: Editorial Notes, Alignment with other AAS Specifications (IDTA-01004)
@@ -225,6 +717,26 @@ criteria:
     areas:
       - 5
       - 10
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: a local access control with access permission rules per subject on every shell
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: Create, Read, Edit and Delete per idShortPath, inherited from the parent path
+        - type: code
+          ref: packages/dto/src/aas/enums/permission-enum.ts
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: membership is checked on every member route; the public base serves reads only
+      notes: "Credited: the API sits behind sessions, API keys and organisation membership, each shell carries a local access control whose rules grant a subject (user and member role) Create, Read, Edit or Delete on elements by idShortPath, inherited down the tree, and the public base of a published passport serves reads only. Missing: the model is open-dpp's own, not the access rules, attributes and rights of IDTA-01004 V3.1 (no ALL, VIEW, TREE or EXECUTE, no attribute-based rule language), and nothing states which subset of Part 4 is supported. Access-control observations outside this run's rows sit in related private findings; no status rests on them."
+      gapIssue: 1068
   - id: IDTA01002-OperationRights
     section: security
     clause: Annex Operation to RIGHT Mapping (normative)
@@ -233,6 +745,23 @@ criteria:
     areas:
       - 5
       - 10
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: Create is checked when an element is posted below a parent
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: Delete is checked on deletion and on a move
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+      notes: "Credited: write operations are evaluated against one permission each on the element's idShortPath (Create for POST, Edit for PATCH, Delete for DELETE), and the serializers apply Read to what a subject gets back, whatever the HTTP method. Missing: the rights are open-dpp's four, not the six of Part 4; VIEW for references, paths and submodel-refs and EXECUTE for invocations have no counterpart because those operations do not exist (IDTA01002-Content-Reference, IDTA01002-InvokeOperationSync), and a PUT that creates has no CREATE-against-UPDATE distinction because PUT is not served (IDTA01002-Methods-PUT)."
+      gapIssue: 1068
   - id: IDTA01002-GetSelfDescription
     section: description
     clause: API Interfaces, Operation GetSelfDescription; Data Types for Payload, ServiceDescription; Service Specifications and Profiles, Profiles
@@ -241,6 +770,24 @@ criteria:
     areas:
       - 1
       - 13
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /description route
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+        - type: check
+          ref: aasapi.description-lists-profiles
+          result: failed
+          date: 2026-10-13
+      notes: "No /description endpoint on the passport base, on the public base or server-wide (Check aasapi.description-lists-profiles answers 404), so a client cannot learn which profiles a base implements; given the deviations in this file, no Full or Read profile could be listed as implemented today."
+      gapIssue: 1067
   - id: IDTA01002-GetAllAssetAdministrationShells
     section: aas-repo
     clause: API Interfaces, Operation GetAllAssetAdministrationShells; OpenAPI GET /shells (and /shells/$reference)
@@ -248,6 +795,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiGetShellsPath /:id/shells, on the member and the public base
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: getAasShells pages the environment's shells
+        - type: check
+          ref: aasapi.shells-paged-result
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: GET /shells answers the shells of the base as a paged Result with limit and cursor (Check aasapi.shells-paged-result); a passport holds one shell, so the page is one item. Missing: the V3.2 createdFrom and updatedFrom filters are not read (shells carry no createdAt or updatedAt: IDTA01001-AdministrativeInformation), and /shells/$reference is not served."
+      gapIssue: 1067
   - id: IDTA01002-GetAllAssetAdministrationShellsRecentChanges
     section: aas-repo
     clause: API Interfaces, Operation GetAllAssetAdministrationShellsRecentChanges (experimental); Data Types for Payload, Recent Changes; OpenAPI GET /shells/$recent-changes
@@ -256,6 +822,18 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /shells/$recent-changes route
+      notes: "Experimental operation; no /shells/$recent-changes route, and shells carry no createdAt or updatedAt to report (IDTA01001-AdministrativeInformation-dates)."
+      gapIssue: 1067
   - id: IDTA01002-GetAssetAdministrationShellById
     section: aas-repo
     clause: API Interfaces, Operation GetAssetAdministrationShellById; OpenAPI GET /shells/{aasIdentifier} (and /$reference)
@@ -263,6 +841,22 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: /:id/shells/:aasId exists for PATCH only
+        - type: check
+          ref: aasapi.shell-by-id
+          result: failed
+          date: 2026-10-13
+      notes: "No GET /shells/{aasIdentifier} (Check aasapi.shell-by-id answers 404) and no /$reference: a shell is read only through the listing; open-dpp's PATCH /shells/{aasId} is the one route that takes the shell's identifier."
+      gapIssue: 1067
   - id: IDTA01002-GetAllAssetAdministrationShellsByAssetId
     section: aas-repo
     clause: API Interfaces, Operation GetAllAssetAdministrationShellsByAssetId; HTTP/REST API, Design Decisions (assetIds); OpenAPI GET /shells?assetIds=
@@ -271,6 +865,18 @@ criteria:
     areas:
       - 1
       - 3
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no assetIds query parameter
+      notes: "GET /shells reads no assetIds parameter; a filter value is ignored and the listing is returned unchanged, so the operation has no effect. open-dpp's lookup of a passport by product identifier is the GS1 and permalink resolver outside the AAS API (graded in EN18219 and EN18222)."
+      gapIssue: 1067
   - id: IDTA01002-GetAllAssetAdministrationShellsByIdShort
     section: aas-repo
     clause: API Interfaces, Operation GetAllAssetAdministrationShellsByIdShort; OpenAPI GET /shells?idShort=
@@ -278,6 +884,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no idShort query parameter on /shells
+      notes: "GET /shells reads no idShort parameter; a filter value is ignored and the listing is returned unchanged."
+      gapIssue: 1067
   - id: IDTA01002-PostAssetAdministrationShell
     section: aas-repo
     clause: API Interfaces, Operation PostAssetAdministrationShell; OpenAPI POST /shells
@@ -285,6 +903,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: POST /passports creates the passport with its one shell
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: createEnvironment refuses more than one shell
+      notes: "No POST /shells: the shell is created with the passport (POST /passports with an environment holding one shell) and a second shell is refused, so a client cannot post a shell with its own id into a base, and no 409 for an existing id can arise."
+      gapIssue: 1067
   - id: IDTA01002-PutAssetAdministrationShellById
     section: aas-repo
     clause: API Interfaces, Operation PutAssetAdministrationShellById; OpenAPI PUT /shells/{aasIdentifier}
@@ -292,6 +925,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPatchShell; no PUT
+        - type: code
+          ref: packages/dto/src/aas/asset-administration-shell-json-schema.ts
+          note: the PATCH body is displayName, description, assetInformation and security
+      notes: "No PUT /shells/{aasIdentifier}; the shell is modified by open-dpp's PATCH /shells/{aasId}, which takes displayName, description, assetInformation and security only and never creates, so neither the replacement nor the V3.2 check of a body id against the path exists."
+      gapIssue: 1067
   - id: IDTA01002-DeleteAssetAdministrationShellById
     section: aas-repo
     clause: API Interfaces, Operation DeleteAssetAdministrationShellById; OpenAPI DELETE /shells/{aasIdentifier}
@@ -299,6 +947,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: DELETE /passports/:id deletes the passport with its environment
+      notes: "No DELETE /shells/{aasIdentifier}; the shell goes with the passport (DELETE /passports/{id}, 204), which deletes its submodels too, where Part 2 deletes the shell alone."
+      gapIssue: 1067
   - id: IDTA01002-GetAllSubmodelReferences
     section: aas
     clause: API Interfaces, Operation GetAllSubmodelReferences; OpenAPI GET /shells/{aasIdentifier}/submodel-refs
@@ -306,6 +966,22 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /submodel-refs route
+        - type: check
+          ref: aasapi.submodel-refs-superpath
+          result: failed
+          date: 2026-10-13
+      notes: "No /shells/{aasIdentifier}/submodel-refs (Check aasapi.submodel-refs-superpath answers 404); the shell's submodels attribute is returned inline in the shell listing as model references."
+      gapIssue: 1067
   - id: IDTA01002-PostSubmodelReference
     section: aas
     clause: API Interfaces, Operation PostSubmodelReference; HTTP/REST API, Mapping of Operations; OpenAPI POST /shells/{aasIdentifier}/submodel-refs
@@ -313,6 +989,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: addSubmodelToEnvironment adds the reference to the shell itself
+      notes: "No POST …/submodel-refs; a submodel reference is added to the shell implicitly when a submodel is posted to /submodels, so a reference to a submodel held elsewhere cannot be added, and no Location header or 409 arise."
+      gapIssue: 1067
   - id: IDTA01002-DeleteSubmodelReference
     section: aas
     clause: API Interfaces, Operation DeleteSubmodelReference; OpenAPI DELETE /shells/{aasIdentifier}/submodel-refs/{submodelIdentifier}
@@ -320,6 +1008,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /submodel-refs route
+      notes: "No DELETE …/submodel-refs/{submodelIdentifier}; the reference is removed implicitly when the submodel is deleted (DELETE /submodels/{submodelIdentifier}), which deletes the submodel as well."
+      gapIssue: 1067
   - id: IDTA01002-GetAssetInformation
     section: aas
     clause: API Interfaces, Operation GetAssetInformation; OpenAPI GET /shells/{aasIdentifier}/asset-information
@@ -328,6 +1028,22 @@ criteria:
     areas:
       - 1
       - 3
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /asset-information route
+        - type: check
+          ref: aasapi.asset-information
+          result: failed
+          date: 2026-10-13
+      notes: "No GET …/asset-information (Check aasapi.asset-information answers 404); the asset information is returned inline in the shell listing."
+      gapIssue: 1067
   - id: IDTA01002-PutAssetInformation
     section: aas
     clause: API Interfaces, Operation PutAssetInformation; OpenAPI PUT /shells/{aasIdentifier}/asset-information
@@ -336,6 +1052,18 @@ criteria:
     areas:
       - 1
       - 3
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/aas/asset-administration-shell-json-schema.ts
+          note: AssetInformationModificationSchema inside the shell PATCH body
+      notes: "No PUT …/asset-information; the asset information is changed through open-dpp's PATCH /shells/{aasId} body, a partial update of the shell rather than a replacement at the specified path."
+      gapIssue: 1067
   - id: IDTA01002-GetThumbnail
     section: aas
     clause: API Interfaces, Operation GetThumbnail; OpenAPI GET /shells/{aasIdentifier}/asset-information/thumbnail
@@ -343,6 +1071,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/asset-information.ts
+          note: defaultThumbnail is held as a Resource
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: uploads are served by media id outside the AAS routes
+      notes: "No …/asset-information/thumbnail route; the defaultThumbnail Resource is held and returned inline in the shell (IDTA01001-Resource), and file content is served by open-dpp's media routes, not through the AAS API."
+      gapIssue: 1067
   - id: IDTA01002-PutThumbnail
     section: aas
     clause: API Interfaces, Operation PutThumbnail; OpenAPI PUT /shells/{aasIdentifier}/asset-information/thumbnail
@@ -350,6 +1093,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: files are uploaded through the media routes and referenced by media id
+      notes: "No PUT …/asset-information/thumbnail; files are uploaded through open-dpp's media routes as multipart and referenced by media id."
+      gapIssue: 1067
   - id: IDTA01002-DeleteThumbnail
     section: aas
     clause: API Interfaces, Operation DeleteThumbnail; OpenAPI DELETE /shells/{aasIdentifier}/asset-information/thumbnail
@@ -357,6 +1112,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /asset-information/thumbnail route
+      notes: "No DELETE …/asset-information/thumbnail."
+      gapIssue: 1067
   - id: IDTA01002-GetAllSubmodels
     section: sm-repo
     clause: API Interfaces, Operation GetAllSubmodels; OpenAPI GET /submodels (and /$metadata, /$value, /$reference, /$path)
@@ -364,6 +1131,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiSubmodelsPath /:id/submodels, on the member and the public base
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: getSubmodels pages the environment's submodels
+      notes: "Credited: GET /submodels answers the submodels of the base as a paged Result with limit and cursor, to members on the passport base and to anyone on the public base of a published passport. Missing: the V3.2 createdFrom and updatedFrom filters are not read (submodels carry no createdAt or updatedAt), level and extent are ignored, and the /$metadata, /$value, /$reference and /$path suffixes are not served on the listing (IDTA01002-Content-Metadata and the following rows)."
+      gapIssue: 1067
   - id: IDTA01002-GetAllSubmodelsRecentChanges
     section: sm-repo
     clause: API Interfaces, Operation GetAllSubmodelsRecentChanges (experimental); Data Types for Payload, Recent Changes; OpenAPI GET /submodels/$recent-changes
@@ -372,6 +1154,18 @@ criteria:
     areas:
       - 1
       - 6
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /submodels/$recent-changes route
+      notes: "Experimental operation; no /submodels/$recent-changes route, and submodels carry no createdAt or updatedAt to report (IDTA01001-AdministrativeInformation-dates)."
+      gapIssue: 1067
   - id: IDTA01002-GetSubmodelById
     section: sm-repo
     clause: API Interfaces, Operation GetSubmodelById and GetSubmodel; OpenAPI GET /submodels/{submodelIdentifier} (and its content suffixes)
@@ -379,6 +1173,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiGetSubmodelByIdPath /:id/submodels/:submodelId
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: findSubmodelByIdOrFail throws BadRequestException for an identifier the passport does not list
+        - type: check
+          ref: aasapi.unknown-submodel-404
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: GET /submodels/{submodelIdentifier} returns the submodel, by base64 or raw UUID identifier, and its /$value is served. Missing: an identifier the base does not hold answers 400 instead of 404 (Check aasapi.unknown-submodel-404), base64url identifiers are not decoded (IDTA01002-IdentifierEncoding), level and extent are ignored, and /$metadata, /$reference and /$path are not served."
+      gapIssue: 1069
   - id: IDTA01002-GetAllSubmodelsBySemanticId
     section: sm-repo
     clause: API Interfaces, Operation GetAllSubmodelsBySemanticId; HTTP/REST API, Design Decisions (semanticId); OpenAPI GET /submodels?semanticId=
@@ -387,6 +1200,22 @@ criteria:
     areas:
       - 1
       - 8
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no semanticId query parameter
+        - type: check
+          ref: aasapi.semantic-id-filter
+          result: failed
+          date: 2026-10-13
+      notes: "GET /submodels reads no semanticId parameter; the listing is returned unchanged (Check aasapi.semantic-id-filter), so a client cannot find the submodels built from a template by semanticId or supplementalSemanticIds."
+      gapIssue: 1067
   - id: IDTA01002-GetAllSubmodelsByIdShort
     section: sm-repo
     clause: API Interfaces, Operation GetAllSubmodelsByIdShort; OpenAPI GET /submodels?idShort=
@@ -394,6 +1223,22 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no idShort query parameter on /submodels
+        - type: check
+          ref: aasapi.idshort-filter
+          result: failed
+          date: 2026-10-13
+      notes: "GET /submodels reads no idShort parameter; the listing is returned unchanged (Check aasapi.idshort-filter)."
+      gapIssue: 1067
   - id: IDTA01002-PostSubmodel
     section: sm-repo
     clause: API Interfaces, Operation PostSubmodel; OpenAPI POST /submodels
@@ -401,6 +1246,28 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPostSubmodel
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-json-schema.ts
+          note: the id is kept from the payload, a UUID by default
+        - type: code
+          ref: apps/main/src/aas/domain/environment.ts
+          note: addSubmodel refuses an id the passport already lists
+        - type: check
+          ref: aasapi.created-201-with-location
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: POST /submodels creates the submodel with the id of the payload (a UUID when none is sent) and answers 201 with the created submodel; a second post of the same id into the passport is refused. Missing: no Location header (Check aasapi.created-201-with-location), the refusal answers 400 rather than 409 (IDTA01002-StatusCodes), and the id is unique per passport only (IDTA01002-Methods-POST)."
+      gapIssue: 1069
   - id: IDTA01002-PutSubmodelById
     section: sm-repo
     clause: API Interfaces, Operation PutSubmodelById and PutSubmodel; OpenAPI PUT /submodels/{submodelIdentifier}
@@ -408,6 +1275,22 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no PUT on /:id/submodels/:submodelId
+        - type: check
+          ref: aasapi.put-submodel-replaces
+          result: failed
+          date: 2026-10-13
+      notes: "No PUT /submodels/{submodelIdentifier} (Check aasapi.put-submodel-replaces answers 404); a submodel is changed in parts by PATCH (IDTA01002-PatchSubmodelById) or deleted and posted again."
+      gapIssue: 1067
   - id: IDTA01002-PatchSubmodelById
     section: sm-repo
     clause: API Interfaces, Operation PatchSubmodelById and PatchSubmodel; OpenAPI PATCH /submodels/{submodelIdentifier} (and /$metadata, /$value)
@@ -415,6 +1298,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPatchSubmodel and ApiPatchSubmodelValue
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-json-schema.ts
+          note: "SubmodelModificationSchema: idShort, displayName and description"
+        - type: code
+          ref: apps/main/src/aas/domain/value-modifier-visitor.ts
+        - type: test
+          ref: apps/main/src/aas/domain/value-modifier-visitor.spec.ts
+      notes: "Credited: PATCH /submodels/{submodelIdentifier} updates the submodel and PATCH …/$value updates its values from the Value-Only form, all or nothing (Check api.update-all-or-nothing). Missing: the Normal-form body takes idShort, displayName and description only and ignores every other attribute, idShort is mandatory in it, /$metadata is not served, and both answer 200 with the submodel instead of 204."
+      gapIssue: 1069
   - id: IDTA01002-DeleteSubmodelById
     section: sm-repo
     clause: API Interfaces, Operation DeleteSubmodelById; OpenAPI DELETE /submodels/{submodelIdentifier}
@@ -422,6 +1324,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiDeleteSubmodelById answers 204
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: deleteSubmodelFromEnvironment; an identifier the passport does not list is a bad request
+      notes: "Credited: DELETE /submodels/{submodelIdentifier} deletes the submodel, removes the shell's reference to it and answers 204. Missing: an identifier the base does not hold answers 400 instead of 404, as on IDTA01002-GetSubmodelById."
+      gapIssue: 1069
   - id: IDTA01002-GetAllSubmodelElements
     section: sm
     clause: API Interfaces, Operation GetAllSubmodelElements; OpenAPI GET /submodels/{submodelIdentifier}/submodel-elements (and its content suffixes)
@@ -429,6 +1346,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiSubmodelElementsPath, on the member and the public base
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: getSubmodelElements pages the submodel's direct children by idShort
+      notes: "Credited: GET …/submodel-elements returns the submodel's elements with their hierarchy as a paged Result with limit and cursor (Checks aasapi.pagination-walk-deterministic, aasapi.pagination-end-without-cursor). Missing: level and extent are ignored, the content suffixes are not served on the listing, and the paging deviations of IDTA01002-Pagination apply."
+      gapIssue: 1069
   - id: IDTA01002-GetSubmodelElementByPath
     section: sm
     clause: API Interfaces, Operation GetSubmodelElementByPath; OpenAPI GET /submodels/{submodelIdentifier}/submodel-elements/{idShortPath} (and its content suffixes)
@@ -436,6 +1368,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiGetSubmodelElementByIdPath, on the member and the public base
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: findSubmodelElementOrFail answers 404 for an unknown path
+        - type: check
+          ref: aasapi.unknown-element-404
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: GET …/submodel-elements/{idShortPath} returns the element at a dotted path, 404 when there is none (Check aasapi.unknown-element-404), and its /$value is served. Missing: list items by index (IDTA01002-IdShortPath), level and extent, and the /$metadata, /$reference and /$path suffixes (IDTA01002-ModifierApplicability)."
+      gapIssue: 1069
   - id: IDTA01002-GetSubmodelElementValueByPath
     section: sm
     clause: API Interfaces, Operation GetSubmodelElementValueByPath; OpenAPI GET /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$value
@@ -444,6 +1395,28 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiGetSubmodelElementValuePath, on the member and the public base
+        - type: code
+          ref: apps/main/src/aas/presentation/responses/value.response.ts
+        - type: code
+          ref: apps/main/src/aas/domain/value-visitor.ts
+        - type: test
+          ref: apps/main/src/aas/domain/value-visitor.spec.ts
+        - type: check
+          ref: aasapi.value-suffix-unnamed-root
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: GET …/{idShortPath}/$value is served and returns the Value-Only form of the element (Check aasapi.value-suffix-unnamed-root). Missing: the form writes every value as a string and deviates from Part 1's Value-Only mapping (IDTA01001-ValueOnly, IDTA01001-ValueOnly-types, #1065)."
+      gapIssue: 1065
   - id: IDTA01002-GetFileByPath
     section: sm
     clause: API Interfaces, Operation GetFileByPath; Data Types for Payload, File Content; OpenAPI GET …/submodel-elements/{idShortPath}/attachment
@@ -451,6 +1424,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /attachment route
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: GET /media/:id/download serves uploads by media id
+        - type: check
+          ref: aasapi.file-attachment
+          result: failed
+          date: 2026-10-13
+      notes: "No …/{idShortPath}/attachment (Check aasapi.file-attachment answers 404): a File element's value is a media id and its content is served by open-dpp's media routes outside the AAS API, without the 405 rule for elements that are no File. The media-id file locator is graded in IDTA01001-File (#1065)."
+      gapIssue: 1067
   - id: IDTA01002-PutFileByPath
     section: sm
     clause: API Interfaces, Operation PutFileByPath; OpenAPI PUT …/submodel-elements/{idShortPath}/attachment
@@ -458,6 +1450,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: files are uploaded through the media routes and referenced by media id
+      notes: "No PUT …/attachment; a file is uploaded through open-dpp's media routes as multipart and the returned media id is set as the File element's value."
+      gapIssue: 1067
   - id: IDTA01002-DeleteFileByPath
     section: sm
     clause: API Interfaces, Operation DeleteFileByPath; OpenAPI DELETE …/submodel-elements/{idShortPath}/attachment
@@ -465,6 +1469,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /attachment route
+      notes: "No DELETE …/attachment."
+      gapIssue: 1067
   - id: IDTA01002-PostSubmodelElement
     section: sm
     clause: API Interfaces, Operation PostSubmodelElement; OpenAPI POST /submodels/{submodelIdentifier}/submodel-elements
@@ -472,6 +1488,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPostSubmodelElement
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-base.ts
+          note: addSubmodelElementOrFail refuses a used idShort with a ValueError
+        - type: check
+          ref: aasapi.duplicate-idshort-conflict-409
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: POST …/submodel-elements creates a direct child with the idShort of the payload and answers 201 with the created element; a used idShort is refused. Missing: the refusal answers 400 instead of 409 (Check aasapi.duplicate-idshort-conflict-409), and Operation, Capability and BasicEventElement bodies are refused (IDTA01001-Operation, IDTA01001-Capability, IDTA01001-BasicEventElement, #1064)."
+      gapIssue: 1069
   - id: IDTA01002-PostSubmodelElementByPath
     section: sm
     clause: API Interfaces, Operation PostSubmodelElementByPath; OpenAPI POST …/submodel-elements/{idShortPath}
@@ -479,6 +1514,25 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPostSubmodelElementAtIdShortPath
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: addSubmodelElement with an idShortPath adds below the container at that path
+        - type: check
+          ref: aasapi.post-into-list-appends
+          result: passed
+          date: 2026-10-13
+      notes: "Credited: POST …/submodel-elements/{idShortPath} creates the element below the collection or list at that path and answers 201 with it; an element posted into a SubmodelElementList is appended at its end (Check aasapi.post-into-list-appends). Missing: a list item must carry an idShort where Part 2 appends it without one (IDTA01001-SubmodelElementList, #1064), a duplicate idShort answers 400 instead of 409, and Entity and AnnotatedRelationshipElement parents are refused on write (IDTA01001-Entity, IDTA01001-AnnotatedRelationshipElement, #1064)."
+      gapIssue: 1069
   - id: IDTA01002-PutSubmodelElementByPath
     section: sm
     clause: API Interfaces, Operation PutSubmodelElementByPath; OpenAPI PUT …/submodel-elements/{idShortPath}
@@ -486,6 +1540,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no PUT on /:id/submodels/:submodelId/submodel-elements/:idShortPath
+      notes: "No PUT …/submodel-elements/{idShortPath}; an element is changed in parts by PATCH (IDTA01002-PatchSubmodelElementByPath) or deleted and posted again."
+      gapIssue: 1067
   - id: IDTA01002-PatchSubmodelElementByPath
     section: sm
     clause: API Interfaces, Operation PatchSubmodelElementByPath; OpenAPI PATCH …/submodel-elements/{idShortPath} (and /$metadata)
@@ -493,6 +1559,30 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPatchSubmodelElement
+        - type: code
+          ref: packages/dto/src/aas/submodel-base/submodel-element-modification-schema.ts
+          note: idShort, displayName and description; a loose object, other keys reach the modifier
+        - type: code
+          ref: apps/main/src/aas/domain/modifier-visitor.ts
+          note: lists Blob, Entity, AnnotatedRelationshipElement and MultiLanguageProperty as not supported
+        - type: test
+          ref: apps/main/src/aas/domain/modifier-visitor.spec.ts
+        - type: check
+          ref: aasapi.patch-element-204
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: PATCH …/submodel-elements/{idShortPath} updates the element at that path from a Normal-form body. Missing: the answer is 200 with the element instead of 204 (Check aasapi.patch-element-204), idShort is mandatory in the body, /$metadata is not served, and the modifier refuses several element types."
+      gapIssue: 1069
   - id: IDTA01002-PatchSubmodelElementValueByPath
     section: sm
     clause: API Interfaces, Operation PatchSubmodelElementValueByPath; OpenAPI PATCH …/submodel-elements/{idShortPath}/$value
@@ -501,6 +1591,27 @@ criteria:
     areas:
       - 1
       - 2
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiPatchSubmodelElementValue
+        - type: code
+          ref: apps/main/src/aas/domain/value-modifier-visitor.ts
+          note: refuses Blob, Entity, Range and relationship values as not supported
+        - type: test
+          ref: apps/main/src/aas/domain/value-modifier-visitor.spec.ts
+        - type: check
+          ref: aasapi.patch-value-204
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: PATCH …/{idShortPath}/$value sets the value of the element at that path from the Value-Only form, all or nothing. Missing: the answer is 200 with the element instead of 204 (Check aasapi.patch-value-204), and Blob, Entity, Range and relationship values are refused as not supported."
+      gapIssue: 1069
   - id: IDTA01002-DeleteSubmodelElementByPath
     section: sm
     clause: API Interfaces, Operation DeleteSubmodelElementByPath; OpenAPI DELETE …/submodel-elements/{idShortPath}
@@ -508,6 +1619,28 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: ApiDeleteSubmodelElementById answers 204
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: deleteSubmodelElement removes the element at the path; a missing element raises a ValueError (400)
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
+          note: deletes a submodel element by idShortPath
+        - type: check
+          ref: aasapi.delete-element-204-then-404
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: DELETE …/submodel-elements/{idShortPath} deletes the element at that path and answers 204 without payload, after which a read of the path answers 404. Missing: a DELETE of a path with no element answers 400 instead of 404 (Check aasapi.delete-element-204-then-404 fails on that last step)."
+      gapIssue: 1069
   - id: IDTA01002-InvokeOperationSync
     section: sm
     clause: API Interfaces, Operation InvokeOperationSync; HTTP/REST API, Asynchronous Invocation; OpenAPI POST …/{idShortPath}/invoke (and /$value)
@@ -515,6 +1648,21 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /invoke route
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-registry.ts
+          note: no Operation element class is registered
+      notes: "No …/{idShortPath}/invoke route; Operation elements are refused on write (IDTA01001-Operation, #1064), so there is nothing to invoke and the 405 for other element types has no counterpart."
+      gapIssue: 1064
   - id: IDTA01002-InvokeOperationAsync
     section: sm
     clause: API Interfaces, Operation InvokeOperationAsync; HTTP/REST API, Asynchronous Invocation; OpenAPI POST …/{idShortPath}/invoke-async (and /$value)
@@ -522,6 +1670,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /invoke-async route
+      notes: "No …/{idShortPath}/invoke-async route; Operation elements are refused on write (IDTA01001-Operation, #1064)."
+      gapIssue: 1064
   - id: IDTA01002-GetOperationAsyncStatus
     section: sm
     clause: API Interfaces, Operation GetOperationAsyncStatus; HTTP/REST API, Asynchronous Invocation; OpenAPI GET …/operation-status/{handleId}
@@ -529,6 +1689,18 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /operation-status route
+      notes: "No …/operation-status/{handleId} route; no asynchronous invocation exists to report on (IDTA01002-InvokeOperationAsync)."
+      gapIssue: 1064
   - id: IDTA01002-GetOperationAsyncResult
     section: sm
     clause: API Interfaces, Operation GetOperationAsyncResult; HTTP/REST API, Asynchronous Invocation; OpenAPI GET …/operation-results/{handleId} (and /$value)
@@ -536,3 +1708,15 @@ criteria:
     applicability: software
     areas:
       - 1
+    assessment:
+      date: 2026-10-13
+      commit: dad482466f7c8b760d173b41f2cefab283e9200f
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: no /operation-results route
+      notes: "No …/operation-results/{handleId} route; no asynchronous invocation exists to deliver a result for (IDTA01002-InvokeOperationAsync)."
+      gapIssue: 1064
