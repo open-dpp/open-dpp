@@ -139,7 +139,7 @@ check(
   {
     id: "api.missing-credentials-answer-401",
     title: "a request without credentials to a members-only passport route is answered 401",
-    criteria: ["EN18222-7.2(6)"],
+    criteria: ["EN18222-7.2(6)", "IDTA01002-StatusCodes"],
   },
   async ({ browser }) => {
     const subject = readSubject();

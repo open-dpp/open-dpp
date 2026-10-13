@@ -279,16 +279,33 @@ check(
 
 check(
   {
-    id: "aasapi.pagination-limit-minimum-one",
-    title: "a limit below one is refused",
+    id: "aasapi.pagination-negative-limit-refused",
+    title: "a negative limit is refused",
     criteria: ["IDTA01002-Pagination"],
   },
   async ({ request }) => {
     const content = await contentSubmodel(request);
-    const response = await request.get(`${content.url}/submodel-elements?limit=0`, {
+    // The text types limit as a non-negative integer and the OpenAPI file gives it a minimum of 1;
+    // both exclude a negative value.
+    const response = await request.get(`${content.url}/submodel-elements?limit=-1`, {
       headers: memberHeaders(),
     });
-    expect(response.status(), "limit=0").toBe(400);
+    expect(response.status(), "limit=-1").toBe(400);
+  },
+);
+
+check(
+  {
+    id: "aasapi.empty-cursor-refused",
+    title: "an empty cursor parameter is refused (AASa-001)",
+    criteria: ["IDTA01002-AASa-001"],
+  },
+  async ({ request }) => {
+    const content = await contentSubmodel(request);
+    const response = await request.get(`${content.url}/submodel-elements?limit=1&cursor=`, {
+      headers: memberHeaders(),
+    });
+    expect(response.status(), "cursor=").toBe(400);
   },
 );
 
@@ -510,17 +527,17 @@ check(
 
 check(
   {
-    id: "aasapi.method-not-allowed-405",
-    title: "a method the resource does not offer answers 405",
-    criteria: ["IDTA01002-StatusCodes"],
+    id: "aasapi.attachment-of-non-file-405",
+    title: "the attachment of an element that is no File answers 405",
+    criteria: ["IDTA01002-StatusCodes", "IDTA01002-GetFileByPath"],
   },
   async ({ request }) => {
     const content = await contentSubmodel(request);
-    const response = await request.post(`${content.url}/$value`, {
+    // One of the 405 cases Part 2 defines: GetFileByPath on an element that is no File.
+    const response = await request.get(`${content.url}/submodel-elements/TradeName/attachment`, {
       headers: memberHeaders(),
-      data: {},
     });
-    expect(response.status(), "POST /submodels/{id}/$value").toBe(405);
+    expect(response.status(), "GET …/TradeName/attachment").toBe(405);
   },
 );
 
