@@ -234,7 +234,7 @@ criteria:
           note: findSubmodelElement compares each segment with the stored idShort by strict equality
         - type: test
           ref: apps/main/src/aas/domain/submodel-base/submodel.spec.ts
-          note: finds, and fails to find, an element by idShortPath
+          note: finds an element by idShortPath; the case comparison itself is asserted by the Check
         - type: check
           ref: aasapi.idshort-case-sensitive
           result: passed
@@ -336,7 +336,7 @@ criteria:
         - type: code
           ref: apps/main/src/open-api-docs/index.ts
           note: one OpenAPI 3.1 document, versioned with the latest API version
-      notes: "Credited: the API is versioned in the URL by major (/api/v1, /api/v2), the recommended form, both majors are served side by side with the passport base between the version and the functional path, and a machine-readable OpenAPI 3.1 description is served (Check api.openapi-document-served). Missing: the versions are open-dpp's own, without a minor, and nothing states which Part 2 version (api/v3) the AAS routes follow; the OpenAPI document describes the latest major only, omits several AAS routes and advertises write methods on the public base; and there is no /description endpoint (IDTA01002-GetSelfDescription)."
+      notes: "Credited: the API is versioned in the URL by major (/api/v1, /api/v2), the recommended form, both majors are served side by side with the passport base between the version and the functional path, and a machine-readable OpenAPI 3.1 description is served (Check api.openapi-document-served). Missing: the versions are open-dpp's own, without a minor, and nothing states which Part 2 version (api/v3) the AAS routes follow; the OpenAPI document describes the latest major only, the passport and template bases, and not every served AAS route; and there is no /description endpoint (IDTA01002-GetSelfDescription)."
       gapIssue: 1067
   - id: IDTA01002-Pagination
     section: pagination
@@ -368,10 +368,6 @@ criteria:
           result: failed
           date: 2026-10-13
         - type: check
-          ref: aasapi.pagination-limit-minimum-one
-          result: failed
-          date: 2026-10-13
-        - type: check
           ref: aasapi.pagination-walk-deterministic
           result: passed
           date: 2026-10-13
@@ -379,7 +375,11 @@ criteria:
           ref: aasapi.shells-paged-result
           result: passed
           date: 2026-10-13
-      notes: "Credited: GetAll answers hold result and paging_metadata, a missing cursor gives the first page, limit caps the page and pages chain through the cursor (Checks aasapi.shells-paged-result, aasapi.pagination-walk-deterministic); without a limit the whole list is returned, a choice the text leaves to the server. Missing: the last page still carries a cursor, and one more request returns an empty page (Check aasapi.pagination-end-without-cursor); the cursor is the raw id or idShort of the last item rather than an opaque token, and an unknown cursor silently restarts at the first item; limit accepts 0 and negative values where the OpenAPI parameter has a minimum of 1 (Check aasapi.pagination-limit-minimum-one); and the envelope is not the Part 2 Result object (IDTA01002-Result)."
+        - type: check
+          ref: aasapi.pagination-negative-limit-refused
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: GetAll answers hold result and paging_metadata, a missing cursor gives the first page, limit caps the page and pages chain through the cursor (Checks aasapi.shells-paged-result, aasapi.pagination-walk-deterministic); without a limit the whole list is returned, a choice the text leaves to the server. Missing: the last page still carries a cursor, and one more request returns an empty page (Check aasapi.pagination-end-without-cursor); the cursor is the raw id or idShort of the last item rather than an opaque token, and an unknown cursor silently restarts at the first item; limit accepts negative values, which the text's non-negative integer and the OpenAPI minimum of 1 both exclude (Check aasapi.pagination-negative-limit-refused), and 0, which the text allows and the OpenAPI file does not; and the envelope is not the Part 2 Result object (IDTA01002-Result)."
       gapIssue: 1069
   - id: IDTA01002-Pagination-order
     section: pagination
@@ -407,7 +407,7 @@ criteria:
           ref: aasapi.pagination-walk-deterministic
           result: passed
           date: 2026-10-13
-      notes: "Pages are slices of the stored, ordered list of ids or idShorts, so two items never swap between requests and an attribute change moves nothing; a created or deleted item shifts later pages, which the text allows (Check aasapi.pagination-walk-deterministic: two walks with limit 3 reproduce the unpaged order)."
+      notes: "Pages are slices of the stored, ordered list of ids or idShorts, so two items never swap between requests and an attribute change moves nothing; a created or deleted item shifts later pages, which the text allows (Check aasapi.pagination-walk-deterministic: two walks with limit 3 reproduce the unpaged order). open-dpp's own move and reorder routes change the stored order on purpose, a change of the data rather than a swap between two identical requests."
   - id: IDTA01002-AASa-001
     section: pagination
     clause: HTTP/REST API, Pagination, Constraint AASa-001
@@ -419,19 +419,24 @@ criteria:
       date: 2026-10-13
       commit: dad482466f7c8b760d173b41f2cefab283e9200f
       validator: agent:conformance-review
-      status: Met
+      status: Partial
       operational: false
       evidence:
         - type: code
           ref: packages/api-client/src/dpp/aas/aasNamespace.ts
-          note: getShells and getSubmodels pass limit and cursor as axios params, which drops an undefined cursor
+          note: getShells and getSubmodels pass limit and cursor as axios params, which drop an undefined cursor
+        - type: code
+          ref: apps/client/src/composables/pagination.ts
+          note: the web client's cursor is undefined, never an empty string, when there is none
         - type: code
           ref: apps/main/src/aas/presentation/aas.decorators.ts
-          note: "CursorQueryParamSchema: an optional string; a missing cursor gives the first page"
-        - type: manual
-          ref: "Against an Instance built from dad48246 (port 3001), as a member of the conformance organisation: the first request of Check aasapi.pagination-walk-deterministic sends limit without a cursor parameter and receives the first page; the shipped api-client builds its query from axios params, where an undefined cursor is omitted."
+          note: "CursorQueryParamSchema: an optional string without a minimum length; an empty cursor is treated as the start"
+        - type: check
+          ref: aasapi.empty-cursor-refused
+          result: failed
           date: 2026-10-13
-      notes: "A constraint on the client: open-dpp's own client omits the cursor parameter when it has none, and the server treats a missing cursor as the first page, so the constraint is honoured on both sides open-dpp ships."
+      notes: "Credited: the clients open-dpp ships never send an empty cursor (the api-client builds its query from axios params, which drop an undefined value, and the web client passes undefined when it has no cursor); no test pins this. Missing: the server does not enforce the constraint: ?cursor= is accepted and answered with the first page instead of 400 (Check aasapi.empty-cursor-refused)."
+      gapIssue: 1069
   - id: IDTA01002-Level
     section: modifiers
     clause: Basic Operation Parameters, Enumeration Level; HTTP/REST API, Design Decisions
@@ -674,14 +679,18 @@ criteria:
           result: failed
           date: 2026-10-13
         - type: check
-          ref: aasapi.method-not-allowed-405
-          result: failed
-          date: 2026-10-13
-        - type: check
           ref: aasapi.unknown-submodel-404
           result: failed
           date: 2026-10-13
-      notes: "Credited: 200 with payload on reads, 201 on creation, 204 on deletion, 400 for malformed bodies and failed validation, 401 without credentials, 403 for a refused permission, 404 for a read of an unknown element path (Check aasapi.unknown-element-404). Missing: a submodel or shell identifier the passport does not hold answers 400, not 404 (Check aasapi.unknown-submodel-404), and so does a DELETE of a missing element (Check aasapi.delete-element-204-then-404); a duplicate id or idShort answers 400, not 409 (Check aasapi.duplicate-idshort-conflict-409); 201 comes without a Location header (Check aasapi.created-201-with-location); updates answer 200 with the resource where Part 2 expects 204; a method a resource does not offer answers 404, not 405 (Check aasapi.method-not-allowed-405); a $value PATCH of an element type the value modifier does not support raises a NotSupportedError no filter maps, which the framework answers 500; and 501 is never used for operations outside the served profiles."
+        - type: check
+          ref: aasapi.attachment-of-non-file-405
+          result: failed
+          date: 2026-10-13
+        - type: check
+          ref: api.missing-credentials-answer-401
+          result: failed
+          date: 2026-10-13
+      notes: "Credited: 200 with payload on reads, 201 on creation, 204 on deletion, 400 for malformed bodies and failed validation, 403 for a refused permission, 404 for a read of an unknown element path (Check aasapi.unknown-element-404). Missing: a request without credentials to a member route answers 403, not 401 (Check api.missing-credentials-answer-401 of EN 18222); a submodel or shell identifier the passport does not hold answers 400, not 404 (Check aasapi.unknown-submodel-404), and so does a DELETE of a missing element (Check aasapi.delete-element-204-then-404); a duplicate id or idShort answers 400, not 409 (Check aasapi.duplicate-idshort-conflict-409); 201 comes without a Location header (Check aasapi.created-201-with-location); updates answer 200 with the resource where Part 2 expects 204; the 405 cases Part 2 defines (the attachment of an element that is no File, the invocation of an element that is no Operation) answer 404, their routes not existing (Check aasapi.attachment-of-non-file-405); a $value PATCH of an element type the value modifier does not support raises a NotSupportedError no filter maps, which the framework answers 500; and 501 is never used for operations outside the served profiles."
       gapIssue: 1069
   - id: IDTA01002-Result
     section: status
@@ -1441,7 +1450,11 @@ criteria:
           ref: aasapi.file-attachment
           result: failed
           date: 2026-10-13
-      notes: "No …/{idShortPath}/attachment (Check aasapi.file-attachment answers 404): a File element's value is a media id and its content is served by open-dpp's media routes outside the AAS API, without the 405 rule for elements that are no File. The media-id file locator is graded in IDTA01001-File (#1065)."
+        - type: check
+          ref: aasapi.attachment-of-non-file-405
+          result: failed
+          date: 2026-10-13
+      notes: "No …/{idShortPath}/attachment (Check aasapi.file-attachment answers 404): a File element's value is a media id and its content is served by open-dpp's media routes outside the AAS API, without the 405 rule for elements that are no File (Check aasapi.attachment-of-non-file-405). The media-id file locator is graded in IDTA01001-File (#1065)."
       gapIssue: 1067
   - id: IDTA01002-PutFileByPath
     section: sm
@@ -1531,7 +1544,7 @@ criteria:
           ref: aasapi.post-into-list-appends
           result: passed
           date: 2026-10-13
-      notes: "Credited: POST …/submodel-elements/{idShortPath} creates the element below the collection or list at that path and answers 201 with it; an element posted into a SubmodelElementList is appended at its end (Check aasapi.post-into-list-appends). Missing: a list item must carry an idShort where Part 2 appends it without one (IDTA01001-SubmodelElementList, #1064), a duplicate idShort answers 400 instead of 409, and Entity and AnnotatedRelationshipElement parents are refused on write (IDTA01001-Entity, IDTA01001-AnnotatedRelationshipElement, #1064)."
+      notes: "Credited: POST …/submodel-elements/{idShortPath} creates the element below the collection or list at that path and answers 201 with it; an element posted into a SubmodelElementList is appended at its end (Check aasapi.post-into-list-appends). Missing: a list item must carry an idShort where Part 2 appends it without one (IDTA01001-SubmodelElementList, #1064) and a duplicate idShort answers 400 instead of 409; posting below an Entity's statements or an AnnotatedRelationshipElement's annotations was not probed."
       gapIssue: 1069
   - id: IDTA01002-PutSubmodelElementByPath
     section: sm
@@ -1574,7 +1587,7 @@ criteria:
           note: idShort, displayName and description; a loose object, other keys reach the modifier
         - type: code
           ref: apps/main/src/aas/domain/modifier-visitor.ts
-          note: lists Blob, Entity, AnnotatedRelationshipElement and MultiLanguageProperty as not supported
+          note: lists AnnotatedRelationshipElement, Blob, Entity, MultiLanguageProperty, Range and RelationshipElement as not supported
         - type: test
           ref: apps/main/src/aas/domain/modifier-visitor.spec.ts
         - type: check
