@@ -34,6 +34,7 @@ describe("the committed files", () => {
       "EN301549",
       "ESPR",
       "IDTA01001",
+      "IDTA01002",
       "ISO21778",
       "REG1778",
       "TOYS",
