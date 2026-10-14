@@ -304,13 +304,13 @@ sources:
     short: AAS Part 2 V3.2
     reference: IDTA-01002-3-2 (V3.2.0)
     publisher: Industrial Digital Twin Association
-    edition: V3.2.0, aligned with IDTA-01001 V3.2 (CC-BY-4.0); scoped to the AAS and Submodel interfaces (#1021), assessed in #1045
+    edition: V3.2.0, July 2026 (release tag v3.2.0 of admin-shell-io/aas-specs-api, commit f136ba14, CC-BY-4.0), aligned with IDTA-01001 V3.2; read from the AsciiDoc sources and the OpenAPI files of the AAS Repository and Submodel Repository Full profiles (SSP-001) of that tag; scoped to the AAS and Submodel interfaces (#1021), assessed in #1045
     stage: Published; a declared standard of open-dpp (map decision of 2026-10-12, #1021), no law or EN cites it
     access: public
-    url: https://industrialdigitaltwin.org/en/content-hub/aasspecifications
+    url: https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/index.html
     watch:
       url: https://github.com/admin-shell-io/aas-specs-api/releases
-      lookFor: A V3.2.x patch release or V3.3
+      lookFor: A V3.2.x patch release (patch releases are binding bugfixes) or V3.3, and a release of aas-test-engines that tests API V3.2
   - id: EN301549
     tier: C
     title: Accessibility requirements for ICT products and services

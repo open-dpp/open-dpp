@@ -2287,3 +2287,155 @@ runs:
     adversarialReview:
       blockingObjections: 5
       comment: https://github.com/open-dpp/open-dpp/pull/1066#issuecomment-6132203615
+  - id: 2026-10-12-idta01002
+    date: 2026-10-12
+    trigger:
+      kind: code
+      detail: "first assessment of IDTA01002 IDTA-01002-3-2 V3.2.0 (Extract and Assess in one session, ticket #1045)"
+    commit: dad482466f7c8b760d173b41f2cefab283e9200f
+    sources:
+      - IDTA01002
+    scope:
+      - id: IDTA01002-Methods-POST
+        reason: not assessed
+      - id: IDTA01002-Methods-PUT
+        reason: not assessed
+      - id: IDTA01002-Methods-PATCH
+        reason: not assessed
+      - id: IDTA01002-HTTPS
+        reason: not assessed
+      - id: IDTA01002-IdentifierEncoding
+        reason: not assessed
+      - id: IDTA01002-IdShortPath
+        reason: not assessed
+      - id: IDTA01002-IdShortCaseSensitive
+        reason: not assessed
+      - id: IDTA01002-Superpaths
+        reason: not assessed
+      - id: IDTA01002-JSON
+        reason: not assessed
+      - id: IDTA01002-AASa-002
+        reason: not assessed
+      - id: IDTA01002-Versioning
+        reason: not assessed
+      - id: IDTA01002-Pagination
+        reason: not assessed
+      - id: IDTA01002-Pagination-order
+        reason: not assessed
+      - id: IDTA01002-AASa-001
+        reason: not assessed
+      - id: IDTA01002-Level
+        reason: not assessed
+      - id: IDTA01002-Content-Metadata
+        reason: not assessed
+      - id: IDTA01002-Content-Value
+        reason: not assessed
+      - id: IDTA01002-Content-Reference
+        reason: not assessed
+      - id: IDTA01002-Content-Path
+        reason: not assessed
+      - id: IDTA01002-Extent
+        reason: not assessed
+      - id: IDTA01002-ModifierApplicability
+        reason: not assessed
+      - id: IDTA01002-ModifierConstraints
+        reason: not assessed
+      - id: IDTA01002-StatusCodes
+        reason: not assessed
+      - id: IDTA01002-Result
+        reason: not assessed
+      - id: IDTA01002-Security
+        reason: not assessed
+      - id: IDTA01002-OperationRights
+        reason: not assessed
+      - id: IDTA01002-GetSelfDescription
+        reason: not assessed
+      - id: IDTA01002-GetAllAssetAdministrationShells
+        reason: not assessed
+      - id: IDTA01002-GetAllAssetAdministrationShellsRecentChanges
+        reason: not assessed
+      - id: IDTA01002-GetAssetAdministrationShellById
+        reason: not assessed
+      - id: IDTA01002-GetAllAssetAdministrationShellsByAssetId
+        reason: not assessed
+      - id: IDTA01002-GetAllAssetAdministrationShellsByIdShort
+        reason: not assessed
+      - id: IDTA01002-PostAssetAdministrationShell
+        reason: not assessed
+      - id: IDTA01002-PutAssetAdministrationShellById
+        reason: not assessed
+      - id: IDTA01002-DeleteAssetAdministrationShellById
+        reason: not assessed
+      - id: IDTA01002-GetAllSubmodelReferences
+        reason: not assessed
+      - id: IDTA01002-PostSubmodelReference
+        reason: not assessed
+      - id: IDTA01002-DeleteSubmodelReference
+        reason: not assessed
+      - id: IDTA01002-GetAssetInformation
+        reason: not assessed
+      - id: IDTA01002-PutAssetInformation
+        reason: not assessed
+      - id: IDTA01002-GetThumbnail
+        reason: not assessed
+      - id: IDTA01002-PutThumbnail
+        reason: not assessed
+      - id: IDTA01002-DeleteThumbnail
+        reason: not assessed
+      - id: IDTA01002-GetAllSubmodels
+        reason: not assessed
+      - id: IDTA01002-GetAllSubmodelsRecentChanges
+        reason: not assessed
+      - id: IDTA01002-GetSubmodelById
+        reason: not assessed
+      - id: IDTA01002-GetAllSubmodelsBySemanticId
+        reason: not assessed
+      - id: IDTA01002-GetAllSubmodelsByIdShort
+        reason: not assessed
+      - id: IDTA01002-PostSubmodel
+        reason: not assessed
+      - id: IDTA01002-PutSubmodelById
+        reason: not assessed
+      - id: IDTA01002-PatchSubmodelById
+        reason: not assessed
+      - id: IDTA01002-DeleteSubmodelById
+        reason: not assessed
+      - id: IDTA01002-GetAllSubmodelElements
+        reason: not assessed
+      - id: IDTA01002-GetSubmodelElementByPath
+        reason: not assessed
+      - id: IDTA01002-GetSubmodelElementValueByPath
+        reason: not assessed
+      - id: IDTA01002-GetFileByPath
+        reason: not assessed
+      - id: IDTA01002-PutFileByPath
+        reason: not assessed
+      - id: IDTA01002-DeleteFileByPath
+        reason: not assessed
+      - id: IDTA01002-PostSubmodelElement
+        reason: not assessed
+      - id: IDTA01002-PostSubmodelElementByPath
+        reason: not assessed
+      - id: IDTA01002-PutSubmodelElementByPath
+        reason: not assessed
+      - id: IDTA01002-PatchSubmodelElementByPath
+        reason: not assessed
+      - id: IDTA01002-PatchSubmodelElementValueByPath
+        reason: not assessed
+      - id: IDTA01002-DeleteSubmodelElementByPath
+        reason: not assessed
+      - id: IDTA01002-InvokeOperationSync
+        reason: not assessed
+      - id: IDTA01002-InvokeOperationAsync
+        reason: not assessed
+      - id: IDTA01002-GetOperationAsyncStatus
+        reason: not assessed
+      - id: IDTA01002-GetOperationAsyncResult
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: Florian Bieck
+    notes: "Checks: the ticket named aas-test-engines wrapped in the conformance project; its current release (1.0.3) tests API V3.0 only and stops at setup on the missing modelType of open-dpp's shells, so 35 native Playwright Checks (apps/e2e/tests/conformance/aas-api.spec.ts, class aasapi) evidence the rows instead; 7 pass, 28 fail as the evidence of the Gaps, each failure named in the row it tags; api.missing-credentials-answer-401 (EN 18222), transport.tls-1-2-minimum and format.public-reads-are-json also tag IDTA01002 rows. The run was opened on 2026-10-12 with the Extract; the Assessments and the Check report are dated 2026-10-13, both against dad48246. The report re-folded the other matrix files as well; those date-only changes were dropped from this run as noise, with one observation kept: a11y.public-view-no-serious-violations failed on 2026-10-12, passed in the first report of 2026-10-13 and failed again in the second, minutes apart against the same commit, so that Check is not stable (an accessibility-tooling follow-up; no status rests on it). Result of the first Assess: 2 Met, 29 Partial, 37 Gap (AASa-001 fell from Met to Partial in the adversarial review: the server accepts an empty cursor); new clusters #1067 (missing operations), #1069 (HTTP conventions), #1068 (security alignment); linked #1065, #1064, #823, #1027. One observation outside this run's rows is tracked in the private security review (#772); the rows it touches are Partial for the reasons given."
+    pr: 1070
+    adversarialReview:
+      blockingObjections: 2
+      comment: https://github.com/open-dpp/open-dpp/pull/1070#issuecomment-6141329841

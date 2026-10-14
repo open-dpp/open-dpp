@@ -13,6 +13,7 @@ check(
     title: "the public passport reads answer application/json with a conforming JSON text",
     criteria: [
       "EN18216-5(a)",
+      "IDTA01002-JSON",
       "ISO21778-2(1)",
       "ISO21778-4",
       "ISO21778-5",
