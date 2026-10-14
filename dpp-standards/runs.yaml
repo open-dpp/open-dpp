@@ -2433,7 +2433,7 @@ runs:
       - id: IDTA01002-GetOperationAsyncResult
         reason: not assessed
     validator: agent:conformance-review
-    reviewer: pending
+    reviewer: Florian Bieck
     notes: "Checks: the ticket named aas-test-engines wrapped in the conformance project; its current release (1.0.3) tests API V3.0 only and stops at setup on the missing modelType of open-dpp's shells, so 35 native Playwright Checks (apps/e2e/tests/conformance/aas-api.spec.ts, class aasapi) evidence the rows instead; 7 pass, 28 fail as the evidence of the Gaps, each failure named in the row it tags; api.missing-credentials-answer-401 (EN 18222), transport.tls-1-2-minimum and format.public-reads-are-json also tag IDTA01002 rows. The run was opened on 2026-10-12 with the Extract; the Assessments and the Check report are dated 2026-10-13, both against dad48246. The report re-folded the other matrix files as well; those date-only changes were dropped from this run as noise, with one observation kept: a11y.public-view-no-serious-violations failed on 2026-10-12, passed in the first report of 2026-10-13 and failed again in the second, minutes apart against the same commit, so that Check is not stable (an accessibility-tooling follow-up; no status rests on it). Result of the first Assess: 2 Met, 29 Partial, 37 Gap (AASa-001 fell from Met to Partial in the adversarial review: the server accepts an empty cursor); new clusters #1067 (missing operations), #1069 (HTTP conventions), #1068 (security alignment); linked #1065, #1064, #823, #1027. One observation outside this run's rows is tracked in the private security review (#772); the rows it touches are Partial for the reasons given."
     pr: 1070
     adversarialReview:
