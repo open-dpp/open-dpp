@@ -41,5 +41,5 @@
     "turbo": "^2.11.7",
     "zod": "^4.3.6"
   },
-  "packageManager": "pnpm@11.26.0"
+  "packageManager": "pnpm@11.28.5"
 }
