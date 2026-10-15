@@ -1,4 +1,4 @@
-FROM node:25-slim AS build
+FROM node:25.9.0-slim AS build
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
@@ -27,7 +27,7 @@ RUN pnpm build
 
 RUN pnpm deploy --filter=@open-dpp/main --prod ./prod/main
 
-FROM node:25-slim AS production
+FROM node:25.9.0-slim AS production
 
 # Left empty on purpose: an unset APP_VERSION makes the backend fall back to the
 # version of the package.json copied in below, instead of pinning a placeholder.
