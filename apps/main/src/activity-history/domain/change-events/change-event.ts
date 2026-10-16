@@ -4,6 +4,7 @@ import { getChangeEventClass } from "./change-event-registry";
 import { IConvertableToPlain } from "../../../aas/domain/convertable-to-plain";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { UserRoleType } from "../../../identity/users/domain/user-role.enum";
+import { GuestRoleType } from "../../../identity/guest-access/domain/guest-role.enum";
 import { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
 
 export interface IChangeEvent extends IConvertableToPlain {
@@ -18,6 +19,7 @@ export interface IChangeEventWithPath extends IChangeEvent {
 export interface IPolicyChangeEvent extends IChangeEventWithPath {
   userRole: UserRoleType;
   memberRole: MemberRoleType | null;
+  guestRole: GuestRoleType | null;
 }
 
 export function isChangeEventWithPath(

@@ -4,6 +4,7 @@ import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { Permission } from "../../../aas/domain/security/permission";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { GuestRole } from "../../../identity/guest-access/domain/guest-role.enum";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { filterChangesByAbility } from "./shared.activity";
 import { DisplayNameChanged } from "../change-events/language-text-collection-changed";
@@ -59,5 +60,43 @@ describe("SharedActivity", () => {
 
     filteredChanges = filterChangesByAbility(changes, { ability: memberAbility });
     expect(filteredChanges).toEqual([]);
+  });
+
+  it("shows policy changes of guest roles to members but not to guests of another role", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const repairer = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      guestRole: GuestRole.REPAIRER,
+    });
+    const read = Permission.create({
+      permission: Permissions.Read,
+      kindOfPermission: PermissionKind.Allow,
+    });
+    security.addPolicy(member, IdShortPath.create({ path: "section1" }), [read]);
+    security.addPolicy(repairer, IdShortPath.create({ path: "section1" }), [read]);
+    const object = createAasObject(IdShortPath.create({ path: "section1" }));
+    const repairerChange = PolicyAdded.create({
+      userRole: UserRole.USER,
+      guestRole: GuestRole.REPAIRER,
+      object,
+      value: [read],
+    });
+    const recyclerChange = PolicyAdded.create({
+      userRole: UserRole.USER,
+      guestRole: GuestRole.RECYCLER,
+      object,
+      value: [read],
+    });
+    const changes = [repairerChange, recyclerChange];
+
+    const memberAbility = security.defineAbilityForSubject(member);
+    expect(filterChangesByAbility(changes, { ability: memberAbility })).toEqual(changes);
+
+    const repairerAbility = security.defineAbilityForSubject(repairer);
+    expect(filterChangesByAbility(changes, { ability: repairerAbility })).toEqual([]);
   });
 });

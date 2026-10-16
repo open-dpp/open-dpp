@@ -63,6 +63,7 @@ export class AccessPermissionRule implements ITrackable {
           PolicyDeleted.create({
             userRole: this.targetSubjectAttributes.userRole,
             memberRole: this.targetSubjectAttributes.memberRole,
+            guestRole: this.targetSubjectAttributes.guestRole,
             object: permissionsPerObject.object,
           }),
         );
@@ -102,6 +103,7 @@ export class AccessPermissionRule implements ITrackable {
       PolicyModified.create({
         userRole: this.targetSubjectAttributes.userRole,
         memberRole: this.targetSubjectAttributes.memberRole,
+        guestRole: this.targetSubjectAttributes.guestRole,
         object: object,
         oldValue: oldPermissions,
         newValue: permissions,
@@ -144,6 +146,7 @@ export class AccessPermissionRule implements ITrackable {
         PolicyDeleted.create({
           userRole: this.targetSubjectAttributes.userRole,
           memberRole: this.targetSubjectAttributes.memberRole,
+          guestRole: this.targetSubjectAttributes.guestRole,
           object: entry.object,
         }),
       );
@@ -156,6 +159,7 @@ export class AccessPermissionRule implements ITrackable {
         PolicyAdded.create({
           userRole: this.targetSubjectAttributes.userRole,
           memberRole: this.targetSubjectAttributes.memberRole,
+          guestRole: this.targetSubjectAttributes.guestRole,
           object: createAasObject(newFullPath),
           value: entry.permissions,
         }),
@@ -175,6 +179,7 @@ export class AccessPermissionRule implements ITrackable {
           PolicyDeleted.create({
             userRole: this.targetSubjectAttributes.userRole,
             memberRole: this.targetSubjectAttributes.memberRole,
+            guestRole: this.targetSubjectAttributes.guestRole,
             object: e.object,
           }),
         );

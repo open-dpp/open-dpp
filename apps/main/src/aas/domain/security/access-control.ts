@@ -170,6 +170,7 @@ export class AccessControl implements ITrackable {
       PolicyAdded.create({
         userRole: subject.userRole,
         memberRole: subject.memberRole,
+        guestRole: subject.guestRole,
         object: permissionPerObject.object,
         value: permissions,
       }),

@@ -1,4 +1,8 @@
 import { IChangeEvent, IPolicyChangeEvent } from "./change-event";
+import {
+  GuestRoleEnum,
+  GuestRoleType,
+} from "../../../identity/guest-access/domain/guest-role.enum";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -16,6 +20,7 @@ const PolicyModifiedSchema = z.object({
   path: z.string(),
   userRole: UserRoleEnum,
   memberRole: MemberRoleEnum.nullable(),
+  guestRole: GuestRoleEnum.nullish(), // missing in events recorded before guest roles existed
   oldValue: PermissionSchema.array(),
   newValue: PermissionSchema.array(),
 });
@@ -26,6 +31,7 @@ export class PolicyModified implements IPolicyChangeEvent {
     public readonly path: IdShortPath,
     public readonly userRole: UserRoleType,
     public readonly memberRole: MemberRoleType | null,
+    public readonly guestRole: GuestRoleType | null,
     public readonly oldValue: Permission[],
     public readonly newValue: Permission[],
   ) {}
@@ -42,6 +48,7 @@ export class PolicyModified implements IPolicyChangeEvent {
   static create(data: {
     userRole: UserRoleType;
     memberRole?: MemberRoleType;
+    guestRole?: GuestRoleType;
     object: ReferenceElement;
     oldValue: Permission[];
     newValue: Permission[];
@@ -50,6 +57,7 @@ export class PolicyModified implements IPolicyChangeEvent {
       IdShortPath.create({ path: data.object.idShort }),
       data.userRole,
       data.memberRole ?? null,
+      data.guestRole ?? null,
       data.oldValue,
       data.newValue,
     );
@@ -61,6 +69,7 @@ export class PolicyModified implements IPolicyChangeEvent {
       IdShortPath.create({ path: parsed.path }),
       parsed.userRole,
       parsed.memberRole,
+      parsed.guestRole ?? null,
       parsed.oldValue.map(Permission.fromPlain),
       parsed.newValue.map(Permission.fromPlain),
     );
@@ -72,6 +81,7 @@ export class PolicyModified implements IPolicyChangeEvent {
       path: this.path.toString(),
       userRole: this.userRole,
       memberRole: this.memberRole,
+      guestRole: this.guestRole,
       oldValue: this.oldValue.map((permission) => permission.toPlain()),
       newValue: this.newValue.map((permission) => permission.toPlain()),
     };

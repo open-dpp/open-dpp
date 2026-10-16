@@ -48,6 +48,7 @@ export function filterChangesByAbility(changes: IChangeEvent[], options?: Conver
         const subjectAttribute = SubjectAttributes.create({
           userRole: change.userRole,
           memberRole: change.memberRole ?? undefined,
+          guestRole: change.guestRole ?? undefined,
         });
         const subjectsToConsider = options.ability.getSubject().getSubjectsWithSubordinatedRoles();
         return subjectsToConsider.some((subject) => {
