@@ -9,7 +9,7 @@ describe("guestAccessFromPlain", () => {
     const access = DirectGuestAccess.create({
       organizationId: "org-1",
       email: "a@example.com",
-      guestRoles: [GuestRole.RECYCLER],
+      guestRole: GuestRole.RECYCLER,
       grantedBy: "user-1",
     });
 

@@ -27,17 +27,10 @@ export const GuestAccessStatusDto = {
 export const GuestAccessStatusDtoEnum = z.enum(GuestAccessStatusDto);
 export type GuestAccessStatusDtoType = z.infer<typeof GuestAccessStatusDtoEnum>;
 
-const GuestRolesSchema = z
-  .array(GuestRoleDtoEnum)
-  .min(1)
-  .refine((roles) => new Set(roles).size === roles.length, {
-    message: "guestRoles must not contain duplicates",
-  });
-
 export const CreateDirectGuestAccessDtoSchema = z.object({
   kind: z.literal(GuestAccessKindDto.DIRECT),
   email: z.email(),
-  guestRoles: GuestRolesSchema,
+  guestRole: GuestRoleDtoEnum,
 });
 
 export const CreateGuestAccessDtoSchema = z.discriminatedUnion("kind", [
@@ -46,16 +39,16 @@ export const CreateGuestAccessDtoSchema = z.discriminatedUnion("kind", [
 
 export type CreateGuestAccessDto = z.infer<typeof CreateGuestAccessDtoSchema>;
 
-export const UpdateGuestAccessRolesDtoSchema = z.object({
-  guestRoles: GuestRolesSchema,
+export const UpdateGuestAccessRoleDtoSchema = z.object({
+  guestRole: GuestRoleDtoEnum,
 });
 
-export type UpdateGuestAccessRolesDto = z.infer<typeof UpdateGuestAccessRolesDtoSchema>;
+export type UpdateGuestAccessRoleDto = z.infer<typeof UpdateGuestAccessRoleDtoSchema>;
 
 const GuestAccessBaseResponseSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
-  guestRoles: GuestRolesSchema,
+  guestRole: GuestRoleDtoEnum,
   grantedBy: z.string(),
   status: GuestAccessStatusDtoEnum,
   createdAt: z.iso.datetime(),

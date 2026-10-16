@@ -3,7 +3,7 @@ import {
   CreateGuestAccessDtoSchema,
   GuestAccessResponseDtoSchema,
   GuestRoleDtoEnum,
-  UpdateGuestAccessRolesDtoSchema,
+  UpdateGuestAccessRoleDtoSchema,
 } from "./guest-access.dto";
 
 describe("GuestRoleDtoEnum", () => {
@@ -24,7 +24,7 @@ describe("GuestRoleDtoEnum", () => {
 });
 
 describe("CreateGuestAccessDtoSchema", () => {
-  const valid = { kind: "Direct", email: "repairer@example.com", guestRoles: ["Repairer"] };
+  const valid = { kind: "Direct", email: "repairer@example.com", guestRole: "Repairer" };
 
   it("parses a direct guest access", () => {
     expect(CreateGuestAccessDtoSchema.parse(valid)).toEqual(valid);
@@ -34,10 +34,12 @@ describe("CreateGuestAccessDtoSchema", () => {
     expect(() => CreateGuestAccessDtoSchema.parse({ ...valid, email: "nope" })).toThrow();
   });
 
-  it("rejects empty and duplicate roles", () => {
-    expect(() => CreateGuestAccessDtoSchema.parse({ ...valid, guestRoles: [] })).toThrow();
+  it("rejects a missing, unknown or multiple roles", () => {
+    const { guestRole: _guestRole, ...withoutRole } = valid;
+    expect(() => CreateGuestAccessDtoSchema.parse(withoutRole)).toThrow();
+    expect(() => CreateGuestAccessDtoSchema.parse({ ...valid, guestRole: "Member" })).toThrow();
     expect(() =>
-      CreateGuestAccessDtoSchema.parse({ ...valid, guestRoles: ["Repairer", "Repairer"] }),
+      CreateGuestAccessDtoSchema.parse({ ...valid, guestRole: ["Repairer", "Recycler"] }),
     ).toThrow();
   });
 
@@ -46,12 +48,13 @@ describe("CreateGuestAccessDtoSchema", () => {
   });
 });
 
-describe("UpdateGuestAccessRolesDtoSchema", () => {
-  it("requires at least one role", () => {
-    expect(UpdateGuestAccessRolesDtoSchema.parse({ guestRoles: ["Supplier"] })).toEqual({
-      guestRoles: ["Supplier"],
+describe("UpdateGuestAccessRoleDtoSchema", () => {
+  it("requires exactly one role", () => {
+    expect(UpdateGuestAccessRoleDtoSchema.parse({ guestRole: "Supplier" })).toEqual({
+      guestRole: "Supplier",
     });
-    expect(() => UpdateGuestAccessRolesDtoSchema.parse({ guestRoles: [] })).toThrow();
+    expect(() => UpdateGuestAccessRoleDtoSchema.parse({})).toThrow();
+    expect(() => UpdateGuestAccessRoleDtoSchema.parse({ guestRole: ["Supplier"] })).toThrow();
   });
 });
 
@@ -61,7 +64,7 @@ describe("GuestAccessResponseDtoSchema", () => {
     organizationId: "acme",
     kind: "Direct",
     email: "repairer@example.com",
-    guestRoles: ["Repairer", "IndependentOperator"],
+    guestRole: "IndependentOperator",
     grantedBy: "user-1",
     status: "Pending",
     createdAt: "2026-10-13T10:00:00.000Z",

@@ -19,7 +19,7 @@ export interface GuestAccess {
   readonly organizationId: string;
   readonly grantedBy: string;
   readonly createdAt: Date;
-  readonly guestRoles: GuestRoleType[];
+  readonly guestRole: GuestRoleType;
   readonly revokedAt: Date | undefined;
   readonly status: GuestAccessStatusType;
   isActiveFor: (caller: CallerFacts) => boolean;

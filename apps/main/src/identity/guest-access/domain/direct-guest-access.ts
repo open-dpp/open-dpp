@@ -16,7 +16,7 @@ export const DirectGuestAccessPlainSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
   email: z.string(),
-  guestRoles: GuestRoleEnum.array(),
+  guestRole: GuestRoleEnum,
   grantedBy: z.string(),
   createdAt: z.coerce.date(),
   acceptedByUserId: z.string().optional(),
@@ -29,7 +29,7 @@ export type DirectGuestAccessPlain = z.infer<typeof DirectGuestAccessPlainSchema
 export interface DirectGuestAccessCreateProps {
   organizationId: string;
   email: string;
-  guestRoles: GuestRoleType[];
+  guestRole: GuestRoleType;
   grantedBy: string;
   now?: Date;
 }
@@ -46,7 +46,7 @@ export class DirectGuestAccess implements GuestAccess {
     public readonly id: string,
     public readonly organizationId: string,
     public readonly email: string,
-    private _guestRoles: GuestRoleType[],
+    private _guestRole: GuestRoleType,
     public readonly grantedBy: string,
     public readonly createdAt: Date,
     private _acceptedByUserId: string | undefined,
@@ -59,7 +59,7 @@ export class DirectGuestAccess implements GuestAccess {
       randomUUID(),
       data.organizationId,
       DirectGuestAccess.normalizeEmail(data.email),
-      DirectGuestAccess.uniqueRolesOrFail(data.guestRoles),
+      data.guestRole,
       data.grantedBy,
       data.now ?? new Date(),
       undefined,
@@ -74,7 +74,7 @@ export class DirectGuestAccess implements GuestAccess {
       data.id,
       data.organizationId,
       data.email,
-      DirectGuestAccess.uniqueRolesOrFail(data.guestRoles),
+      data.guestRole,
       data.grantedBy,
       data.createdAt,
       data.acceptedByUserId,
@@ -83,8 +83,8 @@ export class DirectGuestAccess implements GuestAccess {
     );
   }
 
-  get guestRoles(): GuestRoleType[] {
-    return [...this._guestRoles];
+  get guestRole(): GuestRoleType {
+    return this._guestRole;
   }
 
   get acceptedByUserId(): string | undefined {
@@ -124,16 +124,9 @@ export class DirectGuestAccess implements GuestAccess {
     this._acceptedAt = now;
   }
 
-  addGuestRole(role: GuestRoleType): void {
+  changeGuestRole(role: GuestRoleType): void {
     this.modifiableOrFail();
-    this._guestRoles = DirectGuestAccess.uniqueRolesOrFail([...this._guestRoles, role]);
-  }
-
-  removeGuestRole(role: GuestRoleType): void {
-    this.modifiableOrFail();
-    this._guestRoles = DirectGuestAccess.uniqueRolesOrFail(
-      this._guestRoles.filter((r) => r !== role),
-    );
+    this._guestRole = role;
   }
 
   revoke(now: Date): void {
@@ -144,14 +137,6 @@ export class DirectGuestAccess implements GuestAccess {
 
   private static normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
-  }
-
-  private static uniqueRolesOrFail(guestRoles: GuestRoleType[]): GuestRoleType[] {
-    const roles = [...new Set(guestRoles)];
-    if (roles.length === 0) {
-      throw new ValueError("A guest access needs at least one guest role");
-    }
-    return roles;
   }
 
   private modifiableOrFail(): void {
@@ -166,7 +151,7 @@ export class DirectGuestAccess implements GuestAccess {
       id: this.id,
       organizationId: this.organizationId,
       email: this.email,
-      guestRoles: this.guestRoles,
+      guestRole: this._guestRole,
       grantedBy: this.grantedBy,
       createdAt: this.createdAt,
       acceptedByUserId: this._acceptedByUserId,

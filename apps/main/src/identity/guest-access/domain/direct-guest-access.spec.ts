@@ -23,7 +23,7 @@ describe("directGuestAccess", () => {
     return DirectGuestAccess.create({
       organizationId: "org-1",
       email: " Repairer@Example.com ",
-      guestRoles: [GuestRole.REPAIRER],
+      guestRole: GuestRole.REPAIRER,
       grantedBy: "user-1",
       now,
     });
@@ -39,29 +39,10 @@ describe("directGuestAccess", () => {
     expect(access.id).toBeDefined();
     expect(access.kind).toEqual("Direct");
     expect(access.email).toEqual("repairer@example.com");
-    expect(access.guestRoles).toEqual([GuestRole.REPAIRER]);
+    expect(access.guestRole).toEqual(GuestRole.REPAIRER);
     expect(access.grantedBy).toEqual("user-1");
     expect(access.status).toEqual(GuestAccessStatus.PENDING);
     expect(access.acceptedByUserId).toBeUndefined();
-  });
-
-  it("rejects creation without roles and removes duplicate roles", () => {
-    expect(() =>
-      DirectGuestAccess.create({
-        organizationId: "org-1",
-        email: "a@example.com",
-        guestRoles: [],
-        grantedBy: "user-1",
-      }),
-    ).toThrow(ValueError);
-
-    const access = DirectGuestAccess.create({
-      organizationId: "org-1",
-      email: "a@example.com",
-      guestRoles: [GuestRole.SUPPLIER, GuestRole.SUPPLIER],
-      grantedBy: "user-1",
-    });
-    expect(access.guestRoles).toEqual([GuestRole.SUPPLIER]);
   });
 
   it("grants nothing while pending", () => {
@@ -122,33 +103,28 @@ describe("directGuestAccess", () => {
     expect(access.isActiveFor(callerFacts(invitee.id))).toBe(false);
   });
 
-  it("adds and removes roles but keeps at least one", () => {
+  it("changes its role while it is not revoked", () => {
     const access = createPending();
 
-    access.addGuestRole(GuestRole.INDEPENDENT_OPERATOR);
-    access.addGuestRole(GuestRole.INDEPENDENT_OPERATOR);
-    expect(access.guestRoles).toEqual([GuestRole.REPAIRER, GuestRole.INDEPENDENT_OPERATOR]);
+    access.changeGuestRole(GuestRole.INDEPENDENT_OPERATOR);
 
-    access.removeGuestRole(GuestRole.REPAIRER);
-    expect(access.guestRoles).toEqual([GuestRole.INDEPENDENT_OPERATOR]);
-
-    expect(() => access.removeGuestRole(GuestRole.INDEPENDENT_OPERATOR)).toThrow(ValueError);
+    expect(access.guestRole).toEqual(GuestRole.INDEPENDENT_OPERATOR);
   });
 
-  it("cannot change roles after revocation", () => {
+  it("keeps its acceptance when the role changes", () => {
+    const access = createPending();
+    access.accept(invitee, later);
+
+    access.changeGuestRole(GuestRole.SUPPLIER);
+
+    expect(access.isActiveFor(callerFacts(invitee.id))).toBe(true);
+  });
+
+  it("cannot change its role after revocation", () => {
     const access = createPending();
     access.revoke(later);
 
-    expect(() => access.addGuestRole(GuestRole.SUPPLIER)).toThrow(ValueError);
-    expect(() => access.removeGuestRole(GuestRole.REPAIRER)).toThrow(ValueError);
-  });
-
-  it("does not expose its internal roles array", () => {
-    const access = createPending();
-
-    access.guestRoles.push(GuestRole.SUPPLIER);
-
-    expect(access.guestRoles).toEqual([GuestRole.REPAIRER]);
+    expect(() => access.changeGuestRole(GuestRole.SUPPLIER)).toThrow(ValueError);
   });
 
   it("round-trips through toPlain and fromPlain", () => {
@@ -161,9 +137,16 @@ describe("directGuestAccess", () => {
     expect(restored.isActiveFor(callerFacts(invitee.id))).toBe(true);
   });
 
-  it("rejects a plain object without roles", () => {
+  it("rejects a plain object without or with several roles", () => {
+    const plain = createPending().toPlain();
+    const { guestRole: _guestRole, ...withoutRole } = plain;
+
+    expect(() => DirectGuestAccess.fromPlain(withoutRole)).toThrow();
     expect(() =>
-      DirectGuestAccess.fromPlain({ ...createPending().toPlain(), guestRoles: [] }),
-    ).toThrow(ValueError);
+      DirectGuestAccess.fromPlain({
+        ...plain,
+        guestRole: [GuestRole.REPAIRER, GuestRole.RECYCLER],
+      }),
+    ).toThrow();
   });
 });
