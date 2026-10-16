@@ -2,6 +2,11 @@ import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import {
+  GuestRole,
+  GuestRoleEnum,
+  GuestRoleType,
+} from "../../../identity/guest-access/domain/guest-role.enum";
+import {
   MemberRole,
   MemberRoleEnum,
   MemberRoleType,
@@ -17,18 +22,27 @@ export const SubjectAttributesSchema = z.object({
   subjectAttribute: PropertyJsonSchema.array(),
 });
 
-const roleHierarchy: { userRole: UserRoleType; memberRole?: MemberRoleType }[] = [
-  { userRole: UserRole.ADMIN }, // instance admin, the organization role is not relevant
-  { userRole: UserRole.USER, memberRole: MemberRole.OWNER }, // organization owner
-  { userRole: UserRole.USER, memberRole: MemberRole.MEMBER }, // organization member
-  { userRole: UserRole.USER, memberRole: undefined }, // user without organization membership
-  { userRole: UserRole.ANONYMOUS }, // anonymous user without an account
-] as const;
+type SubjectRoles = {
+  userRole: UserRoleType;
+  memberRole?: MemberRoleType;
+  guestRole?: GuestRoleType;
+};
+
+// Ordered from the most to the least privileged level. Subjects of the same level are equal in rank.
+const roleHierarchy: SubjectRoles[][] = [
+  [{ userRole: UserRole.ADMIN }], // instance admin, the organization role is not relevant
+  [{ userRole: UserRole.USER, memberRole: MemberRole.OWNER }], // organization owner
+  [{ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }], // organization member
+  Object.values(GuestRole).map((guestRole) => ({ userRole: UserRole.USER, guestRole })), // external guests with access granted by an organization
+  [{ userRole: UserRole.USER, memberRole: undefined }], // user without organization membership
+  [{ userRole: UserRole.ANONYMOUS }], // anonymous user without an account
+];
 
 export class SubjectAttributes {
   private _subjectAttribute: Property[];
   public static UserRoleKey = "userRole";
   public static MemberRoleKey = "memberRole";
+  public static GuestRoleKey = "guestRole";
   private constructor(subjectAttribute: Property[]) {
     this.subjectAttribute = subjectAttribute;
   }
@@ -49,7 +63,10 @@ export class SubjectAttributes {
     return this._subjectAttribute;
   }
 
-  static create(data: { userRole: UserRoleType; memberRole?: MemberRoleType }): SubjectAttributes {
+  static create(data: SubjectRoles): SubjectAttributes {
+    if (data.guestRole && (data.userRole !== UserRole.USER || data.memberRole)) {
+      throw new ValueError("A guest role is only allowed for a user without a member role");
+    }
     return new SubjectAttributes([
       Property.create({
         idShort: SubjectAttributes.UserRoleKey,
@@ -62,6 +79,15 @@ export class SubjectAttributes {
               idShort: SubjectAttributes.MemberRoleKey,
               valueType: DataTypeDef.String,
               value: data.memberRole,
+            }),
+          ]
+        : []),
+      ...(data.guestRole
+        ? [
+            Property.create({
+              idShort: SubjectAttributes.GuestRoleKey,
+              valueType: DataTypeDef.String,
+              value: data.guestRole,
             }),
           ]
         : []),
@@ -96,19 +122,27 @@ export class SubjectAttributes {
     );
   }
 
-  private computeRoleHierarchyIndex(roles: {
-    userRole: UserRoleType;
-    memberRole?: MemberRoleType;
-  }): number {
-    return roleHierarchy.findIndex(
-      (role) =>
-        (role.userRole === roles.userRole && role.userRole === UserRole.ADMIN) ||
-        (role.userRole === roles.userRole && role.memberRole === roles.memberRole),
+  get guestRole(): GuestRoleType | undefined {
+    return GuestRoleEnum.optional().parse(
+      this.subjectAttribute.find((p) => p.idShort === SubjectAttributes.GuestRoleKey)?.value ??
+        undefined,
     );
   }
 
-  getRoles() {
-    return { userRole: this.userRole, memberRole: this.memberRole };
+  private computeRoleHierarchyIndex(roles: SubjectRoles): number {
+    return roleHierarchy.findIndex((level) =>
+      level.some(
+        (role) =>
+          (role.userRole === roles.userRole && role.userRole === UserRole.ADMIN) ||
+          (role.userRole === roles.userRole &&
+            role.memberRole === roles.memberRole &&
+            role.guestRole === roles.guestRole),
+      ),
+    );
+  }
+
+  getRoles(): SubjectRoles {
+    return { userRole: this.userRole, memberRole: this.memberRole, guestRole: this.guestRole };
   }
 
   /*
@@ -136,12 +170,17 @@ export class SubjectAttributes {
   isEqual(other: SubjectAttributes): boolean {
     return (
       (this.userRole === other.userRole && this.userRole === UserRole.ADMIN) ||
-      (this.userRole === other.userRole && this.memberRole === other.memberRole)
+      (this.userRole === other.userRole &&
+        this.memberRole === other.memberRole &&
+        this.guestRole === other.guestRole)
     );
   }
 
   getSubjectsWithSubordinatedRoles(): SubjectAttributes[] {
     const index = this.computeRoleHierarchyIndex(this.getRoles());
-    return roleHierarchy.slice(index + 1).map((roles) => SubjectAttributes.create(roles));
+    return roleHierarchy
+      .slice(index + 1)
+      .flat()
+      .map((roles) => SubjectAttributes.create(roles));
   }
 }
