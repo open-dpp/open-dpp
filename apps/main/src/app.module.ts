@@ -25,6 +25,7 @@ import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
 import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
+import { MigrationsModule } from "./migrations/migrations.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PermalinkModule } from "./permalink/permalink.module";
 import { PolicyModule } from "./policy/policy.module";
@@ -79,6 +80,7 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     PresentationConfigurationsModule,
     PermalinkModule,
     StatusModule,
+    MigrationsModule,
   ],
   controllers: [],
   providers: [
