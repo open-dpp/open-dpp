@@ -17,6 +17,7 @@ import {
   SubmodelJsonSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError } from "@open-dpp/exception";
 import {
@@ -119,6 +120,7 @@ describe("environmentService", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({

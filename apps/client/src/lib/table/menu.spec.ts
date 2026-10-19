@@ -18,6 +18,7 @@ function makeDeps(overrides: Partial<TableMenuDeps> = {}): TableMenuDeps {
     onRemoveColumn: vi.fn(),
     onDeleteColumnFromGroup: vi.fn(),
     onMoveColumnToGroup: vi.fn(),
+    onReorderColumn: vi.fn(),
     onCreateGroupFromColumn: vi.fn(),
     onAddRow: vi.fn(),
     onRemoveRow: vi.fn(),
@@ -86,7 +87,12 @@ describe("buildColumnMenu", () => {
       deps,
     );
     const actionsSection = withoutGroups!.find((item) => item.label === "common.actions");
-    expect(actionsSection!.items?.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
+    expect(actionsSection!.items?.map((i) => i.label)).toEqual([
+      "common.edit",
+      "common.moveLeft",
+      "common.moveRight",
+      "common.remove",
+    ]);
 
     const moveToGroupMenuItem = withoutGroups!.find(
       (item) => item.label === "aasEditor.table.moveToGroup",
@@ -116,7 +122,12 @@ describe("buildColumnMenu", () => {
       deps,
     );
     const actionsSection = menu!.find((item) => item.label === "common.actions");
-    expect(actionsSection!.items?.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
+    expect(actionsSection!.items?.map((i) => i.label)).toEqual([
+      "common.edit",
+      "common.moveLeft",
+      "common.moveRight",
+      "common.remove",
+    ]);
 
     const moveToGroupSection = menu!.find((item) => item.label === "aasEditor.table.moveToGroup");
     expect(moveToGroupSection).toBeUndefined();
@@ -156,7 +167,12 @@ describe("buildColumnMenu", () => {
     ]);
     // Sub-column type options exclude "columnGroup" — groups can't nest inside groups.
     expect(menu![0]!.items!.map((item) => item.label)).toEqual(fieldLabels);
-    expect(menu![1]!.items!.map((item) => item.label)).toEqual(["common.edit", "common.remove"]);
+    expect(menu![1]!.items!.map((item) => item.label)).toEqual([
+      "common.edit",
+      "common.moveLeft",
+      "common.moveRight",
+      "common.remove",
+    ]);
   });
 
   it("returns undefined when the sub-column position can't be resolved", () => {
@@ -188,6 +204,8 @@ describe("buildColumnMenu", () => {
     expect(addColumnRightMenu!.items!.map((item) => item.label)).toEqual(fieldLabels);
     expect(actionsMenu!.items!.map((item) => item.label)).toEqual([
       "common.edit",
+      "common.moveLeft",
+      "common.moveRight",
       "aasEditor.table.removeFromGroup",
     ]);
   });
@@ -341,6 +359,85 @@ describe("column menu commands delegate to the injected callbacks", () => {
     const moveSection = menu!.find((item) => item.label === "aasEditor.table.moveToGroup");
     await (moveSection!.items![0]!.command as any)();
     expect(deps.onMoveColumnToGroup).toHaveBeenCalledWith(scalarColumn, "Group1");
+  });
+
+  it("moving a top-level column left/right calls onReorderColumn with the adjacent position", async () => {
+    const deps = makeDeps();
+    // middle column: both directions enabled
+    const menu = buildColumnMenu(
+      { addColumnActions: true, position: 1 },
+      [scalarColumn, tableColumn, groupColumn],
+      deps,
+    );
+    const actionsSection = menu!.find((item) => item.label === "common.actions");
+    const moveLeft = actionsSection!.items!.find((i) => i.label === "common.moveLeft")!;
+    const moveRight = actionsSection!.items!.find((i) => i.label === "common.moveRight")!;
+    expect(moveLeft.disabled).toBeFalsy();
+    expect(moveRight.disabled).toBeFalsy();
+
+    await (moveLeft.command as any)();
+    expect(deps.onReorderColumn).toHaveBeenCalledWith(tableColumn, 0, undefined);
+
+    await (moveRight.command as any)();
+    expect(deps.onReorderColumn).toHaveBeenCalledWith(tableColumn, 2, undefined);
+  });
+
+  it("disables move-left for the first column and move-right for the last column", () => {
+    const deps = makeDeps();
+    const firstMenu = buildColumnMenu(
+      { addColumnActions: true, position: 0 },
+      [scalarColumn, tableColumn],
+      deps,
+    );
+    const firstActions = firstMenu!.find((item) => item.label === "common.actions");
+    expect(firstActions!.items!.find((i) => i.label === "common.moveLeft")!.disabled).toBe(true);
+    expect(firstActions!.items!.find((i) => i.label === "common.moveRight")!.disabled).toBeFalsy();
+
+    const lastMenu = buildColumnMenu(
+      { addColumnActions: true, position: 1 },
+      [scalarColumn, tableColumn],
+      deps,
+    );
+    const lastActions = lastMenu!.find((item) => item.label === "common.actions");
+    expect(lastActions!.items!.find((i) => i.label === "common.moveLeft")!.disabled).toBeFalsy();
+    expect(lastActions!.items!.find((i) => i.label === "common.moveRight")!.disabled).toBe(true);
+  });
+
+  it("moving a sub-column left/right calls onReorderColumn with the group idShort", async () => {
+    const groupWithTwoChildren: Column = {
+      idShort: "Group1",
+      label: "Group1",
+      plain: { idShort: "Group1", modelType: AasSubmodelElements.SubmodelElementCollection },
+      children: [
+        {
+          idShort: "Sub1",
+          label: "Sub1",
+          plain: { idShort: "Sub1", modelType: AasSubmodelElements.Property },
+        },
+        {
+          idShort: "Sub2",
+          label: "Sub2",
+          plain: { idShort: "Sub2", modelType: AasSubmodelElements.Property },
+        },
+      ],
+    };
+    const deps = makeDeps();
+    const menu = buildColumnMenu(
+      { groupIdShort: "Group1", addColumnActions: true, position: 0 },
+      [scalarColumn, groupWithTwoChildren],
+      deps,
+    );
+    const actionsSection = menu!.find((item) => item.label === "common.actions");
+    const moveRight = actionsSection!.items!.find((i) => i.label === "common.moveRight")!;
+    expect(actionsSection!.items!.find((i) => i.label === "common.moveLeft")!.disabled).toBe(true);
+    expect(moveRight.disabled).toBeFalsy();
+
+    await (moveRight.command as any)();
+    expect(deps.onReorderColumn).toHaveBeenCalledWith(
+      groupWithTwoChildren.children![0],
+      1,
+      "Group1",
+    );
   });
 
   it("'+ New group' opens the drawer and its callback invokes onCreateGroupFromColumn", async () => {

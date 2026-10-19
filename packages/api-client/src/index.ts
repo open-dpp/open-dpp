@@ -39,6 +39,7 @@ export * from "./dpp/digital-product-document/digital-product-document.namespace
 
 export type { MemberDto } from "./dpp/organizations/member.dtos";
 export type { OrganizationCreateDto, OrganizationDto } from "./dpp/organizations/organization.dtos";
+export { OAuthProviderNamespace } from "./dpp/oauth-provider/oauth-provider.namespace";
 export { OrganizationsNamespace } from "./dpp/organizations/organizations.namespace";
 
 export { TemplatesNamespace } from "./dpp/templates/templates.namespace";
@@ -52,6 +53,7 @@ export type {
   PermalinkUpdateRequest,
 } from "./dpp/permalinks/permalinks.dtos";
 export { PermalinksNamespace } from "./dpp/permalinks/permalinks.namespace";
+export { PoliciesNamespace } from "./dpp/policy/policies.namespace";
 export type {
   UniqueProductIdentifierListDto,
   UniqueProductIdentifierListItemDto,

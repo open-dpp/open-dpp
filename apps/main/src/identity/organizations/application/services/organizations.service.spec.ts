@@ -1,8 +1,12 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { ForbiddenException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Session } from "../../../auth/domain/session";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
+import { Member } from "../../domain/member";
+import { MemberRole } from "../../domain/member-role.enum";
+import { ORGANIZATION_CREATED_EVENT } from "../../domain/events/organization-created.event";
 import { Organization } from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
@@ -12,22 +16,24 @@ import { InstanceSettingsService } from "../../../../instance-settings/applicati
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { InstanceSettings } from "../../../../instance-settings/domain/instance-settings";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
+import { PolicyManagementService } from "../../../../policy/application/services/policy-management.service";
 
 describe("OrganizationsService", () => {
   let service: OrganizationsService;
 
   const mockOrganizationsRepository = {
-    findOneBySlug: jest.fn<(slug: string) => Promise<Organization | null>>(),
     create:
       jest.fn<
         (organization: Organization, headers: BetterAuthHeaders) => Promise<Organization | null>
       >(),
     findOneById: jest.fn(),
+    findManyByIds: jest.fn<(ids: string[]) => Promise<Organization[]>>(),
     update: jest.fn(),
   };
 
   const mockMembersRepository = {
     findOneByUserIdAndOrganizationId: jest.fn(),
+    findByUserId: jest.fn<(userId: string) => Promise<Member[]>>(),
   };
 
   const mockUsersRepository = {
@@ -39,6 +45,14 @@ describe("OrganizationsService", () => {
   };
 
   const mockInvitationsRepository = {};
+
+  const mockPolicyService = {
+    ensureDefaultPolicies: jest.fn<(organizationId: string) => Promise<void>>(),
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn<EventEmitter2["emit"]>(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -64,10 +78,53 @@ describe("OrganizationsService", () => {
           provide: InstanceSettingsService,
           useValue: mockInstanceSettingsService,
         },
+        {
+          provide: PolicyManagementService,
+          useValue: mockPolicyService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
+        },
       ],
     }).compile();
 
     service = module.get<OrganizationsService>(OrganizationsService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("getMemberOrganizations", () => {
+    it("lists the organizations the user is a member of, from the memberships alone", async () => {
+      const memberships = [
+        Member.create({ userId: "user1", organizationId: "org-1", role: MemberRole.OWNER }),
+        Member.create({ userId: "user1", organizationId: "org-2", role: MemberRole.MEMBER }),
+      ];
+      const organizations = [
+        Organization.create({ name: "One", metadata: {} }),
+        Organization.create({ name: "Two", metadata: {} }),
+      ];
+      mockMembersRepository.findByUserId.mockResolvedValue(memberships);
+      mockOrganizationsRepository.findManyByIds.mockResolvedValue(organizations);
+
+      const result = await service.getMemberOrganizations("user1");
+
+      expect(result).toBe(organizations);
+      expect(mockMembersRepository.findByUserId).toHaveBeenCalledWith("user1");
+      expect(mockOrganizationsRepository.findManyByIds).toHaveBeenCalledWith(["org-1", "org-2"]);
+    });
+
+    it("answers an empty list without querying organizations for a user without memberships", async () => {
+      mockMembersRepository.findByUserId.mockResolvedValue([]);
+      mockOrganizationsRepository.findManyByIds.mockClear();
+
+      const result = await service.getMemberOrganizations("user1");
+
+      expect(result).toEqual([]);
+      expect(mockOrganizationsRepository.findManyByIds).not.toHaveBeenCalled();
+    });
   });
 
   it("should create organization ", async () => {
@@ -78,7 +135,6 @@ describe("OrganizationsService", () => {
     const headers = {};
     const organization = Organization.create({
       name: "Test Organization",
-      slug: "test-organization",
       metadata: {},
     });
     mockOrganizationsRepository.create.mockResolvedValue(organization);
@@ -101,20 +157,46 @@ describe("OrganizationsService", () => {
     expect(mockOrganizationsRepository.create).toHaveBeenCalledTimes(2);
   });
 
-  it("should throw DuplicateOrganizationSlugError when creating organization with existing slug", async () => {
-    const slug = "existing-slug";
-    mockOrganizationsRepository.findOneBySlug.mockResolvedValue({ slug } as Organization);
+  it("should seed the default policies for a newly created organization", async () => {
+    mockInstanceSettingsService.getSettings.mockResolvedValue(
+      InstanceSettings.create({ organizationCreationEnabled: { value: true } }),
+    );
+    const created = Organization.create({
+      name: "Test Organization",
+      metadata: {},
+    });
+    mockOrganizationsRepository.create.mockResolvedValue(created);
 
-    const session = { userId: "user1" } as Session;
-    const headers = {};
+    await service.createOrganization(
+      { name: created.name, metadata: {} },
+      { userId: "user1" } as Session,
+      {},
+      UserRole.USER,
+    );
 
-    await expect(
-      service.createOrganization(
-        { name: "Test", slug, metadata: {} },
-        session,
-        headers,
-        UserRole.ADMIN,
-      ),
-    ).rejects.toThrow(BadRequestException);
+    expect(mockPolicyService.ensureDefaultPolicies).toHaveBeenCalledWith(created.id);
+  });
+
+  it("should emit an organization-created event for a newly created organization", async () => {
+    mockInstanceSettingsService.getSettings.mockResolvedValue(
+      InstanceSettings.create({ organizationCreationEnabled: { value: true } }),
+    );
+    const created = Organization.create({
+      name: "Test Organization",
+      metadata: {},
+    });
+    mockOrganizationsRepository.create.mockResolvedValue(created);
+
+    await service.createOrganization(
+      { name: created.name, metadata: {} },
+      { userId: "user1" } as Session,
+      {},
+      UserRole.USER,
+    );
+
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      ORGANIZATION_CREATED_EVENT,
+      expect.objectContaining({ organizationId: created.id }),
+    );
   });
 });

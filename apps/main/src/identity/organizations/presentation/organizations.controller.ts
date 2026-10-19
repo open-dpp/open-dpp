@@ -19,13 +19,17 @@ import { MembersService } from "../application/services/members.service";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { MemberWithUser } from "../domain/member";
 import { MemberRole } from "../domain/member-role.enum";
-import { Organization } from "../domain/organization";
+import { toOrganizationDto } from "./organization-dto.mapper";
 import { UserRoleDecorator } from "../../auth/presentation/decorators/user-role.decorator";
 import { type UserRoleType } from "../../users/domain/user-role.enum";
 import {
   InvitationResponseDto,
   type MemberRoleChangeDto,
   MemberRoleChangeDtoSchema,
+  type OrganizationCreateDto,
+  OrganizationCreateDtoSchema,
+  type OrganizationDto,
+  PolicyKeyList,
 } from "@open-dpp/dto";
 import { InvitationsRepository } from "../infrastructure/adapters/invitations.repository";
 import { UsersRepository } from "../../users/infrastructure/adapters/users.repository";
@@ -35,6 +39,7 @@ import { OrganizationsRepository } from "../infrastructure/adapters/organization
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { OrganizationId } from "../../auth/presentation/decorators/organization-id.decorator";
 import { MemberHasRole } from "../../auth/presentation/decorators/member-has-role.decorator";
+import { Policy } from "../../../policy/presentation/policy.decorator";
 
 @Controller("organizations")
 export class OrganizationsController {
@@ -50,28 +55,29 @@ export class OrganizationsController {
 
   @Post()
   async createOrganization(
-    @Body() body: { name: string; slug: string },
+    @Body(new ZodValidationPipe(OrganizationCreateDtoSchema)) body: OrganizationCreateDto,
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
     @UserRoleDecorator() userRole: UserRoleType,
-  ) {
-    return this.organizationsService.createOrganization(
+  ): Promise<OrganizationDto> {
+    const organization = await this.organizationsService.createOrganization(
       {
         name: body.name,
-        slug: body.slug,
         metadata: {},
       },
       session,
       extractBetterAuthHeaders(headers),
       userRole,
     );
+    return toOrganizationDto(organization);
   }
 
   // Returns all organizations for admin users
   // Otherwise responds with 403
   @Get()
-  async getOrganizations(@AuthSession() session: Session) {
-    return this.organizationsService.getAllOrganizations(session);
+  async getOrganizations(@AuthSession() session: Session): Promise<OrganizationDto[]> {
+    const organizations = await this.organizationsService.getAllOrganizations(session);
+    return organizations.map(toOrganizationDto);
   }
 
   @Patch(":id")
@@ -80,8 +86,8 @@ export class OrganizationsController {
     @Body() body: { name: string; logo?: string },
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
-  ) {
-    return this.organizationsService.updateOrganization(
+  ): Promise<OrganizationDto> {
+    const organization = await this.organizationsService.updateOrganization(
       id,
       {
         name: body.name,
@@ -90,28 +96,26 @@ export class OrganizationsController {
       session,
       extractBetterAuthHeaders(headers),
     );
+    return toOrganizationDto(organization);
   }
 
   @Get("member")
-  async getMemberOrganizations(
-    @Headers() headers: Record<string, string>,
-    @AuthSession() session: Session,
-  ): Promise<Organization[]> {
-    return this.organizationsService.getMemberOrganizations(
-      session.userId,
-      extractBetterAuthHeaders(headers),
-    );
+  async getMemberOrganizations(@AuthSession() session: Session): Promise<OrganizationDto[]> {
+    const organizations = await this.organizationsService.getMemberOrganizations(session.userId);
+    return organizations.map(toOrganizationDto);
   }
 
   @Get(":id")
   async getOrganization(
     @Param("id") id: string,
     @AuthSession() session: Session,
-  ): Promise<Organization | null> {
-    return this.organizationsService.getOrganization(id, session);
+  ): Promise<OrganizationDto | null> {
+    const organization = await this.organizationsService.getOrganization(id, session);
+    return organization ? toOrganizationDto(organization) : null;
   }
 
   @Post(":id/invite")
+  @Policy(PolicyKeyList.ORGANIZATION_MEMBER_LIMIT)
   async inviteMember(
     @Param("id") id: string,
     @Body() body: { email: string },

@@ -8,6 +8,10 @@
     "noEntries": "Keine Einträge gefunden",
     "moveUp": "Nach oben verschieben",
     "moveDown": "Nach unten verschieben",
+    "moveRight": "Nach rechts verschieben",
+    "moveLeft": "Nach links verschieben",
+    "move": "Verschieben",
+    "moveTo": "Verschieben nach...",
     "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
@@ -95,6 +99,8 @@
     "security": {
       "unknownRole": "Unbekannte Rolle",
       "missingPermission": "Fehlende Rechte",
+      "archivedTooltip": "Dieses Dokument ist archiviert und kann nicht geändert werden.",
+      "editingRestrictedTooltip": "Dieser Pass erlaubt ausschließlich Datenänderungen. Seine Vorlage legt die Struktur fest.",
       "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
       "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
       "permissions": "Berechtigungen",
@@ -154,8 +160,10 @@
     "submodel": "Abschnitt | Abschnitte",
     "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
+    "errorMoveSubmodel": "@:common.move des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",
     "errorRemoveSubmodelElement": "@:common.remove des Elements @:common.failed",
+    "errorMoveSubmodelElement": "@:common.move des Elements @:common.failed",
     "submodelElementList": "Tabelle",
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
@@ -523,6 +531,35 @@
       "title": "Organisation anpassen",
       "branding": "Branding"
     },
+    "usage": {
+      "title": "Nutzungsregeln",
+      "setLimitsDialog": {
+        "title": "Nutzungslimits setzen",
+        "nullIsUnlimited": "Ein Wert von 0 bedeuted unbegrenzten Zugang."
+      },
+      "policy": {
+        "AI_TOKEN_QUOTA": {
+          "title": "AI Token Limit",
+          "unit": "Token | Tokens",
+          "description": "Begrenzt, wie viele KI-Tokens die Organisation pro Monat verbrauchen kann, bevor KI-Funktionen gesperrt werden."
+        },
+        "MEDIA_STORAGE_LIMIT": {
+          "title": "Mediaspeicher Limit",
+          "unit": "MB",
+          "description": "Begrenzt die Gesamtgröße der Mediendateien, die eine Organisation speichern kann, gemessen in MB."
+        },
+        "PASSPORT_CREATE_LIMIT": {
+          "title": "Produktpass Limit",
+          "unit": "Pass | Pässe",
+          "description": "Begrenzt die Gesamtzahl der Produktpässe, die eine Organisation erstellen kann."
+        },
+        "ORGANIZATION_MEMBER_LIMIT": {
+          "title": "Teammitglieder Limit",
+          "unit": "Mitglied | Mitglieder",
+          "description": "Begrenzt die Gesamtzahl der Teammitglieder, die einer Organisation beitreten können."
+        }
+      }
+    },
     "admin": {
       "title": "Administration",
       "organizations": "Alle Organisationen",
@@ -640,6 +677,7 @@
     "label": "Aktivitätsverlauf",
     "createdAt": "Datum",
     "position": "Position",
+    "oldPosition": "Alte Position",
     "name": "Name",
     "group": "Gruppe",
     "type": "Typ",
@@ -648,6 +686,11 @@
     "newValue": "Neuer Wert",
     "userId": "Benutzer ID",
     "path": "Pfad",
+    "movedFrom": "Verschoben von",
+    "movedTo": "Verschoben nach",
+    "viewHistoryBeforeMove": "Verlauf vor der Verschiebung anzeigen",
+    "live": "Aktuell",
+    "beforeMove": "Vor Verschiebung nach {path}",
     "languageOps": {
       "replace": "geändert",
       "add": "hinzugefügt",
@@ -682,7 +725,9 @@
       "SubmodelDeleted": "Abschnitt gelöscht",
       "DigitalProductDocumentStatusChanged": "Status geändert",
       "FileValueChanged": "Datei geändert",
-      "ReferenceElementValueChanged": "Referenz geändert"
+      "ReferenceElementValueChanged": "Referenz geändert",
+      "SubmodelElementMoved": "Element verschoben",
+      "SubmodelMoved": "Abschnitt verschoben"
     }
   },
   "passports": {
@@ -697,8 +742,35 @@
     "notFoundDescription": "Dieser Produktpass existiert nicht oder wurde entfernt. Bitte Link prüfen.",
     "loading": "Produktpass wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status des Produktpasses",
+    "errorRemoveEditingRestrictions": "Fehler beim Entfernen der Bearbeitungseinschränkung",
+    "removeEditingRestrictions": "Bearbeitungseinschränkung entfernen",
+    "removeEditingRestrictionsTooltip": "Struktur, Sicherheit und Layout dieses Produktpasses werden derzeit von seiner Vorlage verwaltet. Wollen Sie die Bearbeitungseinschränkung entfernen?",
+    "removeEditingRestrictionsConfirmHeader": "Bearbeitungseinschränkung entfernen",
+    "removeEditingRestrictionsConfirmMessage": "Dieser Produktpass wird nicht mehr von seiner Vorlage gesteuert — zukünftige Änderungen der Vorlage wirken sich nicht mehr auf ihn aus. Dies kann nicht rückgängig gemacht werden.",
+    "removeEditingRestrictionsConfirmAccept": "Einschränkung entfernen",
+    "restrictedEditingTag": "Beschränkte Bearbeitung",
     "blank": "Leer",
-    "fromTemplate": "Aus Produktpassvorlage"
+    "fromTemplate": "Aus Produktpassvorlage",
+    "registryExport": {
+      "button": "In EU-Register exportieren",
+      "title": "In EU-Register exportieren",
+      "description": "Exportiert die veröffentlichten Produktpässe als ZIP mit Dateien für das EU-Register (max. 100 Produktpässe pro Datei). Produktpässe, die nicht exportiert werden können, stehen in der Datei failed-passports.json im ZIP.",
+      "productGroup": "Produktgruppe",
+      "batteries": "Batterien",
+      "filters": "Produktpässe",
+      "onlyStatus": "Es werden nur Produktpässe mit dem Status „{status}“ exportiert.",
+      "export": "Exportieren",
+      "success": "Der Export wurde heruntergeladen. Prüfe failed-passports.json im ZIP, falls vorhanden.",
+      "noMatch": "Keine veröffentlichten Produktpässe entsprechen diesen Filtern.",
+      "error": "Der Export ist fehlgeschlagen."
+    }
+  },
+  "filter": {
+    "status": "Status",
+    "templates": "Vorlagen",
+    "createdBetween": "Erstellt zwischen",
+    "selectPeriod": "Zeitraum auswählen",
+    "clear": "Filter zurücksetzen"
   },
   "status": {
     "withStatus": "mit Status",
@@ -721,10 +793,22 @@
     "notFoundDescription": "Diese Passvorlage existiert nicht oder wurde entfernt. Bitte Link prüfen.",
     "loading": "Passvorlage wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status der Passvorlage",
+    "errorRestrictPassportEditing": "Fehler beim Einschränken der Passbearbeitung",
+    "restrictPassportEditing": "Passbearbeitung einschränken",
+    "restrictPassportEditingTooltip": "Aus dieser Vorlage erstellte Produktpässe erlauben nur noch die Bearbeitung von Feldinhalten — Struktur, Sicherheit und Layout werden von der Vorlage verwaltet.",
+    "restrictPassportEditingConfirmHeader": "Passbearbeitung einschränken",
+    "restrictPassportEditingConfirmMessage": "Aus dieser Vorlage erstellte Produktpässe erlauben ab sofort nur noch die Bearbeitung von Feldinhalten. Dies kann nicht rückgängig gemacht werden.",
+    "restrictPassportEditingConfirmAccept": "Bearbeitung einschränken",
+    "restrictPassportEditingTag": "Beschränkte Bearbeitung für Pässe",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "select": "Vorlage auswählen",
-    "errorFetchList": "Laden der Vorlagen fehlgeschlagen"
+    "selectMultiple": "Vorlagen auswählen",
+    "errorFetchList": "Laden der Vorlagen fehlgeschlagen",
+    "importOfficial": "Offizielle Vorlagen importieren",
+    "importOfficialSuccess": "{imported} offizielle Vorlage(n) importiert.",
+    "importOfficialPartialFailure": "{imported} offizielle Vorlage(n) importiert, {failed} fehlgeschlagen.",
+    "importOfficialError": "Offizielle Vorlagen konnten nicht importiert werden."
   },
   "actions": {
     "member": {
@@ -850,7 +934,8 @@
       "alreadyAMember": "Bereits registriert?",
       "ctaSignIn": "Jetzt anmelden",
       "error": "Registrierung fehlgeschlagen.",
-      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator."
+      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator.",
+      "oauthContinueError": "Die Weiterleitung zur aufrufenden Anwendung ist fehlgeschlagen. Bitte registrieren Sie sich oder melden Sie sich erneut an."
     },
     "passwordResetRequest": {
       "title": "Passwort zurücksetzen",
@@ -895,9 +980,10 @@
   "api": {
     "error": {
       "limit": {
-        "MODEL_CREATE_CAP": "Limit von {limit} Produktpässen ist erreicht.",
-        "MEDIA_STORAGE_CAP": "Limit von {limit}MB Speicherplatz ist erreicht.",
-        "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht."
+        "PASSPORT_CREATE_LIMIT": "Limit von {limit} Produktpässen ist erreicht.",
+        "MEDIA_STORAGE_LIMIT": "Limit von {limit}MB Speicherplatz ist erreicht.",
+        "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht.",
+        "ORGANIZATION_MEMBER_LIMIT": "Limit von {limit} Teammitgliedern ist erreicht. Entfernen Sie ein Mitglied oder erweitern Sie Ihr Limit, um weitere Personen einzuladen."
       }
     }
   },

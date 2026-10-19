@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from "vue-router";
+import type { RouteRecordRaw, RouterScrollBehavior } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
 import { authClient } from "../auth-client.ts";
 
@@ -10,6 +10,7 @@ import { AUTH_ROUTES } from "./routes/auth";
 import { MEDIA_ROUTES } from "./routes/media";
 import { ORGANIZATION_ROUTES } from "./routes/organizations";
 import { PRESENTATION_ROUTES } from "./routes/presentation/presentation";
+import { resolveAuthRedirect } from "./auth-guard.ts";
 import { toRaw } from "vue";
 
 // const MODE = import.meta.env.MODE;
@@ -94,17 +95,25 @@ export const routes: RouteRecordRaw[] = [
   ...ADMIN_ROUTES,
 ];
 
+/** Only scroll to top on a real page change. A navigation that only changes
+ * query params (drawer open/close, pagination cursor, move/edit bookkeeping)
+ * keeps the current scroll position instead of jerking the viewport back up. */
+export const scrollBehavior: RouterScrollBehavior = (to, from, savedPosition) => {
+  if (savedPosition) return savedPosition;
+  if (to.hash) {
+    return { el: to.hash, behavior: "smooth", top: 150 };
+  }
+  if (to.path === from.path) {
+    return false;
+  }
+
+  return { top: 0 };
+};
+
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition;
-    if (to.hash) {
-      return { el: to.hash, behavior: "smooth", top: 150 };
-    }
-
-    return { top: 0 };
-  },
+  scrollBehavior,
 });
 
 router.beforeEach(async (to, from) => {
@@ -118,17 +127,9 @@ router.beforeEach(async (to, from) => {
   const { data: session } = await authClient.getSession();
   const isSignedIn = session !== null;
 
-  if (isSignedIn && to.meta?.onlyAnonymous) {
-    return "/";
-  }
-  if (!isSignedIn && !to.meta?.public) {
-    const fullRedirectUrl = encodeURIComponent(window.location.origin + to.fullPath);
-    return {
-      name: "Signin",
-      query: {
-        redirect: fullRedirectUrl,
-      },
-    };
+  const authRedirect = resolveAuthRedirect(to, isSignedIn, window.location.origin);
+  if (authRedirect) {
+    return authRedirect;
   }
 
   const { organizations } = useOrganizationsStore();

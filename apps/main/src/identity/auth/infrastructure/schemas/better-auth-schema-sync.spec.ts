@@ -3,6 +3,7 @@ import type { Auth } from "better-auth";
 import { describe, expect, it, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ObjectId } from "mongodb";
 import { Connection, Schema as MongooseSchema } from "mongoose";
@@ -38,6 +39,7 @@ describe("Better Auth Schema Sync", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({

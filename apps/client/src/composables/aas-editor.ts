@@ -15,6 +15,8 @@ import {
   KeyTypesEnum,
   type LanguageTextDto,
   type LanguageType,
+  type MoveSubmodelElementDto,
+  MoveSubmodelElementSchema,
   type PagingParamsDto,
   Permissions,
   type PermissionType,
@@ -36,7 +38,7 @@ import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
-import { computed, type MaybeRefOrGetter, type Ref, ref, toRaw, toValue } from "vue";
+import { computed, type MaybeRefOrGetter, type Ref, ref, shallowRef, toRaw, toValue } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
@@ -49,6 +51,8 @@ import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
 import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
+import { type IAasMoveDialog, useAasMoveDialog } from "./aas-move-dialog.ts";
+import { SCALAR_LEAF_MODEL_TYPES } from "../lib/submodel-element.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -61,15 +65,26 @@ export interface AasEditorProps {
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
   status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
+  /** Passport-only: true when the passport's editing is restricted to leaf data values by
+   * its template. Unlike `isArchived`, this does not block reaching a leaf element's editor
+   * (values stay editable) — it only blocks structural changes (create/delete) and locks
+   * container/shell editors and permissions, which have no leaf value of their own. */
+  isEditingRestrictedToData?: MaybeRefOrGetter<boolean>;
+  /** Called after a submodel/submodel-element move succeeds. Moves change idShort
+   * paths, which invalidates any data keyed by them (e.g. presentation config)
+   * that isn't part of the reloaded shell/submodel payload and must be refetched. */
+  onAfterMove?: () => Promise<void> | void;
 }
 
-export interface IAasEditor extends IAasDrawer, IPagination {
+export interface IAasEditor extends IAasDrawer, IPagination, IAasMoveDialog {
   init: () => Promise<void>;
   findTreeNodeByKey: (key: string, children?: TreeNode[]) => TreeNode | undefined;
   displayName: Ref<string>;
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
+  buildMoveMenu: (node: TreeNode) => void;
+  moveMenuItems: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
   deleteSubmodel: (submodelId: string) => Promise<void>;
   deleteSubmodelElement: (path: AasEditorPath) => Promise<void>;
@@ -94,6 +109,8 @@ export function useAasEditor({
   translate,
   openConfirm,
   status,
+  isEditingRestrictedToData,
+  onAfterMove,
 }: AasEditorProps): IAasEditor {
   const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
   const displayName = ref<string>("");
@@ -101,6 +118,7 @@ export function useAasEditor({
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
   const isArchived = computed(() => toValue(status) === DigitalProductDocumentStatusDto.Archived);
+  const isRestrictedToData = computed(() => toValue(isEditingRestrictedToData) ?? false);
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -113,10 +131,17 @@ export function useAasEditor({
 
   const { can } = useAasAbility({ getAccessPermissionRules });
 
-  const drawer = useAasDrawer({ onHideDrawer, can, isArchived });
+  const drawer = useAasDrawer({
+    onHideDrawer,
+    can,
+    isArchived,
+    isEditingRestrictedToData: isRestrictedToData,
+  });
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
+  const moveMenuItems = ref<MenuItem[]>([]);
+  const rawSubmodels = shallowRef<SubmodelResponseDto[]>([]);
 
   const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({
     translate,
@@ -129,9 +154,8 @@ export function useAasEditor({
     try {
       const response = await aasNamespace.getSubmodels(id, pagingParams);
       if (response.status === HTTPCode.OK) {
-        submodels.value = convertSubmodelsToTree(
-          SubmodelJsonSchema.array().parse(response.data.result),
-        );
+        rawSubmodels.value = SubmodelJsonSchema.array().parse(response.data.result);
+        submodels.value = convertSubmodelsToTree(rawSubmodels.value);
         return response.data;
       } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
@@ -262,14 +286,36 @@ export function useAasEditor({
     }
   }
 
-  async function modifySubmodelElement(path: AasEditorPath, data: SubmodelElementModificationDto) {
+  /** Extracts the value-only payload `modifyValueOfSubmodelElement` expects from the full
+   * modification payload the leaf editor's form submits. Only called for `modelType`s in
+   * `SCALAR_LEAF_MODEL_TYPES` that also have a working editor (Property, File) — the other
+   * listed types (MultiLanguageProperty, ReferenceElement) have no editor component yet, so
+   * this branch is unreachable for them today. */
+  function extractLeafValue(modelType: string, data: any): any {
+    if (modelType === AasSubmodelElements.File) {
+      return { value: data.value, contentType: data.contentType };
+    }
+    return data.value;
+  }
+
+  async function modifySubmodelElement(
+    path: AasEditorPath,
+    data: SubmodelElementModificationDto,
+    modelType?: string,
+  ) {
     if (path.submodelId && path.idShortPath) {
-      const response = await aasNamespace.modifySubmodelElement(
-        id,
-        path.submodelId,
-        path.idShortPath,
-        data,
-      );
+      // While restricted to data, a leaf element's structure/metadata stays frozen but its
+      // value stays editable — route through the value-only endpoint instead of the combined
+      // one, which is blocked for restricted passports on the backend
+      const response =
+        toValue(isRestrictedToData) && modelType && SCALAR_LEAF_MODEL_TYPES.includes(modelType)
+          ? await aasNamespace.modifyValueOfSubmodelElement(
+              id,
+              path.submodelId,
+              path.idShortPath,
+              extractLeafValue(modelType, data),
+            )
+          : await aasNamespace.modifySubmodelElement(id, path.submodelId, path.idShortPath, data);
       await finalizeApiRequest(response);
     }
   }
@@ -287,7 +333,7 @@ export function useAasEditor({
     } else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
       return async (data: any) => {
         try {
-          await modifySubmodelElement(toRaw(node.data.path), data);
+          await modifySubmodelElement(toRaw(node.data.path), data, node.data.modelType);
         } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
@@ -386,14 +432,25 @@ export function useAasEditor({
 
   function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
     const missingPermissionMsg = translate(`${translatePrefix}.security.missingPermission`);
+    const archivedMsg = translate(`${translatePrefix}.security.archivedTooltip`);
     const labels = {
       [Permissions.Read]: "view",
       [Permissions.Edit]: "edit",
       [Permissions.Delete]: "remove",
       [Permissions.Create]: "add",
     };
+    // Structural mutations (create/delete a tree node) are frozen while restricted to data,
+    // same as while archived — but unlike archived, "edit" stays reachable so a leaf
+    // element's value can still be edited (the drawer opened via "edit" locks everything
+    // except the value field for leaf types; see PropertyEditor.vue/FileEditor.vue).
+    const isStructurallyBlocked = (permission: PermissionType) =>
+      (permission === Permissions.Create || permission === Permissions.Delete) &&
+      toValue(isRestrictedToData);
     const visible = (permission: PermissionType) => {
       if (toValue(isArchived) && permission !== Permissions.Read) {
+        return false;
+      }
+      if (isStructurallyBlocked(permission)) {
         return false;
       }
       if (permission === Permissions.Create) {
@@ -404,7 +461,11 @@ export function useAasEditor({
       }
       return true;
     };
-    return Object.values(Permissions).reduce(
+    // Only Read can be both visible and archived at once (see visible() above) — every other
+    // permission that's blocked (archived or structurally-blocked) is hidden entirely, so its
+    // tooltip is never rendered and doesn't need a "why" message here.
+    const blockedTooltip = () => (toValue(isArchived) ? archivedMsg : undefined);
+    const actions = Object.values(Permissions).reduce(
       (
         acc: Record<string, { visible: boolean; enabled: boolean; tooltip: string }>,
         permission,
@@ -413,15 +474,29 @@ export function useAasEditor({
           visible: visible(permission),
           enabled:
             (!toValue(isArchived) || permission === Permissions.Read) &&
+            !isStructurallyBlocked(permission) &&
             can(permission, idShortPathIncludingSubmodel),
-          tooltip: can(permission, idShortPathIncludingSubmodel)
-            ? translate(`common.${labels[permission]}`)
-            : missingPermissionMsg,
+          tooltip:
+            blockedTooltip() ??
+            (can(permission, idShortPathIncludingSubmodel)
+              ? translate(`common.${labels[permission]}`)
+              : missingPermissionMsg),
         };
         return acc;
       },
       {},
     );
+    // Move is a structural action gated by the same permission as Edit — but unlike Edit, it
+    // must be hidden while restricted to data (moving changes tree structure, it isn't a leaf
+    // value edit like the drawer Edit opens), so it can't just reuse actions.edit as-is.
+    const canMove = can(Permissions.Edit, idShortPathIncludingSubmodel);
+    const moveBlocked = toValue(isArchived) || toValue(isRestrictedToData);
+    actions.move = {
+      visible: !moveBlocked && canMove,
+      enabled: !moveBlocked && canMove,
+      tooltip: blockedTooltip() ?? (canMove ? translate("common.move") : missingPermissionMsg),
+    };
+    return actions;
   }
 
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {
@@ -625,6 +700,151 @@ export function useAasEditor({
     });
   }
 
+  /** Finds the ordered list of siblings a node belongs to, and its index within
+   * them, by walking the tree — the node's own siblings are whichever array
+   * (top-level `submodels`, or some ancestor's `children`) actually contains it. */
+  function findSiblingsAndIndex(
+    key: string,
+    nodes: TreeNode[] = submodels.value,
+  ): { siblings: TreeNode[]; index: number } | undefined {
+    const index = nodes.findIndex((n) => n.key === key);
+    if (index !== -1) {
+      return { siblings: nodes, index };
+    }
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        const found = findSiblingsAndIndex(key, node.children);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  async function moveSubmodelElementTo(path: AasEditorPath, options: MoveSubmodelElementDto) {
+    try {
+      if (path.submodelId && path.idShortPath) {
+        const response = await aasNamespace.moveSubmodelElement(
+          id,
+          path.submodelId,
+          path.idShortPath,
+          MoveSubmodelElementSchema.parse(options),
+        );
+        await finalizeApiRequest({ status: response.status });
+        // The move can change idShort paths, so anything keyed by them
+        // (access permission rules, presentation config) must be refetched.
+        await Promise.all([
+          pagination.reloadCurrentPage(),
+          fetchAssetAdministrationShell(),
+          onAfterMove?.(),
+        ]);
+      }
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(
+        translate(`${translatePrefix}.errorMoveSubmodelElement`),
+        error,
+      );
+    }
+  }
+
+  async function moveSubmodelTo(submodelId: string, position: number) {
+    try {
+      const response = await aasNamespace.moveSubmodel(id, submodelId, { position });
+      await finalizeApiRequest({ status: response.status });
+      await Promise.all([
+        pagination.reloadCurrentPage(),
+        fetchAssetAdministrationShell(),
+        onAfterMove?.(),
+      ]);
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(
+        translate(`${translatePrefix}.errorMoveSubmodel`),
+        error,
+      );
+    }
+  }
+
+  const moveDialog = useAasMoveDialog({
+    rawSubmodels,
+    errorHandlingStore,
+    translate,
+    moveSubmodelElementTo,
+  });
+
+  function buildMoveMenu(node: TreeNode) {
+    const moveUpLabel = translate("common.moveUp");
+    const moveDownLabel = translate("common.moveDown");
+
+    if (node.data.modelType === KeyTypes.Submodel) {
+      const pageIndex = submodels.value.findIndex((n) => n.key === node.key);
+      if (pageIndex === -1) {
+        moveMenuItems.value = [];
+        return;
+      }
+      const absolutePosition = pagination.currentPage.value.from + pageIndex;
+      const canMoveUp = pageIndex > 0 || pagination.hasPrevious.value;
+      const canMoveDown = pageIndex < submodels.value.length - 1 || pagination.hasNext.value;
+      moveMenuItems.value = [
+        {
+          label: moveUpLabel,
+          icon: "pi pi-arrow-up",
+          disabled: !canMoveUp,
+          command: async () => {
+            await moveSubmodelTo(node.key as string, absolutePosition - 1);
+          },
+        },
+        {
+          label: moveDownLabel,
+          icon: "pi pi-arrow-down",
+          disabled: !canMoveDown,
+          command: async () => {
+            await moveSubmodelTo(node.key as string, absolutePosition + 1);
+          },
+        },
+      ];
+      return;
+    }
+
+    const found = findSiblingsAndIndex(node.key as string);
+    if (!found) {
+      moveMenuItems.value = [];
+      return;
+    }
+    const { siblings, index } = found;
+    const path = toRaw(node.data.path) as AasEditorPath;
+    moveMenuItems.value = [
+      {
+        label: moveUpLabel,
+        icon: "pi pi-arrow-up",
+        disabled: index <= 0,
+        command: async () => {
+          await moveSubmodelElementTo(path, { position: index - 1 });
+        },
+      },
+      {
+        label: moveDownLabel,
+        icon: "pi pi-arrow-down",
+        disabled: index >= siblings.length - 1,
+        command: async () => {
+          await moveSubmodelElementTo(path, { position: index + 1 });
+        },
+      },
+      // Omitted rather than disabled when there's nothing to move into (e.g.
+      // the element has no sibling/ancestor containers besides its own
+      // current parent) — a picker with no valid target would be dead weight.
+      ...(moveDialog.hasMoveToTarget(path)
+        ? [
+            {
+              label: translate("common.moveTo"),
+              icon: "pi pi-sign-in",
+              command: () => {
+                moveDialog.openMoveToDialog(path);
+              },
+            },
+          ]
+        : []),
+    ];
+  }
+
   async function createSubmodelElementList(
     path: AasEditorPath,
     data: SubmodelElementListRequestDto,
@@ -713,6 +933,9 @@ export function useAasEditor({
     submodelElementsToAdd,
     openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
+    buildMoveMenu,
+    moveMenuItems,
+    ...moveDialog,
     createSubmodel,
     deletePolicyBySubjectAndObject,
     deleteSubmodel,

@@ -28,6 +28,13 @@ _Avoid_: cancel (used interchangeably in UI, but Revoke is the precise term for 
 **Preferred Language**:
 The User's chosen UI language, persisted on the User and mirrored to the browser locale on load and on save.
 
+**OAuth Provider**:
+open-dpp acting as the identity provider and authorization server for a Trusted Client: a User signs in once with open-dpp, and the Trusted Client receives proof of who they are and may act on their behalf against open-dpp. The inverse of an Account's external identity provider, where open-dpp is the one relying on someone else. Optional per instance; when not configured, open-dpp is nobody's identity provider.
+
+**Trusted Client**:
+The single external application an operator has configured to use open-dpp as its OAuth Provider. It is trusted because the operator chose it, so Users are not asked to consent to it. There is at most one per instance, and it cannot be created or changed by Users.
+_Not to be confused with_: an API key (a User-minted credential for their own use) or an Account (a User's link to an authentication method).
+
 ## Organization & Membership
 
 **Member**:
@@ -40,3 +47,6 @@ The privileged Member role of an Organization. Only Owners may change other Memb
 **Member Removal**:
 An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
 _Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).
+
+**Organization Slug**:
+better-auth's internal alias of an Organization. It always equals the Organization's id — set at creation and backfilled for older Organizations — is never chosen by a User and never exposed by the API. Organization names therefore need not be unique.

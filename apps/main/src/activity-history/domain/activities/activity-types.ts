@@ -20,8 +20,11 @@ export const ActivityTypes = {
   ColumnMovedToGroup: "ColumnMovedToGroup",
   ColumnGroupCreated: "ColumnGroupCreated",
   SubmodelElementDeleted: "SubmodelElementDeleted",
+  SubmodelElementMoved: "SubmodelElementMoved",
+  SubmodelMoved: "SubmodelMoved",
   PolicyDeleted: "PolicyDeleted",
   DigitalProductDocumentStatusChanged: "DigitalProductDocumentStatusChanged",
+  PassportEditingModeChanged: "PassportEditingModeChanged",
 } as const;
 export const ActivityTypesEnum = z.enum(ActivityTypes);
 export type ActivityTypesType = z.infer<typeof ActivityTypesEnum>;

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InputText from "primevue/inputtext";
+import Textarea from "primevue/textarea";
 import { computed } from "vue";
 
 const props = withDefaults(
@@ -10,6 +12,7 @@ const props = withDefaults(
     error: string | undefined;
     modelValue: string | null | undefined;
     treatEmptyStringAsNull?: boolean;
+    multiline?: boolean;
     errorPlacement?: "flow" | "absolute";
   }>(),
   {
@@ -25,6 +28,11 @@ const internalValue = computed({
   get: () => props.modelValue,
   set: (val) => emit("update:modelValue", val === "" && props.treatEmptyStringAsNull ? null : val),
 });
+
+const inputComponent = computed(() => (props.multiline ? Textarea : InputText));
+const inputProps = computed(() =>
+  props.multiline ? { rows: 3, autoResize: true, fluid: true } : {},
+);
 
 const isErrorVisible = computed(() => props.showErrors && !!props.error);
 const isAbsolute = computed(() => props.errorPlacement === "absolute");
@@ -52,8 +60,10 @@ const messageClasses = computed(() =>
         <slot name="addonLeft" />
       </InputGroupAddon>
       <FloatLabel v-if="props.label" variant="on">
-        <InputText
+        <component
+          :is="inputComponent"
           :id="props.id"
+          v-bind="inputProps"
           v-model="internalValue"
           :invalid="isErrorVisible"
           :disabled="props.disabled"
@@ -63,9 +73,11 @@ const messageClasses = computed(() =>
         />
         <label :for="props.id">{{ props.label }}</label>
       </FloatLabel>
-      <InputText
+      <component
+        :is="inputComponent"
         v-else-if="props.label === undefined"
         :id="props.id"
+        v-bind="inputProps"
         v-model="internalValue"
         :invalid="isErrorVisible"
         :disabled="props.disabled"

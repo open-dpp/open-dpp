@@ -20,6 +20,8 @@ export const ActivityDtoTypes = {
   ColumnMovedToGroup: "ColumnMovedToGroup",
   ColumnGroupCreated: "ColumnGroupCreated",
   SubmodelElementDeleted: "SubmodelElementDeleted",
+  SubmodelElementMoved: "SubmodelElementMoved",
+  SubmodelMoved: "SubmodelMoved",
   PolicyDeleted: "PolicyDeleted",
   DigitalProductDocumentStatusChanged: "DigitalProductDocumentStatusChanged",
 } as const;

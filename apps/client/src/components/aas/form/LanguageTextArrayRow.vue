@@ -17,6 +17,8 @@ const props = defineProps<{
   submitAttempted: boolean;
   ignoreLanguageOptions: LanguageType[];
   disabled?: boolean;
+  // Renders the text field as a Textarea (see LanguageTextArrayForm).
+  multiline?: boolean;
 }>();
 
 const emit = defineEmits<{ remove: [] }>();
@@ -37,6 +39,9 @@ const {
 const { value: language } = useField<LanguageType>(languagePath);
 
 const showError = computed(() => textMeta.touched || props.submitAttempted);
+
+const rowClasses = computed(() => (props.multiline ? "lg:grid-cols-[1fr_auto]" : "lg:grid-cols-3"));
+const fieldGroupClasses = computed(() => (props.multiline ? "flex flex-col gap-4" : "contents"));
 </script>
 
 <template>
@@ -44,23 +49,28 @@ const showError = computed(() => textMeta.touched || props.submitAttempted);
        positioned error Message from TextFieldWithValidation, so the desktop
        row height stays stable when an error appears. Below lg: the grid is
        a single column and the error flows inline — no extra padding needed. -->
-  <div class="grid gap-4 lg:grid-cols-3 lg:pb-7">
-    <LanguageSelect
-      v-model="language"
-      :disabled="props.disabled"
-      :ignore-options="props.ignoreLanguageOptions"
-    />
-    <TextFieldWithValidation
-      :id="`${props.fieldName}-${fieldKey}`"
-      v-model="text"
-      :label="t(props.rowLabel)"
-      :show-errors="showError"
-      :error="textError"
-      :disabled="props.disabled"
-      error-placement="absolute"
-      @blur="handleTextBlur"
-    />
+  <div class="grid gap-4 lg:pb-7" :class="rowClasses">
+    <div :class="fieldGroupClasses">
+      <LanguageSelect
+        v-model="language"
+        :class="props.multiline ? 'lg:w-1/3' : undefined"
+        :disabled="props.disabled"
+        :ignore-options="props.ignoreLanguageOptions"
+      />
+      <TextFieldWithValidation
+        :id="`${props.fieldName}-${fieldKey}`"
+        v-model="text"
+        :label="t(props.rowLabel)"
+        :show-errors="showError"
+        :error="textError"
+        :disabled="props.disabled"
+        :multiline="props.multiline"
+        error-placement="absolute"
+        @blur="handleTextBlur"
+      />
+    </div>
     <Button
+      :class="props.multiline ? 'self-start' : undefined"
       :data-cy="`remove-${props.dataCyPrefix}-${index}`"
       :aria-label="t('common.remove')"
       icon="pi pi-trash"

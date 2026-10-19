@@ -219,6 +219,31 @@ export async function moveColumnToGroup(
   });
 }
 
+export async function reorderColumn(
+  columnIdShort: string,
+  position: number,
+  deps: TableMutationsDeps,
+  errorMessage: string,
+  onSuccess: (data: SubmodelElementListResponseDto) => void | Promise<void>,
+  groupIdShort?: string,
+): Promise<boolean> {
+  return performMutation({
+    request: () =>
+      deps.aasNamespace.reorderColumn(
+        deps.id,
+        deps.pathToList.submodelId!,
+        deps.pathToList.idShortPath!,
+        columnIdShort,
+        { position },
+        groupIdShort,
+      ),
+    expectedStatus: HTTPCode.CREATED,
+    errorMessage,
+    errorHandlingStore: deps.errorHandlingStore,
+    onSuccess,
+  });
+}
+
 export async function createGroupFromColumn(
   columnIdShort: string,
   groupData: SubmodelElementSharedRequestDto,

@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import {
   findAllByOrganizationId,
   findByIds,
@@ -16,6 +17,10 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportDoc, PassportDocVersion } from "./passport.schema";
 import { IDigitalProductDocumentRepository } from "../../digital-product-document/infrastructure/digital-product-document-repository.interface";
+
+export type PassportFindOptions = FindOptions & {
+  filter?: NonNullable<FindOptions["filter"]> & { templateIds?: ReadonlyArray<string> };
+};
 
 @Injectable()
 export class PassportRepository implements IDigitalProductDocumentRepository<Passport> {
@@ -43,6 +48,14 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     };
   }
 
+  migrate1_1_0To1_2_0(plain: any) {
+    return {
+      ...plain,
+      editingMode: PassportEditingMode.Full,
+      _schemaVersion: PassportDocVersion.v1_2_0,
+    };
+  }
+
   async fromPlainWithMigration(plain: any): Promise<Passport> {
     let migratedVersion = plain;
     if (
@@ -51,6 +64,9 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     ) {
       migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
     }
+    if (migratedVersion._schemaVersion === PassportDocVersion.v1_1_0) {
+      migratedVersion = this.migrate1_1_0To1_2_0(migratedVersion);
+    }
     return this.fromPlain(migratedVersion);
   }
 
@@ -58,7 +74,7 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     return await save(
       passport,
       this.passportDoc,
-      PassportDocVersion.v1_1_0,
+      PassportDocVersion.v1_2_0,
       this.fromPlain.bind(this),
       undefined,
       options,
@@ -75,14 +91,20 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
 
   async findAllByOrganizationId(
     organizationId: string,
-    options?: FindOptions,
+    options?: PassportFindOptions,
   ): Promise<PagingResult<Passport>> {
+    const templateIds = options?.filter?.templateIds;
     return await findAllByOrganizationId(
       this.passportDoc,
       this.fromPlainWithMigration.bind(this),
       organizationId,
       options,
+      templateIds && templateIds.length > 0 ? { templateId: { $in: [...templateIds] } } : {},
     );
+  }
+
+  async countByOrganizationId(organizationId: string): Promise<number> {
+    return await this.passportDoc.countDocuments({ organizationId }).exec();
   }
 
   async findByIds(ids: string[]): Promise<Map<string, Passport>> {

@@ -12,12 +12,14 @@ import { OrganizationsRepository } from "./infrastructure/adapters/organizations
 import { InvitationMapper } from "./infrastructure/mappers/invitation.mapper";
 import { MemberMapper } from "./infrastructure/mappers/member.mapper";
 import { OrganizationMapper } from "./infrastructure/mappers/organization.mapper";
+import { OrganizationSlugInitializerService } from "./infrastructure/organization-slug-initializer.service";
 import { InvitationDoc, InvitationSchema } from "./infrastructure/schemas/invitation.schema";
 
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
 import { Organization, OrganizationSchema } from "./infrastructure/schemas/organization.schema";
 import { OrganizationsController } from "./presentation/organizations.controller";
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
+import { PolicyModule } from "../../policy/policy.module";
 
 @Module({
   imports: [
@@ -30,6 +32,7 @@ import { InstanceSettingsModule } from "../../instance-settings/instance-setting
     forwardRef(() => UsersModule),
     EmailModule,
     InstanceSettingsModule,
+    forwardRef(() => PolicyModule),
   ],
   controllers: [OrganizationsController],
   providers: [
@@ -42,6 +45,7 @@ import { InstanceSettingsModule } from "../../instance-settings/instance-setting
     OrganizationsService,
     MembersService,
     SessionsService,
+    OrganizationSlugInitializerService,
   ],
   exports: [OrganizationsRepository, MembersRepository, OrganizationsService, MembersService],
 })

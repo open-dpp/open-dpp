@@ -1,7 +1,7 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { UpdateProfileDto } from "@open-dpp/dto";
-import { NotFoundError } from "@open-dpp/exception";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole, UserRoleType } from "../../domain/user-role.enum";
@@ -85,12 +85,12 @@ export class UsersService {
   async setUserEmailVerified(email: string, emailVerified: boolean): Promise<User> {
     const user = await this.usersRepository.findOneByEmail(email);
     if (!user) {
-      throw new NotFoundError(User.name, email);
+      throw new NotFoundInDatabaseException(User.name, email);
     }
     const updatedUser = user.withEmailVerified(emailVerified);
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
-      throw new NotFoundError(User.name, user.id);
+      throw new NotFoundInDatabaseException(User.name, user.id);
     }
     return saved;
   }
@@ -100,7 +100,7 @@ export class UsersService {
     const updatedUser = user.withRole(role);
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
-      throw new NotFoundError(User.name, id);
+      throw new NotFoundInDatabaseException(User.name, id);
     }
     return saved;
   }
@@ -123,7 +123,7 @@ export class UsersService {
     }
     const saved = await this.usersRepository.update(next);
     if (!saved) {
-      throw new NotFoundError(User.name, userId);
+      throw new NotFoundInDatabaseException(User.name, userId);
     }
     return saved;
   }

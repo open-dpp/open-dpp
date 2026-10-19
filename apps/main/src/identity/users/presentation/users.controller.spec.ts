@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { type Connection, Types } from "mongoose";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -51,6 +52,7 @@ describe("UsersController", () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({

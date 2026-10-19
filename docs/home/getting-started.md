@@ -32,7 +32,7 @@ curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/open-dpp/open
 curl -fsSL -o .env https://raw.githubusercontent.com/open-dpp/open-dpp/main/.env.example
 ```
 
-Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration). This example stack ships without a mail server: verification and password-reset links are written to the app log instead; see the [Production setup guide](/guides/production-setup#mail-smtp) to connect SMTP.
+Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration). This example stack ships without a mail server and does not virus-scan uploads: verification and password-reset links are written to the app log instead. See the [Production setup guide](/guides/production-setup) to connect [SMTP](/guides/production-setup#mail-smtp) or add [ClamAV](/guides/production-setup#virus-scanning-clamav).
 
 ## Start services
 

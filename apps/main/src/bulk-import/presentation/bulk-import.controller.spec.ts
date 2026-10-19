@@ -5,7 +5,8 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { ApiVersionsDto } from "@open-dpp/dto";
+import { ApiVersionsDto, PolicyKeyList } from "@open-dpp/dto";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -29,6 +30,8 @@ import { UsersModule } from "../../identity/users/users.module";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { BulkImportModule } from "../bulk-import.module";
+import { BulkImportRunController } from "./bulk-import-run.controller";
+import { POLICY_META } from "../../policy/presentation/policy.decorator";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 
 describe("BulkImport controllers", () => {
@@ -42,6 +45,7 @@ describe("BulkImport controllers", () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
@@ -116,12 +120,18 @@ describe("BulkImport controllers", () => {
     fieldMappings: [{ input: "sku", output: "sku" }],
   });
 
+  // Wall-clock deadline rather than a fixed attempt count: under full-suite load a
+  // background run can take several seconds, well beyond 40 x 25 ms.
+  const RUN_COMPLETION_TIMEOUT_MS = 15_000;
+  const RUN_POLL_INTERVAL_MS = 25;
+
   async function waitForRunCompletion(
     runId: string,
     userCookie: string,
     organizationId: string,
   ): Promise<{ status: string }> {
-    for (let attempt = 0; attempt < 40; attempt++) {
+    const deadline = Date.now() + RUN_COMPLETION_TIMEOUT_MS;
+    while (Date.now() < deadline) {
       const response = await request(app.getHttpServer())
         .get(`/bulk-import/runs/${runId}`)
         .set("Cookie", userCookie)
@@ -129,10 +139,25 @@ describe("BulkImport controllers", () => {
       if (response.body.status !== "pending" && response.body.status !== "running") {
         return response.body;
       }
-      await new Promise((resolve) => setTimeout(resolve, 25));
+      await new Promise((resolve) => setTimeout(resolve, RUN_POLL_INTERVAL_MS));
     }
-    throw new Error(`Run ${runId} did not complete in time`);
+    throw new Error(`Run ${runId} did not complete within ${RUN_COMPLETION_TIMEOUT_MS} ms`);
   }
+
+  // A run creates one passport per unlinked row, so both entry points must sit behind the same
+  // cap the single-passport create endpoint uses. The global PolicyGuard is not wired into this
+  // test module, so assert the declaration it reads instead.
+  it.each([["createRun"], ["createRunFromFile"]])(
+    "%s is guarded by the passport create limit",
+    (handler) => {
+      expect(
+        Reflect.getMetadata(
+          POLICY_META,
+          BulkImportRunController.prototype[handler as keyof BulkImportRunController],
+        ),
+      ).toEqual([PolicyKeyList.PASSPORT_CREATE_LIMIT]);
+    },
+  );
 
   it("creates, reads, updates and deletes a bulk import config", async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();

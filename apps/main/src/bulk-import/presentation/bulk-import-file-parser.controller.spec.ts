@@ -11,6 +11,7 @@ import { UsersService } from "../../identity/users/application/services/users.se
 import type { Auth } from "better-auth";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { UsersModule } from "../../identity/users/users.module";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { MongooseModule } from "@nestjs/mongoose";
 import { generateMongoConfig } from "../../database/config";
@@ -30,6 +31,7 @@ describe("BulkImportFileParserController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({

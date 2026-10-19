@@ -3,6 +3,8 @@ import { randomBytes } from "node:crypto";
 export enum AuthMethod {
   SESSION = "session",
   API_KEY = "api-key",
+  /** A Trusted Client acting as the User with a JWT access token from the OAuth Provider. */
+  OAUTH = "oauth",
 }
 
 export interface SessionCreateProps {
@@ -94,7 +96,7 @@ export class Session {
 
   public static loadFromDb(data: SessionDbProps) {
     // Persisted sessions always originate from browser/bearer login;
-    // api-key sessions are synthesized per-request in the AuthGuard.
+    // api-key and OAuth sessions are synthesized per-request in the AuthGuard.
     return new Session(
       data.id,
       data.userId,

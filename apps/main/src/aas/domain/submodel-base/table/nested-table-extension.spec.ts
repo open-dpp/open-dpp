@@ -274,6 +274,37 @@ describe("NestedTableExtension", () => {
       }).toPlain(),
     );
   });
+  it("should reorder a column in table3 and propagate to all instances", () => {
+    const { submodel, ability } = createSubmodelWithNestedTable();
+    submodel.addColumn(
+      IdShortPath.create({
+        path: "table1.row1.table2.row11.table3",
+      }),
+      Property.create({ idShort: "newCol1", value: "1", valueType: DataTypeDef.Double }),
+      { ability },
+    );
+
+    submodel.reorderColumn(
+      IdShortPath.create({
+        path: "table1.row1.table2.row11.table3",
+      }),
+      "newCol1",
+      undefined,
+      0,
+      { ability },
+    );
+
+    const row111 = submodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "table1.row1.table2.row11.table3.row111" }),
+    );
+    expect(row111.getSubmodelElements().map((el) => el.idShort)).toEqual(["newCol1", "col1"]);
+
+    const row221 = submodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "table1.row2.table2.row22.table3.row221" }),
+    );
+    expect(row221.getSubmodelElements().map((el) => el.idShort)).toEqual(["newCol1", "col1"]);
+  });
+
   it("should delete column from table3", () => {
     const { submodel, ability } = createSubmodelWithNestedTable();
     submodel.deleteColumn(

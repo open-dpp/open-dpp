@@ -13,8 +13,11 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { FindOptions } from "../../lib/repositories";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateDocVersion, TemplateSchema } from "./template.schema";
@@ -104,6 +107,42 @@ describe("templateRepository", () => {
         createdAt: legacyDoc.createdAt,
         updatedAt: legacyDoc.updatedAt,
         lastStatusChange: DigitalProductDocumentStatusChange.create({}),
+      }),
+    );
+  });
+
+  it(`should load and migrate template from version 1.1.0 to 1.2.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new TemplateDocument({
+      _id: id,
+      _schemaVersion: TemplateDocVersion.v1_1_0,
+      organizationId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+      },
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundTemplate = await templateRepository.findOneOrFail(id);
+    expect(foundTemplate.getPassportEditingMode()).toEqual(PassportEditingMode.Full);
+    expect(foundTemplate).toEqual(
+      Template.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          currentStatus: DigitalProductDocumentStatus.Draft,
+        }),
+        passportEditingMode: PassportEditingMode.Full,
       }),
     );
   });
@@ -296,6 +335,42 @@ describe("templateRepository", () => {
         totalCount: 4,
       }),
     );
+  });
+
+  it("filters templates by period on createdAt and combines it with status", async () => {
+    const organizationId = randomUUID();
+    const create = (createdAt: string) =>
+      Template.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt: new Date(createdAt),
+      });
+    const t1 = create("2022-01-01T00:00:00.000Z");
+    const t2 = create("2022-02-01T00:00:00.000Z");
+    const t3 = create("2022-03-01T00:00:00.000Z");
+    for (const template of [t1, t2, t3]) {
+      await templateRepository.save(template);
+    }
+
+    const findIds = async (filter: FindOptions["filter"]) =>
+      (await templateRepository.findAllByOrganizationId(organizationId, { filter })).items.map(
+        (t) => t.id,
+      );
+
+    expect(
+      await findIds({ period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }) }),
+    ).toEqual([t3.id, t2.id]);
+    expect(await findIds({ period: Period.fromIso({ end: "2022-02-01T00:00:00.000Z" }) })).toEqual([
+      t2.id,
+      t1.id,
+    ]);
+    expect(
+      await findIds({
+        period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }),
+        status: [DigitalProductDocumentStatus.Published],
+      }),
+    ).toEqual([]);
   });
 
   afterAll(async () => {

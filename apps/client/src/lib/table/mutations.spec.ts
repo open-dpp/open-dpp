@@ -12,6 +12,7 @@ import {
   modifyColumnInGroup,
   modifyTopLevelColumn,
   moveColumnToGroup,
+  reorderColumn,
   saveRows,
   type TableMutationsDeps,
 } from "./mutations.ts";
@@ -170,6 +171,42 @@ describe("moveColumnToGroup", () => {
     const result = await moveColumnToGroup("Column1", "Group1", deps, "error", onSuccess);
     expect(result).toBe(true);
     expect(onSuccess).toHaveBeenCalledWith({ idShort: "List" });
+  });
+});
+
+describe("reorderColumn", () => {
+  it("expects HTTPCode.CREATED and omits groupIdShort when not given", async () => {
+    const onSuccess = vi.fn();
+    const apiCall = vi.fn().mockResolvedValue({
+      status: HTTPCode.CREATED,
+      data: { idShort: "List" },
+    });
+    const { deps } = makeDeps({ reorderColumn: apiCall });
+    const result = await reorderColumn("Column1", 2, deps, "error", onSuccess);
+    expect(result).toBe(true);
+    expect(onSuccess).toHaveBeenCalledWith({ idShort: "List" });
+    expect(apiCall).toHaveBeenCalledWith(
+      "aas-1",
+      "submodel-1",
+      "List",
+      "Column1",
+      { position: 2 },
+      undefined,
+    );
+  });
+
+  it("passes groupIdShort through when reordering within a group", async () => {
+    const apiCall = vi.fn().mockResolvedValue({ status: HTTPCode.CREATED, data: {} });
+    const { deps } = makeDeps({ reorderColumn: apiCall });
+    await reorderColumn("Sub1", 1, deps, "error", vi.fn(), "Group1");
+    expect(apiCall).toHaveBeenCalledWith(
+      "aas-1",
+      "submodel-1",
+      "List",
+      "Sub1",
+      { position: 1 },
+      "Group1",
+    );
   });
 });
 

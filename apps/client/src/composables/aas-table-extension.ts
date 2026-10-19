@@ -310,6 +310,19 @@ export function useAasTableExtension({
     );
   }
 
+  async function onReorderColumn(column: Column, position: number, groupIdShort?: string) {
+    await tableMutations.reorderColumn(
+      column.idShort,
+      position,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorMoveColumn`),
+      (listData) => {
+        updateListData(SubmodelElementListJsonSchema.parse(listData));
+      },
+      groupIdShort,
+    );
+  }
+
   async function onCreateGroupFromColumn(
     column: Column,
     groupData: SubmodelElementSharedRequestDto,
@@ -368,6 +381,7 @@ export function useAasTableExtension({
     onRemoveColumn,
     onDeleteColumnFromGroup,
     onMoveColumnToGroup,
+    onReorderColumn,
     onCreateGroupFromColumn,
     onAddRow,
     onRemoveRow,

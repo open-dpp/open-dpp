@@ -1,6 +1,7 @@
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { User as BetterAuthUser } from "better-auth";
+import { ObjectId } from "mongodb";
 import { UsersService } from "../src/identity/users/application/services/users.service";
 import { UserRoleType } from "../src/identity/users/domain/user-role.enum";
 
@@ -120,7 +121,7 @@ export class BetterAuthHelper {
     const dataOrg = (await (this.auth.api as any).createOrganization({
       body: {
         name: "My Organization",
-        slug: randomUUID(),
+        slug: new ObjectId().toHexString(),
         userId,
         keepCurrentActiveOrganization: false,
         logo: "org-image-media-id",

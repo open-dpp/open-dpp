@@ -105,6 +105,9 @@ export class AccessControl implements ITrackable {
   }
 
   movePolicy(oldObject: IdShortPath, newObject: IdShortPath): void {
+    if (newObject.isEqual(oldObject)) {
+      return;
+    }
     // Reject if newObject is a child of oldObject
     if (newObject.isChildOf(oldObject)) {
       throw new ValueError(

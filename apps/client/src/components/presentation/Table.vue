@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import NestedTableCell from "./NestedTableCell.vue";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
+import TableColumnHeader from "./TableColumnHeader.vue";
 import {
   buildColumns,
   buildGroupHeaders,
@@ -96,28 +97,31 @@ const parentQuery = computed(() =>
         <Column
           v-for="groupCol of groupHeaders"
           :key="groupCol.idShort"
-          :header="groupCol.header"
           :colspan="groupCol.colspan"
           :rowspan="groupCol.isGroup ? 1 : hasGroups ? 2 : 1"
-        />
+        >
+          <template #header>
+            <TableColumnHeader :header="groupCol.header" :description="groupCol.description" />
+          </template>
+        </Column>
       </Row>
       <Row v-if="hasGroups">
         <template v-for="groupCol of groupHeaders" :key="groupCol.idShort">
           <Column
             v-for="subCol of columns.filter((c) => c.groupIdShort === groupCol.idShort)"
             :key="subCol.field"
-            :header="subCol.header"
-          />
+          >
+            <template #header>
+              <TableColumnHeader :header="subCol.header" :description="subCol.description" />
+            </template>
+          </Column>
         </template>
       </Row>
     </ColumnGroup>
-    <Column
-      v-for="col of columns"
-      :key="col.field"
-      :field="col.field"
-      :header="col.header"
-      :style="col.style"
-    >
+    <Column v-for="col of columns" :key="col.field" :field="col.field" :style="col.style">
+      <template #header>
+        <TableColumnHeader :header="col.header" :description="col.description" />
+      </template>
       <template #body="slotProps">
         <NestedTableCell
           v-if="col.isTableColumn"

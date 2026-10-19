@@ -1,12 +1,17 @@
 import { z } from "zod";
 import { AssetAdministrationShellCreateDtoSchema } from "../aas/asset-administration-shell-json-schema";
 import { DigitalProductDocumentDtoSchema } from "../digital-product-document/digital-product-document.schemas";
+import {
+  PassportEditingModeDto,
+  PassportEditingModeDtoEnum,
+} from "../digital-product-document/passport-editing-mode.dto";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 export const PassportDtoSchema = DigitalProductDocumentDtoSchema.extend({
   templateId: z.string().nullable(),
   /** UPI uuid for presentation/chat links; set when listing passports */
   uniqueProductIdentifierUuid: z.uuid().optional(),
+  editingMode: PassportEditingModeDtoEnum.default(PassportEditingModeDto.Full),
 });
 
 export type PassportDto = z.infer<typeof PassportDtoSchema>;
@@ -32,3 +37,8 @@ export const PassportRequestCreateDtoSchema = z.xor([
 ]);
 
 export type PassportRequestCreateDto = z.input<typeof PassportRequestCreateDtoSchema>;
+
+export const RemoveEditingRestrictionsDtoSchema = z.object({
+  mode: z.literal(PassportEditingModeDto.Full),
+});
+export type RemoveEditingRestrictionsDto = z.infer<typeof RemoveEditingRestrictionsDtoSchema>;

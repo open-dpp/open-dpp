@@ -6,6 +6,7 @@ import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { passportsPlainFactory } from "@open-dpp/testing";
 import { Model, Model as MongooseModel } from "mongoose";
 
 import { AasModule } from "../../aas/aas.module";
@@ -16,10 +17,12 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
 import { Passport } from "../domain/passport";
-import { PassportRepository } from "./passport.repository";
+import { PassportFindOptions, PassportRepository } from "./passport.repository";
 import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
 import { EmailService } from "../../email/email.service";
 
@@ -105,6 +108,44 @@ describe("passportRepository", () => {
         createdAt: legacyDoc.createdAt,
         updatedAt: legacyDoc.updatedAt,
         lastStatusChange: DigitalProductDocumentStatusChange.create({}),
+      }),
+    );
+  });
+
+  it(`should load and migrate passport from version 1.1.0 to 1.2.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new PassportDocument({
+      _id: id,
+      _schemaVersion: PassportDocVersion.v1_1_0,
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+      },
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundPassport = await passportRepository.findOneOrFail(id);
+    expect(foundPassport.getEditingMode()).toEqual(PassportEditingMode.Full);
+    expect(foundPassport).toEqual(
+      Passport.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        templateId: legacyDoc.templateId,
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          currentStatus: DigitalProductDocumentStatus.Draft,
+        }),
+        editingMode: PassportEditingMode.Full,
       }),
     );
   });
@@ -414,6 +455,99 @@ describe("passportRepository", () => {
     });
     expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);
     expect(secondPage.totalCount).toBe(2);
+  });
+
+  describe("template and period filters", () => {
+    const organizationId = randomUUID();
+    const templateA = randomUUID();
+    const templateB = randomUUID();
+    const createPassport = (createdAt: string, templateId?: string) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        templateId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt: new Date(createdAt),
+      });
+    const a1 = createPassport("2022-01-01T00:00:00.000Z", templateA);
+    const b1 = createPassport("2022-02-01T00:00:00.000Z", templateB);
+    const a2 = createPassport("2022-03-01T00:00:00.000Z", templateA);
+    const noTemplate = createPassport("2022-04-01T00:00:00.000Z");
+
+    beforeAll(async () => {
+      for (const passport of [a1, b1, a2, noTemplate]) {
+        await passportRepository.save(passport);
+      }
+    });
+
+    const findIds = async (filter: PassportFindOptions["filter"]) =>
+      (await passportRepository.findAllByOrganizationId(organizationId, { filter })).items.map(
+        (p) => p.id,
+      );
+
+    it("filters by several template ids", async () => {
+      expect(await findIds({ templateIds: [templateA, templateB] })).toEqual([a2.id, b1.id, a1.id]);
+      expect(await findIds({ templateIds: [templateA] })).toEqual([a2.id, a1.id]);
+    });
+
+    it("does not filter by template when templateIds is empty", async () => {
+      expect(await findIds({ templateIds: [] })).toEqual([noTemplate.id, a2.id, b1.id, a1.id]);
+    });
+
+    it("filters by an open-ended and a closed period on createdAt", async () => {
+      expect(
+        await findIds({ period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }) }),
+      ).toEqual([noTemplate.id, a2.id, b1.id]);
+      expect(
+        await findIds({ period: Period.fromIso({ end: "2022-02-01T00:00:00.000Z" }) }),
+      ).toEqual([b1.id, a1.id]);
+      expect(
+        await findIds({
+          period: Period.fromIso({
+            start: "2022-01-15T00:00:00.000Z",
+            end: "2022-03-15T00:00:00.000Z",
+          }),
+        }),
+      ).toEqual([a2.id, b1.id]);
+    });
+
+    it("combines template, period and status filters", async () => {
+      expect(
+        await findIds({
+          templateIds: [templateA],
+          period: Period.fromIso({ start: "2022-02-01T00:00:00.000Z" }),
+          status: [DigitalProductDocumentStatus.Draft],
+        }),
+      ).toEqual([a2.id]);
+    });
+  });
+
+  it("countByOrganizationId — counts only the passports of the given organization", async () => {
+    const organizationId = randomUUID();
+    const otherOrganizationId = randomUUID();
+
+    const newPassport = (orgId: string) =>
+      Passport.fromPlain(
+        passportsPlainFactory.build({
+          organizationId: orgId,
+          environment: {
+            assetAdministrationShells: [randomUUID()],
+            submodels: [],
+            conceptDescriptions: [],
+          },
+        }),
+      );
+
+    await passportRepository.save(newPassport(organizationId));
+    await passportRepository.save(newPassport(organizationId));
+    await passportRepository.save(newPassport(otherOrganizationId));
+
+    expect(await passportRepository.countByOrganizationId(organizationId)).toBe(2);
+    expect(await passportRepository.countByOrganizationId(otherOrganizationId)).toBe(1);
+  });
+
+  it("countByOrganizationId — returns 0 for an organization without passports", async () => {
+    expect(await passportRepository.countByOrganizationId(randomUUID())).toBe(0);
   });
 
   afterAll(async () => {

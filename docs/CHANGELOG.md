@@ -1,5 +1,39 @@
 # @open-dpp/docs
 
+## 6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+## 6.1.4
+
+## 6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- [#976](https://github.com/open-dpp/open-dpp/pull/976) [`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce) Thanks [@mr42](https://github.com/mr42)! - Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates. The Github repository where the official templates are loaded from is configurable via environment variable.
+
+## 6.1.1
+
+## 6.1.0
+
+## 6.0.0
+
+## 5.3.0
+
+## 5.2.0
+
+## 5.1.0
+
+## 5.0.0
+
+## 4.0.1
+
 ## 4.0.0
 
 ### Patch Changes

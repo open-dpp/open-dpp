@@ -9,6 +9,8 @@ import {
   submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
 } from "@open-dpp/testing";
+import { ChangeEventTypes } from "../../../activity-history/domain/change-events/change-event-types";
+import { SubmodelElementMoved } from "../../../activity-history/domain/change-events/submodel-element-moved";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
@@ -452,6 +454,280 @@ describe("submodel", () => {
       ),
     ).toBeUndefined();
     expect(onDelete).toHaveBeenCalledWith(submodelElement);
+  });
+
+  it("should move a submodel element within its parent and to another parent", () => {
+    const submodel = Submodel.create({ idShort: "sm" });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+
+    const leaf = Property.create({ idShort: "Leaf1", value: "10", valueType: DataTypeDef.Double });
+    const sub1 = SubmodelElementCollection.create({ idShort: "Sub1", value: [leaf] });
+    const sectionA = SubmodelElementCollection.create({ idShort: "SectionA", value: [sub1] });
+    const other = Property.create({ idShort: "Other", value: "20", valueType: DataTypeDef.Double });
+    const sectionB = SubmodelElementCollection.create({ idShort: "SectionB", value: [other] });
+    submodel.addSubmodelElement(sectionA, { ability });
+    submodel.addSubmodelElement(sectionB, { ability });
+
+    // reorder within the same parent (SectionA was added first, so this actually changes order)
+    const moved = submodel.moveSubmodelElement(
+      IdShortPath.create({ path: "SectionB" }),
+      { position: 0 },
+      { ability, onMove: jest.fn() },
+    );
+    expect(moved).toBe(sectionB);
+    expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["SectionB", "SectionA"]);
+
+    // reparent to a sibling collection, descendants should be recomputed
+    submodel.withTracking();
+    const onMove = jest.fn();
+    const movedSub1 = submodel.moveSubmodelElement(
+      IdShortPath.create({ path: "SectionA.Sub1" }),
+      { path: IdShortPath.create({ path: "SectionB" }) },
+      { ability, onMove },
+    );
+    const changes = submodel.tracker.stop();
+    expect(changes).toHaveLength(1);
+    const moveEvent = changes[0] as SubmodelElementMoved;
+    expect(moveEvent.type).toBe(ChangeEventTypes.SubmodelElementMoved);
+    // both oldPath and newPath must be absolute (submodel-idShort-prefixed) so that
+    // downstream security/presentation-config path rewriting (keyed on absolute paths)
+    // can actually match against them
+    expect(moveEvent.oldPath.toString()).toBe("sm.SectionA.Sub1");
+    expect(moveEvent.path.toString()).toBe("sm.SectionB.Sub1");
+    // onMove must fire with the same absolute paths, so the presentation layer can
+    // feed them into the security-policy / presentation-config rewrite pipeline
+    expect(onMove).toHaveBeenCalledWith(
+      IdShortPath.create({ path: "sm.SectionA.Sub1" }),
+      IdShortPath.create({ path: "sm.SectionB.Sub1" }),
+    );
+    expect(movedSub1).toBe(sub1);
+    expect(sectionA.getSubmodelElements()).toEqual([]);
+    expect(sectionB.getSubmodelElements().map((e) => e.idShort)).toEqual(["Other", "Sub1"]);
+    expect(sub1.getIdShortPath().toString()).toBe("sm.SectionB.Sub1");
+    expect(leaf.getIdShortPath().toString()).toBe("sm.SectionB.Sub1.Leaf1");
+    expect(
+      submodel.findSubmodelElement(IdShortPath.create({ path: "SectionA.Sub1" })),
+    ).toBeUndefined();
+    expect(
+      submodel.findSubmodelElementOrFail(IdShortPath.create({ path: "SectionB.Sub1.Leaf1" })),
+    ).toBe(leaf);
+
+    // reparent up to the submodel root (omitting targetParentPath keeps the same parent, so pass root explicitly)
+    const movedLeaf = submodel.moveSubmodelElement(
+      IdShortPath.create({ path: "SectionB.Sub1.Leaf1" }),
+      { path: IdShortPath.fromSegments([]) },
+      { ability, onMove: jest.fn() },
+    );
+    expect(movedLeaf).toBe(leaf);
+    expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual([
+      "SectionB",
+      "SectionA",
+      "Leaf1",
+    ]);
+    expect(leaf.getIdShortPath().toString()).toBe("sm.Leaf1");
+  });
+
+  it("should reject moving a submodel element into itself or one of its descendants", () => {
+    const submodel = Submodel.create({ idShort: "sm" });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+
+    const child = SubmodelElementCollection.create({ idShort: "Child", value: [] });
+    const parent = SubmodelElementCollection.create({ idShort: "Parent", value: [child] });
+    submodel.addSubmodelElement(parent, { ability });
+
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Parent" }),
+        { path: IdShortPath.create({ path: "Parent" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(ValueError);
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Parent" }),
+        { path: IdShortPath.create({ path: "Parent.Child" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(ValueError);
+  });
+
+  it("should reject moving a submodel element when idShort already exists at the target and roll back", () => {
+    const submodel = Submodel.create({ idShort: "sm" });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+
+    const prop = Property.create({ idShort: "Clash", value: "1", valueType: DataTypeDef.Double });
+    const sectionA = SubmodelElementCollection.create({ idShort: "SectionA", value: [prop] });
+    const clashing = Property.create({
+      idShort: "Clash",
+      value: "2",
+      valueType: DataTypeDef.Double,
+    });
+    const sectionB = SubmodelElementCollection.create({ idShort: "SectionB", value: [clashing] });
+    submodel.addSubmodelElement(sectionA, { ability });
+    submodel.addSubmodelElement(sectionB, { ability });
+
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "SectionA.Clash" }),
+        { path: IdShortPath.create({ path: "SectionB" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(ValueError);
+    // rolled back: still in its original position under SectionA
+    expect(sectionA.getSubmodelElements()).toEqual([prop]);
+    expect(sectionB.getSubmodelElements()).toEqual([clashing]);
+    expect(prop.getIdShortPath().toString()).toBe("sm.SectionA.Clash");
+  });
+
+  it("should reject moving any submodel element directly into a SubmodelElementList (table) and roll back", () => {
+    const submodel = Submodel.create({ idShort: "sm" });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+
+    const prop = Property.create({ idShort: "Prop1", value: "1", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(prop, { ability });
+
+    const list = SubmodelElementList.create({
+      idShort: "List1",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    submodel.addSubmodelElement(list, { ability });
+
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Prop1" }),
+        { path: IdShortPath.create({ path: "List1" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(
+      new ValueError(
+        "Cannot move submodel element with idShortPath Prop1 into a SubmodelElementList (table) with idShortPath List1, or any of its rows or other descendants; rows must be added via the table's row/column operations.",
+      ),
+    );
+    // rolled back: still in its original position, not attached under the list
+    expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["Prop1", "List1"]);
+    expect(list.getSubmodelElements()).toEqual([]);
+    expect(prop.getIdShortPath().toString()).toBe("sm.Prop1");
+
+    // Also rejected for a type-matching element — the check is target-based,
+    // not a side effect of the list's element-type homogeneity check.
+    const section = SubmodelElementCollection.create({ idShort: "Section1" });
+    submodel.addSubmodelElement(section, { ability });
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Section1" }),
+        { path: IdShortPath.create({ path: "List1" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(ValueError);
+    expect(list.getSubmodelElements()).toEqual([]);
+  });
+
+  it("should reject moving a submodel element into a table's row, or a group nested within a row", () => {
+    const submodel = Submodel.create({ idShort: "sm" });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+
+    const list = SubmodelElementList.create({
+      idShort: "List1",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    submodel.addSubmodelElement(list, { ability });
+    const row = SubmodelElementCollection.create({ idShort: "row_0" });
+    list.addSubmodelElement(row, { ability });
+    const group = SubmodelElementCollection.create({ idShort: "Group1" });
+    row.addSubmodelElement(group, { ability });
+
+    const propForRow = Property.create({
+      idShort: "PropForRow",
+      value: "1",
+      valueType: DataTypeDef.Double,
+    });
+    submodel.addSubmodelElement(propForRow, { ability });
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "PropForRow" }),
+        { path: IdShortPath.create({ path: "List1.row_0" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(ValueError);
+    expect(row.getSubmodelElements()).toEqual([group]);
+
+    const propForGroup = Property.create({
+      idShort: "PropForGroup",
+      value: "1",
+      valueType: DataTypeDef.Double,
+    });
+    submodel.addSubmodelElement(propForGroup, { ability });
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "PropForGroup" }),
+        { path: IdShortPath.create({ path: "List1.row_0.Group1" }) },
+        { ability, onMove: jest.fn() },
+      ),
+    ).toThrow(ValueError);
+    expect(group.getSubmodelElements()).toEqual([]);
+    // both rejected moves rolled back to their original top-level position
+    expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual([
+      "List1",
+      "PropForRow",
+      "PropForGroup",
+    ]);
+  });
+
+  it("should reject moving a submodel element without permission", () => {
+    const submodel = Submodel.create({ idShort: "sm" });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const anonymousAbility = security.defineAbilityForSubject(anonymous);
+
+    const sectionA = SubmodelElementCollection.create({ idShort: "SectionA", value: [] });
+    const prop = Property.create({ idShort: "Prop1", value: "1", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(sectionA, { ability });
+    submodel.addSubmodelElement(prop, { ability });
+
+    expect(() =>
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Prop1" }),
+        { path: IdShortPath.create({ path: "SectionA" }) },
+        { ability: anonymousAbility, onMove: jest.fn() },
+      ),
+    ).toThrow(ForbiddenError);
+    expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["SectionA", "Prop1"]);
   });
 
   it("should get value representation for design submodel", () => {

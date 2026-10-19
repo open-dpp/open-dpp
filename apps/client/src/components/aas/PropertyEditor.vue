@@ -40,6 +40,12 @@ const disableEdit = computed(() => {
   return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
+// Metadata (idShort, displayName, description, semanticId, qualifiers) and permissions are
+// structural, not the leaf value — stay locked while restricted to data. The value field
+// itself deliberately does NOT get this check (see PropertyForm's `disabled-value` binding
+// below) so it stays editable, with submission routed through the value-only endpoint.
+const disableMetadata = computed(() => disableEdit.value || props.isEditingRestrictedToData);
+
 async function submit() {
   await handleSubmit(async (data) => {
     if (permissionsFormRef.value) {
@@ -63,11 +69,12 @@ defineExpose<{
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
-      :disabled="disableEdit"
+      :disabled="disableMetadata"
+      :disabled-value="disableEdit"
     />
     <PermissionsForm
       ref="permissionsFormRef"
-      :disabled="disableEdit"
+      :disabled="disableMetadata"
       :ignored-permission-options="[Permissions.Create]"
       :path="props.path"
       :modify-shell="props.modifyShell"

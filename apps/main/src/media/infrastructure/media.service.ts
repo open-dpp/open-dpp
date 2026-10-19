@@ -6,7 +6,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import _ from "lodash";
-import * as Minio from "minio";
+import { Client as S3Client } from "minio";
 import sharp from "sharp";
 import { Media } from "../domain/media";
 import { fileTypeFromBuffer } from "./file-type-util";
@@ -19,7 +19,7 @@ export const BucketDefaultPaths = {
 
 @Injectable()
 export class MediaService {
-  private client: Minio.Client;
+  private readonly client: S3Client;
   private readonly bucketNameDefault: string;
   private readonly bucketNameProfilePictures: string;
   private readonly pathDelimiter = "/";
@@ -35,7 +35,7 @@ export class MediaService {
   ) {
     this.configService = configService;
     this.mediaDoc = mediaDoc;
-    this.client = new Minio.Client({
+    this.client = new S3Client({
       endPoint: configService.get("OPEN_DPP_S3_ENDPOINT") as string,
       port: configService.get("OPEN_DPP_S3_PORT"),
       useSSL: configService.get("OPEN_DPP_S3_SSL"),

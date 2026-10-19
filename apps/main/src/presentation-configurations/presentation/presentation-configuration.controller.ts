@@ -309,6 +309,7 @@ function toPassportHolder(passport: Passport): PresentationReferenceHolder {
     id: passport.id,
     organizationId: passport.organizationId,
     referenceType: DigitalProductDocumentTypes.Passport,
+    editingMode: passport.getEditingMode(),
   };
 }
 

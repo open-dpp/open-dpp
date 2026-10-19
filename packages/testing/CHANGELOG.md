@@ -1,5 +1,115 @@
 # @open-dpp/testing
 
+## 6.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/dto@6.2.1
+  - @open-dpp/env@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/dto@6.2.0
+  - @open-dpp/env@6.2.0
+
+## 6.1.4
+
+### Patch Changes
+
+- [#904](https://github.com/open-dpp/open-dpp/pull/904) [`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36) Thanks [@mr42](https://github.com/mr42)! - In the template editor a user can restrict editing of derived passports to data only. Meaning, the structure, layout and security rules of a passport created from a template with restriction enabled cannot be modified. Only the data values of such a passport can be modified.
+
+- Updated dependencies [[`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36)]:
+  - @open-dpp/dto@6.1.4
+  - @open-dpp/env@6.1.4
+
+## 6.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.1.3
+  - @open-dpp/env@6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce)]:
+  - @open-dpp/dto@6.1.2
+  - @open-dpp/env@6.1.2
+
+## 6.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.1.1
+  - @open-dpp/env@6.1.1
+
+## 6.1.0
+
+### Patch Changes
+
+- Updated dependencies [[`a7a6759`](https://github.com/open-dpp/open-dpp/commit/a7a675966ff4aae683a178cf5a7ab8f8e759823b)]:
+  - @open-dpp/dto@6.1.0
+  - @open-dpp/env@6.1.0
+
+## 6.0.0
+
+### Patch Changes
+
+- Updated dependencies [[`38a9a4c`](https://github.com/open-dpp/open-dpp/commit/38a9a4c0e5949e516222ca0937822ffd4402bf20)]:
+  - @open-dpp/dto@6.0.0
+  - @open-dpp/env@6.0.0
+
+## 5.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.3.0
+  - @open-dpp/env@5.3.0
+
+## 5.2.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.2.0
+  - @open-dpp/env@5.2.0
+
+## 5.1.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.1.0
+  - @open-dpp/env@5.1.0
+
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies [[`66b6537`](https://github.com/open-dpp/open-dpp/commit/66b65379357517e67e4266c003f67ccf73274eb7)]:
+  - @open-dpp/env@5.0.0
+  - @open-dpp/dto@5.0.0
+
+## 4.0.1
+
+### Patch Changes
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/dto@4.0.1
+  - @open-dpp/env@4.0.1
+
 ## 4.0.0
 
 ### Patch Changes

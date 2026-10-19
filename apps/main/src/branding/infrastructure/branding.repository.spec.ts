@@ -66,7 +66,6 @@ describe("brandingRepository", () => {
     jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
       Organization.create({
         name: "acme",
-        slug: `acme-${randomUUID()}`,
       }),
     );
 
@@ -82,7 +81,6 @@ describe("brandingRepository", () => {
     jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
       Organization.create({
         name: "acme",
-        slug: `acme-${randomUUID()}`,
         logo,
       }),
     );
@@ -100,7 +98,6 @@ describe("brandingRepository", () => {
     jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
       Organization.create({
         name: "acme",
-        slug: `acme-${randomUUID()}`,
         logo,
       }),
     );
@@ -140,7 +137,6 @@ describe("brandingRepository", () => {
       jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
         Organization.create({
           name: "acme",
-          slug: `acme-${randomUUID()}`,
         }),
       );
 

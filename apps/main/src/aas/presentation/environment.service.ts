@@ -6,9 +6,12 @@ import { InjectConnection } from "@nestjs/mongoose";
 import {
   ApiVersionsDtoType,
   AssetAdministrationShellCreateDto,
+  AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
+  AssetKind,
   SubmodelElementListResponseDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -16,14 +19,8 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import {
-  AssetAdministrationShellJsonSchema,
-  AssetAdministrationShellPaginationResponseDtoSchema,
-  AssetKind,
-  Permissions,
-} from "@open-dpp/dto";
 
-import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
@@ -78,6 +75,9 @@ import { SubmodelElementListResponse } from "./responses/submodel-element-list.r
 import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
 import { ValueModificationRequest } from "./requests/value-modification.request";
 import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
+import { MoveSubmodelElementRequest } from "./requests/move-submodel-element.request";
+import { SubmodelElementMovedActivity } from "../../activity-history/domain/activities/submodel-element-moved.activity";
+import { SubmodelMovedActivity } from "../../activity-history/domain/activities/submodel-moved.activity";
 import { EnvironmentServiceEventBus } from "./event-bus/environment-service-event-bus";
 import {
   DeleteSubmodelBaseObserver,
@@ -364,18 +364,17 @@ export class EnvironmentService {
     const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
-    if (!ability.can(Permissions.Delete, IdShortPath.create({ path: submodel.idShort }))) {
-      throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
-    }
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         const options = { session };
-        await this.submodelRepository.deleteById(submodel.id, options);
+        // check permission (and mutate the in-memory environment) before any
+        // destructive persistence, so a denial doesn't waste a delete + save
+        environment.withTracking().deleteSubmodel(submodel, ability);
 
+        await this.submodelRepository.deleteById(submodel.id, options);
         aas.withTracking().deleteSubmodel(submodel);
         await this.aasRepository.save(aas, options);
-        environment.withTracking().deleteSubmodel(submodel);
 
         await saveEnvironment(options);
         const activity = SubmodelDeletedActivity.create({
@@ -393,6 +392,45 @@ export class EnvironmentService {
           await observer.onDelete({ pathToDelete: submodel.getIdShortPath() }, options);
         }
       });
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async moveSubmodel(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    position: number,
+    saveEnvironment: (options: DbSessionOptions) => Promise<void>,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+
+    environment.withTracking().moveSubmodel(submodel, position, ability);
+
+    const activity = SubmodelMovedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodelId,
+      environment,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const options = { session };
+        await saveEnvironment(options);
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], options);
+        }
+      });
+      return SubmodelResponse.create({ submodel, version, ability }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -677,6 +715,59 @@ export class EnvironmentService {
     }
   }
 
+  async moveSubmodelElement(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    moveRequest: MoveSubmodelElementRequest,
+    userContext: UserContext,
+    moveObservers: MoveSubmodelBaseObserver[],
+  ): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    const eventBus = EnvironmentServiceEventBus.create({
+      moveObservers: [...moveObservers, SecurityMoveObserver.create({ aas })],
+    });
+    const { targetParentPath, position } = moveRequest.toDomain();
+    const submodelElement = submodel
+      .withTracking()
+      .moveSubmodelElement(
+        idShortPath,
+        { path: targetParentPath, position },
+        { ability, onMove: (oldPath, newPath) => eventBus.publishMoveEvent({ oldPath, newPath }) },
+      );
+
+    const activity = SubmodelElementMovedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const dbOptions = { session };
+        await eventBus.notify(dbOptions);
+        await this.submodelRepository.save(submodel, dbOptions);
+        await this.aasRepository.save(aas, dbOptions);
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], dbOptions);
+        }
+      });
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: moveRequest.version,
+        ability,
+      }).toJSON();
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async addColumn(
     correlationId: string,
     digitalProductDocumentId: string,
@@ -755,6 +846,49 @@ export class EnvironmentService {
       return SubmodelElementListResponse.create({
         submodelElement: modifiedSubmodelElement,
         version: modificationRequest.version,
+        ability,
+      }).toJSON();
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async reorderColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .reorderColumn(idShortPath, idShortOfColumn, groupIdShort, position, { ability });
+
+    const activity = SubmodelElementMovedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version,
         ability,
       }).toJSON();
     } finally {

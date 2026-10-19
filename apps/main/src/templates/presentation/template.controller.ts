@@ -8,6 +8,11 @@ import type {
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
+  ImportOfficialTemplatesResultDto,
+  MoveSubmodelDto,
+  MoveSubmodelElementDto,
+  ReorderColumnDto,
+  RestrictPassportEditingDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -25,9 +30,12 @@ import type {
 } from "@open-dpp/dto";
 
 import {
+  PassportEditingModeDto,
   AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
+  ImportOfficialTemplatesResultDtoSchema,
   Populates,
+  RestrictPassportEditingDtoSchema,
   TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
@@ -35,6 +43,7 @@ import {
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -67,7 +76,10 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiMoveColumnToGroup,
+  ApiMoveSubmodel,
+  ApiMoveSubmodelElement,
   ApiPatchColumn,
+  ApiReorderColumn,
   ApiPatchColumnInGroup,
   ApiPatchShell,
   ApiPatchSubmodel,
@@ -87,9 +99,13 @@ import {
   CursorQueryParam,
   DeletePolicyRequestBody,
   GroupIdShortParam,
+  GroupIdShortQueryParam,
   IdParam,
   IdShortPathParam,
+  MoveSubmodelElementRequestBody,
+  MoveSubmodelRequestBody,
   PositionQueryParam,
+  ReorderColumnRequestBody,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -110,6 +126,8 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
+import { OfficialTemplatesImportService } from "../application/services/official-templates-import.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -143,6 +161,7 @@ export class TemplateController
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
+    private readonly officialTemplatesImportService: OfficialTemplatesImportService,
   ) {}
 
   @ApiGetShells()
@@ -294,6 +313,30 @@ export class TemplateController
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodel(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveSubmodel()
+  async moveSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @MoveSubmodelRequestBody() body: MoveSubmodelDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveSubmodel(
       correlationId,
       organizationId,
       id,
@@ -500,6 +543,36 @@ export class TemplateController
       submodelId,
       idShortPath,
       idShortOfColumn,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiReorderColumn()
+  async reorderColumn(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @ColumnParam() idShortOfColumn: string,
+    @GroupIdShortQueryParam() groupIdShort: string | undefined,
+    @ReorderColumnRequestBody() body: ReorderColumnDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.reorderColumn(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      groupIdShort,
       body,
       { subject, userId },
       version,
@@ -831,6 +904,32 @@ export class TemplateController
     );
   }
 
+  @ApiMoveSubmodelElement()
+  async moveSubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @MoveSubmodelElementRequestBody() body: MoveSubmodelElementDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveSubmodelElement(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
   @ApiGetSubmodelElementValue()
   async getSubmodelElementValue(
     @OrganizationId() organizationId: string,
@@ -874,6 +973,28 @@ export class TemplateController
       subject,
       userId,
     });
+  }
+
+  @Put(":id/passport-editing-mode")
+  async restrictPassportEditingToData(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @Body(new ZodValidationPipe(RestrictPassportEditingDtoSchema))
+    body: RestrictPassportEditingDto,
+  ): Promise<TemplateDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    if (body.mode === PassportEditingModeDto.DataOnly) {
+      return this.templateService.restrictPassportEditingToData(correlationId, organizationId, id, {
+        subject,
+        userId,
+      });
+    } else {
+      throw new BadRequestException(`Mode ${body.mode} not supported yet.`);
+    }
   }
 
   @ApiGetActivities()
@@ -978,20 +1099,34 @@ export class TemplateController
     return TemplateDtoSchema.parse(template.toPlain());
   }
 
+  @Post("/import-official")
+  @HttpCode(HttpStatus.OK)
+  async importOfficialTemplates(
+    @OrganizationId() organizationId: string,
+  ): Promise<ImportOfficialTemplatesResultDto> {
+    const result =
+      await this.officialTemplatesImportService.importOfficialTemplates(organizationId);
+    return ImportOfficialTemplatesResultDtoSchema.parse(result);
+  }
+
   @Get()
   async getTemplates(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @StatusQueryParam() status: DigitalProductDocumentStatusDtoType[] | undefined,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
     let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(
       organizationId,
-      { pagination, ...(status ? { filter: { status } } : {}) },
+      { pagination, filter: { status, period } },
     );
     const subject = SubjectAttributes.create({ userRole, memberRole });
     if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {

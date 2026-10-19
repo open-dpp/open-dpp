@@ -8,17 +8,17 @@ import { Media } from "../domain/media";
 import { MediaDoc } from "./media.schema";
 
 // Mocks setup
-const mockMinioInstance = {
+const mockS3Client = {
   bucketExists: jest.fn<any>(),
   putObject: jest.fn<any>(),
   getObject: jest.fn<any>(),
   removeObject: jest.fn<any>(),
 };
 
-const mockMinioClient = jest.fn(() => mockMinioInstance);
+const mockS3ClientConstructor = jest.fn(() => mockS3Client);
 
 jest.unstable_mockModule("minio", () => ({
-  Client: mockMinioClient,
+  Client: mockS3ClientConstructor,
 }));
 
 jest.unstable_mockModule("sharp", () => ({
@@ -44,8 +44,8 @@ describe("MediaService", () => {
         OPEN_DPP_S3_ENDPOINT: "localhost",
         OPEN_DPP_S3_PORT: 9000,
         OPEN_DPP_S3_SSL: false,
-        OPEN_DPP_S3_ACCESS_KEY: "minio",
-        OPEN_DPP_S3_SECRET_KEY: "minio123",
+        OPEN_DPP_S3_ACCESS_KEY: "test-access-key",
+        OPEN_DPP_S3_SECRET_KEY: "test-secret-key",
         OPEN_DPP_S3_DEFAULT_BUCKET: "default-bucket",
         OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-bucket",
       };
@@ -99,8 +99,8 @@ describe("MediaService", () => {
 
   describe("uploadFile", () => {
     it("should upload file successfully", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag123", versionId: "v1" });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag123", versionId: "v1" });
 
       const result = await service.uploadFile(
         "bucket",
@@ -111,14 +111,14 @@ describe("MediaService", () => {
         "text/plain",
       );
 
-      expect(mockMinioInstance.bucketExists).toHaveBeenCalledWith("bucket");
-      expect(mockMinioInstance.putObject).toHaveBeenCalled();
+      expect(mockS3Client.bucketExists).toHaveBeenCalledWith("bucket");
+      expect(mockS3Client.putObject).toHaveBeenCalled();
       expect(result.location.objectName).toBe("file.txt");
       expect(result.info.etag).toBe("etag123");
     });
 
     it("should throw if bucket does not exist", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(false);
+      mockS3Client.bucketExists.mockResolvedValue(false);
       await expect(
         service.uploadFile("bucket", Buffer.from("test"), "file", [], 4, "text/plain"),
       ).rejects.toThrow("Bucket bucket does not exist");
@@ -157,8 +157,8 @@ describe("MediaService", () => {
     it("should upload file and save media", async () => {
       mockMediaModel.find.mockResolvedValue([]);
       mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
 
       const buffer = Buffer.from("test");
@@ -172,7 +172,7 @@ describe("MediaService", () => {
       );
 
       expect(mockMediaModel.find).toHaveBeenCalled();
-      expect(mockMinioInstance.putObject).toHaveBeenCalled();
+      expect(mockS3Client.putObject).toHaveBeenCalled();
       expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalled();
       expect(result).toBeInstanceOf(Media);
     });
@@ -180,8 +180,8 @@ describe("MediaService", () => {
     it("should delete existing media if found", async () => {
       mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
       mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
 
       await service.uploadFileOfProductPassport(
@@ -202,8 +202,8 @@ describe("MediaService", () => {
     it("should process image if mimetype starts with image/", async () => {
       mockMediaModel.find.mockResolvedValue([]);
       mockFileTypeFromBuffer.mockResolvedValue({ mime: "image/png", ext: "png" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag" });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue({
         ...validMediaDoc,
         mimeType: "image/webp",
@@ -218,7 +218,7 @@ describe("MediaService", () => {
         "oid",
       );
 
-      expect(mockMinioInstance.putObject).toHaveBeenCalledWith(
+      expect(mockS3Client.putObject).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.objectContaining({ length: 15 }), // "processed-image".length
@@ -231,12 +231,12 @@ describe("MediaService", () => {
   describe("uploadMedia", () => {
     it("should upload media", async () => {
       mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag" });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
 
       const result = await service.uploadMedia("file.pdf", Buffer.from("test"), "uid", "oid");
-      expect(mockMinioInstance.putObject).toHaveBeenCalled();
+      expect(mockS3Client.putObject).toHaveBeenCalled();
       expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalled();
       expect(result).toBeInstanceOf(Media);
     });
@@ -244,16 +244,16 @@ describe("MediaService", () => {
 
   describe("getFileStream", () => {
     it("should return stream", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
+      mockS3Client.bucketExists.mockResolvedValue(true);
       const streamMock = "stream";
-      mockMinioInstance.getObject.mockResolvedValue(streamMock);
+      mockS3Client.getObject.mockResolvedValue(streamMock);
 
       const result = await service.getFileStream("bucket", "file");
       expect(result).toBe(streamMock);
     });
 
     it("should throw if bucket does not exist", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(false);
+      mockS3Client.bucketExists.mockResolvedValue(false);
       await expect(service.getFileStream("bucket", "file")).rejects.toThrow();
     });
   });
@@ -261,8 +261,8 @@ describe("MediaService", () => {
   describe("getFilestreamOfProductPassport", () => {
     it("should return stream and media", async () => {
       mockMediaModel.find.mockResolvedValue([validMediaDoc]);
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.getObject.mockResolvedValue("stream");
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject.mockResolvedValue("stream");
 
       const result = await service.getFilestreamOfProductPassport("fid", "upid");
       expect(result.stream).toBe("stream");
@@ -273,8 +273,8 @@ describe("MediaService", () => {
   describe("getFilestreamById", () => {
     it("should return stream and media", async () => {
       mockMediaModel.findById.mockResolvedValue(validMediaDoc);
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.getObject.mockResolvedValue("stream");
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject.mockResolvedValue("stream");
 
       const result = await service.getFilestreamById("id");
       expect(result.stream).toBe("stream");
@@ -284,8 +284,8 @@ describe("MediaService", () => {
 
   describe("getFilestreamOfMedia", () => {
     it("should return stream", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.getObject.mockResolvedValue("stream");
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject.mockResolvedValue("stream");
       const media = Media.loadFromDb({ ...validMediaDoc, id: "id" } as any);
 
       const result = await service.getFilestreamOfMedia(media);
@@ -356,12 +356,12 @@ describe("MediaService", () => {
   describe("deleteFileById", () => {
     it("should remove object from storage and delete from db", async () => {
       mockMediaModel.findById.mockResolvedValue(validMediaDoc);
-      mockMinioInstance.removeObject.mockResolvedValue(undefined);
+      mockS3Client.removeObject.mockResolvedValue(undefined);
       mockMediaModel.deleteOne.mockResolvedValue(undefined);
 
       await service.deleteFileById("media-id");
 
-      expect(mockMinioInstance.removeObject).toHaveBeenCalledWith(
+      expect(mockS3Client.removeObject).toHaveBeenCalledWith(
         validMediaDoc.bucket,
         validMediaDoc.objectName,
       );

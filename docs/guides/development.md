@@ -16,6 +16,8 @@ cp .env.dev.example .env.dev
 
 Then update secrets and tokens in `.env.dev`.
 
+The OAuth Provider is off by default. To try it against a local Trusted Client, uncomment the `OPEN_DPP_OAUTH_PROVIDER_*` block in `.env.dev` (an `http://localhost:…` redirect URI is accepted on loopback hosts); the backend then serves the issuer at `<OPEN_DPP_URL>/api/v2/auth`. See the [Production setup](/guides/production-setup#oauth-provider) guide for the contract. Two maintainer notes: `apps/main` declares `@better-auth/core` explicitly next to the better-auth plugins, and the family is bumped together, because a plugin's unpinned core peer resolves to the newest release and splits the core graph; the plugin's mandatory `consentPage` option points at a route that never renders, since the Trusted Client skips consent.
+
 ## 3) Generate MongoDB key file
 
 ```bash
@@ -31,7 +33,7 @@ Use the project helper:
 make dev
 ```
 
-This starts required services from `docker-compose.dev.yml` (MongoDB, MinIO, and ClamAV).
+This starts required services from `docker-compose.dev.yml` (MongoDB and RustFS as S3-compatible object storage). The `rustfs-init` container creates the two buckets from `.env.dev` with object versioning enabled and exits. Virus scanning of uploads is disabled in development; see the [Production setup](/guides/production-setup#virus-scanning-clamav) guide to enable it.
 
 Mail is off by default: the backend logs the verification, password-reset and invitation links instead of sending them. To send mail through [Mailpit](https://mailpit.axllent.org/) (a local mail catcher with a web inbox), uncomment the mail block in `.env.dev` — `COMPOSE_PROFILES=mail` plus the `OPEN_DPP_MAIL_*` variables — and rerun `make dev`.
 
@@ -45,6 +47,7 @@ After startup:
 
 - open-dpp: <http://localhost:3000>
 - Mailpit (only with the `mail` profile): <http://localhost:8025>
+- RustFS console: <http://localhost:9001> (log in with `OPEN_DPP_S3_ACCESS_KEY` / `OPEN_DPP_S3_SECRET_KEY`)
 
 ## 6) Run the end-to-end tests
 

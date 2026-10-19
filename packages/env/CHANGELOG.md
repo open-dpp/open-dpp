@@ -1,5 +1,56 @@
 # @open-dpp/env
 
+## 6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+## 6.1.4
+
+## 6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- [#976](https://github.com/open-dpp/open-dpp/pull/976) [`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce) Thanks [@mr42](https://github.com/mr42)! - Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates. The Github repository where the official templates are loaded from is configurable via environment variable.
+
+## 6.1.1
+
+## 6.1.0
+
+### Minor Changes
+
+- [#967](https://github.com/open-dpp/open-dpp/pull/967) [`a7a6759`](https://github.com/open-dpp/open-dpp/commit/a7a675966ff4aae683a178cf5a7ab8f8e759823b) Thanks [@florianBieck](https://github.com/florianBieck)! - Optional OAuth Provider: open-dpp can act as an OpenID Connect provider for one operator-configured Trusted Client (for example a landing page), off by default.
+
+  - `OPEN_DPP_OAUTH_PROVIDER_ENABLED` plus `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`, `_CLIENT_SECRET`, `_REDIRECT_URIS` and optional `_CLIENT_NAME` configure it; the client variables are validated only while the provider is enabled. The Trusted Client is written on every startup; a failed write stops the startup.
+  - The Trusted Client signs Users in through `{origin}/api/v2/auth` and calls the API on their behalf with a 15-minute JWT access token carrying `open-dpp:api`; refresh tokens last 7 days, sliding.
+  - The sign-in and sign-up pages continue a pending authorization; the sign-up page does so through the new `POST /api/v2/oauth-provider/continue` (`apiClient.dpp.oauthProvider.continueAuthorization`).
+  - Users created without a display name get one (first and last name, or `User`), and `GET /organizations/member` reads memberships from the database.
+
+  See `docs/guides/production-setup.md#oauth-provider`.
+
+## 6.0.0
+
+## 5.3.0
+
+## 5.2.0
+
+## 5.1.0
+
+## 5.0.0
+
+### Major Changes
+
+- [#714](https://github.com/open-dpp/open-dpp/pull/714) [`66b6537`](https://github.com/open-dpp/open-dpp/commit/66b65379357517e67e4266c003f67ccf73274eb7) Thanks [@florianBieck](https://github.com/florianBieck)! - BREAKING: `OPEN_DPP_CLAMAV_PORT` was removed — put the port into `OPEN_DPP_CLAMAV_URL` (e.g. `http://clamav-rest:9000`). Existing deployments must update their `.env`, otherwise scans target the wrong port and every upload is rejected.
+
+  `OPEN_DPP_CLAMAV_URL` is now optional: unset (or empty) disables virus scanning — uploads are accepted unscanned and a warning is logged at startup. The `clamav-rest` service was removed from the example and development compose files; see the Production setup guide (`docs/guides/production-setup.md`) to add it back.
+
+## 4.0.1
+
 ## 4.0.0
 
 ### Major Changes

@@ -7,6 +7,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import apiClient from "../../lib/api-client.ts";
+import { handleApiError, LimitError } from "../../lib/api-error-mapping";
 import RingLoader from "../navigation/RingLoader.vue";
 
 const emit = defineEmits<{
@@ -26,6 +27,8 @@ async function inviteUser() {
   if (!organizationId.value) {
     return;
   }
+
+  errors.value = [];
 
   const emailSchema = z.email();
   const result = emailSchema.safeParse(email.value);
@@ -47,10 +50,15 @@ async function inviteUser() {
       emit("success");
       visible.value = false;
     } else {
-      errors.value.push("Ein Fehler ist aufgetreten.");
+      errors.value.push(t("common.errorOccurred"));
     }
   } catch (error) {
-    errors.value.push("Ein Fehler ist aufgetreten.");
+    const err = handleApiError(error);
+    if (err instanceof LimitError) {
+      errors.value.push(t(`api.error.limit.${err.key}`, { limit: err.limit }));
+    } else {
+      errors.value.push(t("common.errorOccurred"));
+    }
     loading.value = false;
   }
 }

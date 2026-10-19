@@ -5,12 +5,14 @@ import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { HTTPCode } from "../stores/http-codes.ts";
+import { useNotificationStore } from "../stores/notification.ts";
 import { useTemplates } from "./templates.ts";
 
 const mocks = vi.hoisted(() => {
   return {
     createTemplate: vi.fn(),
     fetchTemplates: vi.fn(),
+    importOfficial: vi.fn(),
     routerPush: vi.fn(),
   };
 });
@@ -22,6 +24,7 @@ vi.mock("../lib/api-client", () => ({
       templates: {
         create: mocks.createTemplate,
         getAll: mocks.fetchTemplates,
+        importOfficial: mocks.importOfficial,
       },
     },
   },
@@ -102,5 +105,54 @@ describe("templates", () => {
       filter: { status: [DigitalProductDocumentStatusDto.Archived] },
     });
     expect(templates.value).toEqual(templatesResponse);
+  });
+
+  it("should import official templates and show a success notification when none fail", async () => {
+    const { importOfficialTemplates, importingOfficialTemplates } = mountHarness();
+    mocks.importOfficial.mockResolvedValueOnce({
+      data: { imported: [{ fileName: "battery.json", templateId: "t1" }], failed: [] },
+    });
+
+    const promise = importOfficialTemplates();
+    expect(importingOfficialTemplates.value).toBe(true);
+    await promise;
+
+    expect(importingOfficialTemplates.value).toBe(false);
+    const notificationStore = useNotificationStore();
+    expect(notificationStore.notifications).toHaveLength(1);
+    expect(notificationStore.notifications[0]).toEqual(
+      expect.objectContaining({ message: "templates.importOfficialSuccess" }),
+    );
+  });
+
+  it("should show a warning notification when some official templates fail to import", async () => {
+    const { importOfficialTemplates } = mountHarness();
+    mocks.importOfficial.mockResolvedValueOnce({
+      data: {
+        imported: [{ fileName: "battery.json", templateId: "t1" }],
+        failed: [{ fileName: "broken.json", reason: "Invalid import data format" }],
+      },
+    });
+
+    await importOfficialTemplates();
+
+    const notificationStore = useNotificationStore();
+    expect(notificationStore.notifications).toHaveLength(1);
+    expect(notificationStore.notifications[0]).toEqual(
+      expect.objectContaining({ message: "templates.importOfficialPartialFailure" }),
+    );
+  });
+
+  it("should show an error notification when the import request itself fails", async () => {
+    const { importOfficialTemplates } = mountHarness();
+    mocks.importOfficial.mockRejectedValueOnce(new Error("network error"));
+
+    await importOfficialTemplates();
+
+    const notificationStore = useNotificationStore();
+    expect(notificationStore.notifications).toHaveLength(1);
+    expect(notificationStore.notifications[0]).toEqual(
+      expect.objectContaining({ message: "templates.importOfficialError" }),
+    );
   });
 });

@@ -10,7 +10,7 @@ Releases are managed with [Changesets](https://github.com/changesets/changesets)
 
 The flow is fully automated through [`.github/workflows/release.yml`](./.github/workflows/release.yml):
 
-1. Contributors add a **changeset** file to any PR that changes code shipped in `@open-dpp/api-client`.
+1. Contributors add a **changeset** file to any PR that changes a workspace package (see [When you need a changeset](#when-you-need-a-changeset)).
 2. When such a PR is merged to `main`, the release workflow opens (or updates) a **"chore: version packages"** PR that bumps versions and updates changelogs.
 3. When a maintainer merges that PR, the workflow publishes `@open-dpp/api-client` and `@open-dpp/dto` to npm and pushes git tags.
 
@@ -38,16 +38,16 @@ flowchart TD
 
 ## When you need a changeset
 
-Add a changeset if your PR changes code that is shipped in `@open-dpp/api-client`, either directly or through one of its dependencies (e.g. `@open-dpp/dto`).
+Every PR that changes a workspace package needs one. In practice that means any PR touching `apps/main/`, `apps/client/`, `packages/*`, or `docs/`. The `changeset` job in [`build.yml`](./.github/workflows/build.yml) enforces it by running `changeset status --since=origin/main` on each pull request, so a change can no longer merge and silently miss the release.
 
-You do **not** need a changeset for PRs that only touch:
+Two escape hatches, and no others:
 
-- Documentation (`docs/`, `*.md`)
-- CI / workflow configuration
-- Tests that do not affect shipped code
-- Backend-only (`apps/main`) or frontend-only (`apps/client`) changes that don't reach `@open-dpp/api-client` or its dependencies
+- **`pnpm changeset --empty`** — for a change that touches a workspace package but has nothing to tell users (refactors, tests, internal cleanups). It satisfies the CI job, is consumed by `changeset version` without bumping anything, and leaves a record in the PR that the omission was deliberate.
+- **Changing nothing inside a workspace package** — root configuration, `.github/`, `Dockerfile`, `Makefile`, and top-level Markdown live outside every package, so `changeset status` has nothing to report and the job passes on its own. The same holds for `apps/e2e/`, which is listed in `ignore` in [`.changeset/config.json`](./.changeset/config.json) because it is never released.
 
-If in doubt, add one — an unnecessary changeset only produces a no-op changelog entry.
+The job does not run for the `changeset-release/main` PR, which consumes changesets rather than adding them, or for dependency updates from `renovate[bot]` and PRs labelled `dependencies`.
+
+If in doubt, add a real changeset — an unnecessary one only produces a no-op changelog entry.
 
 ## Adding a changeset to your PR (contributor flow)
 
@@ -204,7 +204,7 @@ git push --follow-tags
 
 ## Troubleshooting
 
-- **"No changesets found" in a Release PR** — a changeset was not added to the merged PR. Create one with `pnpm changeset` in a follow-up PR.
+- **"No changesets found" in a Release PR** — a changeset was not added to the merged PR. Create one with `pnpm changeset` in a follow-up PR. The `changeset` CI job exists to stop this happening; if the PR was exempt from it (Renovate, or the release PR itself), that is expected.
 - **Release PR has no version bumps** — the changesets targeted only private packages. Target `@open-dpp/api-client` (or any member of the `fixed` group) so the bump actually happens.
 - **`changeset publish` skipped a package** — expected if it is not `@open-dpp/api-client` or `@open-dpp/dto`. Everything else is `private: true` and intentionally not published.
 - **npm publish failed with 401 / 403** — `NPM_TOKEN` is missing, expired, or lacks publish rights to the `@open-dpp` scope. Rotate it and re-run the job.

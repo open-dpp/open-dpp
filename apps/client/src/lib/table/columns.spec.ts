@@ -192,6 +192,45 @@ describe("convertDataToColumns", () => {
     expect(columns[0]!.label).toBe("Material");
   });
 
+  it("repositions existing columns in the array to match a reordered header row", () => {
+    const columnA = {
+      idShort: "ColumnA",
+      valueType: DataTypeDef.String,
+      modelType: AasSubmodelElements.Property,
+      displayName: [],
+    };
+    const columnB = {
+      idShort: "ColumnB",
+      valueType: DataTypeDef.String,
+      modelType: AasSubmodelElements.Property,
+      displayName: [],
+    };
+    const columnC = {
+      idShort: "ColumnC",
+      valueType: DataTypeDef.String,
+      modelType: AasSubmodelElements.Property,
+      displayName: [],
+    };
+    const columns: Column[] = [
+      { idShort: "ColumnA", label: "ColumnA", plain: columnA },
+      { idShort: "ColumnB", label: "ColumnB", plain: columnB },
+      { idShort: "ColumnC", label: "ColumnC", plain: columnC },
+    ];
+    const originalColumnC = columns[2];
+
+    // No membership change — ColumnC moved from the end to the front.
+    const reorderedHeaderRow = {
+      idShort: "row0",
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      value: [columnC, columnA, columnB],
+    };
+    convertDataToColumns(columns, { value: [reorderedHeaderRow] } as any, Language.en);
+
+    expect(columns.map((c) => c.idShort)).toEqual(["ColumnC", "ColumnA", "ColumnB"]);
+    // The existing object is repositioned, not replaced.
+    expect(columns[0]).toBe(originalColumnC);
+  });
+
   it("treats a Table (SubmodelElementList) column as flat, not a group", () => {
     const tableHeaderRow = {
       idShort: "row0",

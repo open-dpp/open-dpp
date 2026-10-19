@@ -8,6 +8,10 @@
     "noEntries": "No entries found",
     "moveUp": "Move up",
     "moveDown": "Move down",
+    "moveRight": "Move right",
+    "moveLeft": "Move left",
+    "move": "Move",
+    "moveTo": "Move to...",
     "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
@@ -95,6 +99,8 @@
     "security": {
       "unknownRole": "Unknown role",
       "missingPermission": "Missing permissions",
+      "archivedTooltip": "This document is archived and cannot be modified.",
+      "editingRestrictedTooltip": "This passport allows data changes only. Its template controls the structure.",
       "inheritedPermission": "Inherits permissions of parent node",
       "overriddenPermission": "Overrides permissions of parent node",
       "permissions": "Permissions",
@@ -155,8 +161,10 @@
     "submodel": "Section | Sections",
     "removeSubmodelElement": "Should the element really be removed?",
     "errorRemoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.remove the element.",
+    "errorMoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.move the element.",
     "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
     "errorRemoveSubmodel": "@.capitalize:common.failed to @.lower:common.remove @.lower:aasEditor.submodel.",
+    "errorMoveSubmodel": "@.capitalize:common.failed to @.lower:common.move @.lower:aasEditor.submodel.",
     "submodelElementList": "Table",
     "textField": "Text field",
     "file": "File",
@@ -523,6 +531,35 @@
       "title": "Configure organization",
       "branding": "Branding"
     },
+    "usage": {
+      "title": "Usage policies",
+      "setLimitsDialog": {
+        "title": "Set usage limits",
+        "nullIsUnlimited": "A value of 0 will make the limit be unlimited."
+      },
+      "policy": {
+        "AI_TOKEN_QUOTA": {
+          "title": "AI Token limit",
+          "unit": "Tokens",
+          "description": "Limits how many AI tokens the organization can consume each month before AI features are blocked."
+        },
+        "MEDIA_STORAGE_LIMIT": {
+          "title": "Media storage limit",
+          "unit": "MB",
+          "description": "Limits the total size of media files the organization can store, measured in MB."
+        },
+        "PASSPORT_CREATE_LIMIT": {
+          "title": "Passport limit",
+          "unit": "Pass | Passes",
+          "description": "Limits the total number of passports the organization can create."
+        },
+        "ORGANIZATION_MEMBER_LIMIT": {
+          "title": "Team member limit",
+          "unit": "Member | Members",
+          "description": "Limits the total number of members in an organization."
+        }
+      }
+    },
     "admin": {
       "title": "Administration",
       "organizations": "All organizations",
@@ -611,6 +648,7 @@
     "label": "Activity history",
     "createdAt": "Date",
     "position": "Position",
+    "oldPosition": "Old position",
     "name": "Name",
     "group": "Group",
     "type": "Type",
@@ -618,6 +656,11 @@
     "oldValue": "Old value",
     "newValue": "New value",
     "userId": "User ID",
+    "movedFrom": "Moved from",
+    "movedTo": "Moved to",
+    "viewHistoryBeforeMove": "View history before move",
+    "live": "Live",
+    "beforeMove": "Before move to {path}",
     "languageOps": {
       "replace": "modified",
       "add": "added",
@@ -652,7 +695,9 @@
       "DigitalProductDocumentStatusChanged": "Status changed",
       "PolicyModified": "Permission modified",
       "FileValueChanged": "File changed",
-      "ReferenceElementValueChanged": "Reference changed"
+      "ReferenceElementValueChanged": "Reference changed",
+      "SubmodelElementMoved": "Element moved",
+      "SubmodelMoved": "Section moved"
     }
   },
   "passports": {
@@ -667,8 +712,35 @@
     "loading": "Loading passport…",
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport status",
+    "errorRemoveEditingRestrictions": "Failed to remove editing restrictions",
+    "removeEditingRestrictions": "Remove Editing Restrictions",
+    "removeEditingRestrictionsTooltip": "This passport's structure, security, and layout are currently managed by its template. Do you want to remove the editing restriction?",
+    "removeEditingRestrictionsConfirmHeader": "Remove Editing Restrictions",
+    "removeEditingRestrictionsConfirmMessage": "This passport will no longer be controlled by its template — future template changes will not reach it. This cannot be undone.",
+    "removeEditingRestrictionsConfirmAccept": "Remove Restrictions",
+    "restrictedEditingTag": "Restricted editing",
     "blank": "Blank",
-    "fromTemplate": "From template"
+    "fromTemplate": "From template",
+    "registryExport": {
+      "button": "Export to EU registry",
+      "title": "Export to EU registry",
+      "description": "Exports the published passports as ZIP with files for the EU registry (max. 100 passports per file). Passports that cannot be exported are listed in failed-passports.json inside the ZIP.",
+      "productGroup": "Product group",
+      "batteries": "Batteries",
+      "filters": "Passports",
+      "onlyStatus": "Only passports with the status \"{status}\" are exported.",
+      "export": "Export",
+      "success": "The export was downloaded. Check failed-passports.json in the ZIP, if it exists.",
+      "noMatch": "No published passports match these filters.",
+      "error": "The export failed."
+    }
+  },
+  "filter": {
+    "status": "Status",
+    "templates": "Templates",
+    "createdBetween": "Created between",
+    "selectPeriod": "Select period",
+    "clear": "Clear filters"
   },
   "status": {
     "withStatus": "with status",
@@ -691,10 +763,22 @@
     "loading": "Loading template…",
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport template status",
+    "errorRestrictPassportEditing": "Failed to restrict passport editing",
+    "restrictPassportEditing": "Restrict Passport Editing",
+    "restrictPassportEditingTooltip": "Passports created from this template will only allow editing of field content — structure, security, and layout will be managed by the template.",
+    "restrictPassportEditingConfirmHeader": "Restrict Passport Editing",
+    "restrictPassportEditingConfirmMessage": "Passports created from this template will only allow editing of field content from now on. This cannot be undone.",
+    "restrictPassportEditingConfirmAccept": "Restrict Editing",
+    "restrictPassportEditingTag": "Limited Editing for Passports",
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",
-    "errorFetchList": "Failed to load templates"
+    "selectMultiple": "Select templates",
+    "errorFetchList": "Failed to load templates",
+    "importOfficial": "Import official templates",
+    "importOfficialSuccess": "Imported {imported} official template(s).",
+    "importOfficialPartialFailure": "Imported {imported} official template(s), {failed} failed.",
+    "importOfficialError": "Failed to import official templates."
   },
   "actions": {
     "member": {
@@ -850,7 +934,8 @@
       "alreadyAMember": "Already a member?",
       "ctaSignIn": "Sign in now",
       "error": "Sign up failed.",
-      "disabled": "Signup is currently disabled. Please contact your administrator."
+      "disabled": "Signup is currently disabled. Please contact your administrator.",
+      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again."
     },
     "passwordResetRequest": {
       "title": "Request password reset",
@@ -895,9 +980,10 @@
   "api": {
     "error": {
       "limit": {
-        "MODEL_CREATE_CAP": "Model limit of {limit} has been reached.",
-        "MEDIA_STORAGE_CAP": "Storage limit of {limit} MB has been reached.",
-        "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached."
+        "PASSPORT_CREATE_LIMIT": "Model limit of {limit} has been reached.",
+        "MEDIA_STORAGE_LIMIT": "Storage limit of {limit} MB has been reached.",
+        "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached.",
+        "ORGANIZATION_MEMBER_LIMIT": "Team member limit of {limit} has been reached. Remove a member or raise your limit to invite more people."
       }
     }
   },

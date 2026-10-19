@@ -5,9 +5,11 @@ import { BrandingNamespace } from "./branding/branding.namespace";
 import { BulkImportNamespace } from "./bulk-import/bulk-import.namespace";
 import { InstanceSettingsNamespace } from "./instance-settings/instance-settings.namespace";
 import { AasIntegrationNamespace } from "./integrations/aas-integration.namespace";
+import { OAuthProviderNamespace } from "./oauth-provider/oauth-provider.namespace";
 import { OrganizationsNamespace } from "./organizations/organizations.namespace";
 import { PassportNamespace } from "./passport/passports.namespace";
 import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
+import { PoliciesNamespace } from "./policy/policies.namespace";
 import { TemplatesNamespace } from "./templates/templates.namespace";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { UsersNamespace } from "./users/users.namespace";
@@ -25,6 +27,8 @@ export class DppApiClient implements IApiClient {
   public aasIntegration!: AasIntegrationNamespace;
   public users!: UsersNamespace;
   public instanceSettings!: InstanceSettingsNamespace;
+  public policies!: PoliciesNamespace;
+  public oauthProvider!: OAuthProviderNamespace;
   private axiosInstance!: AxiosInstance;
   private options: ApiClientOptions;
 
@@ -57,5 +61,7 @@ export class DppApiClient implements IApiClient {
     this.uniqueProductIdentifiers = new UniqueProductIdentifiersNamespace(this.axiosInstance);
     this.users = new UsersNamespace(this.axiosInstance);
     this.instanceSettings = new InstanceSettingsNamespace(this.axiosInstance);
+    this.policies = new PoliciesNamespace(this.axiosInstance);
+    this.oauthProvider = new OAuthProviderNamespace(this.axiosInstance);
   }
 }

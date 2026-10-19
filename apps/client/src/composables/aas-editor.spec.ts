@@ -58,6 +58,9 @@ const mocks = vi.hoisted(() => {
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
+    modifyValueOfSubmodelElement: vi.fn(),
+    moveSubmodel: vi.fn(),
+    moveSubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
     deleteSubmodelElementById: vi.fn(),
     asSubject: vi.fn(),
@@ -75,10 +78,13 @@ vi.mock("../lib/api-client", () => ({
           createSubmodel: mocks.createSubmodel,
           deleteSubmodelById: mocks.deleteSubmodelById,
           modifySubmodel: mocks.modifySubmodel,
+          moveSubmodel: mocks.moveSubmodel,
           getSubmodels: mocks.getSubmodels,
           createSubmodelElement: mocks.createSubmodelElement,
           createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          modifyValueOfSubmodelElement: mocks.modifyValueOfSubmodelElement,
+          moveSubmodelElement: mocks.moveSubmodelElement,
           deleteSubmodelElementById: mocks.deleteSubmodelElementById,
         },
       },
@@ -355,12 +361,14 @@ describe("aasEditor composable", () => {
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
       create: { visible: true, enabled: true, tooltip: "common.add" },
       delete: { visible: true, enabled: true, tooltip: "common.remove" },
+      move: { visible: true, enabled: true, tooltip: "common.move" },
     };
     const actionsOfLeaveNode = {
       read: { visible: true, enabled: true, tooltip: "common.view" },
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
       create: { visible: false, enabled: true, tooltip: "common.add" },
       delete: { visible: true, enabled: true, tooltip: "common.remove" },
+      move: { visible: true, enabled: true, tooltip: "common.move" },
     };
     const missingPermissionsMsg = "aasEditor.security.missingPermission";
     const actionsOfParentWithoutPermissions = {
@@ -376,6 +384,7 @@ describe("aasEditor composable", () => {
       },
       create: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
       delete: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+      move: { visible: false, enabled: false, tooltip: missingPermissionsMsg },
     };
 
     const withoutChildren = (value: any) => omit(value, "children");
@@ -487,6 +496,121 @@ describe("aasEditor composable", () => {
       },
     };
     expect(withoutChildren(actualListProp)).toEqual(expectedListProp);
+  });
+
+  it("hides structural actions (create/delete) but keeps edit reachable when isEditingRestrictedToData is true", async () => {
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
+    mocks.getSubmodels.mockResolvedValue({
+      data: response,
+      status: HTTPCode.OK,
+    });
+    mocks.getShells.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: [assetAdministrationShell1] },
+      status: HTTPCode.OK,
+    });
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
+    const { init, findTreeNodeByKey } = mountHarness({
+      id: aasWrapperId,
+      aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
+      errorHandlingStore,
+      selectedLanguage,
+      openConfirm: mockOpenConfirm,
+      translate,
+      status,
+      isEditingRestrictedToData: true,
+    });
+    await init();
+
+    // submodel1's policy grants full permissions, so any remaining restriction here is
+    // solely the effect of isEditingRestrictedToData, not a permission gap. Create/delete/move
+    // are hidden (not just disabled), so their tooltip value is never actually rendered — it
+    // falls through to the normal label rather than a "restricted" message, since nothing needs
+    // it. Move is structural (like create/delete) even though it shares edit's permission gate.
+    const restrictedActions = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: false, enabled: false, tooltip: "common.add" },
+      delete: { visible: false, enabled: false, tooltip: "common.remove" },
+      move: { visible: false, enabled: false, tooltip: "common.move" },
+    };
+
+    const submodelNode = findTreeNodeByKey(submodel1.id)!;
+    expect(submodelNode.data.actions).toEqual(restrictedActions);
+
+    const leafNode = findTreeNodeByKey("Design_V01.Author.AuthorName")!;
+    expect(leafNode.data.actions).toEqual(restrictedActions);
+  });
+
+  it("routes Property/File value edits through modifyValueOfSubmodelElement when isEditingRestrictedToData is true, but leaves container edits on the full endpoint", async () => {
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
+    mocks.getSubmodels.mockResolvedValue({ data: response, status: HTTPCode.OK });
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
+    const { init, selectTreeNode, editorVNode } = mountHarness({
+      id: aasWrapperId,
+      aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
+      errorHandlingStore,
+      selectedLanguage,
+      openConfirm: mockOpenConfirm,
+      translate,
+      status,
+      isEditingRestrictedToData: true,
+    });
+    await init();
+
+    // Property: only `value` is extracted from the full form submission.
+    selectTreeNode("Design_V01.Author.AuthorName");
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "AuthorName", value: "New Name" });
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel1.id,
+      "Design_V01.Author.AuthorName",
+      "New Name",
+    );
+    expect(mocks.modifySubmodelElement).not.toHaveBeenCalled();
+
+    // File: `value` and `contentType` are extracted, other metadata dropped.
+    selectTreeNode("Design_V01.AdditionalInformation.FileProp");
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({
+      idShort: "FileProp",
+      value: "new/path",
+      contentType: "application/pdf",
+    });
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel1.id,
+      "Design_V01.AdditionalInformation.FileProp",
+      { value: "new/path", contentType: "application/pdf" },
+    );
+
+    // Container (SubmodelElementCollection): no leaf value — stays on the full endpoint.
+    selectTreeNode(`${submodel2.idShort}.ProductCarbonFootprint_A4`);
+    mocks.modifySubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "ProductCarbonFootprint_A4" });
+    expect(mocks.modifySubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel2.id,
+      "ProductCarbonFootprint_A4",
+      { idShort: "ProductCarbonFootprint_A4" },
+    );
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledTimes(2);
   });
 
   it.each([
@@ -1056,6 +1180,171 @@ describe("aasEditor composable", () => {
         "aasEditor.errorRemoveSubmodelElement",
         { status: HTTPCode.INTERNAL_SERVER_ERROR },
       );
+    });
+  });
+
+  describe("should move", () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it("builds an up/down menu for a submodel node, gated on its position on the page", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems } = mountHarness({
+        id: aasWrapperId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: mockOpenConfirm,
+        translate,
+        status,
+      });
+      await init();
+
+      buildMoveMenu(findTreeNodeByKey(submodel1.id)!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: true },
+        { label: "common.moveDown", disabled: false },
+      ]);
+
+      mocks.moveSubmodel.mockResolvedValueOnce({ status: HTTPCode.OK });
+      await (moveMenuItems.value[1]!.command as any)();
+      expect(mocks.moveSubmodel).toHaveBeenCalledWith(aasWrapperId, submodel1.id, { position: 1 });
+      expect(mocks.getSubmodels).toHaveBeenCalledTimes(2); // initial load + reload after move
+
+      buildMoveMenu(findTreeNodeByKey(submodel2.id)!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: false },
+        { label: "common.moveDown", disabled: true },
+      ]);
+
+      mocks.moveSubmodel.mockRejectedValueOnce({ status: HTTPCode.INTERNAL_SERVER_ERROR });
+      await (moveMenuItems.value[0]!.command as any)();
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith("aasEditor.errorMoveSubmodel", {
+        status: HTTPCode.INTERNAL_SERVER_ERROR,
+      });
+    });
+
+    it("builds an up/down menu for a submodel element, gated on its position among siblings", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems } = mountHarness({
+        id: aasWrapperId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: mockOpenConfirm,
+        translate,
+        status,
+      });
+      await init();
+
+      // "Author" is the first of Design_V01's 8 children.
+      buildMoveMenu(findTreeNodeByKey("Design_V01.Author")!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: true },
+        { label: "common.moveDown", disabled: false },
+        { label: "common.moveTo", disabled: false },
+      ]);
+
+      mocks.moveSubmodelElement.mockResolvedValueOnce({ status: HTTPCode.OK });
+      await (moveMenuItems.value[1]!.command as any)();
+      expect(mocks.moveSubmodelElement).toHaveBeenCalledWith(
+        aasWrapperId,
+        submodel1.id,
+        "Design_V01.Author",
+        { position: 1 },
+      );
+      expect(mocks.getSubmodels).toHaveBeenCalledTimes(2); // initial load + reload after move
+
+      // "ModelName" is the last of Design_V01's 8 children.
+      buildMoveMenu(findTreeNodeByKey("Design_V01.ModelName")!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: false },
+        { label: "common.moveDown", disabled: true },
+        { label: "common.moveTo", disabled: false },
+      ]);
+
+      mocks.moveSubmodelElement.mockRejectedValueOnce({ status: HTTPCode.INTERNAL_SERVER_ERROR });
+      await (moveMenuItems.value[0]!.command as any)();
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith(
+        "aasEditor.errorMoveSubmodelElement",
+        { status: HTTPCode.INTERNAL_SERVER_ERROR },
+      );
+    });
+
+    it("refetches the shell (security) and invokes onAfterMove (presentation) after a successful move", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      mocks.getShells.mockResolvedValue({
+        data: {
+          paging_metadata: { cursor: null },
+          result: [
+            {
+              ...assetAdministrationShell1,
+              security: securityPlainFactory.build({}, { transient: { policies: [] } }),
+            },
+          ],
+        },
+        status: HTTPCode.OK,
+      });
+      const onAfterMove = vi.fn();
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems } = mountHarness({
+        id: aasWrapperId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: mockOpenConfirm,
+        translate,
+        status,
+        onAfterMove,
+      });
+      await init();
+      expect(mocks.getShells).toHaveBeenCalledTimes(1); // initial load
+
+      buildMoveMenu(findTreeNodeByKey("Design_V01.Author")!);
+      mocks.moveSubmodelElement.mockResolvedValueOnce({ status: HTTPCode.OK });
+      await (moveMenuItems.value[1]!.command as any)();
+
+      // idShort paths can change as a result of the move, so security (part of
+      // the shell) and presentation (via onAfterMove) must both be refetched.
+      expect(mocks.getShells).toHaveBeenCalledTimes(2);
+      expect(onAfterMove).toHaveBeenCalledTimes(1);
+    });
+
+    it("wires the 'Move to...' menu item to open the move dialog", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems, moveToDialogVisible } =
+        mountHarness({
+          id: aasWrapperId,
+          aasNamespace: apiClient.dpp.templates.aas,
+          changeQueryParams,
+          errorHandlingStore,
+          selectedLanguage,
+          openConfirm: mockOpenConfirm,
+          translate,
+          status,
+        });
+      await init();
+
+      buildMoveMenu(findTreeNodeByKey("Design_V01.Author")!);
+      const moveToItem = moveMenuItems.value.find((i) => i.label === "common.moveTo")!;
+      expect(moveToDialogVisible.value).toBe(false);
+      (moveToItem.command as any)();
+      expect(moveToDialogVisible.value).toBe(true);
     });
   });
 });

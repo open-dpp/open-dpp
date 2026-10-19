@@ -17,7 +17,7 @@ pnpm run build                # all apps + packages
 pnpm run build:main           # backend only
 
 # Dev (requires Docker services running first)
-make dev                      # start Docker services (MongoDB, MinIO, ClamAV; Mailpit only with COMPOSE_PROFILES=mail)
+make dev                      # start Docker services (MongoDB, RustFS; Mailpit only with COMPOSE_PROFILES=mail)
 pnpm run dev                  # start all apps
 pnpm run dev:main             # backend only
 

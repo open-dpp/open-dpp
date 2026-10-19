@@ -9,6 +9,9 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelDto,
+  MoveSubmodelElementDto,
+  ReorderColumnDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -37,6 +40,7 @@ import { SubmodelRequest } from "../../aas/presentation/requests/submodel.reques
 import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel-modification.request";
 import { ValueModificationRequest } from "../../aas/presentation/requests/value-modification.request";
 import { SubmodelElementModificationRequest } from "../../aas/presentation/requests/submodel-element-modification.request";
+import { MoveSubmodelElementRequest } from "../../aas/presentation/requests/move-submodel-element.request";
 import { PresentationDeletionObserver } from "../../aas/presentation/event-bus/delete-submodel-base-observer";
 import { PresentationMoveObserver } from "../../aas/presentation/event-bus/move-submodel-base-observer";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
@@ -70,6 +74,33 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       SubmodelRequest.create({ body, version }),
       this.saveEnvironmentCallback(item),
       userContext,
+    );
+  }
+
+  async moveSubmodel(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: MoveSubmodelDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveSubmodel(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      body.position,
+      this.saveEnvironmentCallback(item),
+      userContext,
+      version,
     );
   }
 
@@ -180,6 +211,40 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       SubmodelElementRequest.create({ body, version }),
       userContext,
       idShortPath,
+    );
+  }
+
+  async moveSubmodelElement(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: MoveSubmodelElementDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveSubmodelElement(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      MoveSubmodelElementRequest.create({ body, version }),
+      userContext,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -316,6 +381,38 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortOfColumn,
       SubmodelElementModificationRequest.create({ body, version }),
       userContext,
+    );
+  }
+
+  async reorderColumn(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    body: ReorderColumnDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.reorderColumn(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      groupIdShort,
+      body.position,
+      userContext,
+      version,
     );
   }
 

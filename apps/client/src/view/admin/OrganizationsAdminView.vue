@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Organization } from "better-auth/client";
 import { isAxiosError } from "axios";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 import { useRouter } from "vue-router";
 import OrganizationsAdminList from "../../components/organizations/OrganizationsAdminList.vue";
 import axiosIns from "../../lib/axios.ts";
@@ -26,6 +26,8 @@ async function fetchOrganizations() {
   }
 }
 
+const setPolicyLimitDialog = useTemplateRef("setPolicyLimitDialog");
+
 onMounted(async () => {
   await fetchOrganizations();
 });
@@ -34,7 +36,12 @@ onMounted(async () => {
 <template>
   <section>
     <div class="flex flex-col gap-3 p-3">
-      <OrganizationsAdminList v-if="organizations.length > 0" :organizations="organizations" />
+      <SetPolicyLimitDialog ref="setPolicyLimitDialog" />
+      <OrganizationsAdminList
+        v-if="organizations.length > 0"
+        :organizations="organizations"
+        @set-limits="setPolicyLimitDialog?.openDialog($event)"
+      />
     </div>
   </section>
 </template>

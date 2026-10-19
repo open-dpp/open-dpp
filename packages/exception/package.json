@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/exception",
-  "version": "4.0.0",
+  "version": "6.2.1",
   "private": true,
   "description": "",
   "keywords": [],
@@ -26,12 +26,12 @@
     "test": "jest"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.26",
-    "@nestjs/core": "^11.1.26"
+    "@nestjs/common": "^11.2.6",
+    "@nestjs/core": "^11.2.6"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.26",
-    "@swc/core": "^1.15.41",
+    "@nestjs/testing": "^11.2.6",
+    "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
@@ -63,5 +63,5 @@
       ]
     }
   },
-  "packageManager": "pnpm@11.6.0"
+  "packageManager": "pnpm@11.28.5"
 }

@@ -1,12 +1,16 @@
 import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
+import { HttpModule, HttpService } from "@nestjs/axios";
 
 import {
   AssetKind,
   DigitalProductDocumentStatusModificationMethodDto,
   DigitalProductDocumentTypes,
+  PassportEditingModeDto,
 } from "@open-dpp/dto";
+import { AxiosResponse } from "axios";
+import { of } from "rxjs";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -31,7 +35,9 @@ import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
+import { OfficialTemplatesImportService } from "../application/services/official-templates-import.service";
 import { Template } from "../domain/template";
+import { OfficialTemplateRepository } from "../infrastructure/official-template.repository";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplatesModule } from "../templates.module";
@@ -48,8 +54,13 @@ describe("templateController", () => {
     basePathV1,
     basePathV2,
     {
-      imports: [TemplatesModule, PresentationConfigurationsModule],
-      providers: [TemplateRepository, AasSerializationService],
+      imports: [TemplatesModule, PresentationConfigurationsModule, HttpModule],
+      providers: [
+        TemplateRepository,
+        AasSerializationService,
+        OfficialTemplateRepository,
+        OfficialTemplatesImportService,
+      ],
       controllers: [TemplateController],
     },
     [
@@ -165,6 +176,10 @@ describe("templateController", () => {
     await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
 
+  it("/POST move submodel", async () => {
+    await ctx.asserts.moveSubmodel(createTemplate);
+  });
+
   it(`/PATCH submodel value`, async () => {
     await ctx.asserts.modifyValueOfSubmodel(createTemplate, saveTemplate);
   });
@@ -229,6 +244,10 @@ describe("templateController", () => {
     await ctx.asserts.moveColumnToGroup(createTemplate, saveTemplate);
   });
 
+  it("/POST reorder column", async () => {
+    await ctx.asserts.reorderColumn(createTemplate, saveTemplate);
+  });
+
   it("/POST create group from column", async () => {
     await ctx.asserts.createGroupFromColumn(createTemplate, saveTemplate);
   });
@@ -244,6 +263,10 @@ describe("templateController", () => {
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
     await ctx.asserts.postSubmodelElementAtIdShortPathV1(createTemplate, saveTemplate);
     await ctx.asserts.postSubmodelElementAtIdShortPath(createTemplate);
+  });
+
+  it("/POST move submodel element", async () => {
+    await ctx.asserts.moveSubmodelElement(createTemplate, saveTemplate);
   });
 
   it(`/GET submodel element by id`, async () => {
@@ -285,20 +308,23 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
-      [t2, t1].map((t) => ({
-        ...t.toPlain(),
-        environment: {
-          ...t.environment.toPlain(),
-          assetAdministrationShells: [
-            {
-              id: aas.id,
-              displayName: aas.displayName.map((d) => ({ language: d.language, text: d.text })),
-            },
-          ],
-        },
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-      })),
+      [t2, t1].map((t) => {
+        const plain = t.toPlain();
+        return {
+          ...plain,
+          environment: {
+            ...t.environment.toPlain(),
+            assetAdministrationShells: [
+              {
+                id: aas.id,
+                displayName: aas.displayName.map((d) => ({ language: d.language, text: d.text })),
+              },
+            ],
+          },
+          createdAt: t.createdAt.toISOString(),
+          updatedAt: t.updatedAt.toISOString(),
+        };
+      }),
     );
 
     response = await request(app.getHttpServer())
@@ -307,11 +333,14 @@ describe("templateController", () => {
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
     expect(response.body.result).toEqual(
-      [t2, t1].map((t) => ({
-        ...t.toPlain(),
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-      })),
+      [t2, t1].map((t) => {
+        const plain = t.toPlain();
+        return {
+          ...plain,
+          createdAt: t.createdAt.toISOString(),
+          updatedAt: t.updatedAt.toISOString(),
+        };
+      }),
     );
 
     response = await request(app.getHttpServer())
@@ -325,12 +354,49 @@ describe("templateController", () => {
         cursor: null,
         total_count: 1,
       },
-      result: [t2].map((p) => ({
-        ...p.toPlain(),
-        createdAt: p.createdAt.toISOString(),
-        updatedAt: p.updatedAt.toISOString(),
-      })),
+      result: [t2].map((p) => {
+        const plain = p.toPlain();
+        return {
+          ...plain,
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString(),
+        };
+      }),
     });
+  });
+
+  it("/GET templates filtered by period", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const date1 = new Date("2019-01-01T00:00:00.000Z");
+    const date2 = new Date("2019-02-01T00:00:00.000Z");
+    const date3 = new Date("2019-03-01T00:00:00.000Z");
+    const t1 = await createTemplate(org.id, date1, date1);
+    const t2 = await createTemplate(org.id, date2, date2);
+    const t3 = await createTemplate(org.id, date3, date3);
+
+    const getIds = async (query: string) => {
+      const response = await request(app.getHttpServer())
+        .get(`${basePathV2}?${query}`)
+        .set("Cookie", userCookie)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
+      expect(response.status).toEqual(200);
+      return response.body.result.map((t: { id: string }) => t.id);
+    };
+
+    expect(
+      await getIds(`startDate=2019-01-15T00:00:00.000Z&endDate=2019-02-15T00:00:00.000Z`),
+    ).toEqual([t2.id]);
+    expect(
+      await getIds(`startDate=2019-02-01T00:00:00.000Z&endDate=2019-12-31T00:00:00.000Z`),
+    ).toEqual([t3.id, t2.id]);
+    expect(await getIds(`endDate=2019-02-01T00:00:00.000Z`)).toEqual([t2.id, t1.id]);
+
+    const invalid = await request(app.getHttpServer())
+      .get(`${basePathV2}?startDate=not-a-date`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
+    expect(invalid.status).toEqual(400);
   });
 
   it(`/POST a template`, async () => {
@@ -365,6 +431,7 @@ describe("templateController", () => {
         currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
+      passportEditingMode: "Full",
     });
     const foundAas = await ctx
       .getRepositories()
@@ -465,6 +532,52 @@ describe("templateController", () => {
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
   });
 
+  it("/POST import-official imports every file the source repo lists, skipping any that fail", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const validPayload = buildEmptyExportPayload();
+
+    const getSpy = jest.spyOn(HttpService.prototype, "get").mockImplementation((url: string) => {
+      if (url.includes("api.github.com")) {
+        return of({
+          data: [
+            { name: "battery.json", type: "file" },
+            { name: "broken.json", type: "file" },
+            { name: "README.md", type: "file" },
+          ],
+        } as AxiosResponse);
+      }
+      if (url.endsWith("broken.json")) {
+        return of({ data: { invalid: "data" } } as AxiosResponse);
+      }
+      return of({ data: validPayload } as AxiosResponse);
+    });
+
+    try {
+      const response = await request(app.getHttpServer())
+        .post(`${basePathV2}/import-official`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      expect(response.body.imported).toHaveLength(1);
+      expect(response.body.imported[0].fileName).toEqual("battery.json");
+      expect(response.body.imported[0].templateId).toBeDefined();
+      expect(response.body.failed).toHaveLength(1);
+      expect(response.body.failed[0].fileName).toEqual("broken.json");
+
+      const listResponse = await request(app.getHttpServer())
+        .get(basePathV2)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+      expect(listResponse.body.result).toHaveLength(1);
+      expect(listResponse.body.result[0].id).toEqual(response.body.imported[0].templateId);
+    } finally {
+      getSpy.mockRestore();
+    }
+  });
+
   it("/PUT template status", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
@@ -490,6 +603,34 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
     expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
+  it("/PUT template passport-editing-mode", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository } = ctx.getRepositories();
+
+    const template = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await dppIdentifiableRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .put(`${basePathV2}/${template.id}/passport-editing-mode`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        mode: PassportEditingModeDto.DataOnly,
+      });
+    expect(response.status).toEqual(200);
+    expect(response.body.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
+    const found = await dppIdentifiableRepository.findOneOrFail(template.id);
+    expect(found.getPassportEditingMode()).toEqual(PassportEditingModeDto.DataOnly);
   });
 
   it("/DELETE template", async () => {

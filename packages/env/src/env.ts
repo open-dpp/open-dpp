@@ -1,4 +1,11 @@
 import { z } from "zod";
+import { isHttpsOrLoopbackUrl, parseTrustedClientEnv } from "./trusted-client";
+
+// "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>". Only "github" is
+// supported today; the provider prefix is a seam for other git hosts (GitLab, Bitbucket, a
+// self-hosted server) later without changing this env var's shape or breaking existing values.
+const OFFICIAL_TEMPLATES_REPO_PATTERN = /^([a-z][a-z0-9-]*):([^/\s]+)\/([^@\s]+)(?:@(\S+))?$/;
+const SUPPORTED_OFFICIAL_TEMPLATES_PROVIDERS = ["github"] as const;
 
 const asStrictBoolean = z
   .string()
@@ -7,10 +14,12 @@ const asStrictBoolean = z
   })
   .transform((val) => val.toLowerCase() === "true");
 
-// "" in an env file means "not configured" (compose passes unset vars through as
-// empty strings), so it is treated like an unset variable.
-const emptyToUndefined = (val: unknown) => (val === "" ? undefined : val);
-const optionalString = z.preprocess(emptyToUndefined, z.string().optional());
+/**
+ * `KEY=""` in an env file means "not set", like an absent variable (compose also passes
+ * unset vars through as empty strings).
+ */
+const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((v) => (v === "" ? undefined : v), schema);
 
 export const envSchema = z
   .object({
@@ -52,22 +61,49 @@ export const envSchema = z
       .string()
       .optional()
       .default("open-dpp-profile-pictures"),
-    // ClamAV
-    OPEN_DPP_CLAMAV_URL: z.coerce.string(),
-    OPEN_DPP_CLAMAV_PORT: z.coerce.number().max(65535).min(0),
+    // ClamAV — full URL incl. port; unset or empty disables virus scanning of uploads
+    OPEN_DPP_CLAMAV_URL: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.url({ protocol: /^https?$/ }).optional(),
+    ),
+    // Official templates — public repo templates are imported from; the default points at the
+    // open-dpp project's own repo, override to point at a fork/mirror or a test fixture repo.
+    // Format: "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>"; branch
+    // defaults to the repo's default branch when omitted.
+    OPEN_DPP_OFFICIAL_TEMPLATES_REPO: z.coerce
+      .string()
+      .optional()
+      .default("github:open-dpp/passport-templates")
+      .superRefine((value, ctx) => {
+        const match = OFFICIAL_TEMPLATES_REPO_PATTERN.exec(value);
+        if (!match) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              'OPEN_DPP_OFFICIAL_TEMPLATES_REPO must look like "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>"',
+          });
+          return;
+        }
+        const [, provider] = match;
+        if (!SUPPORTED_OFFICIAL_TEMPLATES_PROVIDERS.includes(provider as "github")) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Unsupported official templates provider "${provider}"; only ${SUPPORTED_OFFICIAL_TEMPLATES_PROVIDERS.map((p) => `"${p}"`).join(", ")} is currently supported`,
+          });
+        }
+      }),
     // Misc
     OPEN_DPP_BUILD_API_DOC: asStrictBoolean.optional().default(false),
     OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce.string().or(z.number()).optional().default("10mb"),
     OPEN_DPP_JSON_LIMIT_INTEGRATION: z.coerce.string().or(z.number()).optional().default("50mb"),
     // Mail (optional: unset host = mail disabled, links are logged instead)
-    OPEN_DPP_MAIL_HOST: optionalString,
-    OPEN_DPP_MAIL_PORT: z.preprocess(
-      emptyToUndefined,
+    OPEN_DPP_MAIL_HOST: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_MAIL_PORT: emptyAsUndefined(
       z.coerce.number().max(65535).min(0).optional().default(587),
     ),
-    OPEN_DPP_MAIL_USER: optionalString,
-    OPEN_DPP_MAIL_PASSWORD: optionalString,
-    OPEN_DPP_MAIL_SENDER_ADDRESS: optionalString,
+    OPEN_DPP_MAIL_USER: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_MAIL_PASSWORD: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_MAIL_SENDER_ADDRESS: emptyAsUndefined(z.string().optional()),
     // Auth
     OPEN_DPP_AUTH_SECRET: z.coerce.string(),
     OPEN_DPP_AUTH_CLOUD_ENABLED: asStrictBoolean.optional().default(false),
@@ -77,6 +113,14 @@ export const envSchema = z
     OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
     OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
     OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
+    // OAuth Provider — open-dpp as identity provider for one Trusted Client (CONTEXT.md).
+    // Off by default; when on, the client variables are required and validated (see
+    // superRefine), when off they are ignored. EnvService.getTrustedClient() parses them.
+    OPEN_DPP_OAUTH_PROVIDER_ENABLED: asStrictBoolean.optional().default(false),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: emptyAsUndefined(z.string().optional()),
     // Instance Settings
     OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),
     OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: asStrictBoolean.optional(),
@@ -85,6 +129,7 @@ export const envSchema = z
     OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
     OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),
     OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP: z.coerce.number().min(0).optional().default(0),
+    OPEN_DPP_DEFAULT_ORGANIZATION_MEMBER_CAP: z.coerce.number().min(0).optional().default(0),
   })
   .superRefine((val, ctx) => {
     const hasUri = !!val.OPEN_DPP_MONGODB_URI;
@@ -133,6 +178,27 @@ export const envSchema = z
         message: "OPEN_DPP_MAIL_SENDER_ADDRESS is required when OPEN_DPP_MAIL_HOST is set.",
         path: ["OPEN_DPP_MAIL_SENDER_ADDRESS"],
       });
+    }
+    // an enabled OAuth Provider needs its whole Trusted Client; a disabled one ignores it
+    if (val.OPEN_DPP_OAUTH_PROVIDER_ENABLED) {
+      const trustedClient = parseTrustedClientEnv(val);
+      if (!trustedClient.success) {
+        for (const { path, message } of trustedClient.issues) {
+          ctx.addIssue({ code: "custom", message, path });
+        }
+      }
+      // The issuer and every OAuth endpoint derive from OPEN_DPP_URL. Client credentials,
+      // authorization codes and tokens must not cross the network in cleartext, so the
+      // origin follows the redirect-URI rule: https, http only on loopback hosts.
+      // A value that is no URL at all is already reported by its field schema.
+      if (URL.canParse(val.OPEN_DPP_URL) && !isHttpsOrLoopbackUrl(val.OPEN_DPP_URL)) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but OPEN_DPP_URL is not https. The OAuth Provider's issuer derives from it; http is allowed only on loopback hosts.",
+          path: ["OPEN_DPP_URL"],
+        });
+      }
     }
     const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;
     const hasAuthAdminPassword = !!val.OPEN_DPP_AUTH_ADMIN_PASSWORD;

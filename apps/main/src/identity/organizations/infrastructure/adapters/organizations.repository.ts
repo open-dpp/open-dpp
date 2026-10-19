@@ -17,18 +17,6 @@ export class OrganizationsRepository {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
-  async findManyByMember(headers: BetterAuthHeaders): Promise<Organization[]> {
-    const result = await (this.auth.api as any).listOrganizations({
-      headers,
-    });
-
-    if (!result || !Array.isArray(result)) {
-      return [];
-    }
-
-    return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
-  }
-
   async create(
     organization: Organization,
     headers: BetterAuthHeaders,
@@ -57,7 +45,6 @@ export class OrganizationsRepository {
       body: {
         data: {
           name: organization.name,
-          slug: organization.slug,
           logo: organization.logo ?? "",
           metadata: organization.metadata,
         },
@@ -73,22 +60,39 @@ export class OrganizationsRepository {
     return OrganizationMapper.toDomain(document);
   }
 
-  async findOneBySlug(slug: string): Promise<Organization | null> {
-    // Ensure slug is a safe primitive value before using it in a query
-    if (typeof slug !== "string" || slug.trim().length === 0) {
-      return null;
-    }
-
-    const document = await this.organizationModel.findOne({ slug: { $eq: slug } });
-    if (!document) return null;
-    return OrganizationMapper.toDomain(document);
-  }
-
   async findManyByIds(ids: string[]): Promise<Organization[]> {
     const documents = await this.organizationModel.find({
       _id: { $in: ids.map((id) => new ObjectId(id)) },
     });
     return documents.map(OrganizationMapper.toDomain);
+  }
+
+  /**
+   * Ids of every organization, unbounded and without hydrating the documents —
+   * for maintenance passes that have to touch each organization exactly once.
+   */
+  async findAllIds(): Promise<string[]> {
+    const documents = await this.organizationModel.find({}, { _id: 1 }).lean();
+    return documents.map((document) => document._id.toString());
+  }
+
+  /**
+   * Data migration (#852): every organization's `slug` must equal its id. Runs on every
+   * bootstrap (see OrganizationSlugInitializerService), is idempotent and costs one round
+   * trip: only documents whose slug still differs are touched. Returns the number aligned.
+   *
+   * Deliberate exception to "no field-level $set in repositories": the domain update path
+   * ({@link update}) goes through better-auth's `updateOrganization`, which requires a session
+   * of an organization member — nothing of the kind exists at bootstrap. Keep this the only
+   * such write in the module.
+   */
+  async alignSlugsWithIds(): Promise<number> {
+    const result = await this.organizationModel.updateMany(
+      { $expr: { $ne: ["$slug", { $toString: "$_id" }] } },
+      [{ $set: { slug: { $toString: "$_id" } } }],
+      { updatePipeline: true },
+    );
+    return result.modifiedCount;
   }
 
   async getAllOrganizations() {

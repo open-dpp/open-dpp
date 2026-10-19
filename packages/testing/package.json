@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/testing",
-  "version": "4.0.0",
+  "version": "6.2.1",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -25,9 +25,9 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.26",
+    "@nestjs/common": "^11.2.6",
     "@nestjs/config": "^4.0.4",
-    "@nestjs/core": "^11.1.26",
+    "@nestjs/core": "^11.2.6",
     "@nestjs/mongoose": "^11.0.4",
     "@open-dpp/dto": "workspace:*",
     "@open-dpp/env": "workspace:*",
@@ -36,12 +36,12 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.41",
+    "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/jest": "^30.0.0",
-    "@types/lodash": "^4.17.24",
+    "@types/lodash": "^4.17.25",
     "@types/supertest": "^6.0.3",
     "jest": "^30.4.2",
     "typescript": "^5.9.3"
@@ -76,5 +76,5 @@
       "node_modules/(?!.*(@open-dpp|uuid))"
     ]
   },
-  "packageManager": "pnpm@11.6.0"
+  "packageManager": "pnpm@11.28.5"
 }

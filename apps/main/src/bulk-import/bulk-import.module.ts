@@ -2,6 +2,7 @@ import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { DatabaseModule } from "../database/database.module";
 import { PassportsModule } from "../passports/passports.module";
+import { PolicyModule } from "../policy/policy.module";
 import { TemplatesModule } from "../templates/templates.module";
 import { BulkImportConfigService } from "./application/services/bulk-import-config.service";
 import { BulkImportRunService } from "./application/services/bulk-import-run.service";
@@ -38,6 +39,7 @@ import { BulkImportFileParserController } from "./presentation/bulk-import-file-
     DatabaseModule,
     forwardRef(() => PassportsModule),
     forwardRef(() => TemplatesModule),
+    PolicyModule,
   ],
   controllers: [
     BulkImportConfigController,

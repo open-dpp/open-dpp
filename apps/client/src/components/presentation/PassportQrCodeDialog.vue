@@ -37,6 +37,8 @@ const toast = useToast();
 
 const link = computed(() => permalinks.value?.at(-1)?.publicUrl);
 
+const qrCodeSize = computed(() => Math.min(windowWidth.value, windowHeight.value) * 0.55);
+
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { copy } = useClipboard();
 
@@ -77,7 +79,7 @@ async function onCopy() {
       >
         <span class="flex-1 text-sm">{{ t("qrCodeDialog.archivedWarning") }}</span>
       </div>
-      <QrCode :size="Math.min(windowHeight, windowWidth) * 0.55" v-if="link" :link="link" />
+      <QrCode :size="qrCodeSize" v-if="link" :link="link" />
       <div v-if="link" class="flex flex-row gap-1 px-4 py-4 text-blue-600 sm:px-6">
         <a
           :href="link"

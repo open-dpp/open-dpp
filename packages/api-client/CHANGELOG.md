@@ -1,5 +1,129 @@
 # @open-dpp/api-client
 
+## 6.2.1
+
+### Patch Changes
+
+- [#1019](https://github.com/open-dpp/open-dpp/pull/1019) [`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83) Thanks [@mr42](https://github.com/mr42)! - Published passports can be exported to upload them to the EU registry.
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/dto@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/dto@6.2.0
+
+## 6.1.4
+
+### Patch Changes
+
+- [#904](https://github.com/open-dpp/open-dpp/pull/904) [`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36) Thanks [@mr42](https://github.com/mr42)! - In the template editor a user can restrict editing of derived passports to data only. Meaning, the structure, layout and security rules of a passport created from a template with restriction enabled cannot be modified. Only the data values of such a passport can be modified.
+
+- Updated dependencies [[`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36)]:
+  - @open-dpp/dto@6.1.4
+
+## 6.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- [#976](https://github.com/open-dpp/open-dpp/pull/976) [`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce) Thanks [@mr42](https://github.com/mr42)! - Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates. The Github repository where the official templates are loaded from is configurable via environment variable.
+
+- Updated dependencies [[`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce)]:
+  - @open-dpp/dto@6.1.2
+
+## 6.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.1.1
+
+## 6.1.0
+
+### Minor Changes
+
+- [#967](https://github.com/open-dpp/open-dpp/pull/967) [`a7a6759`](https://github.com/open-dpp/open-dpp/commit/a7a675966ff4aae683a178cf5a7ab8f8e759823b) Thanks [@florianBieck](https://github.com/florianBieck)! - Optional OAuth Provider: open-dpp can act as an OpenID Connect provider for one operator-configured Trusted Client (for example a landing page), off by default.
+
+  - `OPEN_DPP_OAUTH_PROVIDER_ENABLED` plus `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`, `_CLIENT_SECRET`, `_REDIRECT_URIS` and optional `_CLIENT_NAME` configure it; the client variables are validated only while the provider is enabled. The Trusted Client is written on every startup; a failed write stops the startup.
+  - The Trusted Client signs Users in through `{origin}/api/v2/auth` and calls the API on their behalf with a 15-minute JWT access token carrying `open-dpp:api`; refresh tokens last 7 days, sliding.
+  - The sign-in and sign-up pages continue a pending authorization; the sign-up page does so through the new `POST /api/v2/oauth-provider/continue` (`apiClient.dpp.oauthProvider.continueAuthorization`).
+  - Users created without a display name get one (first and last name, or `User`), and `GET /organizations/member` reads memberships from the database.
+
+  See `docs/guides/production-setup.md#oauth-provider`.
+
+### Patch Changes
+
+- Updated dependencies [[`a7a6759`](https://github.com/open-dpp/open-dpp/commit/a7a675966ff4aae683a178cf5a7ab8f8e759823b)]:
+  - @open-dpp/dto@6.1.0
+
+## 6.0.0
+
+### Major Changes
+
+- [#876](https://github.com/open-dpp/open-dpp/pull/876) [`38a9a4c`](https://github.com/open-dpp/open-dpp/commit/38a9a4c0e5949e516222ca0937822ffd4402bf20) Thanks [@florianBieck](https://github.com/florianBieck)! - Organization slugs are an internal detail equal to the organization id, so organization names no longer need to be unique.
+
+  - `POST /organizations` accepts `{ name }` only and validates it (non-empty after trimming). A `slug` in the body is ignored; `logo` and `metadata` are no longer part of the create type (they were never forwarded).
+  - `OrganizationDto` is now a zod schema in `@open-dpp/dto` (re-exported by `@open-dpp/api-client`): `slug` is removed, the never-sent `updatedAt` is gone, and `createdAt` is an ISO string instead of `Date`.
+  - Organization responses no longer include the always-empty `members` array.
+  - Existing organizations are backfilled to `slug = id` on every startup.
+  - The raw better-auth routes `/organization/update` and `/organization/check-slug` return 403, like `/organization/create` already did.
+
+### Patch Changes
+
+- Updated dependencies [[`38a9a4c`](https://github.com/open-dpp/open-dpp/commit/38a9a4c0e5949e516222ca0937822ffd4402bf20)]:
+  - @open-dpp/dto@6.0.0
+
+## 5.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.3.0
+
+## 5.2.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.2.0
+
+## 5.1.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.1.0
+
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.0.0
+
+## 4.0.1
+
+### Patch Changes
+
+- [#725](https://github.com/open-dpp/open-dpp/pull/725) [`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25) Thanks [@mr42](https://github.com/mr42)! - In the passport and template editors, sections, subsections, and data fields can be moved.
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/dto@4.0.1
+
 ## 4.0.0
 
 ### Major Changes

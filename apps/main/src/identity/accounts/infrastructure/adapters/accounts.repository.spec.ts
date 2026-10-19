@@ -3,6 +3,7 @@ import type { Auth } from "better-auth";
 import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Connection, Types } from "mongoose";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
@@ -24,6 +25,7 @@ describe("AccountsRepository (integration)", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({ ...generateMongoConfig(configService) }),

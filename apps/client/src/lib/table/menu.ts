@@ -66,6 +66,7 @@ export interface TableMenuDeps {
   onRemoveColumn: (column: Column) => Promise<void>;
   onDeleteColumnFromGroup: (groupIdShort: string, subColumn: Column) => Promise<void>;
   onMoveColumnToGroup: (column: Column, groupIdShort: string) => Promise<void>;
+  onReorderColumn: (column: Column, position: number, groupIdShort?: string) => Promise<void>;
   onCreateGroupFromColumn: (
     column: Column,
     groupData: SubmodelElementSharedRequestDto,
@@ -257,6 +258,34 @@ function buildAllColumnTypeMenuItems(
   ];
 }
 
+function buildMoveColumnMenuItems(
+  column: Column,
+  position: number,
+  containerLength: number,
+  deps: TableMenuDeps,
+  groupIdShort?: string,
+): MenuItem[] {
+  const { translate, disableColumnEditing } = deps;
+  return [
+    {
+      label: translate("common.moveLeft"),
+      icon: "pi pi-arrow-left",
+      disabled: !!disableColumnEditing || position <= 0,
+      command: async () => {
+        await deps.onReorderColumn(column, position - 1, groupIdShort);
+      },
+    },
+    {
+      label: translate("common.moveRight"),
+      icon: "pi pi-arrow-right",
+      disabled: !!disableColumnEditing || position >= containerLength - 1,
+      command: async () => {
+        await deps.onReorderColumn(column, position + 1, groupIdShort);
+      },
+    },
+  ];
+}
+
 function modifyColumnMenuItem(column: Column, deps: TableMenuDeps) {
   const { translate, openDrawer, pathToList, disableColumnEditing } = deps;
   return {
@@ -430,7 +459,11 @@ function buildTopLevelColumnMenu(
 
     menu.push({
       label: translate("common.actions"),
-      items: [modifyColumnMenuItem(column, deps), removeColumnMenuItem(column, deps)],
+      items: [
+        modifyColumnMenuItem(column, deps),
+        ...buildMoveColumnMenuItems(column, position, columns.length, deps),
+        removeColumnMenuItem(column, deps),
+      ],
     });
 
     // Group targets live in their own top-level section rather than nested
@@ -482,6 +515,7 @@ function buildGroupHeaderMenu(
     deps,
     groupIdShort,
   );
+  const groupPosition = columns.findIndex((c) => c.idShort === groupIdShort);
 
   return [
     {
@@ -490,7 +524,11 @@ function buildGroupHeaderMenu(
     },
     {
       label: translate("common.actions"),
-      items: [modifyColumnMenuItem(groupColumn, deps), removeColumnMenuItem(groupColumn, deps)],
+      items: [
+        modifyColumnMenuItem(groupColumn, deps),
+        ...buildMoveColumnMenuItems(groupColumn, groupPosition, columns.length, deps),
+        removeColumnMenuItem(groupColumn, deps),
+      ],
     },
   ];
 }
@@ -505,12 +543,21 @@ function buildSubColumnMenu(
 
   try {
     const subColumn = getSubColumnAtIndexOrFail(columns, groupIdShort!, position ?? 0);
+    const group = columns.find((c) => c.idShort === groupIdShort);
+    const containerLength = group?.children?.length ?? 0;
     return [
       ...buildAddColumnLeftRightSections(position ?? 0, deps, groupIdShort),
       {
         label: translate("common.actions"),
         items: [
           modifySubColumnMenuItem(groupIdShort!, subColumn, deps),
+          ...buildMoveColumnMenuItems(
+            subColumn,
+            position ?? 0,
+            containerLength,
+            deps,
+            groupIdShort,
+          ),
           removeFromGroupMenuItem(groupIdShort!, subColumn, deps),
         ],
       },
