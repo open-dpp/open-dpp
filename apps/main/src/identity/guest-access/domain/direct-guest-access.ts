@@ -5,7 +5,6 @@ import { User } from "../../users/domain/user";
 import { CallerFacts, GuestAccess } from "./guest-access";
 import {
   GuestAccessKind,
-  GuestAccessKindType,
   GuestAccessStatus,
   GuestAccessStatusType,
 } from "./guest-access-kind.enum";
@@ -40,7 +39,7 @@ export interface DirectGuestAccessCreateProps {
  * that account's user id.
  */
 export class DirectGuestAccess implements GuestAccess {
-  readonly kind: GuestAccessKindType = GuestAccessKind.DIRECT;
+  readonly kind = GuestAccessKind.DIRECT;
 
   private constructor(
     public readonly id: string,
@@ -147,7 +146,7 @@ export class DirectGuestAccess implements GuestAccess {
 
   toPlain(): DirectGuestAccessPlain {
     return {
-      kind: this.kind as typeof GuestAccessKind.DIRECT,
+      kind: this.kind,
       id: this.id,
       organizationId: this.organizationId,
       email: this.email,

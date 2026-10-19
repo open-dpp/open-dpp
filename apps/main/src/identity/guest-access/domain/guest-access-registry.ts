@@ -15,7 +15,7 @@ const registry = new Map<GuestAccessKindType, GuestAccessStatic>([
   [GuestAccessKind.DIRECT, DirectGuestAccess],
 ]);
 
-export function guestAccessFromPlain(plain: { kind?: unknown }): GuestAccess {
+export function guestAccessFromPlain(plain: Record<string, unknown>): GuestAccess {
   const kind = GuestAccessKindEnum.safeParse(plain.kind);
   const GuestAccessClass = kind.success ? registry.get(kind.data) : undefined;
   if (!GuestAccessClass) {

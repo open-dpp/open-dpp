@@ -1,3 +1,4 @@
+import type { DirectGuestAccessPlain } from "./direct-guest-access";
 import { GuestAccessKindType, GuestAccessStatusType } from "./guest-access-kind.enum";
 import { GuestRoleType } from "./guest-role.enum";
 
@@ -8,6 +9,9 @@ import { GuestRoleType } from "./guest-role.enum";
 export interface CallerFacts {
   userId: string;
 }
+
+/** The plain shape of every access kind. Add the plain shape of a new kind to this union. */
+export type GuestAccessPlain = DirectGuestAccessPlain;
 
 /**
  * What authorization depends on. Each access kind (e.g. DirectGuestAccess) is a separate class
@@ -24,5 +28,5 @@ export interface GuestAccess {
   readonly status: GuestAccessStatusType;
   isActiveFor: (caller: CallerFacts) => boolean;
   revoke: (now: Date) => void;
-  toPlain: () => Record<string, unknown>;
+  toPlain: () => GuestAccessPlain;
 }
