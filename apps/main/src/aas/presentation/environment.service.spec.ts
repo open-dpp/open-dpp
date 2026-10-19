@@ -30,6 +30,7 @@ import { generateMongoConfig } from "../../database/config";
 
 import { AuthModule } from "../../identity/auth/auth.module";
 
+import { GuestRole } from "../../identity/guest-access/domain/guest-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
@@ -592,6 +593,19 @@ describe("environmentService", () => {
                 }),
               ],
             }),
+            ...Object.values(GuestRole).map((guestRole) =>
+              PolicyAdded.create({
+                object: submodelObject,
+                userRole: UserRole.USER,
+                guestRole,
+                value: [
+                  Permission.create({
+                    permission: Permissions.Read,
+                    kindOfPermission: PermissionKind.Allow,
+                  }),
+                ],
+              }),
+            ),
             SubmodelReferenceAdded.create({
               submodelRef: submodelToReference(submodelAdded),
             }),

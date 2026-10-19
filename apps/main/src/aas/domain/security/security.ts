@@ -1,6 +1,7 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
+import { GuestRole } from "../../../identity/guest-access/domain/guest-role.enum";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
@@ -141,13 +142,22 @@ export class Security implements ITrackable {
         }
       }
 
-      const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+      // Guests and the public get Read only. Guests do not fall back to the public rules, so each
+      // guest role needs its own rule.
+      const readOnlySubjects = [
+        SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+        ...Object.values(GuestRole).map((guestRole) =>
+          SubjectAttributes.create({ userRole: UserRole.USER, guestRole }),
+        ),
+      ];
       const permissions = [
         Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       ];
 
-      if (!this.hasPolicy(anonymous, object, permissions)) {
-        this.addPolicy(anonymous, object, permissions);
+      for (const subject of readOnlySubjects) {
+        if (!this.hasPolicy(subject, object, permissions)) {
+          this.addPolicy(subject, object, permissions);
+        }
       }
     }
   }

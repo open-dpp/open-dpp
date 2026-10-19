@@ -1,6 +1,7 @@
 import { beforeAll, expect, it } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
+import { GuestRole } from "../../../identity/guest-access/domain/guest-role.enum";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
@@ -1022,6 +1023,73 @@ describe("security", () => {
           },
         ],
       },
+    });
+  });
+
+  describe("guest roles", () => {
+    const path = IdShortPath.create({ path: "section1" });
+    const read = Permission.create({
+      permission: Permissions.Read,
+      kindOfPermission: PermissionKind.Allow,
+    });
+    const repairer = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      guestRole: GuestRole.REPAIRER,
+    });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
+    it("gives every guest role and the public Read only on a new submodel", () => {
+      const security = Security.create({});
+
+      security.addDefaultPolicyForSubmodelIfNoExists({ idShort: "section1" });
+
+      for (const guestRole of Object.values(GuestRole)) {
+        const ability = security.defineAbilityForSubject(
+          SubjectAttributes.create({ userRole: UserRole.USER, guestRole }),
+        );
+        expect(ability.can(Permissions.Read, path)).toBe(true);
+        expect(ability.can(Permissions.Create, path)).toBe(false);
+        expect(ability.can(Permissions.Edit, path)).toBe(false);
+        expect(ability.can(Permissions.Delete, path)).toBe(false);
+      }
+      expect(security.defineAbilityForSubject(anonymous).can(Permissions.Read, path)).toBe(true);
+    });
+
+    it("does not add the defaults when the path already has a policy", () => {
+      const security = Security.create({});
+      security.addPolicy(member, path, [read]);
+
+      security.addDefaultPolicyForSubmodelIfNoExists({ idShort: "section1" });
+
+      const rules = security.localAccessControl.accessPermissionRules;
+      expect(rules).toHaveLength(1);
+      expect(rules[0].targetSubjectAttributes.isEqual(member)).toBe(true);
+      expect(security.defineAbilityForSubject(repairer).can(Permissions.Read, path)).toBe(false);
+    });
+
+    it("keeps guest roles independent of each other", () => {
+      const security = Security.create({});
+      security.addPolicy(repairer, path, [read]);
+
+      const recycler = SubjectAttributes.create({
+        userRole: UserRole.USER,
+        guestRole: GuestRole.RECYCLER,
+      });
+      expect(security.defineAbilityForSubject(repairer).can(Permissions.Read, path)).toBe(true);
+      expect(security.defineAbilityForSubject(recycler).can(Permissions.Read, path)).toBe(false);
+    });
+
+    it("lets a member manage the policies of guest roles, a guest not those of its own rank", () => {
+      const security = Security.create({}).withAdministrator(member);
+      security.addPolicy(repairer, path, [read]);
+      security.addPolicy(anonymous, path, [read]);
+
+      const guestAdministered = Security.create({}).withAdministrator(repairer);
+      expect(() => guestAdministered.addPolicy(repairer, path, [read])).toThrow(ForbiddenError);
     });
   });
 });
