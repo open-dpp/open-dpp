@@ -28,7 +28,7 @@ export class GuestAccess {
   @Prop({ required: true, enum: Object.values(GuestAccessKind), type: String })
   kind: GuestAccessKindType;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true })
   organizationId: string;
 
   @Prop({ required: true, enum: Object.values(GuestRole), type: String })
@@ -70,5 +70,12 @@ export class GuestAccess {
 
 export const GuestAccessSchema = SchemaFactory.createForClass(GuestAccess);
 
+// Owner's guest list and the duplicate-invitation check. The leading organizationId also serves
+// queries by organization alone.
 GuestAccessSchema.index({ organizationId: 1, email: 1 });
-GuestAccessSchema.index({ acceptedByUserId: 1, organizationId: 1 }, { sparse: true });
+// Authorization on every permalink request: the accesses a user has accepted in an organization.
+// Pending invitations have no acceptedByUserId and stay out of this index.
+GuestAccessSchema.index(
+  { acceptedByUserId: 1, organizationId: 1 },
+  { partialFilterExpression: { acceptedByUserId: { $exists: true } } },
+);

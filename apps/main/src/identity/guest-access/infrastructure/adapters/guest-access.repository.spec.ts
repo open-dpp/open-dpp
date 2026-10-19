@@ -64,6 +64,20 @@ describe("GuestAccessRepository", () => {
     return User.create({ email, firstName: "Rita", lastName: "Repair", emailVerified: true });
   }
 
+  it("creates the indexes for the owner's list and for authorization", async () => {
+    await connection.model(GuestAccessSchemaClass.name).syncIndexes();
+
+    const indexes = await connection.collection(GUEST_ACCESS_COLLECTION).indexes();
+
+    expect(indexes.map((i) => i.key)).toEqual([
+      { _id: 1 },
+      { organizationId: 1, email: 1 },
+      { acceptedByUserId: 1, organizationId: 1 },
+    ]);
+    const userIndex = indexes.find((i) => "acceptedByUserId" in i.key);
+    expect(userIndex?.partialFilterExpression).toEqual({ acceptedByUserId: { $exists: true } });
+  });
+
   it("saves a pending access and finds it by id", async () => {
     const access = createAccess();
 
