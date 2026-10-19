@@ -1,6 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
+import type { LogLevel } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import {
   ConsoleLogger,
   Logger,
@@ -21,11 +23,15 @@ import { createProxyServer } from "http-proxy-3";
 import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
+import { correlationIdMiddleware } from "./common/middleware/correlation-id.middleware";
+import { createLoggerMiddleware } from "./common/middleware/logger.middleware";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
 import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-dpp/dto";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
+
+const LOG_LEVELS: LogLevel[] = ["error", "warn", "log", "debug", "verbose"];
 
 const GS1_RESOLVER_ROUTE_REGEX = new RegExp(
   `^/${GS1_RESOLVER_PATH_PREFIX}/01/[^/]+(?:/10/[^/]+)?(?:/21/[^/]+)?/?$`,
@@ -54,16 +60,25 @@ async function bootstrap() {
   const logFormat = process.env.OPEN_DPP_LOG_FORMAT || "plain";
   const useJsonLogging = logFormat === "json";
 
-  const app = await NestFactory.create(AppModule, {
+  const consoleLogger = new ConsoleLogger({
+    json: useJsonLogging,
+    logLevels: LOG_LEVELS,
+  });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
-    logger: new ConsoleLogger({
-      json: useJsonLogging,
-      logLevels: ["log", "error", "warn", "debug", "verbose"],
-    }),
+    logger: consoleLogger,
   });
 
   const envService = app.get(EnvService);
   const logger = new Logger("Bootstrap");
+
+  const logLevel = envService.get("OPEN_DPP_LOG_LEVEL");
+  consoleLogger.setLogLevels(LOG_LEVELS.slice(0, LOG_LEVELS.indexOf(logLevel) + 1));
+
+  app.set("trust proxy", envService.get("OPEN_DPP_TRUST_PROXY"));
+
+  app.use(correlationIdMiddleware);
+  app.use(createLoggerMiddleware(envService.get("OPEN_DPP_LOG_FORMAT")));
 
   if (!envService.get("OPEN_DPP_CLAMAV_URL")) {
     logger.warn("OPEN_DPP_CLAMAV_URL is not set — uploaded files are not virus-scanned");

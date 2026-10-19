@@ -37,6 +37,23 @@ export const envSchema = z
     ),
     OPEN_DPP_PERMALINK_BASE_URL: z.url().optional(),
     OPEN_DPP_LOG_FORMAT: z.enum(["json", "plain"]).optional().default("plain"),
+    OPEN_DPP_LOG_LEVEL: emptyAsUndefined(
+      z.enum(["fatal", "error", "warn", "log", "debug", "verbose"]).optional().default("debug"),
+    ),
+    OPEN_DPP_TRUST_PROXY: emptyAsUndefined(
+      z
+        .string()
+        .optional()
+        .transform((value): boolean | number | string => {
+          if (value === undefined || value.toLowerCase() === "false") {
+            return false;
+          }
+          if (value.toLowerCase() === "true") {
+            return true;
+          }
+          return /^\d+$/.test(value) ? Number(value) : value;
+        }),
+    ),
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
     // MongoDB
     OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),

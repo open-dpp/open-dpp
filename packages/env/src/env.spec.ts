@@ -259,3 +259,21 @@ describe("validateEnv — OPEN_DPP_OFFICIAL_TEMPLATES_REPO", () => {
     ).toThrow(/Unsupported official templates provider "gitlab"/);
   });
 });
+
+describe("validateEnv — OPEN_DPP_LOG_LEVEL", () => {
+  it("defaults to debug", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_LOG_LEVEL).toBe("debug");
+  });
+
+  it("accepts verbose", () => {
+    expect(validateEnv({ ...baseEnv, OPEN_DPP_LOG_LEVEL: "verbose" }).OPEN_DPP_LOG_LEVEL).toBe(
+      "verbose",
+    );
+  });
+
+  it("rejects an unknown level", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_LOG_LEVEL: "trace" })).toThrow(
+      "OPEN_DPP_LOG_LEVEL",
+    );
+  });
+});
