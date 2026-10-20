@@ -4,39 +4,40 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
 import { Member } from "../identity/organizations/domain/member";
 import { User } from "../identity/users/domain/user";
+import { PassportService } from "../passports/application/services/passport.service";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
-import { McpClientService } from "./mcp-client/mcp-client.service";
+import { chatSubject, createPassportTool } from "./tools/passport.tool";
 import { PolicyKeyList } from "@open-dpp/dto";
 
 @Injectable()
 export class ChatService {
   private readonly logger: Logger = new Logger(ChatService.name);
 
-  private readonly mcpClientService: McpClientService;
   private readonly aiService: AiService;
   private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
   private readonly aiConfigurationService: AiConfigurationService;
   private readonly policyService: PolicyService;
   private readonly passportRepository: PassportRepository;
+  private readonly passportService: PassportService;
 
   constructor(
-    mcpClientService: McpClientService,
     aiService: AiService,
     uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
     passportRepository: PassportRepository,
+    passportService: PassportService,
   ) {
-    this.mcpClientService = mcpClientService;
     this.aiService = aiService;
     this.uniqueProductIdentifierRepository = uniqueProductIdentifierRepository;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
     this.passportRepository = passportRepository;
+    this.passportService = passportService;
   }
 
   async askAgent(
@@ -84,12 +85,14 @@ export class ChatService {
 
     const llm = this.aiService.getLLM(aiConfiguration.provider, aiConfiguration.model);
     this.logger.log(`Get tools`);
-    const tools = await this.mcpClientService.getTools({ user, member });
+    const subject = chatSubject(user, member, passport.organizationId);
+    const tools = [createPassportTool(this.passportService, passport.id, subject)];
     const agent = this.aiService.getAgent({
       llm,
       tools,
     });
-    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passport.id}>.`;
+    const systemPrompt =
+      "You are a helpful assistant answering questions about a product passport. Use the product-passport-tool to read it.";
     this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", systemPrompt],

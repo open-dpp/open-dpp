@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { randomUUID } from "node:crypto";
 import { describeError } from "../../../../lib/describe-error";
@@ -26,12 +25,6 @@ const API_KEY_SESSION_TOKEN = "api-key";
 const OAUTH_SESSION_TOKEN = "oauth";
 
 const BEARER_SCHEME = /^Bearer\s+(\S+)$/i;
-
-/** Transports reachable without a session although they carry no decorator (SSE, MCP messages). */
-const ANONYMOUS_PATHS = [
-  `/api/${LatestApiVersionWithPrefixDto}/sse`,
-  `/api/${LatestApiVersionWithPrefixDto}/messages`,
-];
 
 /** The token of an RFC 6750 bearer header, or undefined for any other authorization header. */
 function bearerToken(authorization: unknown): string | undefined {
@@ -97,7 +90,7 @@ export class AuthGuard implements CanActivate {
       if (accessToken !== undefined) {
         throw invalidAccessToken();
       }
-      return ANONYMOUS_PATHS.includes(url.split("?")[0]);
+      return false;
     }
     if (
       this.metadata<boolean>(context, SESSION_ONLY) &&
