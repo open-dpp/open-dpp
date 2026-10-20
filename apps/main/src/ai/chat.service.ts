@@ -72,19 +72,14 @@ export class ChatService {
       throw error;
     }
 
-    this.logger.log(`Fetch ai configuration`);
     const aiConfiguration = await this.aiConfigurationService.findOneByOrganizationId(
       passport.organizationId,
     );
 
     if (!aiConfiguration?.isEnabled) {
-      this.logger.log(`AI is not enabled`);
       throw new Error("AI is not enabled");
     }
-    this.logger.log(`Get llm`);
-
     const llm = this.aiService.getLLM(aiConfiguration.provider, aiConfiguration.model);
-    this.logger.log(`Get tools`);
     const subject = chatSubject(user, member, passport.organizationId);
     const tools = [createPassportTool(this.passportService, passport.id, subject)];
     const agent = this.aiService.getAgent({
@@ -93,7 +88,6 @@ export class ChatService {
     });
     const systemPrompt =
       "You are a helpful assistant answering questions about a product passport. Use the product-passport-tool to read it.";
-    this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", systemPrompt],
       ["human", "{input}"],
@@ -110,10 +104,9 @@ export class ChatService {
       },
       new StringOutputParser(),
     ]);
-    this.logger.log(`Ask agent`);
 
     const errorFunc = (type: string, err: any) => {
-      console.error(type, err);
+      this.logger.error(type, err);
     };
     const result = await chain.invoke(
       { input: query },
@@ -126,10 +119,9 @@ export class ChatService {
               const generation = output.generations?.[0]?.[0];
               const usageMetadata =
                 (generation as any)?.message?.usage_metadata || output.llmOutput?.tokenUsage;
-              this.logger.log(`In asking`);
 
               if (usageMetadata?.total_tokens) {
-                this.logger.debug(
+                this.logger.verbose(
                   `Tokens used: ${usageMetadata.total_tokens} (input: ${usageMetadata.input_tokens}, output: ${usageMetadata.output_tokens})`,
                 );
                 await this.policyService.incrementQuota(
