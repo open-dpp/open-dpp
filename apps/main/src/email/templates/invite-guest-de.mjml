@@ -1,0 +1,35 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    {{> emailHeader }}
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Du wurdest als Gast eingeladen!</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Die Organisation {{ organizationName }} gibt dir Zugriff auf ausgew&auml;hlte Daten von
+          Produktp&auml;ssen als <strong>{{ guestRoleName }}</strong
+          >.<br />
+          <p></p
+        ></mj-text>
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Melde dich mit dieser E-Mail-Adresse an oder registriere dich und nimm die Einladung mit
+          dem Button unten an.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{ link }}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >Einladung annehmen</mj-button
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
