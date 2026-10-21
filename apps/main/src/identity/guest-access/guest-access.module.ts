@@ -1,4 +1,4 @@
-import { forwardRef, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../../email/email.module";
@@ -6,6 +6,7 @@ import { OrganizationsModule } from "../organizations/organizations.module";
 import { UsersModule } from "../users/users.module";
 import { GuestAccessService } from "./application/services/guest-access.service";
 import { GuestAccessRepository } from "./infrastructure/adapters/guest-access.repository";
+import { GuestAccessController } from "./presentation/guest-access.controller";
 import { GuestAccess, GuestAccessSchema } from "./infrastructure/schemas/guest-access.schema";
 
 @Module({
@@ -13,9 +14,10 @@ import { GuestAccess, GuestAccessSchema } from "./infrastructure/schemas/guest-a
     MongooseModule.forFeature([{ name: GuestAccess.name, schema: GuestAccessSchema }]),
     EnvModule,
     EmailModule,
-    forwardRef(() => OrganizationsModule),
-    forwardRef(() => UsersModule),
+    OrganizationsModule,
+    UsersModule,
   ],
+  controllers: [GuestAccessController],
   providers: [GuestAccessRepository, GuestAccessService],
   exports: [GuestAccessService],
 })
