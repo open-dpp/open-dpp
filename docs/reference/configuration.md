@@ -54,13 +54,15 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Mail
 
-| Variable                       | Type   | Required | Default | Description                             |
-| ------------------------------ | ------ | -------- | ------- | --------------------------------------- |
-| `OPEN_DPP_MAIL_HOST`           | string | Yes      | –       | SMTP host.                              |
-| `OPEN_DPP_MAIL_PORT`           | number | Yes      | –       | SMTP port.                              |
-| `OPEN_DPP_MAIL_USER`           | string | Yes      | –       | SMTP username.                          |
-| `OPEN_DPP_MAIL_PASSWORD`       | string | Yes      | –       | SMTP password.                          |
-| `OPEN_DPP_MAIL_SENDER_ADDRESS` | string | Yes      | –       | Sender address used in outgoing emails. |
+| Variable                       | Type   | Required    | Default | Description                                                                                            |
+| ------------------------------ | ------ | ----------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `OPEN_DPP_MAIL_HOST`           | string | No          | –       | SMTP host. Unset (or empty) ⇒ mail is disabled and mail links are written to the log.                  |
+| `OPEN_DPP_MAIL_PORT`           | number | No          | `587`   | SMTP port. `465` switches to implicit TLS; other ports upgrade via STARTTLS when the server offers it. |
+| `OPEN_DPP_MAIL_USER`           | string | No          | –       | SMTP username. Unset ⇒ no authentication (unauthenticated relay).                                      |
+| `OPEN_DPP_MAIL_PASSWORD`       | string | No          | –       | SMTP password.                                                                                         |
+| `OPEN_DPP_MAIL_SENDER_ADDRESS` | string | Conditional | –       | Sender address used in outgoing emails. Required when `OPEN_DPP_MAIL_HOST` is set.                     |
+
+> See the [Production setup guide](/guides/production-setup#mail-smtp) for the full behaviour of the disabled mode.
 
 ## Authentication
 
@@ -90,6 +92,7 @@ open-dpp is configured through environment variables. Some settings can also be 
 | ------------------------------------------------- | ----------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------- |
 | `OPEN_DPP_INSTANCE_SIGNUP_ENABLED`                | strict boolean (string) | No       | true    | Allows/disables signup; value must be `"true"` or `"false"`.                                                   |
 | `OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED` | strict boolean (string) | No       | true    | Allows/disables creation of organizations for users which are not admins; value must be `"true"` or `"false"`. |
+| `OPEN_DPP_INSTANCE_MAIL_ENABLED`                  | strict boolean (string) | No       | true    | Locks the admin "Sending mail enabled" toggle; ignored (mail stays off) while `OPEN_DPP_MAIL_HOST` is unset.   |
 
 ## Official templates
 

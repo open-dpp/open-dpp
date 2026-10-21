@@ -1,39 +1,64 @@
 import { Injectable } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
+import { ValueError } from "@open-dpp/exception";
 import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
 import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
+import { MailEnabledSetting } from "../../domain/mail-enabled-setting";
+
+export const INSTANCE_SETTINGS_CACHE_TTL_MS = 60_000;
 
 @Injectable()
 export class InstanceSettingsService {
+  // ponytail: per-replica in-memory cache; an update is visible at once on the
+  // replica that handled it and within the TTL everywhere else.
+  private cache: { stored: InstanceSettings; loadedAt: number } | null = null;
+
   constructor(
     private readonly repository: InstanceSettingsRepository,
     private readonly envService: EnvService,
   ) {}
 
   async getSettings(): Promise<InstanceSettings> {
-    const existing = await this.repository.findOne();
-
-    if (existing) {
-      return this.applyEnvOverrides(existing);
-    }
-
-    const defaults = InstanceSettings.create({
-      signupEnabled: {
-        value: true,
-      },
-    });
-    const saved = await this.repository.save(defaults);
-    return this.applyEnvOverrides(saved);
+    return this.applyEnvOverrides(await this.loadStored());
   }
 
   async updateSettings(updates: Partial<InstanceSettingsDbProps>): Promise<InstanceSettings> {
-    const current = await this.getSettings();
-    const updated = current.update(updates);
-    const saved = await this.repository.save(updated);
+    if (updates.mailEnabled !== undefined && !this.isSmtpConfigured()) {
+      throw new ValueError("Cannot change mailEnabled: OPEN_DPP_MAIL_HOST is not set, mail is off");
+    }
+    // save() replaces the whole singleton document, so the write must start from
+    // the DB, not from a possibly stale cache of another replica's state
+    const stored = await this.loadStored({ fresh: true });
+    // enforce env locks against the effective settings, but persist the update
+    // on the stored ones so env-forced values never end up in the DB
+    this.applyEnvOverrides(stored).update(updates);
+    const saved = await this.repository.save(stored.update(updates));
+    this.remember(saved);
     return this.applyEnvOverrides(saved);
+  }
+
+  private async loadStored(options?: { fresh: boolean }): Promise<InstanceSettings> {
+    const cacheIsValid =
+      this.cache && Date.now() - this.cache.loadedAt < INSTANCE_SETTINGS_CACHE_TTL_MS;
+    if (cacheIsValid && !options?.fresh) {
+      return this.cache!.stored;
+    }
+    const stored =
+      (await this.repository.findOne()) ??
+      (await this.repository.save(InstanceSettings.create({ signupEnabled: { value: true } })));
+    this.remember(stored);
+    return stored;
+  }
+
+  private remember(stored: InstanceSettings): void {
+    this.cache = { stored, loadedAt: Date.now() };
+  }
+
+  private isSmtpConfigured(): boolean {
+    return !!this.envService.get("OPEN_DPP_MAIL_HOST");
   }
 
   private applyEnvOverrides(settings: InstanceSettings): InstanceSettings {
@@ -42,11 +67,16 @@ export class InstanceSettingsService {
       OrganizationCreationEnabledSetting.ENV_NAME,
     );
     const envPermalinkBaseUrl = this.envService.get(PermalinkBaseUrlSetting.ENV_NAME);
+    // no SMTP host ⇒ mail is off no matter what; otherwise the env lock (if any)
+    const envMailEnabled = this.isSmtpConfigured()
+      ? this.envService.get(MailEnabledSetting.ENV_NAME)
+      : false;
 
     return settings.withEnvOverrides({
       signupEnabled: enforcedSignup,
       organizationCreationEnabled: envOrganizationCreationEnabled,
       permalinkBaseUrl: envPermalinkBaseUrl,
+      mailEnabled: envMailEnabled,
     });
   }
 }

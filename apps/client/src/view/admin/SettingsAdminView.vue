@@ -12,7 +12,7 @@ const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const toast = useToast();
 type BooleanInstanceSetting = {
-  key: "signupEnabled" | "organizationCreationEnabled";
+  key: "signupEnabled" | "organizationCreationEnabled" | "mailEnabled";
   setting: BooleanSettingsResponseDto;
 };
 
@@ -23,6 +23,10 @@ const instanceSettings = ref<BooleanInstanceSetting[]>([
   },
   {
     key: "organizationCreationEnabled",
+    setting: { value: true },
+  },
+  {
+    key: "mailEnabled",
     setting: { value: true },
   },
 ]);

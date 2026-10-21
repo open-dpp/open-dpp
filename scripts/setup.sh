@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # One-command local setup of the example deployment stack (docker-compose.yml):
-# open-dpp + MongoDB + RustFS + Mailpit (no virus scanning, see
-# https://docs.open-dpp.de/guides/production-setup to add ClamAV).
+# open-dpp + MongoDB + RustFS. Mail is off (links are logged) and uploads are
+# not virus-scanned; see https://docs.open-dpp.de/guides/production-setup to
+# configure SMTP or add ClamAV.
 #
 # Works from a repo checkout (./scripts/setup.sh) or standalone in an empty
 # directory (missing files are downloaded from the main branch):
@@ -68,8 +69,10 @@ cat <<'EOF'
 open-dpp is up. Open:
 
   app:     http://localhost:3000
-  Mailpit: http://localhost:8025
   RustFS:  http://localhost:9001 (object storage console; log in with the S3 keys from .env)
+
+No SMTP server is configured, so verification and password-reset links are
+written to the app log instead of being mailed: `docker compose logs -f open-dpp`
 
 Restart the stack later with `docker compose up -d` (or re-run this script).
 EOF

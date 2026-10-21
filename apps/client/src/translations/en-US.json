@@ -613,6 +613,10 @@
           "title": "Public creation of organizations enabled",
           "description": "When disabled, only admins can create new organizations."
         },
+        "mailEnabled": {
+          "title": "Sending mail enabled",
+          "description": "When disabled, no mail is sent. Verification, password-reset, email-change and invitation links are written to the server log instead."
+        },
         "permalinkBaseUrl": {
           "title": "Passport URL",
           "description": "URL where published passport pages are served via their permanent links. Only set this when running a custom passport viewer at a different domain.",

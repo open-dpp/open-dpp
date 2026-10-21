@@ -32,11 +32,6 @@ services:
       - mongo_db:/data/db
       - mongo_config:/data/configdb
 
-  mailpit:
-    image: axllent/mailpit:latest
-    ports:
-      - "8025:8025"
-
   # S3-compatible object storage. RustFS replaces MinIO (community edition
   # archived, images pulled from Docker Hub in 2025): Apache-2.0, one
   # multi-arch container, object versioning, a /health/ready endpoint.
