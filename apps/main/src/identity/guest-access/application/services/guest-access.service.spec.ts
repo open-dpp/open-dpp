@@ -8,10 +8,7 @@ import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { InviteGuestMail } from "../../../../email/domain/invite-guest-mail";
 import { EmailService } from "../../../../email/email.service";
-import { Member } from "../../../organizations/domain/member";
-import { MemberRole } from "../../../organizations/domain/member-role.enum";
 import { MembersService } from "../../../organizations/application/services/members.service";
-import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../../organizations/infrastructure/adapters/organizations.repository";
 import { DisplayLanguage, DisplayLanguageType } from "@open-dpp/dto";
 import { User } from "../../../users/domain/user";
@@ -93,15 +90,6 @@ describe("GuestAccessService", () => {
             isOwnerOrAdmin: async (_organizationId: string, userId: string) => owners.has(userId),
             getMembers: async () => members,
             isMemberOfOrganization: async (userId: string) => memberOfOrganization.has(userId),
-          },
-        },
-        {
-          provide: MembersRepository,
-          useValue: {
-            findOneByUserIdAndOrganizationId: async (userId: string, orgId: string) =>
-              memberOfOrganization.has(userId)
-                ? Member.create({ organizationId: orgId, userId, role: MemberRole.MEMBER })
-                : null,
           },
         },
         {
@@ -399,7 +387,7 @@ describe("GuestAccessService", () => {
   });
 
   describe("findGuestRole", () => {
-    it("returns nothing for pending accesses, other organizations and members", async () => {
+    it("returns nothing for pending accesses and other organizations", async () => {
       const user = createUser();
       const pending = await service.invite({
         organizationId,
@@ -413,9 +401,6 @@ describe("GuestAccessService", () => {
       await service.accept(pending.id, user);
       expect(await service.findGuestRole(user.id, organizationId)).toEqual(GuestRole.REPAIRER);
       expect(await service.findGuestRole(user.id, "org-2")).toBeUndefined();
-
-      memberOfOrganization.add(user.id);
-      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
     });
   });
 });

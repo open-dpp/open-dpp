@@ -5,7 +5,6 @@ import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { InviteGuestMail } from "../../../../email/domain/invite-guest-mail";
 import { EmailService } from "../../../../email/email.service";
 import { MembersService } from "../../../organizations/application/services/members.service";
-import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../../organizations/infrastructure/adapters/organizations.repository";
 import { User } from "../../../users/domain/user";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
@@ -38,7 +37,6 @@ export class GuestAccessService {
   constructor(
     private readonly guestAccessRepository: GuestAccessRepository,
     private readonly membersService: MembersService,
-    private readonly membersRepository: MembersRepository,
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly emailService: EmailService,
@@ -141,17 +139,10 @@ export class GuestAccessService {
   }
 
   /**
-   * The guest role a user has in an organization, if any. Members never count as guests, so a
-   * membership always wins.
+   * The guest role a user has in an organization, if any. Whoever resolves a subject checks the
+   * membership first: a member never acts as a guest.
    */
   async findGuestRole(userId: string, organizationId: string): Promise<GuestRoleType | undefined> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
-      userId,
-      organizationId,
-    );
-    if (member) {
-      return undefined;
-    }
     const candidates = await this.guestAccessRepository.findAllByOrganizationId(organizationId, {
       acceptedByUserId: userId,
       revoked: false,
