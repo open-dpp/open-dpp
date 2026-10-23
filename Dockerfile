@@ -48,6 +48,9 @@ COPY --chown=node:node /docker/startup.sh /startup.sh
 
 RUN chmod +x /startup.sh
 
+# Drop root; startup.sh writes config.json into the node-owned OPEN_DPP_FRONTEND_ROOT.
+USER node
+
 EXPOSE 3000
 
 # Start the server using the production build
