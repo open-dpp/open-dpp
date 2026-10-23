@@ -4,39 +4,40 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
 import { Member } from "../identity/organizations/domain/member";
 import { User } from "../identity/users/domain/user";
+import { PassportService } from "../passports/application/services/passport.service";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
-import { McpClientService } from "./mcp-client/mcp-client.service";
+import { chatSubject, createPassportTool } from "./tools/passport.tool";
 import { PolicyKeyList } from "@open-dpp/dto";
 
 @Injectable()
 export class ChatService {
   private readonly logger: Logger = new Logger(ChatService.name);
 
-  private readonly mcpClientService: McpClientService;
   private readonly aiService: AiService;
   private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
   private readonly aiConfigurationService: AiConfigurationService;
   private readonly policyService: PolicyService;
   private readonly passportRepository: PassportRepository;
+  private readonly passportService: PassportService;
 
   constructor(
-    mcpClientService: McpClientService,
     aiService: AiService,
     uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
     passportRepository: PassportRepository,
+    passportService: PassportService,
   ) {
-    this.mcpClientService = mcpClientService;
     this.aiService = aiService;
     this.uniqueProductIdentifierRepository = uniqueProductIdentifierRepository;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
     this.passportRepository = passportRepository;
+    this.passportService = passportService;
   }
 
   async askAgent(
@@ -71,26 +72,22 @@ export class ChatService {
       throw error;
     }
 
-    this.logger.log(`Fetch ai configuration`);
     const aiConfiguration = await this.aiConfigurationService.findOneByOrganizationId(
       passport.organizationId,
     );
 
     if (!aiConfiguration?.isEnabled) {
-      this.logger.log(`AI is not enabled`);
       throw new Error("AI is not enabled");
     }
-    this.logger.log(`Get llm`);
-
     const llm = this.aiService.getLLM(aiConfiguration.provider, aiConfiguration.model);
-    this.logger.log(`Get tools`);
-    const tools = await this.mcpClientService.getTools({ user, member });
+    const subject = chatSubject(user, member, passport.organizationId);
+    const tools = [createPassportTool(this.passportService, passport.id, subject)];
     const agent = this.aiService.getAgent({
       llm,
       tools,
     });
-    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passport.id}>.`;
-    this.logger.log(systemPrompt);
+    const systemPrompt =
+      "You are a helpful assistant answering questions about a product passport. Use the product-passport-tool to read it.";
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", systemPrompt],
       ["human", "{input}"],
@@ -107,10 +104,9 @@ export class ChatService {
       },
       new StringOutputParser(),
     ]);
-    this.logger.log(`Ask agent`);
 
     const errorFunc = (type: string, err: any) => {
-      console.error(type, err);
+      this.logger.error(type, err);
     };
     const result = await chain.invoke(
       { input: query },
@@ -123,10 +119,9 @@ export class ChatService {
               const generation = output.generations?.[0]?.[0];
               const usageMetadata =
                 (generation as any)?.message?.usage_metadata || output.llmOutput?.tokenUsage;
-              this.logger.log(`In asking`);
 
               if (usageMetadata?.total_tokens) {
-                this.logger.debug(
+                this.logger.verbose(
                   `Tokens used: ${usageMetadata.total_tokens} (input: ${usageMetadata.input_tokens}, output: ${usageMetadata.output_tokens})`,
                 );
                 await this.policyService.incrementQuota(
