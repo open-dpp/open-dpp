@@ -1,5 +1,18 @@
 # @open-dpp/main
 
+## 6.2.2
+
+### Patch Changes
+
+- [#1078](https://github.com/open-dpp/open-dpp/pull/1078) [`28ebc44`](https://github.com/open-dpp/open-dpp/commit/28ebc44e713c24307975078495c7d813a365c2b3) Thanks [@Hentra](https://github.com/Hentra)! - Remove loopback MCP Server
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.2
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+  - @open-dpp/exception@6.2.2
+  - @open-dpp/permission@6.2.2
+
 ## 6.2.1
 
 ### Patch Changes
