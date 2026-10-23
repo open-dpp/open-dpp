@@ -112,8 +112,8 @@ importers:
         specifier: ^4.8.4
         version: 4.8.4(supports-color@8.1.1)
       ts-pattern:
-        specifier: ^5.9.0
-        version: 5.9.0
+        specifier: ^5.9.2
+        version: 5.9.2
       vee-validate:
         specifier: ^4.15.1
         version: 4.15.1(vue@3.5.43(typescript@5.9.3))
@@ -410,8 +410,8 @@ importers:
         specifier: ^4.8.4
         version: 4.8.4(supports-color@8.1.1)
       ts-pattern:
-        specifier: ^5.9.0
-        version: 5.9.0
+        specifier: ^5.9.2
+        version: 5.9.2
       uri-js:
         specifier: ^4.4.1
         version: 4.4.1
@@ -8648,8 +8648,8 @@ packages:
       '@swc/wasm':
         optional: true
 
-  ts-pattern@5.9.0:
-    resolution: {integrity: sha512-6s5V71mX8qBUmlgbrfL33xDUwO0fq48rxAu2LBE11WBeGdpCPOsXksQbZJHvHwhrd3QjUusd3mAOM5Gg0mFBLg==}
+  ts-pattern@5.9.2:
+    resolution: {integrity: sha512-qAf+7M7Jjk7uebZeIo9uEzyintfuRtgHdzM9dqxRKcMi2dt76Ec+FH2wW3bnU9TuGLkZIJLoLs7cCQnU7Tu8ig==}
 
   tsconfig-paths-webpack-plugin@4.2.0:
     resolution: {integrity: sha512-zbem3rfRS8BgeNK50Zz5SIQgXzLafiHjOwUAvk/38/o1jHn/V5QAgVUcz884or7WYcPaH3N2CIfUc2u0ul7UcA==}
@@ -17954,7 +17954,7 @@ snapshots:
     optionalDependencies:
       '@swc/core': 1.16.18(@swc/helpers@0.5.23)
 
-  ts-pattern@5.9.0: {}
+  ts-pattern@5.9.2: {}
 
   tsconfig-paths-webpack-plugin@4.2.0:
     dependencies:

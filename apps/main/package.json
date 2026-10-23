@@ -80,7 +80,7 @@
     "sharp": "^0.35.5",
     "socket.io": "^4.8.4",
     "socket.io-client": "^4.8.4",
-    "ts-pattern": "^5.9.0",
+    "ts-pattern": "^5.9.2",
     "uri-js": "^4.4.1",
     "uuid": "^13.0.2",
     "xlsx": "^0.18.5",
