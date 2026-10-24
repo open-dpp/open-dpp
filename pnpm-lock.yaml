@@ -380,8 +380,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0
       nodemailer:
-        specifier: ^10.0.14
-        version: 10.0.15
+        specifier: ^10.1.4
+        version: 10.2.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -7205,8 +7205,8 @@ packages:
     resolution: {integrity: sha512-mIrE/Cw9y+9Au6dS5vDKDhQza9YvG6w+ZrS6X+ZzA7yFW/soAeaups4Qzn1bL6g5FVy8WtP79+0j82oPIbqRjQ==}
     engines: {node: '>=18'}
 
-  nodemailer@10.0.15:
-    resolution: {integrity: sha512-EUqp5PhtcsYXs9Fq/lS7s/8zlTrnBqmzZWzFFROrNikMiz+om/YRKMwqN907t+0A1KKyT8jd39CBUbFZmaZmcA==}
+  nodemailer@10.2.1:
+    resolution: {integrity: sha512-ZrDNsPFoDMwefNs7sJwrYiEJ/CG4ClJWDZv05iNJsEBWa8GRDry1QJHTJxsuTAY9eDDKjX4k+q3SxslXJOao7w==}
     engines: {node: '>=20.0.0'}
 
   nopt@10.0.1:
@@ -16159,7 +16159,7 @@ snapshots:
 
   node-releases@2.0.55: {}
 
-  nodemailer@10.0.15: {}
+  nodemailer@10.2.1: {}
 
   nopt@10.0.1:
     dependencies:
