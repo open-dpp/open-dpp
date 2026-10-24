@@ -40,8 +40,8 @@ minimumReleaseAgeExclude:
   - dompurify@3.4.13 || 3.4.16
   # Renovate security update: form-data@4.0.6
   - form-data@4.0.6
-  # Renovate security update: body-parser@2.3.0
-  - body-parser@2.3.0
+  # Renovate security update: body-parser@2.3.0 || 2.4.0
+  - body-parser@2.3.0 || 2.4.0
   # Renovate security update: sharp@0.35.4
   - sharp@0.35.4
   # Renovate security update: handlebars@4.7.10
