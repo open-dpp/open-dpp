@@ -126,6 +126,7 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
 import { OfficialTemplatesImportService } from "../application/services/official-templates-import.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
@@ -1114,14 +1115,18 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @StatusQueryParam() status: DigitalProductDocumentStatusDtoType[] | undefined,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
     let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(
       organizationId,
-      { pagination, ...(status ? { filter: { status } } : {}) },
+      { pagination, filter: { status, period } },
     );
     const subject = SubjectAttributes.create({ userRole, memberRole });
     if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {

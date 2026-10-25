@@ -18,6 +18,10 @@ import { Passport } from "../domain/passport";
 import { PassportDoc, PassportDocVersion } from "./passport.schema";
 import { IDigitalProductDocumentRepository } from "../../digital-product-document/infrastructure/digital-product-document-repository.interface";
 
+export type PassportFindOptions = FindOptions & {
+  filter?: NonNullable<FindOptions["filter"]> & { templateIds?: ReadonlyArray<string> };
+};
+
 @Injectable()
 export class PassportRepository implements IDigitalProductDocumentRepository<Passport> {
   private passportDoc: MongooseModel<PassportDoc>;
@@ -87,13 +91,15 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
 
   async findAllByOrganizationId(
     organizationId: string,
-    options?: FindOptions,
+    options?: PassportFindOptions,
   ): Promise<PagingResult<Passport>> {
+    const templateIds = options?.filter?.templateIds;
     return await findAllByOrganizationId(
       this.passportDoc,
       this.fromPlainWithMigration.bind(this),
       organizationId,
       options,
+      templateIds && templateIds.length > 0 ? { templateId: { $in: [...templateIds] } } : {},
     );
   }
 

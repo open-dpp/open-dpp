@@ -365,6 +365,40 @@ describe("templateController", () => {
     });
   });
 
+  it("/GET templates filtered by period", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const date1 = new Date("2019-01-01T00:00:00.000Z");
+    const date2 = new Date("2019-02-01T00:00:00.000Z");
+    const date3 = new Date("2019-03-01T00:00:00.000Z");
+    const t1 = await createTemplate(org.id, date1, date1);
+    const t2 = await createTemplate(org.id, date2, date2);
+    const t3 = await createTemplate(org.id, date3, date3);
+
+    const getIds = async (query: string) => {
+      const response = await request(app.getHttpServer())
+        .get(`${basePathV2}?${query}`)
+        .set("Cookie", userCookie)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
+      expect(response.status).toEqual(200);
+      return response.body.result.map((t: { id: string }) => t.id);
+    };
+
+    expect(
+      await getIds(`startDate=2019-01-15T00:00:00.000Z&endDate=2019-02-15T00:00:00.000Z`),
+    ).toEqual([t2.id]);
+    expect(
+      await getIds(`startDate=2019-02-01T00:00:00.000Z&endDate=2019-12-31T00:00:00.000Z`),
+    ).toEqual([t3.id, t2.id]);
+    expect(await getIds(`endDate=2019-02-01T00:00:00.000Z`)).toEqual([t2.id, t1.id]);
+
+    const invalid = await request(app.getHttpServer())
+      .get(`${basePathV2}?startDate=not-a-date`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
+    expect(invalid.status).toEqual(400);
+  });
+
   it(`/POST a template`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();

@@ -6,7 +6,7 @@
  * model (undefined name) and the dialog never opens. Correct usage: v-model:visible.
  */
 
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref } from "vue";
@@ -73,10 +73,41 @@ vi.mock("../../components/digital-product-document/DigitalProductDocumentTable.v
     setup(props, { slots }) {
       return () =>
         h("div", { "data-testid": "dpt" }, [
+          slots.filters?.() ?? null,
           slots.headerActions?.() ?? null,
           ...(props.items ?? []).map((item: DigitalProductDocumentDto) =>
             slots.actions?.({ item, goToItem: vi.fn() }),
           ),
+        ]);
+    },
+  }),
+}));
+
+// The real filter bar loads templates and needs PrimeVue; the view only wires its events.
+vi.mock("../../components/digital-product-document/DigitalProductDocumentFilterBar.vue", () => ({
+  default: defineComponent({
+    name: "DigitalProductDocumentFilterBar",
+    props: {
+      status: Array,
+      templateIds: Array,
+      period: Array,
+      showTemplates: Boolean,
+      hasActiveFilters: Boolean,
+    },
+    emits: ["update:status", "update:templateIds", "update:period", "reset"],
+    setup(props, { emit }) {
+      return () =>
+        h("div", [
+          h("span", { "data-testid": "show-templates" }, String(props.showTemplates)),
+          h("button", {
+            "data-testid": "set-status",
+            onClick: () => emit("update:status", ["Published"]),
+          }),
+          h("button", {
+            "data-testid": "set-templates",
+            onClick: () => emit("update:templateIds", ["template-1"]),
+          }),
+          h("button", { "data-testid": "reset", onClick: () => emit("reset") }),
         ]);
     },
   }),
@@ -260,5 +291,55 @@ describe("PassportListView – QR code dialog wiring", () => {
     // model never gets set and the permalink fetch never fires.
     expect(getByPassport).toHaveBeenCalledOnce();
     expect(getByPassport).toHaveBeenCalledWith("passport-42");
+  });
+});
+
+describe("PassportListView – filters", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setActivePinia(createPinia());
+  });
+
+  async function mountView() {
+    const { default: apiClient } = await import("../../lib/api-client");
+    const getAll = apiClient.dpp.passports.getAll as ReturnType<typeof vi.fn>;
+    getAll.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: [] } satisfies PassportPaginationDto,
+    });
+    const wrapper = mount(PassportListView, {
+      global: { plugins: [i18n], components: { PassportQrCodeDialog } },
+    });
+    await flushPromises();
+    return { wrapper, getAll };
+  }
+
+  it("loads without a filter and offers the template filter", async () => {
+    const { wrapper, getAll } = await mountView();
+    expect(getAll).toHaveBeenCalledWith(expect.objectContaining({ filter: {} }));
+    expect(wrapper.find('[data-testid="show-templates"]').text()).toBe("true");
+  });
+
+  it("reloads the passports with the new filter and writes it to the URL", async () => {
+    const { wrapper, getAll } = await mountView();
+    getAll.mockClear();
+
+    await wrapper.find('[data-testid="set-status"]').trigger("click");
+    await flushPromises();
+    expect(getAll).toHaveBeenLastCalledWith(
+      expect.objectContaining({ filter: { status: ["Published"] } }),
+    );
+    expect(routerReplace).toHaveBeenCalledWith({
+      query: expect.objectContaining({ status: ["Published"] }),
+    });
+
+    await wrapper.find('[data-testid="set-templates"]').trigger("click");
+    await flushPromises();
+    expect(getAll).toHaveBeenLastCalledWith(
+      expect.objectContaining({ filter: { status: ["Published"], templateIds: ["template-1"] } }),
+    );
+
+    await wrapper.find('[data-testid="reset"]').trigger("click");
+    await flushPromises();
+    expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({ filter: {} }));
   });
 });

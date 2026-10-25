@@ -2,9 +2,10 @@ import type {
   ActivityPaginationDto,
   DigitalProductDocumentStatusModificationDto,
   GetAllActivitiesParamsDto,
-  GetAllParamsDto,
+  GetAllPassportsParamsDto,
   PassportDto,
   PassportPaginationDto,
+  PassportRegistryExportRequestDto,
   PassportRequestCreateDto,
   PermalinkPaginationDto,
   RemoveEditingRestrictionsDto,
@@ -16,7 +17,7 @@ import { AasNamespace } from "../aas/aasNamespace";
 import type { CursorListParams } from "../cursor-list-params";
 import {
   parseGetAllActivitiesParams,
-  parseGetAllParams,
+  parseGetAllPassportsParams,
 } from "../digital-product-document/parse-get-all-params";
 import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 import type {
@@ -37,9 +38,9 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     );
   }
 
-  public async getAll(params: GetAllParamsDto) {
+  public async getAll(params: GetAllPassportsParamsDto) {
     return await this.axiosInstance.get<PassportPaginationDto>(this.passportEndpoint, {
-      params: parseGetAllParams(params),
+      params: parseGetAllPassportsParams(params),
       paramsSerializer: {
         indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
       },
@@ -52,6 +53,15 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
 
   public async create(data: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data);
+  }
+
+  /** Published passports as ZIP of EU registry files, see POST /passports/export-to-registry. */
+  public async exportToRegistry(
+    data: PassportRegistryExportRequestDto,
+  ): Promise<AxiosResponse<Blob>> {
+    return await this.axiosInstance.post(`${this.passportEndpoint}/export-to-registry`, data, {
+      responseType: "blob",
+    });
   }
 
   public async getPermalinks(passportId: string, params?: CursorListParams) {

@@ -716,7 +716,27 @@
     "removeEditingRestrictionsConfirmAccept": "Remove Restrictions",
     "restrictedEditingTag": "Restricted editing",
     "blank": "Blank",
-    "fromTemplate": "From template"
+    "fromTemplate": "From template",
+    "registryExport": {
+      "button": "Export to EU registry",
+      "title": "Export to EU registry",
+      "description": "Exports the published passports as ZIP with files for the EU registry (max. 100 passports per file). Passports that cannot be exported are listed in failed-passports.json inside the ZIP.",
+      "productGroup": "Product group",
+      "batteries": "Batteries",
+      "filters": "Passports",
+      "onlyStatus": "Only passports with the status \"{status}\" are exported.",
+      "export": "Export",
+      "success": "The export was downloaded. Check failed-passports.json in the ZIP, if it exists.",
+      "noMatch": "No published passports match these filters.",
+      "error": "The export failed."
+    }
+  },
+  "filter": {
+    "status": "Status",
+    "templates": "Templates",
+    "createdBetween": "Created between",
+    "selectPeriod": "Select period",
+    "clear": "Clear filters"
   },
   "status": {
     "withStatus": "with status",
@@ -749,6 +769,7 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",
+    "selectMultiple": "Select templates",
     "errorFetchList": "Failed to load templates",
     "importOfficial": "Import official templates",
     "importOfficialSuccess": "Imported {imported} official template(s).",

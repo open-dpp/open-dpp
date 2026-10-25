@@ -9,6 +9,7 @@ import {
   ImportOfficialTemplatesResultDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
+  PassportRegistryExportRequestDtoSchema,
   PassportRequestCreateDtoSchema,
   RemoveEditingRestrictionsDtoSchema,
   RestrictPassportEditingDtoSchema,
@@ -62,6 +63,7 @@ import {
   PopulateQueryParamSchema,
   StartDateQueryParamSchema,
   StatusQueryParamSchema,
+  TemplateIdQueryParamSchema,
 } from "../digital-product-document/presentation/digital-product-document-decorators";
 import { HTTPCode } from "./http.codes";
 import { ContentType } from "./content.types";
@@ -651,6 +653,8 @@ function createTemplatePaths() {
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
           StatusQueryParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -818,6 +822,9 @@ function createPassportPaths() {
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
           StatusQueryParamSchema,
+          TemplateIdQueryParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -844,6 +851,27 @@ function createPassportPaths() {
               [ContentType.JSON]: { schema: PassportDtoSchema },
             },
           },
+        },
+        security,
+      },
+    },
+    [`/${tag}/export-to-registry`]: {
+      post: {
+        tags: [tag],
+        summary: `Exports published passports as ZIP of EU registry files (max. 100 passports per file). Passports without a published permalink are listed in failed-passports.json.`,
+        parameters: [orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: PassportRegistryExportRequestDtoSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.ZIP]: { schema: { type: "string", format: "binary" } },
+            },
+          },
+          [HTTPCode.NOT_FOUND]: { description: "No published passport matches the filters" },
         },
         security,
       },

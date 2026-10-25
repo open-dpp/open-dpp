@@ -36,7 +36,7 @@ import {
   bulkImportRun1Interrupted,
   bulkImportRunItem1,
 } from "./handlers/bulk-import";
-import { passport1, passport2 } from "./handlers/passports";
+import { passport1, passport2, passportFilterParams } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
@@ -197,6 +197,14 @@ describe("apiClient", () => {
       expect(response.data.result).toEqual([passport1, passport2]);
     });
 
+    it("should get all passports with template and period filters", async () => {
+      const response = await sdk.dpp.passports.getAll({
+        pagination: paginationParams,
+        filter: { ...filterParams, ...passportFilterParams },
+      });
+      expect(response.data.result).toEqual([passport1, passport2]);
+    });
+
     it("should create passport", async () => {
       let response = await sdk.dpp.passports.create({ templateId: "temp" });
       expect(response.data).toEqual(passport1);
@@ -208,6 +216,15 @@ describe("apiClient", () => {
       });
 
       expect(response.data).toEqual(passport1);
+    });
+
+    it("should export passports to registry as zip", async () => {
+      const response = await sdk.dpp.passports.exportToRegistry(passportFilterParams);
+      expect(response.status).toEqual(200);
+      expect(response.headers["content-type"]).toEqual("application/zip");
+      expect(response.headers["content-disposition"]).toEqual(
+        'attachment; filename="eu-registry-export.zip"',
+      );
     });
 
     it("should delete passport", async () => {

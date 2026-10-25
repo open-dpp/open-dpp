@@ -13,6 +13,7 @@ import type {
   PassportDto,
   ReorderColumnDto,
   PassportPaginationDto,
+  PassportRegistryExportRequestDto,
   PassportRequestCreateDto,
   RemoveEditingRestrictionsDto,
   SubmodelElementListResponseDto,
@@ -33,6 +34,7 @@ import {
   PassportDtoSchema,
   PassportEditingModeDto,
   PassportPaginationDtoSchema,
+  PassportRegistryExportRequestDtoSchema,
   PassportRequestCreateDtoSchema,
   PolicyKeyList,
   Populates,
@@ -129,10 +131,13 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { Pagination } from "../../pagination/pagination";
+import { Period } from "../../time/period";
 import { PagingResult } from "../../pagination/paging-result";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { EuRegistryExportService } from "../application/services/eu-registry-export.service";
+import { writeRegistryExportZip } from "./registry-export-zip.writer";
 import { PassportService } from "../application/services/passport.service";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
@@ -145,6 +150,7 @@ import {
   PopulateQueryParam,
   StartDateQueryParam,
   StatusQueryParam,
+  TemplateIdQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
@@ -168,6 +174,7 @@ export class PassportController
     @Inject(forwardRef(() => PermalinkApplicationService))
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly euRegistryExportService: EuRegistryExportService,
   ) {}
 
   @Get()
@@ -176,15 +183,20 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @StatusQueryParam() status: DigitalProductDocumentStatusDtoType[] | undefined,
+    @TemplateIdQueryParam() templateIds: string[] | undefined,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportPaginationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(
       organizationId,
-      { pagination, ...(status ? { filter: { status } } : {}) },
+      { pagination, filter: { status, templateIds, period } },
     );
     if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
@@ -1339,6 +1351,24 @@ export class PassportController
         organizationId,
       );
     return await this.aasSerializationService.exportPassport(passport, subject);
+  }
+
+  // Must stay a POST with a static path: GET ":id" routes must not match it.
+  @Post("/export-to-registry")
+  @HttpCode(HttpStatus.OK)
+  async exportToRegistry(
+    @OrganizationId() organizationId: string,
+    @Body(new ZodValidationPipe(PassportRegistryExportRequestDtoSchema))
+    body: PassportRegistryExportRequestDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { templateIds, startDate, endDate } = body;
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
+    await writeRegistryExportZip(
+      res,
+      this.euRegistryExportService.exportFiles(organizationId, { templateIds, period }),
+    );
   }
 
   @Post("/import")

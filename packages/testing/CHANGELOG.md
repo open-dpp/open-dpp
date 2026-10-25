@@ -1,5 +1,41 @@
 # @open-dpp/testing
 
+## 6.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.3
+  - @open-dpp/env@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+
+## 6.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/dto@6.2.1
+  - @open-dpp/env@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/dto@6.2.0
+  - @open-dpp/env@6.2.0
+
 ## 6.1.4
 
 ### Patch Changes

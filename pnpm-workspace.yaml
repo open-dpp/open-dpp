@@ -26,21 +26,27 @@ allowBuilds:
   unrs-resolver: true
   vue-demi: true
 minimumReleaseAgeExclude:
-  # Renovate security update: nodemailer@9.1.1 || 10.0.9
-  - nodemailer@9.1.1 || 10.0.9
+  # Renovate security update: nodemailer@9.1.1 || 10.0.9 || 10.1.4
+  - nodemailer@9.1.1 || 10.0.9 || 10.1.4
   # Renovate security update: vitest@4.1.11
   - vitest@4.1.11
   # Renovate security update: axios@1.18.0
   - axios@1.18.0
   # Renovate security update: postcss@8.5.23
   - postcss@8.5.23
-  # Renovate security update: multer@2.3.0 || 2.4.0
-  - multer@2.3.0 || 2.4.0
+  # Renovate security update: multer@2.3.0 || 2.4.0 || 2.5.0
+  - multer@2.3.0 || 2.4.0 || 2.5.0
   # Renovate security update: dompurify@3.4.13 || 3.4.16
   - dompurify@3.4.13 || 3.4.16
   # Renovate security update: form-data@4.0.6
   - form-data@4.0.6
-  # Renovate security update: body-parser@2.3.0
-  - body-parser@2.3.0
+  # Renovate security update: body-parser@2.3.0 || 2.4.0
+  - body-parser@2.3.0 || 2.4.0
   # Renovate security update: sharp@0.35.4
   - sharp@0.35.4
+  # Renovate security update: handlebars@4.7.10
+  - handlebars@4.7.10
+  # Renovate security update: @modelcontextprotocol/sdk@1.31.0
+  - "@modelcontextprotocol/sdk@1.31.0"
+  # Renovate security update: vite@8.3.3
+  - vite@8.3.3

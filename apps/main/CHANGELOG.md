@@ -1,5 +1,61 @@
 # @open-dpp/main
 
+## 6.2.3
+
+### Patch Changes
+
+- [#1090](https://github.com/open-dpp/open-dpp/pull/1090) [`d1b182f`](https://github.com/open-dpp/open-dpp/commit/d1b182fb7c292999bd3b85b2db5500dfa0f49f9e) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the container's Node.js runtime from 25.9.0 (end-of-life, no fix) to 24.22.1 LTS to patch CVE-2026-111497, an out-of-bounds write in Node's bundled Brotli decoder reachable via `Content-Encoding: br` request bodies and Brotli-encoded `fetch()` responses.
+
+  The production container now runs as the unprivileged `node` user (uid 1000) instead of root.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.3
+  - @open-dpp/dto@6.2.3
+  - @open-dpp/env@6.2.3
+  - @open-dpp/exception@6.2.3
+  - @open-dpp/permission@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- [#1078](https://github.com/open-dpp/open-dpp/pull/1078) [`28ebc44`](https://github.com/open-dpp/open-dpp/commit/28ebc44e713c24307975078495c7d813a365c2b3) Thanks [@Hentra](https://github.com/Hentra)! - Remove loopback MCP Server
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.2
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+  - @open-dpp/exception@6.2.2
+  - @open-dpp/permission@6.2.2
+
+## 6.2.1
+
+### Patch Changes
+
+- [#1019](https://github.com/open-dpp/open-dpp/pull/1019) [`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83) Thanks [@mr42](https://github.com/mr42)! - Published passports can be exported to upload them to the EU registry.
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/api-client@6.2.1
+  - @open-dpp/dto@6.2.1
+  - @open-dpp/env@6.2.1
+  - @open-dpp/exception@6.2.1
+  - @open-dpp/permission@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/api-client@6.2.0
+  - @open-dpp/permission@6.2.0
+  - @open-dpp/exception@6.2.0
+  - @open-dpp/dto@6.2.0
+  - @open-dpp/env@6.2.0
+
 ## 6.1.4
 
 ### Patch Changes

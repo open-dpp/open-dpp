@@ -40,7 +40,10 @@ const { selfCaptioning } = usePresentationDispatch(
   >
     <dt v-if="!selfCaptioning" class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
-      <p v-if="descriptionText" class="mt-0.5 text-xs font-normal text-gray-400">
+      <p
+        v-if="descriptionText"
+        class="mt-0.5 max-w-40 text-xs font-normal wrap-break-word text-gray-400 lg:max-w-80"
+      >
         {{ descriptionText }}
       </p>
     </dt>
