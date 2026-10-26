@@ -819,6 +819,13 @@
   "user": {
     "admin": "Administrator*in",
     "public": "Öffentlichkeit",
+    "guestRoles": {
+      "Repairer": "Reparateur*in",
+      "Recycler": "Recycler",
+      "MarketSurveillance": "Marktüberwachungsbehörde",
+      "IndependentOperator": "Unabhängige*r Wirtschaftsakteur*in",
+      "Supplier": "Lieferant*in"
+    },
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",

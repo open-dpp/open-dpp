@@ -789,6 +789,13 @@
   "user": {
     "admin": "Admin",
     "public": "Public",
+    "guestRoles": {
+      "Repairer": "Repairer",
+      "Recycler": "Recycler",
+      "MarketSurveillance": "Market surveillance authority",
+      "IndependentOperator": "Independent operator",
+      "Supplier": "Supplier"
+    },
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",
