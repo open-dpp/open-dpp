@@ -2,11 +2,10 @@ import type {
   AccessPermissionRuleResponseDto,
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
-  MemberRoleDtoType,
   PermissionType,
-  UserRoleDtoType,
 } from "@open-dpp/dto";
 import type { Ref } from "vue";
+import type { Subject } from "../lib/aas-security.ts";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
 import {
@@ -17,11 +16,6 @@ import {
 } from "../lib/aas-security.ts";
 import { useUserStore } from "../stores/user.ts";
 import { useRoleHierarchy } from "./role-hierarchy.ts";
-
-interface Subject {
-  userRole: UserRoleDtoType;
-  memberRole?: MemberRoleDtoType;
-}
 
 export interface PermissionsPerSubject {
   subject: Subject;

@@ -1,22 +1,22 @@
 import type {
   AccessPermissionRuleResponseDto,
-  MemberRoleDtoType,
   PermissionDto,
   SubjectAttributesDto,
-  UserRoleDtoType,
 } from "@open-dpp/dto";
-import { DataTypeDef, MemberRoleDtoEnum, UserRoleDto, UserRoleDtoEnum } from "@open-dpp/dto";
+import type { SubjectRoles } from "@open-dpp/permission";
+import {
+  DataTypeDef,
+  GuestRoleDtoEnum,
+  MemberRoleDtoEnum,
+  UserRoleDto,
+  UserRoleDtoEnum,
+} from "@open-dpp/dto";
+import { isEqualSubjectRoles } from "@open-dpp/permission";
 
-export interface Subject {
-  userRole: UserRoleDtoType;
-  memberRole?: MemberRoleDtoType;
-}
+export type Subject = SubjectRoles;
 
 export function isEqualSubject(subject1: Subject, subject2: Subject) {
-  return (
-    (subject1.userRole === UserRoleDto.ADMIN && subject1.userRole === subject2.userRole) ||
-    JSON.stringify(subject1) === JSON.stringify(subject2)
-  );
+  return isEqualSubjectRoles(subject1, subject2);
 }
 
 export function makeSubjectAttributes(subject: Subject): SubjectAttributesDto {
@@ -35,6 +35,9 @@ export function makeSubjectAttributes(subject: Subject): SubjectAttributesDto {
   const subjectAttribute = [createProperty("userRole", subject.userRole)];
   if (subject.memberRole) {
     subjectAttribute.push(createProperty("memberRole", subject.memberRole));
+  }
+  if (subject.guestRole) {
+    subjectAttribute.push(createProperty("guestRole", subject.guestRole));
   }
 
   return {
@@ -67,9 +70,17 @@ export function makeRule(data: {
     value: data.subject.memberRole,
     valueType: DataTypeDef.String,
   };
+  const guestRole = {
+    ...defaultValues,
+    idShort: "guestRole",
+    value: data.subject.guestRole,
+    valueType: DataTypeDef.String,
+  };
   return {
     targetSubjectAttributes: {
-      subjectAttribute: [userRole, memberRole],
+      subjectAttribute: data.subject.guestRole
+        ? [userRole, memberRole, guestRole]
+        : [userRole, memberRole],
     },
     permissionsPerObject: [
       {
@@ -91,14 +102,21 @@ export function ruleHelper(accessPermissionRule: AccessPermissionRuleResponseDto
       undefined,
   );
 
+  const guestRole = GuestRoleDtoEnum.optional().parse(
+    rule.targetSubjectAttributes.subjectAttribute.find((p) => p.idShort === "guestRole")?.value ??
+      undefined,
+  );
+
   function getSubject(): Subject {
-    return { userRole, memberRole };
+    return { userRole, memberRole, guestRole };
   }
 
   function hasEqualSubject(subject: Subject) {
     return (
       (subject.userRole === userRole && userRole === UserRoleDto.ADMIN) ||
-      (subject.userRole === userRole && subject.memberRole === memberRole)
+      (subject.userRole === userRole &&
+        subject.memberRole === memberRole &&
+        subject.guestRole === guestRole)
     );
   }
 
@@ -106,6 +124,7 @@ export function ruleHelper(accessPermissionRule: AccessPermissionRuleResponseDto
     ...rule,
     userRole,
     memberRole,
+    guestRole,
     hasEqualSubject,
     getSubject,
   };
