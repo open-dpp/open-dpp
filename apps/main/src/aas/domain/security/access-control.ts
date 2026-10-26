@@ -178,6 +178,10 @@ export class AccessControl implements ITrackable {
   }
 
   private administratePolicyGuard(subject: SubjectAttributes) {
+    // Guests only read. They rank above the public but never administer any policy.
+    if (this.administrator.guestRole) {
+      throw new ForbiddenError(`Administrator has no permission to add/ modify/ delete policy.`);
+    }
     if (
       this.administrator.userRole !== UserRole.ADMIN &&
       this.administrator.hasLowerThanOrEqualRoles(subject)

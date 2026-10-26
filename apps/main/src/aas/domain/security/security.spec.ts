@@ -1083,13 +1083,36 @@ describe("security", () => {
       expect(security.defineAbilityForSubject(recycler).can(Permissions.Read, path)).toBe(false);
     });
 
-    it("lets a member manage the policies of guest roles, a guest not those of its own rank", () => {
+    it("lets a member manage the policies of guest roles and the public", () => {
       const security = Security.create({}).withAdministrator(member);
-      security.addPolicy(repairer, path, [read]);
-      security.addPolicy(anonymous, path, [read]);
 
-      const guestAdministered = Security.create({}).withAdministrator(repairer);
-      expect(() => guestAdministered.addPolicy(repairer, path, [read])).toThrow(ForbiddenError);
+      expect(() => security.addPolicy(repairer, path, [read])).not.toThrow();
+      expect(() => security.addPolicy(anonymous, path, [read])).not.toThrow();
+    });
+
+    it("never lets a guest manage any policy, not even those of lower ranks", () => {
+      const recycler = SubjectAttributes.create({
+        userRole: UserRole.USER,
+        guestRole: GuestRole.RECYCLER,
+      });
+      const security = Security.create({}).withAdministrator(repairer);
+      security.localAccessControl.addRule(
+        AccessPermissionRule.create({
+          targetSubjectAttributes: anonymous,
+          permissionsPerObject: [
+            PermissionPerObject.create({ object: createAasObject(path), permissions: [read] }),
+          ],
+        }),
+      );
+
+      expect(() => security.addPolicy(repairer, path, [read])).toThrow(policyManagementError);
+      expect(() => security.addPolicy(recycler, path, [read])).toThrow(policyManagementError);
+      expect(() => security.addPolicy(anonymous, path, [read])).toThrow(policyManagementError);
+      expect(() => security.modifyPolicy(anonymous, path, [read])).toThrow(policyManagementError);
+      expect(() => security.deletePolicyBySubjectAndObject(anonymous, path)).toThrow(
+        policyManagementError,
+      );
+      expect(() => security.deletePoliciesByObjectPath(path)).toThrow(policyManagementError);
     });
   });
 });
