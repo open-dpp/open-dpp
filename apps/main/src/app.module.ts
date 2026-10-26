@@ -24,7 +24,6 @@ import { OrganizationsModule } from "./identity/organizations/organizations.modu
 import { ApiKeysModule } from "./identity/api-keys/api-keys.module";
 import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
-import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PermalinkModule } from "./permalink/permalink.module";
@@ -70,7 +69,6 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
       },
     }),
     MediaModule,
-    McpServerModule,
     AiConfigurationModule,
     AiModule,
     AnalyticsModule,

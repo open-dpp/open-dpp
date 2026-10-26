@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "6.2.1",
+  "version": "6.2.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,7 +26,7 @@
     "better-auth": "^1.6.17",
     "chart.js": "^4.5.1",
     "dayjs": "^1.11.23",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "lodash": "^4.18.1",
     "marked": "^17.0.6",
     "motion": "^12.40.0",
@@ -35,11 +35,11 @@
     "primevue": "^4.5.5",
     "qrcode": "^1.5.4",
     "socket.io-client": "^4.8.4",
-    "ts-pattern": "^5.9.0",
+    "ts-pattern": "^5.9.2",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.43",
     "vue-chartjs": "^5.3.4",
-    "vue-i18n": "^11.4.12",
+    "vue-i18n": "^11.4.14",
     "vue-router": "^5.1.0",
     "zod": "^4.4.3",
     "zod-vue-i18n": "^0.0.10"
@@ -52,8 +52,8 @@
     "@testing-library/vue": "^8.1.0",
     "@types/dompurify": "^3.2.0",
     "@types/language-tags": "^1.0.4",
-    "@types/lodash": "^4.17.25",
-    "@vitejs/plugin-vue": "^6.0.9",
+    "@types/lodash": "^4.17.27",
+    "@vitejs/plugin-vue": "^6.0.10",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vue/test-utils": "^2.5.1",
     "@vue/tsconfig": "^0.9.1",
@@ -61,15 +61,15 @@
     "fishery": "^2.4.0",
     "jest-diff": "^30.4.1",
     "jsdom": "^27.4.0",
-    "postcss": "^8.5.28",
+    "postcss": "^8.5.31",
     "resize-observer-polyfill": "^1.5.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
-    "vite": "^7.3.6",
+    "vite": "^8.3.3",
     "vitest": "^4.1.11",
     "vue-tsc": "^3.3.11"
   },
-  "packageManager": "pnpm@11.26.0"
+  "packageManager": "pnpm@11.28.5"
 }
