@@ -380,7 +380,7 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       nodemailer:
-        specifier: ^10.1.4
+        specifier: ^10.2.1
         version: 10.2.1
       reflect-metadata:
         specifier: ^0.2.2
