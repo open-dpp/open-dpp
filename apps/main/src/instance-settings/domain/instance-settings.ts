@@ -3,6 +3,7 @@ import {
   BooleanInstanceSettingCreateProps,
   BooleanInstanceSettingResponse,
 } from "./boolean-instance-setting";
+import { MailEnabledSetting } from "./mail-enabled-setting";
 import { SignupEnabledSetting } from "./signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "./organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "./permalink-base-url-setting";
@@ -24,6 +25,7 @@ export interface InstanceSettingsCreateProps {
   signupEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
   organizationCreationEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
   permalinkBaseUrl?: StringInstanceSettingCreatePropsWithoutName;
+  mailEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
 }
 
 export interface InstanceSettingsDbProps {
@@ -31,6 +33,7 @@ export interface InstanceSettingsDbProps {
   signupEnabled: boolean;
   organizationCreationEnabled: boolean;
   permalinkBaseUrl: string | null;
+  mailEnabled: boolean;
 }
 
 export interface InstanceSettingsResponseProps {
@@ -38,12 +41,14 @@ export interface InstanceSettingsResponseProps {
   signupEnabled: BooleanInstanceSettingResponse;
   organizationCreationEnabled: BooleanInstanceSettingResponse;
   permalinkBaseUrl: StringInstanceSettingResponse;
+  mailEnabled: BooleanInstanceSettingResponse;
 }
 
 export interface EnvOverrideProps {
   signupEnabled?: boolean;
   organizationCreationEnabled?: boolean;
   permalinkBaseUrl?: string;
+  mailEnabled?: boolean;
 }
 
 export class InstanceSettings {
@@ -52,6 +57,7 @@ export class InstanceSettings {
     public readonly signupEnabled: SignupEnabledSetting,
     public readonly organizationCreationEnabled: OrganizationCreationEnabledSetting,
     public readonly permalinkBaseUrl: StringInstanceSetting,
+    public readonly mailEnabled: MailEnabledSetting,
   ) {}
 
   public static create(props: InstanceSettingsCreateProps = {}): InstanceSettings {
@@ -66,6 +72,7 @@ export class InstanceSettings {
       props.permalinkBaseUrl
         ? PermalinkBaseUrlSetting.create(props.permalinkBaseUrl)
         : PermalinkBaseUrlSetting.create({}),
+      MailEnabledSetting.create(props.mailEnabled ?? {}),
     );
   }
 
@@ -75,6 +82,8 @@ export class InstanceSettings {
       SignupEnabledSetting.create({ value: props.signupEnabled }),
       OrganizationCreationEnabledSetting.create({ value: props.organizationCreationEnabled }),
       PermalinkBaseUrlSetting.create({ value: props.permalinkBaseUrl }),
+      // documents written before v1.4.0 carry no mailEnabled → default (on)
+      MailEnabledSetting.create({ value: props.mailEnabled }),
     );
   }
 
@@ -84,6 +93,7 @@ export class InstanceSettings {
       this.signupEnabled.withEnvOverrides(overrides.signupEnabled),
       this.organizationCreationEnabled.withEnvOverrides(overrides.organizationCreationEnabled),
       this.permalinkBaseUrl.withEnvOverrides(overrides.permalinkBaseUrl),
+      this.mailEnabled.withEnvOverrides(overrides.mailEnabled),
     );
   }
 
@@ -93,6 +103,7 @@ export class InstanceSettings {
       this.signupEnabled.update(props.signupEnabled),
       this.organizationCreationEnabled.update(props.organizationCreationEnabled),
       this.permalinkBaseUrl.update(props.permalinkBaseUrl),
+      this.mailEnabled.update(props.mailEnabled),
     );
   }
 
@@ -102,6 +113,7 @@ export class InstanceSettings {
       signupEnabled: this.signupEnabled.value,
       organizationCreationEnabled: this.organizationCreationEnabled.value,
       permalinkBaseUrl: this.permalinkBaseUrl.value,
+      mailEnabled: this.mailEnabled.value,
     };
   }
 
@@ -111,6 +123,7 @@ export class InstanceSettings {
       signupEnabled: this.signupEnabled.toResponse(),
       organizationCreationEnabled: this.organizationCreationEnabled.toResponse(),
       permalinkBaseUrl: this.permalinkBaseUrl.toResponse(),
+      mailEnabled: this.mailEnabled.toResponse(),
     };
   }
 }

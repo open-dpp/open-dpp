@@ -8,7 +8,7 @@ This guide describes the infrastructure requirements and configuration steps for
 A production deployment of open-dpp requires the following external services:
 
 - A **MongoDB** instance with a replica set enabled
-- An **SMTP server** for outgoing email
+- An **SMTP server** for outgoing email (optional; without one the mail links are written to the log, see [Mail (SMTP)](#mail-smtp))
 - An **S3-compatible object storage** service
 - Optionally, a **ClamAV** scanner for virus-scanning uploads
 
@@ -80,17 +80,53 @@ rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongodb:27017" }] });
 
 This step is required only once. On subsequent restarts the replica set configuration is persisted in the data volume.
 
-## SMTP
+## Mail (SMTP)
 
-open-dpp sends transactional email for account management and notifications. Configure your SMTP server using the following variables:
+open-dpp sends mail for signup verification, password resets, email changes and organization invitations. The example deployment ships without a mail server (the development stack can start Mailpit behind the `mail` compose profile); connect your SMTP relay through these variables:
 
-| Variable                       | Description                              |
-| ------------------------------ | ---------------------------------------- |
-| `OPEN_DPP_MAIL_HOST`           | SMTP server hostname                     |
-| `OPEN_DPP_MAIL_PORT`           | SMTP server port (typically `587`)       |
-| `OPEN_DPP_MAIL_USER`           | SMTP username                            |
-| `OPEN_DPP_MAIL_PASSWORD`       | SMTP password                            |
-| `OPEN_DPP_MAIL_SENDER_ADDRESS` | From address used in all outgoing emails |
+| Variable                       | Description                                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_MAIL_HOST`           | SMTP server hostname. Unset (or empty) ⇒ mail is disabled, see [Disabled mode](#disabled-mode) |
+| `OPEN_DPP_MAIL_PORT`           | SMTP server port (default `587`; `465` = implicit TLS)                                         |
+| `OPEN_DPP_MAIL_USER`           | SMTP username; omit for an unauthenticated relay                                               |
+| `OPEN_DPP_MAIL_PASSWORD`       | SMTP password                                                                                  |
+| `OPEN_DPP_MAIL_SENDER_ADDRESS` | From address used in all outgoing emails, e.g. `open-dpp <noreply@example.com>`                |
+
+- `OPEN_DPP_MAIL_SENDER_ADDRESS` is required as soon as `OPEN_DPP_MAIL_HOST` is set; startup fails otherwise.
+- Port `587` (the default) connects in plain text and upgrades to TLS via STARTTLS when the server offers it. Port `465` uses implicit TLS from the first byte. Leave `OPEN_DPP_MAIL_USER` unset to send without an `AUTH` handshake.
+- With credentials on port `587`, make sure the relay advertises STARTTLS: the upgrade is opportunistic, so against a relay without it the password is sent in plain text. Use `465` when in doubt.
+
+### Disabled mode
+
+When `OPEN_DPP_MAIL_HOST` is unset (or empty) the backend starts normally, logs a warning at startup and, instead of sending, writes one line per mail to its log with the mail type, recipient, subject and the contained links, for example:
+
+```
+WARN [EmailService] Mail not sent (mail disabled): type=VERIFY_EMAIL to=ada@example.com subject="Verify E-Mail address" links=https://dpp.example.com/api/v1/auth/verify-email?token=…
+```
+
+An operator can complete the flow by handing that link to the user. The same happens when an admin switches the **Sending mail enabled** toggle off on the admin Settings page while SMTP is configured.
+
+> [!WARNING]
+> In disabled mode the log contains live verification, password-reset, email-change-revoke and invitation links. Anyone who can read the log can act on them. Restrict log access accordingly, or configure SMTP.
+
+### Admin toggle and env lock
+
+`mailEnabled` is an instance setting (default on) shown as the third toggle on the admin Settings page. Precedence, highest first:
+
+1. `OPEN_DPP_MAIL_HOST` unset ⇒ mail is off and the toggle is locked, whatever else is set.
+2. `OPEN_DPP_INSTANCE_MAIL_ENABLED="true"` / `"false"` ⇒ that value, toggle locked.
+3. Otherwise the value stored by the admin toggle.
+
+Instance settings are cached in memory per replica for 60 seconds and refreshed immediately on update, so a toggle takes effect at once on the replica that handled it and within a minute on the others.
+
+### What changes while mail is off
+
+The backend keeps every route; only delivery changes. The frontend hides the self-service actions that can only complete by mail:
+
+- sign-in: the "Forgot password?" link
+- profile: the change-email button, the resend-verification button and the "not verified" badge
+
+Admin actions — creating or inviting users, resending reset or verification mails — stay visible, since an admin can pick the link from the log. Signing in with an unverified address is allowed either way.
 
 ## S3-compatible object storage
 

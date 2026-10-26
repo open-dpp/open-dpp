@@ -32,7 +32,7 @@ curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/open-dpp/open
 curl -fsSL -o .env https://raw.githubusercontent.com/open-dpp/open-dpp/main/.env.example
 ```
 
-Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration). This example stack does not virus-scan uploads; see the [Production setup](/guides/production-setup#virus-scanning-clamav) guide to add ClamAV.
+Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration). This example stack ships without a mail server and does not virus-scan uploads: verification and password-reset links are written to the app log instead. See the [Production setup guide](/guides/production-setup) to connect [SMTP](/guides/production-setup#mail-smtp) or add [ClamAV](/guides/production-setup#virus-scanning-clamav).
 
 ## Start services
 
@@ -51,7 +51,7 @@ docker compose logs -f
 
 ## Explore the features
 
-After startup, open `OPEN_DPP_URL` in your browser and explore the platform ([http://localhost:3000](http://localhost:3000) by default). If your setup uses a custom port, include it in the URL. The docker compose project also includes a mailpit instance on [http://localhost:8025](http://localhost:8025) which allows you to receive emails from your open-dpp instance.
+After startup, open `OPEN_DPP_URL` in your browser and explore the platform ([http://localhost:3000](http://localhost:3000) by default). If your setup uses a custom port, include it in the URL.
 
 For more details, see [configuration options](/reference/configuration) and the [guides](/guides/branding).
 

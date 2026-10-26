@@ -72,15 +72,18 @@ services:
       rc bucket create local/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET} --ignore-existing --with-versioning;
       "
 
+  # optional: COMPOSE_PROFILES=mail (see .env.dev.example) routes mail through
+  # Mailpit; without it mail is off and links are logged by the app
   mailpit:
     container_name: mailpit
     image: axllent/mailpit:latest
+    profiles: ["mail"]
     ports:
       - "8025:8025"
       - "8026:1025"
     environment:
-      - MP_SMTP_AUTH=${OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH}
-      - MP_SMTP_AUTH_ALLOW_INSECURE=${OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE}
+      - MP_SMTP_AUTH=${OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH:-admin:admin}
+      - MP_SMTP_AUTH_ALLOW_INSECURE=${OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE:-true}
 
 volumes:
   caddy_data:

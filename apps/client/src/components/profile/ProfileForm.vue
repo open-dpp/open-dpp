@@ -11,6 +11,7 @@ import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { useInstanceSettings } from "../../composables/instance.settings.ts";
 import {
   computeProfileDiff,
   mapUserToFormValues,
@@ -25,6 +26,7 @@ import EmailChangeCard from "./EmailChangeCard.vue";
 const { t, locale } = useI18n();
 const notificationStore = useNotificationStore();
 const userStore = useUserStore();
+const { mailEnabled, fetchInstanceSettings } = useInstanceSettings();
 
 const profileSchema = UpdateProfileDtoSchema;
 
@@ -115,6 +117,7 @@ function onEmailUpdated(next: MeDto) {
 }
 
 onMounted(async () => {
+  void fetchInstanceSettings();
   try {
     await hydrate();
   } catch (error) {
@@ -247,6 +250,7 @@ function discard() {
       <EmailChangeCard
         :email="currentEmail"
         :email-verified="user?.emailVerified ?? false"
+        :mail-enabled="mailEnabled"
         :pending-email-change="pendingEmailChange"
         :loaded="loaded"
         :hydration-failed="hydrationFailed"
