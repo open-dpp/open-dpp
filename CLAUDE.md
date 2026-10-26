@@ -49,7 +49,7 @@ packages/dto/        # Shared Zod schemas and TS types for all DTOs
 packages/api-client/ # Typed axios-based API client
 packages/env/        # Zod-validated env schema + NestJS EnvModule
 packages/exception/  # ValueError, NotFoundError, NotSupportedError + NestJS filters
-packages/permission/ # CASL-based permission helpers
+packages/permission/ # Shared subject role hierarchy (admin > owner > member > guests > anonymous)
 packages/testing/    # Fishery factories for test data
 ```
 

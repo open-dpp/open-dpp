@@ -22,44 +22,21 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
-    "test": "jest --passWithNoTests"
+    "test": "jest"
   },
   "dependencies": {
-    "@casl/ability": "^6.8.1"
+    "@open-dpp/dto": "workspace:*"
   },
   "devDependencies": {
+    "@jest/globals": "^30.3.0",
     "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
     "jest": "^30.4.2",
     "typescript": "^5.9.3"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest",
-        {
-          "jsc": {
-            "target": "es2022",
-            "parser": {
-              "syntax": "typescript",
-              "decorators": true
-            },
-            "transform": {
-              "decoratorMetadata": true
-            }
-          },
-          "module": {
-            "type": "commonjs"
-          }
-        }
-      ]
-    }
   },
   "packageManager": "pnpm@11.28.5"
 }
