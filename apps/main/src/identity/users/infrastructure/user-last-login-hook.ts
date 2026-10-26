@@ -17,6 +17,6 @@ export async function recordLastLogin(db: Db, session: CreatedSession): Promise<
     .collection(USER_COLLECTION)
     .updateOne(
       { _id: idFilter(session.userId) as any },
-      { $set: { lastLoginAt: session.createdAt } },
+      { $max: { lastLoginAt: session.createdAt } },
     );
 }
