@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@open-dpp/testing": "workspace:*",
-    "@rollup/plugin-typescript": "^12.3.0",
+    "@rollup/plugin-typescript": "^12.3.1",
     "@swc/core": "^1.16.20",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
