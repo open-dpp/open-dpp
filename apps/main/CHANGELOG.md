@@ -1,5 +1,16 @@
 # @open-dpp/main
 
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.4
+  - @open-dpp/dto@6.2.4
+  - @open-dpp/env@6.2.4
+  - @open-dpp/exception@6.2.4
+  - @open-dpp/permission@6.2.4
+
 ## 6.2.3
 
 ### Patch Changes
