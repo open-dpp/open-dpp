@@ -158,8 +158,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       '@types/lodash':
-        specifier: ^4.17.26
-        version: 4.17.26
+        specifier: ^4.17.27
+        version: 4.17.27
       '@vitejs/plugin-vue':
         specifier: ^6.0.10
         version: 6.0.10(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.43(typescript@5.9.3))
@@ -459,8 +459,8 @@ importers:
         specifier: ^30.0.0
         version: 30.0.0
       '@types/lodash':
-        specifier: ^4.17.26
-        version: 4.17.26
+        specifier: ^4.17.27
+        version: 4.17.27
       '@types/mjml':
         specifier: ^4.7.4
         version: 4.7.4
@@ -744,8 +744,8 @@ importers:
         specifier: ^30.0.0
         version: 30.0.0
       '@types/lodash':
-        specifier: ^4.17.26
-        version: 4.17.26
+        specifier: ^4.17.27
+        version: 4.17.27
       '@types/supertest':
         specifier: ^6.0.3
         version: 6.0.3
@@ -3403,8 +3403,8 @@ packages:
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
 
-  '@types/lodash@4.17.26':
-    resolution: {integrity: sha512-48NWfiY6oNcKOh47Z4h+sIvwcQR91h6KPhaYKgeMIrkT2jV82Gy90SErj60vW8jQbeMSOSbhIv3bZ7JoqPPVhA==}
+  '@types/lodash@4.17.27':
+    resolution: {integrity: sha512-VenMRv/eKNrspX9v3H4dbmjsrnCOYdYBG3kxXKk3dG6X+urBGcj2Prww3xw1U5K4FV/mE4h5GbWd0szEKf+9ew==}
 
   '@types/markdown-it@14.1.2':
     resolution: {integrity: sha512-promo4eFwuiW+TfGxhi+0x3czqTYJkG8qB17ZUJiVF10Xm7NLVRSLUsfRTU/6h1e24VvRnXCx+hG7li58lkzog==}
@@ -11605,7 +11605,7 @@ snapshots:
 
   '@types/linkify-it@5.0.0': {}
 
-  '@types/lodash@4.17.26': {}
+  '@types/lodash@4.17.27': {}
 
   '@types/markdown-it@14.1.2':
     dependencies:
