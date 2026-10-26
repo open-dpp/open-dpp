@@ -37,6 +37,7 @@ export type {
 export { AasIntegrationNamespace } from "./dpp/integrations/aas-integration.namespace";
 export * from "./dpp/digital-product-document/digital-product-document.namespace";
 
+export { GuestAccessNamespace } from "./dpp/guest-access/guest-access.namespace";
 export type { MemberDto } from "./dpp/organizations/member.dtos";
 export type { OrganizationCreateDto, OrganizationDto } from "./dpp/organizations/organization.dtos";
 export { OAuthProviderNamespace } from "./dpp/oauth-provider/oauth-provider.namespace";
