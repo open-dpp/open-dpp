@@ -10,6 +10,7 @@ const props = defineProps<{
     firstName?: string;
     lastName?: string;
     name?: string;
+    lastLoginAt?: Date | string | null;
   })[];
   currentUserRole: string;
   currentUserId?: string;
@@ -23,7 +24,7 @@ const emits = defineEmits<{
   (e: "resendVerificationEmail", userId: string, email: string): void;
 }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const roleLabels: Record<string, string> = {
   admin: "organizations.admin.changeRoleDialog.roleAdmin",
@@ -46,6 +47,7 @@ const rows = computed(() => {
     role: i.role ?? "user",
     name: i.name ?? (`${i.firstName ?? ""} ${i.lastName ?? ""}`.trim() || "N/A"),
     emailVerified: Boolean(i.emailVerified),
+    lastLoginAt: i.lastLoginAt ? new Date(i.lastLoginAt).toLocaleString(locale.value) : "–",
   }));
 });
 
@@ -115,6 +117,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
       </template>
     </Column>
     <Column field="name" :header="t('common.name')" />
+    <Column field="lastLoginAt" :header="t('organizations.admin.lastLogin')" />
     <Column style="width: 3rem">
       <template #body="{ data }">
         <div class="flex w-full justify-end">
