@@ -89,6 +89,7 @@ feature/
 - **Submodel element registry**: Classes registered at startup via `aas/domain/submodel-base/submodel-registry.ts`, mapping `KeyTypesType` to classes with `fromPlain`.
 - **AAS interface segregation**: Controllers implement `IAasReadEndpoints`, `IAasCreateEndpoints`, `IAasModifyEndpoints`, `IAasDeleteEndpoints` from `aas/presentation/aas.endpoints.ts`.
 - **Schema versioning**: Mongoose documents carry `_schemaVersion` (e.g. `"1.0.0"`). All `save()` calls pass the version constant.
+- **One-time data migrations**: `apps/main/src/migrations/` — A migration is an `@Injectable()` class in `scripts/<YYYYMMDDHHmmss>-<name>.ts` (id = file name), registered in `migrations.ts`, applied once on bootstrap and recorded in the `migrations` collection. `up()` must be idempotent (test with `expectMigrationToBeIdempotent`), write to raw collections, and leave data readable by the previous release. Prefer this over new migrate-on-read code or ad-hoc `OnApplicationBootstrap` backfills.
 - **Error hierarchy**: Use `ValueError` for domain validation, `NotFoundError` for missing entities. Import from `@open-dpp/exception`.
 
 ### Testing Patterns

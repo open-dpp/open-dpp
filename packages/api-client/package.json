@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/api-client",
-  "version": "6.2.4",
+  "version": "6.3.0",
   "description": "A client for my API",
   "keywords": [],
   "homepage": "https://github.com/open-dpp/open-dpp#readme",
@@ -47,8 +47,8 @@
   },
   "devDependencies": {
     "@open-dpp/testing": "workspace:*",
-    "@rollup/plugin-typescript": "^12.3.0",
-    "@swc/core": "^1.16.18",
+    "@rollup/plugin-typescript": "^12.3.1",
+    "@swc/core": "^1.16.20",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.9",

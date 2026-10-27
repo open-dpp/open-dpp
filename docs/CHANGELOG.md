@@ -1,5 +1,11 @@
 # @open-dpp/docs
 
+## 6.3.0
+
+### Minor Changes
+
+- [#1071](https://github.com/open-dpp/open-dpp/pull/1071) [`aa82258`](https://github.com/open-dpp/open-dpp/commit/aa822584c6f463d15b6a4d1a0c07ccdfc901a334) Thanks [@Hentra](https://github.com/Hentra)! - Create a migration process on startup
+
 ## 6.2.4
 
 ### Patch Changes
