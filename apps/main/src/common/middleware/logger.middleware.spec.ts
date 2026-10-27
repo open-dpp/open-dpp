@@ -80,6 +80,19 @@ describe("createLoggerMiddleware", () => {
     expect(calls.map(({ level }) => level)).toEqual(["warn"]);
   });
 
+  it.each(["json", "plain"] as const)(
+    "keeps query values such as reset tokens out of %s logs",
+    async (logFormat) => {
+      const calls = spyOnLogger();
+
+      await request(createApp(logFormat)).get("/passports?token=secret-token").expect(200);
+
+      const logged = JSON.stringify(calls[0].message);
+      expect(logged).toContain("/passports");
+      expect(logged).not.toContain("secret-token");
+    },
+  );
+
   it("logs the correlation id and the forwarded client ip", async () => {
     const calls = spyOnLogger();
 

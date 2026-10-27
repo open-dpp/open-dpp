@@ -23,7 +23,8 @@ export function createLoggerMiddleware(logFormat: "json" | "plain") {
   const logger = new Logger("HTTP");
 
   return (req: Request, res: Response, next: NextFunction): void => {
-    const { method, originalUrl, ip, path } = req;
+    // Log the path only: query strings can carry secrets, e.g. /password-reset?token=…
+    const { method, ip, path } = req;
     const userAgent = req.get("user-agent") || "";
     const correlationId = req.headers[CORRELATION_ID_HEADER];
     const startTime = Date.now();
@@ -37,14 +38,14 @@ export function createLoggerMiddleware(logFormat: "json" | "plain") {
         message = {
           correlationId,
           method,
-          url: originalUrl,
+          url: path,
           status: statusCode,
           ip,
           userAgent,
           duration,
         };
       } else {
-        message = `${correlationId} ${method} ${originalUrl} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
+        message = `${correlationId} ${method} ${path} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
       }
 
       if (statusCode >= 500) {
