@@ -84,6 +84,22 @@ describe("OrganizationUsageView — usage management link", () => {
     expect(link.text()).toBe("Manage usage");
   });
 
+  it("replaces the {organizationId} placeholder with the selected organization", async () => {
+    getPublic.mockResolvedValue({
+      data: {
+        signupEnabled: true,
+        usageManagementUrl: "https://billing.example.com/organizations/{organizationId}/usage",
+      },
+    });
+
+    const wrapper = mountView();
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="usage-management-link"]').attributes("href")).toBe(
+      "https://billing.example.com/organizations/org-1/usage",
+    );
+  });
+
   it("hides the link when no usage management URL is configured", async () => {
     getPublic.mockResolvedValue({ data: { signupEnabled: true } });
 

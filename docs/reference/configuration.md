@@ -8,13 +8,13 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Common
 
-| Variable                        | Type              | Required | Default | Description                                                                                     |
-| ------------------------------- | ----------------- | -------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `OPEN_DPP_PORT`                 | number            | No       | `3000`  | HTTP port for the main service.                                                                 |
-| `OPEN_DPP_URL`                  | URL               | Yes      | –       | Public base URL of open-dpp (`https://your-open-dpp.example`).                                  |
-| `OPEN_DPP_LOG_FORMAT`           | `json` \| `plain` | No       | `plain` | Log output format.                                                                              |
-| `OPEN_DPP_INSTANCE_BRANDING`    | string            | No       | –       | Optional instance branding image location.                                                      |
-| `OPEN_DPP_USAGE_MANAGEMENT_URL` | URL               | No       | –       | http(s) URL where users manage their usage. When set, a button to it appears on the usage page. |
+| Variable                        | Type              | Required | Default | Description                                                                                                                                                                                                                                       |
+| ------------------------------- | ----------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_PORT`                 | number            | No       | `3000`  | HTTP port for the main service.                                                                                                                                                                                                                   |
+| `OPEN_DPP_URL`                  | URL               | Yes      | –       | Public base URL of open-dpp (`https://your-open-dpp.example`).                                                                                                                                                                                    |
+| `OPEN_DPP_LOG_FORMAT`           | `json` \| `plain` | No       | `plain` | Log output format.                                                                                                                                                                                                                                |
+| `OPEN_DPP_INSTANCE_BRANDING`    | string            | No       | –       | Optional instance branding image location.                                                                                                                                                                                                        |
+| `OPEN_DPP_USAGE_MANAGEMENT_URL` | URL               | No       | –       | http(s) URL where users manage their usage. When set, a button to it appears on the usage page. `{organizationId}` in the URL is replaced with the current organization's ID (e.g. `https://billing.example.com/organizations/{organizationId}`). |
 
 ## Database
 
