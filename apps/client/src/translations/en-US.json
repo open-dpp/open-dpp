@@ -566,7 +566,7 @@
       "users": "All users",
       "settings": "Settings",
       "emailNotVerified": "Email not verified",
-      "lastLogin": "Last login",
+      "lastLogin": "Last active",
       "inviteUserDialog": {
         "title": "Create user",
         "create": "Create",
