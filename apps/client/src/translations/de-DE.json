@@ -826,6 +826,13 @@
       "IndependentOperator": "Unabhängige*r Wirtschaftsakteur*in",
       "Supplier": "Lieferant*in"
     },
+    "guestRoleDescriptions": {
+      "Repairer": "Erbringt gewerbliche Reparatur- oder Wartungsleistungen für ein Produkt, innerhalb des Vertriebssystems des Herstellers oder unabhängig davon.",
+      "Recycler": "Sammelt, verarbeitet und verwertet wiederverwendbare Materialien und wendet ein Dekontaminationsverfahren an.",
+      "MarketSurveillance": "Von einem Mitgliedstaat benannte Behörde, die für die Marktüberwachung in dessen Hoheitsgebiet zuständig ist.",
+      "IndependentOperator": "Vom Hersteller unabhängig und direkt oder indirekt an der Aufarbeitung, Reparatur, Wartung oder Umnutzung von Produkten beteiligt. Dazu zählen Abfallbewirtschafter, Aufarbeiter, Reparateure, Hersteller oder Händler von Reparaturausrüstung, Werkzeugen oder Ersatzteilen, Herausgeber technischer Informationen sowie Anbieter von Prüf-, Test- oder Schulungsleistungen.",
+      "Supplier": "Liefert Materialien, Bauteile oder Teile, die zur Herstellung des Produkts verwendet werden."
+    },
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",

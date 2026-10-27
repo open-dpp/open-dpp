@@ -796,6 +796,13 @@
       "IndependentOperator": "Independent operator",
       "Supplier": "Supplier"
     },
+    "guestRoleDescriptions": {
+      "Repairer": "Provides professional repair or maintenance services for a product, whether within the manufacturer's distribution system or independently.",
+      "Recycler": "Collects, processes and recovers reusable materials and applies a decontamination process.",
+      "MarketSurveillance": "Authority designated by a Member State to carry out market surveillance in its territory.",
+      "IndependentOperator": "Independent of the manufacturer and directly or indirectly involved in refurbishing, repairing, maintaining or repurposing products. Includes waste management operators, refurbishers, repairers, manufacturers or distributors of repair equipment, tools or spare parts, publishers of technical information, and providers of inspection, testing or training.",
+      "Supplier": "Supplies materials, components or parts that are used to manufacture the product."
+    },
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",
