@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import type { LogLevel } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import {
   ConsoleLogger,
@@ -22,6 +21,7 @@ import * as bodyParser from "body-parser";
 import { createProxyServer } from "http-proxy-3";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
+import { LOG_LEVELS, logLevelsUpTo } from "./common/logging/log-levels";
 import { correlationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 import { createLoggerMiddleware } from "./common/middleware/logger.middleware";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
@@ -29,8 +29,6 @@ import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
-
-const LOG_LEVELS: LogLevel[] = ["error", "warn", "log", "debug", "verbose"];
 
 const GS1_RESOLVER_ROUTE_REGEX = new RegExp(
   `^/${GS1_RESOLVER_PATH_PREFIX}/01/[^/]+(?:/10/[^/]+)?(?:/21/[^/]+)?/?$`,
@@ -71,8 +69,7 @@ async function bootstrap() {
   const envService = app.get(EnvService);
   const logger = new Logger("Bootstrap");
 
-  const logLevel = envService.get("OPEN_DPP_LOG_LEVEL");
-  consoleLogger.setLogLevels(LOG_LEVELS.slice(0, LOG_LEVELS.indexOf(logLevel) + 1));
+  consoleLogger.setLogLevels(logLevelsUpTo(envService.get("OPEN_DPP_LOG_LEVEL")));
 
   app.set("trust proxy", envService.get("OPEN_DPP_TRUST_PROXY"));
 
