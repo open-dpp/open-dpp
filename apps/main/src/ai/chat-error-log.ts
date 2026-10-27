@@ -7,5 +7,5 @@ export function chatErrorForLog(err: unknown): { name: string; stack?: string } 
   if (!(err instanceof Error)) {
     return { name: typeof err };
   }
-  return { name: err.name, stack: err.stack?.split("\n").slice(1).join("\n") };
+  return { name: err.name };
 }
