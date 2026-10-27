@@ -19,6 +19,11 @@ export function isEqualSubject(subject1: Subject, subject2: Subject) {
   return isEqualSubjectRoles(subject1, subject2);
 }
 
+// Anonymous users and guests only read. They never create, edit or delete.
+export function isReadOnlySubject(subject: Subject) {
+  return subject.userRole === UserRoleDto.ANONYMOUS || subject.guestRole !== undefined;
+}
+
 export function makeSubjectAttributes(subject: Subject): SubjectAttributesDto {
   const createProperty = (idShort: string, value: string) => ({
     value,

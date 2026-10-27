@@ -1,6 +1,12 @@
 import { GuestRoleDto, MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
 import { describe, expect, it } from "vitest";
-import { isEqualSubject, makeRule, makeSubjectAttributes, ruleHelper } from "./aas-security.ts";
+import {
+  isEqualSubject,
+  isReadOnlySubject,
+  makeRule,
+  makeSubjectAttributes,
+  ruleHelper,
+} from "./aas-security.ts";
 
 const repairer = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.REPAIRER };
 const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
@@ -83,6 +89,20 @@ describe("aas-security", () => {
       ]);
       expect(ruleHelper(rule).guestRole).toBeUndefined();
       expect(ruleHelper(rule).hasEqualSubject(repairer)).toBe(false);
+    });
+  });
+
+  describe("isReadOnlySubject", () => {
+    it("is true for the public and for every guest role", () => {
+      expect(isReadOnlySubject({ userRole: UserRoleDto.ANONYMOUS })).toBe(true);
+      for (const guestRole of Object.values(GuestRoleDto)) {
+        expect(isReadOnlySubject({ userRole: UserRoleDto.USER, guestRole })).toBe(true);
+      }
+    });
+
+    it("is false for members and admins", () => {
+      expect(isReadOnlySubject(member)).toBe(false);
+      expect(isReadOnlySubject({ userRole: UserRoleDto.ADMIN })).toBe(false);
     });
   });
 });
