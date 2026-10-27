@@ -1,5 +1,31 @@
 # @open-dpp/main
 
+## 6.3.0
+
+### Minor Changes
+
+- [#1071](https://github.com/open-dpp/open-dpp/pull/1071) [`aa82258`](https://github.com/open-dpp/open-dpp/commit/aa822584c6f463d15b6a4d1a0c07ccdfc901a334) Thanks [@Hentra](https://github.com/Hentra)! - Create a migration process on startup
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.0
+  - @open-dpp/dto@6.3.0
+  - @open-dpp/env@6.3.0
+  - @open-dpp/exception@6.3.0
+  - @open-dpp/permission@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.4
+  - @open-dpp/dto@6.2.4
+  - @open-dpp/env@6.2.4
+  - @open-dpp/exception@6.2.4
+  - @open-dpp/permission@6.2.4
+
 ## 6.2.3
 
 ### Patch Changes

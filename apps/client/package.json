@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "6.2.3",
+  "version": "6.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -52,7 +52,7 @@
     "@testing-library/vue": "^8.1.0",
     "@types/dompurify": "^3.2.0",
     "@types/language-tags": "^1.0.4",
-    "@types/lodash": "^4.17.26",
+    "@types/lodash": "^4.17.27",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vue/test-utils": "^2.5.1",
@@ -67,7 +67,7 @@
     "typescript": "^5.9.3",
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
-    "vite": "^8.3.3",
+    "vite": "^8.3.5",
     "vitest": "^4.1.11",
     "vue-tsc": "^3.3.11"
   },

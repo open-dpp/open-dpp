@@ -1,5 +1,21 @@
 # @open-dpp/client
 
+## 6.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.0
+  - @open-dpp/dto@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.4
+  - @open-dpp/dto@6.2.4
+
 ## 6.2.3
 
 ### Patch Changes
