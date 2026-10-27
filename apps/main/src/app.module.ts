@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { HttpModule } from "@nestjs/axios";
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -13,7 +13,6 @@ import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { BrandingModule } from "./branding/branding.module";
 import { BulkImportModule } from "./bulk-import/bulk-import.module";
-import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
@@ -34,8 +33,6 @@ import { StatusModule } from "./status/status.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
-import { CorrelationIdService } from "./common/middleware/correlation-id.service";
-import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 
 @Module({
   imports: [
@@ -82,7 +79,6 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
   ],
   controllers: [],
   providers: [
-    CorrelationIdService,
     ChatGateway,
     {
       provide: APP_GUARD,
@@ -94,9 +90,4 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
-    consumer.apply(LoggerMiddleware).forRoutes("*");
-  }
-}
+export class AppModule {}

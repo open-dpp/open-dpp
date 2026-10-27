@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import {
   ConsoleLogger,
   Logger,
@@ -20,6 +21,9 @@ import * as bodyParser from "body-parser";
 import { createProxyServer } from "http-proxy-3";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
+import { LOG_LEVELS, logLevelsUpTo } from "./common/logging/log-levels";
+import { correlationIdMiddleware } from "./common/middleware/correlation-id.middleware";
+import { createLoggerMiddleware } from "./common/middleware/logger.middleware";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
 import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-dpp/dto";
 
@@ -53,16 +57,24 @@ async function bootstrap() {
   const logFormat = process.env.OPEN_DPP_LOG_FORMAT || "plain";
   const useJsonLogging = logFormat === "json";
 
-  const app = await NestFactory.create(AppModule, {
+  const consoleLogger = new ConsoleLogger({
+    json: useJsonLogging,
+    logLevels: LOG_LEVELS,
+  });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
-    logger: new ConsoleLogger({
-      json: useJsonLogging,
-      logLevels: ["log", "error", "warn", "debug", "verbose"],
-    }),
+    logger: consoleLogger,
   });
 
   const envService = app.get(EnvService);
   const logger = new Logger("Bootstrap");
+
+  consoleLogger.setLogLevels(logLevelsUpTo(envService.get("OPEN_DPP_LOG_LEVEL")));
+
+  app.set("trust proxy", envService.get("OPEN_DPP_TRUST_PROXY"));
+
+  app.use(correlationIdMiddleware);
+  app.use(createLoggerMiddleware(envService.get("OPEN_DPP_LOG_FORMAT")));
 
   if (!envService.get("OPEN_DPP_CLAMAV_URL")) {
     logger.warn("OPEN_DPP_CLAMAV_URL is not set — uploaded files are not virus-scanned");
