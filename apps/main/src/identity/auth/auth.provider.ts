@@ -285,13 +285,10 @@ export const AuthProvider: Provider = {
                 };
               }
             },
-            after: async (session) => {
-              try {
-                await recordLastLogin(db, session);
-              } catch (error) {
-                logger.error("Failed to record last login", error);
-              }
-            },
+            after: async (session) => recordLastLogin(db, logger, session),
+          },
+          update: {
+            after: async (session) => recordLastLogin(db, logger, session),
           },
         },
         user: {
