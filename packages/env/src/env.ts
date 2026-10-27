@@ -14,6 +14,22 @@ const asStrictBoolean = z
   })
   .transform((val) => val.toLowerCase() === "true");
 
+// What Express's `trust proxy` (proxy-addr) accepts besides booleans and hop counts.
+const TRUST_PROXY_PRESETS = ["loopback", "linklocal", "uniquelocal"];
+const trustProxyAddress = z.union([z.ipv4(), z.ipv6(), z.cidrv4(), z.cidrv6()]);
+
+function isTrustProxyValue(value: string): boolean {
+  if (/^(?:true|false|\d+)$/i.test(value)) {
+    return true;
+  }
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .every(
+      (entry) => TRUST_PROXY_PRESETS.includes(entry) || trustProxyAddress.safeParse(entry).success,
+    );
+}
+
 /** `KEY=""` in an env file means "not set", like an absent variable. */
 const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
@@ -44,6 +60,9 @@ export const envSchema = z
       z
         .string()
         .optional()
+        .refine((value) => value === undefined || isTrustProxyValue(value), {
+          message: `Expected "true", "false", a hop count, or a comma-separated list of IP addresses, CIDR ranges or ${TRUST_PROXY_PRESETS.map((preset) => `"${preset}"`).join(", ")}`,
+        })
         .transform((value): boolean | number | string => {
           if (value === undefined || value.toLowerCase() === "false") {
             return false;

@@ -277,3 +277,30 @@ describe("validateEnv — OPEN_DPP_LOG_LEVEL", () => {
     );
   });
 });
+
+describe("validateEnv — OPEN_DPP_TRUST_PROXY", () => {
+  it("defaults to false", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_TRUST_PROXY).toBe(false);
+  });
+
+  it.each([
+    ["true", true],
+    ["FALSE", false],
+    ["2", 2],
+    ["loopback, 10.0.0.0/8", "loopback, 10.0.0.0/8"],
+    ["203.0.113.7,::1,fe80::/10", "203.0.113.7,::1,fe80::/10"],
+  ])("accepts %p", (value: string, expected: boolean | number | string) => {
+    expect(validateEnv({ ...baseEnv, OPEN_DPP_TRUST_PROXY: value }).OPEN_DPP_TRUST_PROXY).toBe(
+      expected,
+    );
+  });
+
+  it.each(["yes", "-1", "10.0.0.0/33", "10.0.0.1,", "loopback, proxy.internal"])(
+    "rejects %p",
+    (value: string) => {
+      expect(() => validateEnv({ ...baseEnv, OPEN_DPP_TRUST_PROXY: value })).toThrow(
+        "OPEN_DPP_TRUST_PROXY",
+      );
+    },
+  );
+});
