@@ -54,6 +54,15 @@ export function useRoleHierarchy() {
       : t("aasEditor.security.unknownRole");
   }
 
+  // What a guest role is allowed to do, taken from the standards. Other roles have no description,
+  // and neither has a guest role as long as its text is empty.
+  function getRoleDescription(subject: Subject): string | undefined {
+    if (!subject.guestRole) {
+      return undefined;
+    }
+    return t(`user.guestRoleDescriptions.${subject.guestRole}`) || undefined;
+  }
+
   function canEditPermissionsOfRole(subject: Subject, target: Subject) {
     // Only admins and members edit permissions. Guests, users without an organization and
     // anonymous users only read.
@@ -63,5 +72,11 @@ export function useRoleHierarchy() {
     return levelOfSubject(subject) < levelOfSubject(target);
   }
 
-  return { hierarchy: roleHierarchy, getVisibleRoles, canEditPermissionsOfRole, getRoleName };
+  return {
+    hierarchy: roleHierarchy,
+    getVisibleRoles,
+    canEditPermissionsOfRole,
+    getRoleName,
+    getRoleDescription,
+  };
 }

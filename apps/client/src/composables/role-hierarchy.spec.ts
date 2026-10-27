@@ -1,11 +1,13 @@
 import { GuestRoleDto, MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
 import { subjectHierarchy } from "@open-dpp/permission";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useRoleHierarchy } from "./role-hierarchy.ts";
+
+const i18n = vi.hoisted(() => ({ translations: {} as Record<string, string> }));
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
-    t: (key: string) => key,
+    t: (key: string) => i18n.translations[key] ?? key,
   }),
 }));
 
@@ -15,6 +17,10 @@ const guestRoleEntries = Object.values(GuestRoleDto).map((guestRole) => ({
 }));
 
 describe("useRoleHierarchy", () => {
+  beforeEach(() => {
+    i18n.translations = {};
+  });
+
   it("should return editable roles", () => {
     const { getVisibleRoles, hierarchy } = useRoleHierarchy();
     expect(
@@ -218,5 +224,33 @@ describe("useRoleHierarchy", () => {
     for (const { key } of hierarchy) {
       expect(getRoleName(key)).not.toEqual("aasEditor.security.unknownRole");
     }
+  });
+
+  describe("getRoleDescription", () => {
+    const repairer = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.REPAIRER };
+
+    it("should return the description of a guest role", () => {
+      i18n.translations = { "user.guestRoleDescriptions.Repairer": "Repairs products" };
+      const { getRoleDescription } = useRoleHierarchy();
+
+      expect(getRoleDescription(repairer)).toEqual("Repairs products");
+    });
+
+    it("should have no description while the text of a guest role is empty", () => {
+      i18n.translations = { "user.guestRoleDescriptions.Repairer": "" };
+      const { getRoleDescription } = useRoleHierarchy();
+
+      expect(getRoleDescription(repairer)).toBeUndefined();
+    });
+
+    it("should have no description for roles which are no guest roles", () => {
+      i18n.translations = {};
+      const { getRoleDescription } = useRoleHierarchy();
+
+      expect(
+        getRoleDescription({ userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER }),
+      ).toBeUndefined();
+      expect(getRoleDescription({ userRole: UserRoleDto.ANONYMOUS })).toBeUndefined();
+    });
   });
 });

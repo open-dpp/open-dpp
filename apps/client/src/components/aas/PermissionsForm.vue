@@ -10,9 +10,10 @@ import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import type { PermissionsPerSubject } from "../../composables/aas-permissions-form.ts";
 
 import type { Subject } from "../../lib/aas-security.ts";
-import { Permissions, UserRoleDto } from "@open-dpp/dto";
+import { Permissions } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useAasPermissionOptions } from "../../composables/aas-permission-options.ts";
 import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
 import { isEqualSubject } from "../../lib/aas-security.ts";
@@ -43,7 +44,7 @@ const {
 });
 
 const { asSubject } = useUserStore();
-const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
+const { getVisibleRoles, canEditPermissionsOfRole, getRoleDescription } = useRoleHierarchy();
 
 const roles = ref(getVisibleRoles(asSubject()));
 const selectedRole = ref<Subject>(asSubject());
@@ -66,27 +67,9 @@ const canEditPermissions = computed(() => {
 
 const { t } = useI18n();
 
-const permissionOptions = computed(() => {
-  let options: { name: string; key: PermissionType }[] = [
-    { name: t("aasEditor.security.read"), key: Permissions.Read },
-  ];
-
-  if (selectedRole.value.userRole !== UserRoleDto.ANONYMOUS) {
-    options.push(
-      { name: t("aasEditor.security.create"), key: Permissions.Create },
-      { name: t("aasEditor.security.edit"), key: Permissions.Edit },
-      { name: t("aasEditor.security.delete"), key: Permissions.Delete },
-    );
-  }
-  if (props.ignoredPermissionOptions !== undefined) {
-    options = options.filter(
-      (permission) =>
-        props.ignoredPermissionOptions && !props.ignoredPermissionOptions.includes(permission.key),
-    );
-  }
-
-  return options;
-});
+const { getPermissionOptions } = useAasPermissionOptions(props.ignoredPermissionOptions);
+const permissionOptions = computed(() => getPermissionOptions(selectedRole.value));
+const roleDescription = computed(() => getRoleDescription(selectedRole.value));
 
 function onPermissionChange(newPermissions: PermissionType[]) {
   editPermissions(newPermissions, selectedRole.value);
@@ -136,6 +119,9 @@ defineExpose<{
         :disabled="disabled"
       />
     </div>
+    <p v-if="roleDescription" class="text-sm text-gray-600" data-cy="role-description">
+      {{ roleDescription }}
+    </p>
     <div class="flex flex-col gap-3 p-2">
       <div v-if="!props.hideInheritanceToggle" class="flex items-center gap-2">
         <ToggleSwitch
