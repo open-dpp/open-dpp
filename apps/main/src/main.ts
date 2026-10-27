@@ -20,7 +20,6 @@ import {
 } from "@open-dpp/exception";
 import * as bodyParser from "body-parser";
 import { createProxyServer } from "http-proxy-3";
-import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { correlationIdMiddleware } from "./common/middleware/correlation-id.middleware";
@@ -163,14 +162,6 @@ async function bootstrap() {
   const port = envService.get("OPEN_DPP_PORT");
   logger.log(`Application is running on: ${port}`);
   await app.listen(port);
-  try {
-    const mcpClientService = app.get(McpClientService);
-    await mcpClientService.connect();
-  } catch (err) {
-    logger.error(`MCP connect failed: ${err instanceof Error ? err.message : String(err)}`);
-    await app.close();
-    process.exit(1);
-  }
 }
 
 bootstrap();

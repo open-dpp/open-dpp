@@ -1,5 +1,45 @@
 # @open-dpp/testing
 
+## 6.3.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.1
+  - @open-dpp/env@6.3.1
+
+## 6.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.0
+  - @open-dpp/env@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.4
+  - @open-dpp/env@6.2.4
+
+## 6.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.3
+  - @open-dpp/env@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+
 ## 6.2.1
 
 ### Patch Changes

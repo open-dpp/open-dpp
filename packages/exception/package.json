@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/exception",
-  "version": "6.2.1",
+  "version": "6.3.1",
   "private": true,
   "description": "",
   "keywords": [],
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.2.6",
-    "@swc/core": "^1.16.18",
+    "@swc/core": "^1.16.20",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
