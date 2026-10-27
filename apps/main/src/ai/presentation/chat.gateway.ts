@@ -12,6 +12,7 @@ import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/we
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { chatErrorForLog } from "../chat-error-log";
 import { ChatService } from "../chat.service";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
@@ -37,7 +38,6 @@ export class ChatGateway {
     @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
-    this.logger.log("Start to process message:", message);
 
     try {
       const { passport } = await this.permalinkApplicationService.resolveToPassport(
@@ -65,14 +65,15 @@ export class ChatGateway {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name !== "QuotaExceededError") {
-          this.logger.error("Unexpected error in chat handler", error);
+          const { name, stack } = chatErrorForLog(error);
+          this.logger.error(`Unexpected error in chat handler: ${name}`, stack);
         }
         client.emit("limitError", {
           msg: error.message,
           code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
         });
       } else {
-        this.logger.error("Unknown error in chat handler", error);
+        this.logger.error(`Unknown error in chat handler: ${chatErrorForLog(error).name}`);
         client.emit("limitError", {
           msg: "An error occurred",
           code: "ERROR",
