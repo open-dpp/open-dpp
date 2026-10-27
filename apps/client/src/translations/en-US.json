@@ -533,6 +533,7 @@
     },
     "usage": {
       "title": "Usage policies",
+      "manage": "Manage usage",
       "setLimitsDialog": {
         "title": "Set usage limits",
         "nullIsUnlimited": "A value of 0 will make the limit be unlimited."

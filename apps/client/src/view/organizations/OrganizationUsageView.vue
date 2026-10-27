@@ -1,18 +1,22 @@
 <script lang="ts" setup>
 import { useI18n } from "vue-i18n";
+import Button from "primevue/button";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
 import apiClient from "../../lib/api-client.ts";
 import type { PolicyUtilizationDtoType } from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import PolicyRule from "../../components/policy/PolicyRule.vue";
+import { useInstanceSettings } from "../../composables/instance.settings.ts";
 import { useIndexStore } from "../../stores/index.ts";
 
 const policyUtilization = ref<PolicyUtilizationDtoType | undefined>(undefined);
 const indexStore = useIndexStore();
+const { usageManagementUrl, fetchInstanceSettings } = useInstanceSettings();
 
 const { t } = useI18n();
 
 onMounted(async () => {
+  void fetchInstanceSettings();
   if (!indexStore.selectedOrganization) {
     return;
   }
@@ -36,6 +40,18 @@ onMounted(async () => {
         :usage="policy.used"
         :limit="policy.limit"
       />
+      <div v-if="usageManagementUrl">
+        <Button
+          as="a"
+          :href="usageManagementUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          icon="pi pi-external-link"
+          iconPos="right"
+          :label="t('organizations.usage.manage')"
+          data-testid="usage-management-link"
+        />
+      </div>
     </div>
   </ContentViewWrapper>
 </template>

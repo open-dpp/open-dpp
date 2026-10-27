@@ -8,6 +8,7 @@ import { UserRoleDto } from "@open-dpp/dto";
 export function useInstanceSettings() {
   const { user } = useUserStore();
   const organizationCreationEnabled = ref<boolean>(false);
+  const usageManagementUrl = ref<string | undefined>(undefined);
   const errorHandlingStore = useErrorHandlingStore();
   const { t } = useI18n();
 
@@ -15,8 +16,10 @@ export function useInstanceSettings() {
     try {
       const res = await apiClient.dpp.instanceSettings.getPublic();
       organizationCreationEnabled.value = res.data.organizationCreationEnabled ?? false;
+      usageManagementUrl.value = res.data.usageManagementUrl;
     } catch {
       organizationCreationEnabled.value = false;
+      usageManagementUrl.value = undefined;
       errorHandlingStore.logErrorWithNotification(
         t("organizations.admin.instanceSettings.errorLoading"),
       );
@@ -27,5 +30,5 @@ export function useInstanceSettings() {
     return organizationCreationEnabled.value || user.role === UserRoleDto.ADMIN;
   });
 
-  return { canCreateOrganization, fetchInstanceSettings };
+  return { canCreateOrganization, usageManagementUrl, fetchInstanceSettings };
 }

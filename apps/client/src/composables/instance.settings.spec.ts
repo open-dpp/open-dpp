@@ -97,4 +97,21 @@ describe("instanceSettings composable", () => {
     await fetchInstanceSettings();
     await waitFor(() => expect(canCreateOrganization.value).toBeTruthy());
   });
+
+  it("should get usageManagementUrl", async () => {
+    const { usageManagementUrl, fetchInstanceSettings } = mountHarness();
+    mocks.getPublic.mockResolvedValueOnce({
+      data: {
+        signupEnabled: true,
+        usageManagementUrl: "https://billing.example.com",
+      },
+    });
+
+    await fetchInstanceSettings();
+    expect(usageManagementUrl.value).toBe("https://billing.example.com");
+
+    mocks.getPublic.mockResolvedValueOnce({ data: { signupEnabled: true } });
+    await fetchInstanceSettings();
+    expect(usageManagementUrl.value).toBeUndefined();
+  });
 });
