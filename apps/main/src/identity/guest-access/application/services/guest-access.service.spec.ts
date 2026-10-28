@@ -6,7 +6,7 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
-import { InviteGuestMail } from "../../../../email/domain/invite-guest-mail";
+import { BaseEmail, BaseEmailTypes } from "../../../../email/domain/base-email";
 import { EmailService } from "../../../../email/email.service";
 import { MembersService } from "../../../organizations/application/services/members.service";
 import { OrganizationsRepository } from "../../../organizations/infrastructure/adapters/organizations.repository";
@@ -31,9 +31,9 @@ describe("GuestAccessService", () => {
   let owners: Set<string>;
   let members: { user: { email: string } | null }[];
   let memberOfOrganization: Set<string>;
-  let sentMails: InviteGuestMail[];
-  let inviterLanguage: DisplayLanguageType | undefined;
-  let sendMail: jest.Mock<(mail: InviteGuestMail) => Promise<void>>;
+  let sentMails: BaseEmail[];
+  let languages: Map<string, DisplayLanguageType>;
+  let sendMail: jest.Mock<(mail: BaseEmail) => Promise<void>>;
 
   const organizationId = "org-1";
   const ownerId = "owner-1";
@@ -64,8 +64,8 @@ describe("GuestAccessService", () => {
     members = [];
     memberOfOrganization = new Set();
     sentMails = [];
-    inviterLanguage = undefined;
-    sendMail = jest.fn(async (mail: InviteGuestMail) => {
+    languages = new Map();
+    sendMail = jest.fn(async (mail: BaseEmail) => {
       sentMails.push(mail);
     });
 
@@ -100,7 +100,7 @@ describe("GuestAccessService", () => {
           provide: UsersRepository,
           useValue: {
             findOneById: async (id: string) =>
-              inviterLanguage ? { id, preferredLanguage: inviterLanguage } : null,
+              languages.has(id) ? { id, preferredLanguage: languages.get(id) } : null,
           },
         },
         { provide: EmailService, useValue: { send: sendMail } },
@@ -142,14 +142,14 @@ describe("GuestAccessService", () => {
       });
     });
 
-    it("sends the English mail by default and the German one to a German-speaking owner", async () => {
+    it("sends the English mail by default and the German one for a German-speaking owner", async () => {
       await service.invite({
         organizationId,
         actingUserId: ownerId,
         email: "authority@example.com",
         guestRole: GuestRole.MARKET_SURVEILLANCE,
       });
-      inviterLanguage = DisplayLanguage.de;
+      languages.set(ownerId, DisplayLanguage.de);
       await service.invite({
         organizationId,
         actingUserId: ownerId,
@@ -401,6 +401,153 @@ describe("GuestAccessService", () => {
       await service.accept(pending.id, user);
       expect(await service.findGuestRole(user.id, organizationId)).toEqual(GuestRole.REPAIRER);
       expect(await service.findGuestRole(user.id, "org-2")).toBeUndefined();
+    });
+  });
+
+  describe("notifications about changes", () => {
+    const mailsOfType = (type: string) => sentMails.filter((mail) => mail.type === type);
+
+    async function invitePending(email = "repairer@example.com") {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email,
+        guestRole: GuestRole.REPAIRER,
+      });
+      sentMails = [];
+      return pending;
+    }
+
+    async function inviteAccepted(language?: DisplayLanguageType) {
+      const pending = await invitePending();
+      const user = createUser();
+      if (language) languages.set(user.id, language);
+      await service.accept(pending.id, user);
+      return { guestAccessId: pending.id, user };
+    }
+
+    it("tells an accepted guest about a role change in the language of the guest", async () => {
+      const { guestAccessId } = await inviteAccepted(DisplayLanguage.de);
+      languages.set(ownerId, DisplayLanguage.en);
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId,
+        actingUserId: ownerId,
+        guestRole: GuestRole.MARKET_SURVEILLANCE,
+      });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestRoleChanged);
+      expect(sentMails).toHaveLength(1);
+      expect(mail.to).toEqual("repairer@example.com");
+      expect(mail.language).toEqual("de");
+      expect(mail.templateProperties).toMatchObject({
+        organizationName: "ACME GmbH",
+        guestRoleName: "Marktüberwachungsbehörde",
+      });
+      expect(mail.templateProperties).not.toHaveProperty("link", expect.any(String));
+    });
+
+    it("tells a guest who has not accepted yet about a role change and includes the link", async () => {
+      const pending = await invitePending();
+      languages.set(ownerId, DisplayLanguage.de);
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId: pending.id,
+        actingUserId: ownerId,
+        guestRole: GuestRole.SUPPLIER,
+      });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestRoleChanged);
+      expect(mail.language).toEqual("de");
+      expect(mail.templateProperties).toMatchObject({
+        guestRoleName: "Lieferant",
+        link: expect.stringContaining(`/accept-guest-access/${pending.id}`),
+      });
+    });
+
+    it("does not send a mail if the role stays the same", async () => {
+      const { guestAccessId } = await inviteAccepted();
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId,
+        actingUserId: ownerId,
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      expect(sentMails).toHaveLength(0);
+    });
+
+    it("tells an accepted guest that the access was revoked", async () => {
+      const { guestAccessId } = await inviteAccepted(DisplayLanguage.de);
+
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestAccessRevoked);
+      expect(sentMails).toHaveLength(1);
+      expect(mail.to).toEqual("repairer@example.com");
+      expect(mail.language).toEqual("de");
+      expect(mail.subject).toEqual("Dein Gastzugriff wurde entzogen");
+      expect(mail.templateProperties).toMatchObject({
+        organizationName: "ACME GmbH",
+        accepted: true,
+      });
+    });
+
+    it("tells a guest who has not accepted yet that the invitation was withdrawn", async () => {
+      const pending = await invitePending();
+      languages.set(ownerId, DisplayLanguage.de);
+
+      await service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: ownerId });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestAccessRevoked);
+      expect(mail.subject).toEqual("Deine Einladung wurde zurückgezogen");
+      expect(mail.templateProperties).toMatchObject({ accepted: false });
+    });
+
+    it("tells the guest only once if an access is revoked twice", async () => {
+      const { guestAccessId } = await inviteAccepted();
+
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+
+      expect(mailsOfType(BaseEmailTypes.GuestAccessRevoked)).toHaveLength(1);
+    });
+
+    it("keeps the change when the mail cannot be sent", async () => {
+      const { guestAccessId, user } = await inviteAccepted();
+      sendMail.mockRejectedValue(new Error("smtp down"));
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId,
+        actingUserId: ownerId,
+        guestRole: GuestRole.SUPPLIER,
+      });
+      expect(await service.findGuestRole(user.id, organizationId)).toEqual(GuestRole.SUPPLIER);
+
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+    });
+
+    it("sends nothing if the owner is not allowed to change the access", async () => {
+      const { guestAccessId } = await inviteAccepted();
+
+      await expect(
+        service.revoke({ organizationId, guestAccessId, actingUserId: "someone" }),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.changeGuestRole({
+          organizationId,
+          guestAccessId,
+          actingUserId: "someone",
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(sentMails).toHaveLength(0);
     });
   });
 });

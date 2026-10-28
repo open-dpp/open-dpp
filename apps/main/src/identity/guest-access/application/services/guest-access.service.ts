@@ -2,6 +2,9 @@ import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { DisplayLanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
+import { BaseEmail } from "../../../../email/domain/base-email";
+import { GuestAccessRevokedMail } from "../../../../email/domain/guest-access-revoked-mail";
+import { GuestRoleChangedMail } from "../../../../email/domain/guest-role-changed-mail";
 import { InviteGuestMail } from "../../../../email/domain/invite-guest-mail";
 import { EmailService } from "../../../../email/email.service";
 import { MembersService } from "../../../organizations/application/services/members.service";
@@ -10,6 +13,7 @@ import { User } from "../../../users/domain/user";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { DirectGuestAccess } from "../../domain/direct-guest-access";
 import { GuestAccess } from "../../domain/guest-access";
+import { GuestAccessStatus } from "../../domain/guest-access-kind.enum";
 import { GuestRole, GuestRoleType } from "../../domain/guest-role.enum";
 import { GuestAccessRepository } from "../../infrastructure/adapters/guest-access.repository";
 
@@ -74,7 +78,17 @@ export class GuestAccessService {
     }
 
     const saved = await this.guestAccessRepository.save(guestAccess);
-    await this.sendInvitation(saved, guestAccess.email, data.actingUserId);
+    await this.notifyGuest(guestAccess, data.actingUserId, "invitation", (context) =>
+      InviteGuestMail.create({
+        to: guestAccess.email,
+        language: context.language,
+        templateProperties: {
+          link: this.acceptLink(guestAccess),
+          organizationName: context.organizationName,
+          guestRoleName: GUEST_ROLE_NAME_BY_LANGUAGE[context.language][guestAccess.guestRole],
+        },
+      }),
+    );
     return saved;
   }
 
@@ -120,8 +134,27 @@ export class GuestAccessService {
     if (!(guestAccess instanceof DirectGuestAccess)) {
       throw new ValueError("The role of this guest access cannot be changed");
     }
+    const previousRole = guestAccess.guestRole;
     guestAccess.changeGuestRole(data.guestRole);
-    return await this.guestAccessRepository.save(guestAccess);
+    const saved = await this.guestAccessRepository.save(guestAccess);
+    if (previousRole !== guestAccess.guestRole) {
+      await this.notifyGuest(guestAccess, data.actingUserId, "role change", (context) =>
+        GuestRoleChangedMail.create({
+          to: guestAccess.email,
+          language: context.language,
+          templateProperties: {
+            organizationName: context.organizationName,
+            guestRoleName: GUEST_ROLE_NAME_BY_LANGUAGE[context.language][guestAccess.guestRole],
+            // A guest who has not accepted yet needs the link to do so
+            link:
+              guestAccess.status === GuestAccessStatus.PENDING
+                ? this.acceptLink(guestAccess)
+                : undefined,
+          },
+        }),
+      );
+    }
+    return saved;
   }
 
   async revoke(data: {
@@ -134,8 +167,21 @@ export class GuestAccessService {
       data.organizationId,
       data.guestAccessId,
     );
+    const wasRevoked = guestAccess.status === GuestAccessStatus.REVOKED;
+    const wasAccepted = guestAccess.status === GuestAccessStatus.ACCEPTED;
     guestAccess.revoke(new Date());
-    return await this.guestAccessRepository.save(guestAccess);
+    const saved = await this.guestAccessRepository.save(guestAccess);
+    // Revoking again changes nothing, so nobody is notified twice
+    if (!wasRevoked && guestAccess instanceof DirectGuestAccess) {
+      await this.notifyGuest(guestAccess, data.actingUserId, "revocation", (context) =>
+        GuestAccessRevokedMail.create({
+          to: guestAccess.email,
+          language: context.language,
+          templateProperties: { organizationName: context.organizationName, accepted: wasAccepted },
+        }),
+      );
+    }
+    return saved;
   }
 
   /**
@@ -168,32 +214,39 @@ export class GuestAccessService {
     return guestAccess;
   }
 
-  // The mail is sent in the language of the inviting owner, since the invitee may not have an account.
-  private async sendInvitation(
-    guestAccess: GuestAccess,
-    email: string,
-    invitedBy: string,
+  private acceptLink(guestAccess: GuestAccess): string {
+    return `${this.envService.get("OPEN_DPP_URL")}/accept-guest-access/${guestAccess.id}`;
+  }
+
+  /**
+   * Tells the guest about a change. The mail is in the language of the guest if the guest has an
+   * account, otherwise in the language of the owner who acts. A failed mail must not undo the
+   * change: the owner sees the new state and the guest simply is not told.
+   */
+  private async notifyGuest(
+    guestAccess: DirectGuestAccess,
+    actingUserId: string,
+    description: string,
+    buildMail: (context: { language: DisplayLanguageType; organizationName: string }) => BaseEmail,
   ): Promise<void> {
     try {
       const organization = await this.organizationsRepository.findOneById(
         guestAccess.organizationId,
       );
-      const inviter = await this.usersRepository.findOneById(invitedBy);
-      const language = inviter?.preferredLanguage ?? "en";
+      const recipientOrInviter = await this.usersRepository.findOneById(
+        guestAccess.acceptedByUserId ?? actingUserId,
+      );
       await this.emailService.send(
-        InviteGuestMail.create({
-          to: email,
-          language,
-          templateProperties: {
-            link: `${this.envService.get("OPEN_DPP_URL")}/accept-guest-access/${guestAccess.id}`,
-            organizationName: organization?.name ?? "",
-            guestRoleName: GUEST_ROLE_NAME_BY_LANGUAGE[language][guestAccess.guestRole],
-          },
+        buildMail({
+          language: recipientOrInviter?.preferredLanguage ?? "en",
+          organizationName: organization?.name ?? "",
         }),
       );
     } catch (error) {
-      // The invitation stays pending and visible to the owner; a failed mail must not lose it.
-      this.logger.error(`Failed to send guest invitation ${guestAccess.id}`, error);
+      this.logger.error(
+        `Failed to send the mail about the ${description} of ${guestAccess.id}`,
+        error,
+      );
     }
   }
 }
