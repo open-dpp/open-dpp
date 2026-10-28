@@ -68,7 +68,7 @@
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
     "vite": "^8.3.5",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "vue-tsc": "^3.3.11"
   },
   "packageManager": "pnpm@11.28.5"
