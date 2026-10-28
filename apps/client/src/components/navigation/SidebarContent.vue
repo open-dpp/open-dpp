@@ -10,6 +10,7 @@ import {
   Cog6ToothIcon,
   BuildingOfficeIcon,
   UserGroupIcon,
+  UserPlusIcon,
   CircleStackIcon,
 } from "@heroicons/vue/24/outline";
 import { ChartBarIcon, CloudIcon, LinkIcon } from "@heroicons/vue/16/solid";
@@ -17,6 +18,8 @@ import { computed, onMounted, type FunctionalComponent } from "vue";
 import { authClient } from "../../auth-client";
 import { useStatusStore } from "../../stores/status";
 import { useOrganizationsStore } from "../../stores/organizations";
+import { useUserStore } from "../../stores/user";
+import { MemberRoleDto } from "@open-dpp/dto";
 
 const { src } = useBranding();
 const route = useRoute();
@@ -44,6 +47,9 @@ const role = computed<string>(() => {
 });
 
 const organizationsStore = useOrganizationsStore();
+const userStore = useUserStore();
+// Only owners manage guests, the backend enforces it as well
+const isOwner = computed(() => userStore.memberRole === MemberRoleDto.OWNER);
 
 const statusStore = useStatusStore();
 onMounted(() => statusStore.fetchStatus());
@@ -87,6 +93,12 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           to: `/organizations/${indexStore.selectedOrganization}/members`,
           icon: UsersIcon,
           show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("guestAccess.title"),
+          to: `/organizations/${indexStore.selectedOrganization}/guests`,
+          icon: UserPlusIcon,
+          show: () => indexStore.selectedOrganization !== null && isOwner.value,
         },
         {
           name: t("organizations.settings.title"),
