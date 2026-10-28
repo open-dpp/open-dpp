@@ -13,6 +13,9 @@ import { EnvService } from "@open-dpp/env";
 import { BaseEmail } from "./domain/base-email";
 import { EmailChangeNotificationMail } from "./domain/email-change-notification-mail";
 import { EmailTemplate } from "./domain/email-template";
+import { GuestAccessRevokedMail } from "./domain/guest-access-revoked-mail";
+import { GuestRoleChangedMail } from "./domain/guest-role-changed-mail";
+import { InviteGuestMail } from "./domain/invite-guest-mail";
 import { EmailService } from "./email.service";
 
 interface CapturedMail {
@@ -117,5 +120,98 @@ describe("EmailService template localization", () => {
     const html = lastHtml();
     expect(html).toContain("Please verify your email address");
     expect(html).toContain("Hey Ada!");
+  });
+
+  describe("guest mails", () => {
+    const link = "https://app.open-dpp.test/accept-guest-access/access-1";
+
+    it("renders the invitation in English and German", async () => {
+      const properties = { link, organizationName: "ACME GmbH", guestRoleName: "Repairer" };
+
+      await service.send(
+        InviteGuestMail.create({ to: "to@example.com", templateProperties: properties }),
+      );
+      expect(lastHtml()).toContain("You have been invited as a guest");
+      expect(lastHtml()).toContain(link);
+
+      await service.send(
+        InviteGuestMail.create({
+          to: "to@example.com",
+          language: "de",
+          templateProperties: properties,
+        }),
+      );
+      expect(lastHtml()).toContain("Du wurdest als Gast eingeladen");
+      expect(lastHtml()).toContain(link);
+    });
+
+    it("renders the role change with the link only for an invitation not accepted yet", async () => {
+      const properties = { organizationName: "ACME GmbH", guestRoleName: "Supplier" };
+
+      await service.send(
+        GuestRoleChangedMail.create({ to: "to@example.com", templateProperties: properties }),
+      );
+      expect(lastHtml()).toContain("Your guest role has changed");
+      expect(lastHtml()).toContain("Supplier");
+      expect(lastHtml()).not.toContain("Accept invitation");
+
+      await service.send(
+        GuestRoleChangedMail.create({
+          to: "to@example.com",
+          templateProperties: { ...properties, link },
+        }),
+      );
+      expect(lastHtml()).toContain("Accept invitation");
+      expect(lastHtml()).toContain(link);
+
+      await service.send(
+        GuestRoleChangedMail.create({
+          to: "to@example.com",
+          language: "de",
+          templateProperties: { ...properties, link },
+        }),
+      );
+      expect(lastHtml()).toContain("Deine Gastrolle wurde ge&auml;ndert");
+      expect(lastHtml()).toContain("Einladung annehmen");
+    });
+
+    it("renders a revoked access or a withdrawn invitation", async () => {
+      const mail = (accepted: boolean, language?: "en" | "de") =>
+        GuestAccessRevokedMail.create({
+          to: "to@example.com",
+          language,
+          templateProperties: { organizationName: "ACME GmbH", accepted },
+        });
+
+      await service.send(mail(true));
+      expect(lastHtml()).toContain("Your guest access was revoked");
+      expect(lastHtml()).not.toContain("Your invitation was withdrawn");
+
+      await service.send(mail(false));
+      expect(lastHtml()).toContain("Your invitation was withdrawn");
+      expect(lastHtml()).not.toContain("Your guest access was revoked");
+
+      await service.send(mail(true, "de"));
+      expect(lastHtml()).toContain("Dein Gastzugriff wurde entzogen");
+
+      await service.send(mail(false, "de"));
+      expect(lastHtml()).toContain("Deine Einladung wurde zur&uuml;ckgezogen");
+    });
+
+    it("uses the subject of the language", () => {
+      expect(
+        GuestAccessRevokedMail.create({
+          to: "to@example.com",
+          language: "de",
+          templateProperties: { organizationName: "ACME GmbH", accepted: false },
+        }).subject,
+      ).toEqual("Deine Einladung wurde zurückgezogen");
+      expect(
+        GuestRoleChangedMail.create({
+          to: "to@example.com",
+          templateProperties: { organizationName: "ACME GmbH", guestRoleName: "Supplier" },
+        }).subject,
+      ).toEqual("Your guest role has changed");
+    });
   });
 });

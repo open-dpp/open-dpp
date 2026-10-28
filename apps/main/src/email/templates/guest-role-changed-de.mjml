@@ -1,0 +1,34 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Deine Gastrolle wurde ge&auml;ndert</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Die Organisation {{ organizationName }} hat deine Rolle auf
+          <strong>{{ guestRoleName }}</strong> ge&auml;ndert.</mj-text
+        >
+        {{#if link}}
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Du hast die Einladung noch nicht angenommen. Melde dich mit dieser E-Mail-Adresse an oder
+          registriere dich und nimm sie mit dem Button unten an.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{ link }}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >Einladung annehmen</mj-button
+        >
+        {{/if}}
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

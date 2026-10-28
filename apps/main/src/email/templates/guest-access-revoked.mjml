@@ -1,0 +1,28 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        {{#if accepted}}
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Your guest access was revoked</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >The organization {{ organizationName }} revoked your access. You can no longer see data
+          of this organization.</mj-text
+        >
+        {{else}}
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Your invitation was withdrawn</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >The organization {{ organizationName }} withdrew your invitation as a guest. The link in
+          the invitation no longer works.</mj-text
+        >
+        {{/if}}
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

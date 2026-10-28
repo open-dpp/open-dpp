@@ -1,0 +1,35 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Your guest role has changed</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >The organization {{ organizationName }} changed your role to
+          <strong>{{ guestRoleName }}</strong
+          >.</mj-text
+        >
+        {{#if link}}
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >You have not accepted the invitation yet. Sign in or sign up with this email address and
+          accept it using the button below.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{ link }}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >Accept invitation</mj-button
+        >
+        {{/if}}
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -6,6 +6,8 @@ export const BaseEmailTypes = {
   VerifyEmail: "VERIFY_EMAIL",
   InviteUserToOrganization: "INVITE_USER_TO_ORGANIZATION",
   InviteGuest: "INVITE_GUEST",
+  GuestRoleChanged: "GUEST_ROLE_CHANGED",
+  GuestAccessRevoked: "GUEST_ACCESS_REVOKED",
   PasswordReset: "PASSWORD_RESET",
   EmailChangeNotification: "EMAIL_CHANGE_NOTIFICATION",
   EmailChangeVerification: "EMAIL_CHANGE_VERIFICATION",
