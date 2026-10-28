@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/main",
-  "version": "6.2.4",
+  "version": "6.3.2",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -70,7 +70,7 @@
     "mongodb": "~7.2",
     "mongoose": "^9.7.0",
     "multer": "^2.5.0",
-    "nodemailer": "^10.1.4",
+    "nodemailer": "^10.2.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "semver": "^7.8.5",

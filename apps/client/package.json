@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "6.2.4",
+  "version": "6.3.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -67,7 +67,7 @@
     "typescript": "^5.9.3",
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
-    "vite": "^8.3.3",
+    "vite": "^8.3.5",
     "vitest": "^4.1.11",
     "vue-tsc": "^3.3.11"
   },

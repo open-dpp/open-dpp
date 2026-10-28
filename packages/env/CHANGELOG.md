@@ -1,5 +1,17 @@
 # @open-dpp/env
 
+## 6.3.2
+
+### Patch Changes
+
+- [#1076](https://github.com/open-dpp/open-dpp/pull/1076) [`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64) Thanks [@Hentra](https://github.com/Hentra)! - Log every request, including frontend page visits and `/gs1` resolver hits, with a correlation id that is returned in the `x-correlation-id` response header. A caller-supplied `x-correlation-id` is reused when it is a plain token of up to 128 characters; otherwise a new one is generated. Request logs record the path without the query string, so tokens in links such as `/password-reset?token=…` stay out of the logs.
+
+  Two new settings: `OPEN_DPP_LOG_LEVEL` sets the most verbose level that is printed (default `debug`, which hides `verbose` output printed before), and `OPEN_DPP_TRUST_PROXY` sets Express's `trust proxy` so the real client IP is logged and used for rate limiting behind a reverse proxy. Invalid `OPEN_DPP_TRUST_PROXY` values are rejected at startup.
+
+## 6.3.1
+
+## 6.3.0
+
 ## 6.2.4
 
 ## 6.2.3

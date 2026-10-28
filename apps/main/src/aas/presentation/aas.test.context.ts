@@ -92,7 +92,6 @@ import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { CorrelationIdService } from "../../common/middleware/correlation-id.service";
 import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
@@ -151,7 +150,6 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
-        CorrelationIdService,
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,

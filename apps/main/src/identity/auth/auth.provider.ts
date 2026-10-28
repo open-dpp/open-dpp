@@ -22,6 +22,7 @@ import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infra
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
 import { fillMissingDisplayName } from "../users/infrastructure/user-display-name-hook";
+import { recordLastLogin } from "../users/infrastructure/user-last-login-hook";
 import { oauthProviderAuthOptions } from "./infrastructure/oauth-provider/oauth-provider-plugins";
 import { AUTH_BASE_PATH } from "./auth-base-path";
 import { bootstrapTrustedClient } from "./infrastructure/oauth-provider/trusted-client-upsert";
@@ -194,6 +195,11 @@ export const AuthProvider: Provider = {
             defaultValue: "en",
             validator: { input: DisplayLanguageEnum },
           },
+          lastLoginAt: {
+            type: "date",
+            required: false,
+            input: false,
+          },
         },
         changeEmail: {
           enabled: true,
@@ -279,6 +285,10 @@ export const AuthProvider: Provider = {
                 };
               }
             },
+            after: async (session) => recordLastLogin(db, logger, session),
+          },
+          update: {
+            after: async (session) => recordLastLogin(db, logger, session),
           },
         },
         user: {

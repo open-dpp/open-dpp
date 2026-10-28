@@ -39,7 +39,6 @@ services:
   # archived, images pulled from Docker Hub in 2025): Apache-2.0, one
   # multi-arch container, object versioning, a /health/ready endpoint.
   rustfs:
-    container_name: rustfs
     image: rustfs/rustfs:1.0.0-rc.6
     environment:
       - RUSTFS_ACCESS_KEY=${OPEN_DPP_S3_ACCESS_KEY}
