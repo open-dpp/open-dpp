@@ -89,6 +89,9 @@ jobs:
           publish: pnpm release
           title: "chore: version packages"
           commit: "chore: version packages"
+          # One combined `v<version>` release is created below instead of one
+          # release per published package.
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -118,6 +121,21 @@ jobs:
             git push origin "$tag"
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.version-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists, skipping."
+            exit 0
+          fi
+          node scripts/release-notes.mjs "${RELEASE_TAG#v}" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
 
       - name: Trigger versioned Docker build
         if: steps.changesets.outputs.published == 'true'

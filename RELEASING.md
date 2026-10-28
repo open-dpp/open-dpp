@@ -12,7 +12,7 @@ The flow is fully automated through [`.github/workflows/release.yml`](./.github/
 
 1. Contributors add a **changeset** file to any PR that changes a workspace package (see [When you need a changeset](#when-you-need-a-changeset)).
 2. When such a PR is merged to `main`, the release workflow opens (or updates) a **"chore: version packages"** PR that bumps versions and updates changelogs.
-3. When a maintainer merges that PR, the workflow publishes `@open-dpp/api-client` and `@open-dpp/dto` to npm and pushes git tags.
+3. When a maintainer merges that PR, the workflow publishes `@open-dpp/api-client` and `@open-dpp/dto` to npm, pushes git tags, and creates one `vX.Y.Z` GitHub release with the combined changelog.
 
 ```mermaid
 flowchart TD
@@ -32,7 +32,8 @@ flowchart TD
     L --> N[Create local git tags<br/>@open-dpp/api-client@X.Y.Z<br/>@open-dpp/dto@X.Y.Z]
     N --> O[changesets/action<br/>pushes tag to origin]
     O --> P[Push repo-wide vX.Y.Z tag<br/>post-publish step]
-    P --> Q[Dispatch build.yml at tag ref<br/>post-publish step]
+    P --> P2[Create vX.Y.Z GitHub release<br/>with combined changelog]
+    P2 --> Q[Dispatch build.yml at tag ref<br/>post-publish step]
     Q --> R[build.yml publishes<br/>ghcr.io/open-dpp/open-dpp:X.Y.Z]
 ```
 
@@ -85,7 +86,7 @@ The [`Release`](./.github/workflows/release.yml) workflow runs on every push to 
 - **If there are pending `.changeset/*.md` files:** the workflow opens (or updates) a PR titled **"chore: version packages"**. That PR runs `pnpm version-packages` (i.e. `changeset version`), which:
   - Consumes the pending changeset files and deletes them.
   - Bumps every `@open-dpp/*` package to the next version in lock-step.
-  - Regenerates `CHANGELOG.md` for each package using the `@changesets/changelog-github` formatter, which links back to the PRs and contributors.
+  - Regenerates `CHANGELOG.md` for each package using [`.changeset/changelog.cjs`](./.changeset/changelog.cjs): the `@changesets/changelog-github` formatter, which links back to the PRs and contributors, minus its "Updated dependencies" entries. Those entries only restate that the `fixed` group moved every package to the same version.
 - **If there are no pending changesets:** the workflow is a no-op.
 
 ```mermaid
@@ -113,6 +114,7 @@ sequenceDiagram
     WF->>WF: Create local tags<br/>@open-dpp/api-client@X.Y.Z<br/>@open-dpp/dto@X.Y.Z
     CS->>GH: Push new tag to origin
     WF->>GH: Push repo-wide vX.Y.Z tag<br/>(post-publish step)
+    WF->>GH: Create vX.Y.Z GitHub release<br/>(combined changelog)
     WF->>GH: Dispatch build.yml at vX.Y.Z ref<br/>(post-publish step)
     GH->>WF: Run build.yml via workflow_dispatch
     WF->>GHCR: Publish ghcr.io/open-dpp/open-dpp:X.Y.Z
@@ -133,8 +135,25 @@ sequenceDiagram
 5. Verify the release:
    - New per-package tags `@open-dpp/api-client@<version>` and `@open-dpp/dto@<version>` appear on [GitHub](https://github.com/open-dpp/open-dpp/tags). Changesets creates these.
    - A new repo-wide `v<version>` tag also appears — see [Docker images](#docker-images) below.
+   - A single [GitHub release](https://github.com/open-dpp/open-dpp/releases) `v<version>` appears — see [GitHub release](#github-release) below.
    - The new version appears on [npmjs.com/package/@open-dpp/api-client](https://www.npmjs.com/package/@open-dpp/api-client) and [npmjs.com/package/@open-dpp/dto](https://www.npmjs.com/package/@open-dpp/dto).
    - A new Docker image is published to [`ghcr.io/open-dpp/open-dpp:<version>`](https://github.com/open-dpp/open-dpp/pkgs/container/open-dpp).
+
+## GitHub release
+
+Each version gets one GitHub release named `v<version>`, not one per published package. `changesets/action` runs with `createGithubReleases: false`, and a post-publish step in `release.yml` creates the release from the output of [`scripts/release-notes.mjs`](./scripts/release-notes.mjs). The script collects the `## <version>` section from every workspace `CHANGELOG.md` (all of `apps/`, `packages/` and `docs/`, except packages in the changeset `ignore` list), merges them under Major / Minor / Patch, and lists a changeset that targeted several packages only once. Notes from private packages such as `@open-dpp/main` and `@open-dpp/client` are included.
+
+To preview the notes for a version locally:
+
+```bash
+node scripts/release-notes.mjs 6.3.3
+```
+
+If you run the manual / local release escape hatch, create the release yourself after pushing the `v<version>` tag:
+
+```bash
+node scripts/release-notes.mjs "$version" | gh release create "v$version" --verify-tag --title "v$version" --notes-file -
+```
 
 ## Docker images
 
@@ -149,13 +168,13 @@ To give each Changesets release a corresponding version-tagged Docker image (e.g
 
 **Tag shapes you will see after a release:**
 
-| Tag                                 | Created by                                   | Purpose                                                                                     |
-| ----------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `@open-dpp/api-client@<version>`    | `changeset publish`                          | Per-package git tag for the published npm package.                                          |
-| `@open-dpp/dto@<version>`           | `changeset publish`                          | Per-package git tag for the published npm package.                                          |
-| `v<version>`                        | `release.yml` post-publish step              | Repo-wide git reference for the release; used as the ref of the dispatched `build.yml` run. |
-| Docker `:<version>`                 | `build.yml` (dispatched at `v<version>` ref) | Pinnable Docker image for the release.                                                      |
-| Docker `:latest`, `:main`, `:sha-*` | `build.yml` (every push to main)             | Rolling tags; unchanged by this flow.                                                       |
+| Tag                                 | Created by                                   | Purpose                                                                                                               |
+| ----------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `@open-dpp/api-client@<version>`    | `changeset publish`                          | Per-package git tag for the published npm package.                                                                    |
+| `@open-dpp/dto@<version>`           | `changeset publish`                          | Per-package git tag for the published npm package.                                                                    |
+| `v<version>`                        | `release.yml` post-publish step              | Repo-wide git reference for the release; carries the GitHub release and is the ref of the dispatched `build.yml` run. |
+| Docker `:<version>`                 | `build.yml` (dispatched at `v<version>` ref) | Pinnable Docker image for the release.                                                                                |
+| Docker `:latest`, `:main`, `:sha-*` | `build.yml` (every push to main)             | Rolling tags; unchanged by this flow.                                                                                 |
 
 ### The version reported by the running app
 
