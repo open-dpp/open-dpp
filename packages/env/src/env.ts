@@ -86,6 +86,7 @@ export const envSchema = z
         }),
     ),
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
+    OPEN_DPP_USAGE_MANAGEMENT_URL: emptyAsUndefined(z.url({ protocol: /^https?$/ }).optional()),
     // MongoDB
     OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
     OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),

@@ -74,6 +74,34 @@ describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
   });
 });
 
+describe("validateEnv — OPEN_DPP_USAGE_MANAGEMENT_URL", () => {
+  it("accepts an https URL", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "https://billing.example.com/plan" })
+        .OPEN_DPP_USAGE_MANAGEMENT_URL,
+    ).toBe("https://billing.example.com/plan");
+  });
+
+  it("is optional (link hidden when omitted)", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_USAGE_MANAGEMENT_URL).toBeUndefined();
+  });
+
+  it("treats an empty string as omitted", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "" }).OPEN_DPP_USAGE_MANAGEMENT_URL,
+    ).toBeUndefined();
+  });
+
+  it("rejects a value that is not an http(s) URL", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "javascript:alert(1)" }),
+    ).toThrow(/OPEN_DPP_USAGE_MANAGEMENT_URL/);
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "billing.example.com" }),
+    ).toThrow(/OPEN_DPP_USAGE_MANAGEMENT_URL/);
+  });
+});
+
 describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
   const trustedClientEnv = {
     OPEN_DPP_OAUTH_PROVIDER_ENABLED: "true",

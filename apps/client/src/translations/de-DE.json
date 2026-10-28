@@ -533,6 +533,7 @@
     },
     "usage": {
       "title": "Nutzungsregeln",
+      "manage": "Nutzung verwalten",
       "setLimitsDialog": {
         "title": "Nutzungslimits setzen",
         "nullIsUnlimited": "Ein Wert von 0 bedeuted unbegrenzten Zugang."

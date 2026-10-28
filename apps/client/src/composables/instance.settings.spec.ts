@@ -7,11 +7,17 @@ import { useInstanceSettings } from "./instance.settings.ts";
 import { waitFor } from "@testing-library/vue";
 import { useUserStore } from "../stores/user.ts";
 
-const mocks = vi.hoisted(() => {
+const mocks = await vi.hoisted(async () => {
+  const { reactive } = await import("vue");
   return {
     getPublic: vi.fn(),
+    indexStore: reactive({ selectedOrganization: null as string | null }),
   };
 });
+
+vi.mock("../stores/index.ts", () => ({
+  useIndexStore: () => mocks.indexStore,
+}));
 
 vi.mock("../lib/api-client", () => ({
   default: {
@@ -56,6 +62,7 @@ describe("instanceSettings composable", () => {
     setActivePinia(createPinia());
 
     vi.resetAllMocks();
+    mocks.indexStore.selectedOrganization = null;
   });
 
   afterEach(() => {
@@ -96,5 +103,38 @@ describe("instanceSettings composable", () => {
 
     await fetchInstanceSettings();
     await waitFor(() => expect(canCreateOrganization.value).toBeTruthy());
+  });
+
+  it("should get usageManagementUrl", async () => {
+    const { usageManagementUrl, fetchInstanceSettings } = mountHarness();
+    mocks.getPublic.mockResolvedValueOnce({
+      data: {
+        signupEnabled: true,
+        usageManagementUrl: "https://billing.example.com",
+      },
+    });
+
+    await fetchInstanceSettings();
+    expect(usageManagementUrl.value).toBe("https://billing.example.com");
+
+    mocks.getPublic.mockResolvedValueOnce({ data: { signupEnabled: true } });
+    await fetchInstanceSettings();
+    expect(usageManagementUrl.value).toBeUndefined();
+  });
+
+  it("should replace the {organizationId} placeholder in usageManagementUrl", async () => {
+    const { usageManagementUrl, fetchInstanceSettings } = mountHarness();
+    mocks.getPublic.mockResolvedValue({
+      data: {
+        signupEnabled: true,
+        usageManagementUrl: "https://billing.example.com/organizations/{organizationId}",
+      },
+    });
+
+    await fetchInstanceSettings();
+    expect(usageManagementUrl.value).toBeUndefined();
+
+    mocks.indexStore.selectedOrganization = "org-1";
+    expect(usageManagementUrl.value).toBe("https://billing.example.com/organizations/org-1");
   });
 });
