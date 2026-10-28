@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 6.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`23201ff`](https://github.com/open-dpp/open-dpp/commit/23201ffe3c041ecdc24e1fa28bb6805614a66c05)]:
+  - @open-dpp/api-client@6.3.3
+  - @open-dpp/dto@6.3.3
+
 ## 6.3.2
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @open-dpp/api-client
 
+## 6.3.3
+
+### Patch Changes
+
+- [#1111](https://github.com/open-dpp/open-dpp/pull/1111) [`23201ff`](https://github.com/open-dpp/open-dpp/commit/23201ffe3c041ecdc24e1fa28bb6805614a66c05) Thanks [@Hentra](https://github.com/Hentra)! - Keep AI assistant chats out of the server logs. Chat messages are no longer logged, and errors from the chat are logged by name and stack trace only, since their messages can quote the conversation. The server now also refuses to start while `MISTRAL_DEBUG` or `LANGCHAIN_VERBOSE` is set, because either makes the AI libraries print every chat message and reply to the logs.
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.3
+
 ## 6.3.2
 
 ### Patch Changes
