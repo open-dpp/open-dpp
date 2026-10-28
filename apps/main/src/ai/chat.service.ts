@@ -9,7 +9,7 @@ import { PassportRepository } from "../passports/infrastructure/passport.reposit
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
-import { chatErrorForLog } from "./chat-error-log";
+import { logChatError } from "./chat-error-log";
 import { AiService } from "./infrastructure/ai.service";
 import { chatSubject, createPassportTool } from "./tools/passport.tool";
 import { PolicyKeyList } from "@open-dpp/dto";
@@ -87,7 +87,6 @@ export class ChatService {
       llm,
       tools,
     });
-
     const systemPrompt =
       "You are a helpful assistant answering questions about a product passport. Use the product-passport-tool to read it.";
     const prompt = ChatPromptTemplate.fromMessages([
@@ -107,17 +106,13 @@ export class ChatService {
       new StringOutputParser(),
     ]);
 
-    const errorFunc = (type: string, err: any) => {
-      const { name, stack } = chatErrorForLog(err);
-      this.logger.error(`${type}: ${name}`, stack);
-    };
     const result = await chain.invoke(
       { input: query },
       {
         callbacks: [
           {
-            handleLLMError: (err: any) => errorFunc("LLMError", err),
-            handleChainError: (err: any) => errorFunc("Chain Error", err),
+            handleLLMError: (err: any) => logChatError(this.logger, "LLMError", err),
+            handleChainError: (err: any) => logChatError(this.logger, "Chain Error", err),
             handleLLMEnd: async (output) => {
               const generation = output.generations?.[0]?.[0];
               const usageMetadata =

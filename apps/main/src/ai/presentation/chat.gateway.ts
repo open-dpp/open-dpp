@@ -12,7 +12,7 @@ import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/we
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
-import { chatErrorForLog } from "../chat-error-log";
+import { logChatError } from "../chat-error-log";
 import { ChatService } from "../chat.service";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
@@ -65,15 +65,14 @@ export class ChatGateway {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name !== "QuotaExceededError") {
-          const { name, stack } = chatErrorForLog(error);
-          this.logger.error(`Unexpected error in chat handler: ${name}`, stack);
+          logChatError(this.logger, "Unexpected error in chat handler", error);
         }
         client.emit("limitError", {
           msg: error.message,
           code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
         });
       } else {
-        this.logger.error(`Unknown error in chat handler: ${chatErrorForLog(error).name}`);
+        logChatError(this.logger, "Unknown error in chat handler", error);
         client.emit("limitError", {
           msg: "An error occurred",
           code: "ERROR",
