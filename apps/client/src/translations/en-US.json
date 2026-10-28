@@ -448,6 +448,31 @@
     "monthlyView": "Monthly view",
     "yearlyView": "Yearly view"
   },
+  "guestAccess": {
+    "title": "Guests",
+    "description": "External people such as repairers, recyclers or authorities who may see selected product passport data. Guests can only read and see nothing else of your organization.",
+    "invite": "Invite guest",
+    "email": "Email address",
+    "role": "Role",
+    "status": {
+      "label": "Status",
+      "Pending": "Invited",
+      "Accepted": "Accepted",
+      "Revoked": "Revoked"
+    },
+    "inviteSuccess": "The invitation has been sent.",
+    "inviteError": "The guest could not be invited. Check whether this email address already has access or belongs to a member.",
+    "changeRole": "Change role",
+    "changeRoleError": "The role could not be changed.",
+    "revoke": "Revoke access",
+    "revokeError": "The access could not be revoked.",
+    "revokeDialog": {
+      "header": "Revoke guest access",
+      "message": "Do you really want to revoke the access of {email}? The guest can no longer see data of your organization."
+    },
+    "errorLoading": "The guests could not be loaded.",
+    "empty": "No guests invited yet."
+  },
   "members": {
     "members": "Members"
   },

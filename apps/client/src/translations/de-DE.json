@@ -448,6 +448,31 @@
     "monthlyView": "Monatsansicht",
     "yearlyView": "Jahresansicht"
   },
+  "guestAccess": {
+    "title": "Gäste",
+    "description": "Externe Personen wie Reparateur*innen, Recycler*innen oder Behörden, die ausgewählte Daten von Produktpässen sehen dürfen. Gäste können nur lesen und sehen nichts anderes aus deiner Organisation.",
+    "invite": "Gast einladen",
+    "email": "E-Mail-Adresse",
+    "role": "Rolle",
+    "status": {
+      "label": "Status",
+      "Pending": "Eingeladen",
+      "Accepted": "Angenommen",
+      "Revoked": "Entzogen"
+    },
+    "inviteSuccess": "Die Einladung wurde versendet.",
+    "inviteError": "Der Gast konnte nicht eingeladen werden. Prüfe, ob diese E-Mail-Adresse bereits Zugriff hat oder zu einem Mitglied gehört.",
+    "changeRole": "Rolle ändern",
+    "changeRoleError": "Die Rolle konnte nicht geändert werden.",
+    "revoke": "Zugriff entziehen",
+    "revokeError": "Der Zugriff konnte nicht entzogen werden.",
+    "revokeDialog": {
+      "header": "Gastzugriff entziehen",
+      "message": "Möchtest du den Zugriff von {email} wirklich entziehen? Der Gast kann dann keine Daten deiner Organisation mehr sehen."
+    },
+    "errorLoading": "Die Gäste konnten nicht geladen werden.",
+    "empty": "Noch keine Gäste eingeladen."
+  },
   "members": {
     "members": "Mitglieder"
   },
