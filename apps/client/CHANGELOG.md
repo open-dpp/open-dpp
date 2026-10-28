@@ -1,5 +1,39 @@
 # @open-dpp/client
 
+## 6.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`23201ff`](https://github.com/open-dpp/open-dpp/commit/23201ffe3c041ecdc24e1fa28bb6805614a66c05)]:
+  - @open-dpp/api-client@6.3.3
+  - @open-dpp/dto@6.3.3
+
+## 6.3.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.2
+  - @open-dpp/dto@6.3.2
+
+## 6.3.1
+
+### Patch Changes
+
+- [#1102](https://github.com/open-dpp/open-dpp/pull/1102) [`8e2596f`](https://github.com/open-dpp/open-dpp/commit/8e2596f7605fcf0e18ce3bbc503ff303840cb935) Thanks [@Hentra](https://github.com/Hentra)! - Show last time a user logged in in the admin overview
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.1
+  - @open-dpp/dto@6.3.1
+
+## 6.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.0
+  - @open-dpp/dto@6.3.0
+
 ## 6.2.4
 
 ### Patch Changes

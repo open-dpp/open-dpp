@@ -14,9 +14,37 @@ const asStrictBoolean = z
   })
   .transform((val) => val.toLowerCase() === "true");
 
+// What Express's `trust proxy` (proxy-addr) accepts besides booleans and hop counts.
+const TRUST_PROXY_PRESETS = ["loopback", "linklocal", "uniquelocal"];
+const trustProxyAddress = z.union([z.ipv4(), z.ipv6(), z.cidrv4(), z.cidrv6()]);
+
+function isTrustProxyValue(value: string): boolean {
+  if (/^(?:true|false|\d+)$/i.test(value)) {
+    return true;
+  }
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .every(
+      (entry) => TRUST_PROXY_PRESETS.includes(entry) || trustProxyAddress.safeParse(entry).success,
+    );
+}
+
 /** `KEY=""` in an env file means "not set", like an absent variable. */
 const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
+
+/**
+ * A debug switch of an AI SDK that prints every prompt and reply to stdout. Chat content must
+ * never reach the logs, so the app refuses to start while one is set. The Mistral SDK coerces
+ * any non-empty value to true, so even `MISTRAL_DEBUG=false` turns it on.
+ */
+const chatContentDebugSwitch = (name: string) =>
+  emptyAsUndefined(
+    z.undefined({
+      message: `${name} makes the AI SDK print chat messages to the logs; unset it`,
+    }),
+  );
 
 export const envSchema = z
   .object({
@@ -37,6 +65,26 @@ export const envSchema = z
     ),
     OPEN_DPP_PERMALINK_BASE_URL: z.url().optional(),
     OPEN_DPP_LOG_FORMAT: z.enum(["json", "plain"]).optional().default("plain"),
+    OPEN_DPP_LOG_LEVEL: emptyAsUndefined(
+      z.enum(["fatal", "error", "warn", "log", "debug", "verbose"]).optional().default("debug"),
+    ),
+    OPEN_DPP_TRUST_PROXY: emptyAsUndefined(
+      z
+        .string()
+        .optional()
+        .refine((value) => value === undefined || isTrustProxyValue(value), {
+          message: `Expected "true", "false", a hop count, or a comma-separated list of IP addresses, CIDR ranges or ${TRUST_PROXY_PRESETS.map((preset) => `"${preset}"`).join(", ")}`,
+        })
+        .transform((value): boolean | number | string => {
+          if (value === undefined || value.toLowerCase() === "false") {
+            return false;
+          }
+          if (value.toLowerCase() === "true") {
+            return true;
+          }
+          return /^\d+$/.test(value) ? Number(value) : value;
+        }),
+    ),
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
     OPEN_DPP_USAGE_MANAGEMENT_URL: emptyAsUndefined(z.url({ protocol: /^https?$/ }).optional()),
     // MongoDB
@@ -48,6 +96,8 @@ export const envSchema = z
     OPEN_DPP_MONGODB_DATABASE: z.coerce.string().optional().default("management"),
     // AI
     OPEN_DPP_MISTRAL_API_KEY: z.coerce.string().optional(),
+    MISTRAL_DEBUG: chatContentDebugSwitch("MISTRAL_DEBUG"),
+    LANGCHAIN_VERBOSE: chatContentDebugSwitch("LANGCHAIN_VERBOSE"),
     // S3
     OPEN_DPP_S3_ENDPOINT: z.coerce.string(),
     OPEN_DPP_S3_PORT: z.coerce.number().max(65535).min(0),

@@ -75,3 +75,7 @@ auth-db
 
 .postman
 /postman
+
+standards
+apps/e2e/conformance-report.json
+apps/e2e/conformance-report.md
