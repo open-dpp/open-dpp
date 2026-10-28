@@ -34,6 +34,18 @@ function isTrustProxyValue(value: string): boolean {
 const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
 
+/**
+ * A debug switch of an AI SDK that prints every prompt and reply to stdout. Chat content must
+ * never reach the logs, so the app refuses to start while one is set. The Mistral SDK coerces
+ * any non-empty value to true, so even `MISTRAL_DEBUG=false` turns it on.
+ */
+const chatContentDebugSwitch = (name: string) =>
+  emptyAsUndefined(
+    z.undefined({
+      message: `${name} makes the AI SDK print chat messages to the logs; unset it`,
+    }),
+  );
+
 export const envSchema = z
   .object({
     // Misc
@@ -83,6 +95,8 @@ export const envSchema = z
     OPEN_DPP_MONGODB_DATABASE: z.coerce.string().optional().default("management"),
     // AI
     OPEN_DPP_MISTRAL_API_KEY: z.coerce.string().optional(),
+    MISTRAL_DEBUG: chatContentDebugSwitch("MISTRAL_DEBUG"),
+    LANGCHAIN_VERBOSE: chatContentDebugSwitch("LANGCHAIN_VERBOSE"),
     // S3
     OPEN_DPP_S3_ENDPOINT: z.coerce.string(),
     OPEN_DPP_S3_PORT: z.coerce.number().max(65535).min(0),

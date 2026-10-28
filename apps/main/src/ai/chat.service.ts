@@ -9,6 +9,7 @@ import { PassportRepository } from "../passports/infrastructure/passport.reposit
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
+import { logChatError } from "./chat-error-log";
 import { AiService } from "./infrastructure/ai.service";
 import { chatSubject, createPassportTool } from "./tools/passport.tool";
 import { PolicyKeyList } from "@open-dpp/dto";
@@ -105,16 +106,13 @@ export class ChatService {
       new StringOutputParser(),
     ]);
 
-    const errorFunc = (type: string, err: any) => {
-      this.logger.error(type, err);
-    };
     const result = await chain.invoke(
       { input: query },
       {
         callbacks: [
           {
-            handleLLMError: (err: any) => errorFunc("LLMError", err),
-            handleChainError: (err: any) => errorFunc("Chain Error", err),
+            handleLLMError: (err: any) => logChatError(this.logger, "LLMError", err),
+            handleChainError: (err: any) => logChatError(this.logger, "Chain Error", err),
             handleLLMEnd: async (output) => {
               const generation = output.generations?.[0]?.[0];
               const usageMetadata =
