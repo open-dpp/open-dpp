@@ -304,3 +304,20 @@ describe("validateEnv — OPEN_DPP_TRUST_PROXY", () => {
     },
   );
 });
+
+describe("validateEnv — AI SDK debug switches", () => {
+  it.each(["MISTRAL_DEBUG", "LANGCHAIN_VERBOSE"])("accepts %s unset or empty", (name: string) => {
+    expect(() => validateEnv(baseEnv)).not.toThrow();
+    expect(() => validateEnv({ ...baseEnv, [name]: "" })).not.toThrow();
+  });
+
+  it.each([
+    ["MISTRAL_DEBUG", "true"],
+    ["MISTRAL_DEBUG", "false"],
+    ["LANGCHAIN_VERBOSE", "true"],
+  ])("rejects %s=%p, which prints chat messages to the logs", (name: string, value: string) => {
+    expect(() => validateEnv({ ...baseEnv, [name]: value })).toThrow(
+      `${name} makes the AI SDK print chat messages to the logs`,
+    );
+  });
+});

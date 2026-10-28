@@ -36,6 +36,8 @@ open-dpp is configured through environment variables. Some settings can also be 
 | -------------------------- | ------ | -------- | ------- | -------------------------------- |
 | `OPEN_DPP_MISTRAL_API_KEY` | string | Yes      | –       | API key for Mistral integration. |
 
+> `MISTRAL_DEBUG` and `LANGCHAIN_VERBOSE` must not be set. They make the Mistral SDK and LangChain print every chat message and reply to the logs, so open-dpp refuses to start while either has a value. The Mistral SDK treats any non-empty value as on, even `false`.
+
 ## S3 storage
 
 | Variable                             | Type                    | Required | Default                     | Description                                      |
