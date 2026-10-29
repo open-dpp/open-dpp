@@ -6,6 +6,8 @@
   "scripts": {
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "lint:style": "eslint",
+    "lint:style:prune-suppressions": "eslint --prune-suppressions",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "gen:gs1": "tsx scripts/gs1-generator/index.mts && oxfmt --write packages/dto/src/unique-product-identifiers/gs1",
@@ -34,11 +36,16 @@
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.1",
     "@dotenvx/dotenvx": "^1.75.1",
+    "@shadcn/lint": "^0.2.3",
     "@types/node": "^22.20.5",
+    "@typescript-eslint/parser": "^8.72.1",
+    "eslint": "^10.13.0",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.86.0",
     "tsx": "^4.23.15",
     "turbo": "^2.11.10",
+    "typescript": "^5.9.3",
+    "vue-eslint-parser": "^10.4.1",
     "zod": "^4.3.6"
   },
   "packageManager": "pnpm@11.28.5"

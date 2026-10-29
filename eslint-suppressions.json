@@ -1,0 +1,575 @@
+{
+  "apps/client/src/components/QrCode.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/aas/AASEditor.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/aas/SubmodelElementListEditor.vue": {
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/aas/form/FileField.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/aas/form/PropertyValueField.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/aas/presentation/ElementPresentationPanel.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 2
+    },
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/components/aas/presentation/PresentationPreviewFrame.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/activity-history/ActivityHistoryStackBreadcrumb.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/activity-history/DescriptionTerm.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/activity-history/EditorActivityHistory.vue": {
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/activity-history/IdShortPath.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/activity-history/SubmodelElementMoved.vue": {
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/admin/AdminUsersList.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/admin/ChangeRoleDialog.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/admin/InstanceSettingToogle.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/admin/InstanceSettingUrlInput.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/admin/InviteToOrganizationDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 7
+    }
+  },
+  "apps/client/src/components/admin/InviteUserDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 10
+    }
+  },
+  "apps/client/src/components/basics/TextFieldWithValidation.vue": {
+    "shadcn/require-static-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/bulk-import/EditConfigDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/bulk-import/Stat.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/bulk-import/steps/ConfigDetailsStep.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/bulk-import/steps/UploadTemplateStep.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue": {
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/digital-product-document/DigitalProductDocumentToolbar.vue": {
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/lists/ListHeader.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/lists/SimpleTable.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 7
+    }
+  },
+  "apps/client/src/components/media/GalleriaEdit.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/media/MediaDetailsSidebar.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 15
+    }
+  },
+  "apps/client/src/components/media/MediaFieldView.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/media/MediaInput.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 3
+    },
+    "shadcn/no-unknown-classes": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/media/MediaListItem.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/components/media/MediaModal.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/media/MediaPreview.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 2
+    },
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/media/ProductImageGalleria.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/navigation/Breadcrumbs.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/navigation/RingLoader.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 5
+    },
+    "shadcn/no-unknown-classes": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/navigation/SidebarContent.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 6
+    }
+  },
+  "apps/client/src/components/notifications/NotificationView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 12
+    }
+  },
+  "apps/client/src/components/organizations/CreateOrganizationForm.vue": {
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/organizations/EmptyState.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/organizations/InviteMemberDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 8
+    }
+  },
+  "apps/client/src/components/organizations/OrganizationMembersList.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 8
+    }
+  },
+  "apps/client/src/components/organizations/OrganizationsAdminList.vue": {
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/organizations/OrganizationsGrid.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 16
+    }
+  },
+  "apps/client/src/components/organizations/SelectOrganization.vue": {
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/organizations/UserInvitationsList.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 9
+    }
+  },
+  "apps/client/src/components/pagination/TablePagination.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    },
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/passport/PassportRegistryExportDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/permalinks/Gs1DataAttributesField.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/permalinks/PermalinkCreateDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/permalinks/PermalinkEditDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 11
+    }
+  },
+  "apps/client/src/components/permalinks/PermalinkQrCode.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/policy/LimitInput.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/policy/SetPolicyLimitDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/presentation/BigNumberValue.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/presentation/Breadcrumbs.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/presentation/Navbar.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    },
+    "shadcn/no-restyle": {
+      "count": 6
+    }
+  },
+  "apps/client/src/components/presentation/NavigationDrawer.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 5
+    }
+  },
+  "apps/client/src/components/presentation/NavigationTree.vue": {
+    "shadcn/no-restyle": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/presentation/Passport.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/components/presentation/PassportHeader.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 9
+    }
+  },
+  "apps/client/src/components/presentation/PassportQrCodeDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 7
+    },
+    "shadcn/no-unknown-classes": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/presentation/Submodel.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/presentation/SubmodelElement.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/components/presentation/SubmodelElementCollection.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/presentation/SubmodelElementValue.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/presentation/Table.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/presentation/TableColumnHeader.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/profile/Username.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/template/TemplateSelectOption.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 8
+    }
+  },
+  "apps/client/src/layout/Main.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 2
+    },
+    "shadcn/no-raw-colors": {
+      "count": 4
+    },
+    "shadcn/no-restyle": {
+      "count": 2
+    }
+  },
+  "apps/client/src/layout/None.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    }
+  },
+  "apps/client/src/layout/Presentation.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/admin/SettingsAdminView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 7
+    }
+  },
+  "apps/client/src/view/auth/EmailChangeRevokeConfirmView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 6
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/auth/EmailChangeRevokedView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 6
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/auth/EmailVerifiedView.vue": {
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/auth/PasswordReset.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 8
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/auth/PasswordResetRequest.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 7
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/auth/Signin.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 14
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/auth/Signup.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 10
+    },
+    "shadcn/no-restyle": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/integrations/AiIntegrationView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/view/integrations/BulkImportListView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/view/integrations/BulkImportRunDetailView.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/view/integrations/IntegrationView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 2
+    }
+  },
+  "apps/client/src/view/organizations/AcceptInviteToOrganizationView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/view/organizations/CreateOrganizationView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/view/organizations/OrganizationSettingsView.vue": {
+    "shadcn/no-inline-styles": {
+      "count": 1
+    },
+    "shadcn/no-raw-colors": {
+      "count": 10
+    }
+  },
+  "apps/client/src/view/organizations/OrganizationUsageView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/passports/PassportView.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 3
+    },
+    "shadcn/no-raw-colors": {
+      "count": 8
+    }
+  },
+  "apps/client/src/view/presentation/404.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 3
+    }
+  },
+  "apps/client/src/view/presentation/Chat.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 3
+    },
+    "shadcn/no-raw-colors": {
+      "count": 4
+    }
+  },
+  "apps/client/src/view/profile/ProfileInvitationsView.vue": {
+    "shadcn/no-raw-colors": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/templates/TemplateView.vue": {
+    "shadcn/no-arbitrary-values": {
+      "count": 3
+    },
+    "shadcn/no-raw-colors": {
+      "count": 8
+    }
+  }
+}

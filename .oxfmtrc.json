@@ -6,5 +6,5 @@
   "printWidth": 100,
   "organizeImports": true,
   "sortTailwindcss": {},
-  "ignorePatterns": ["**/CHANGELOG.md"]
+  "ignorePatterns": ["**/CHANGELOG.md", "eslint-suppressions.json"]
 }
