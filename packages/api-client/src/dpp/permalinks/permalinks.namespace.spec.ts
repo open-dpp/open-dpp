@@ -72,6 +72,25 @@ describe("PermalinksNamespace", () => {
       expect(axios.delete).toHaveBeenCalledWith("/permalinks/a%2Fb");
     });
 
+    it("getCarrierExport('pl-1') calls GET /permalinks/pl-1/carrier as blob", async () => {
+      const { ns, axios } = makeNamespace();
+      await ns.getCarrierExport("pl-1");
+      expect(axios.get).toHaveBeenCalledWith("/permalinks/pl-1/carrier", {
+        params: undefined,
+        responseType: "blob",
+      });
+    });
+
+    it("getCarrierExport passes the settings as query params and encodes the id", async () => {
+      const { ns, axios } = makeNamespace();
+      const settings = { format: "png", moduleSize: 0.99, dpi: 600, errorCorrection: "Q" } as const;
+      await ns.getCarrierExport("a/b", settings);
+      expect(axios.get).toHaveBeenCalledWith("/permalinks/a%2Fb/carrier", {
+        params: settings,
+        responseType: "blob",
+      });
+    });
+
     it("no longer exposes setPrimary (primary concept removed)", () => {
       const { ns } = makeNamespace();
       expect((ns as unknown as Record<string, unknown>).setPrimary).toBeUndefined();

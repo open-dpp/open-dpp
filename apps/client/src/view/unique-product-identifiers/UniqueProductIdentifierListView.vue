@@ -11,7 +11,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import UniqueProductIdentifierCreateDialog from "../../components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue";
 import Gs1DigitalLinkPromptDialog from "../../components/unique-product-identifier/Gs1DigitalLinkPromptDialog.vue";
-import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
+import DataCarrier from "../../components/permalinks/DataCarrier.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
@@ -117,6 +117,7 @@ function openQrDialog(upi: UniqueProductIdentifierListItemDto) {
 const qrPermalink = computed(() =>
   qrUpi.value?.permalink
     ? {
+        id: qrUpi.value.permalink.id,
         kind: qrUpi.value.permalink.kind,
         publicUrl: qrUpi.value.permalink.publicUrl,
       }
@@ -285,7 +286,7 @@ onMounted(async () => {
     />
 
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
-      <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" :identity="qrIdentity" />
+      <DataCarrier v-if="qrPermalink" :permalink="qrPermalink" :identity="qrIdentity" />
     </Dialog>
   </ContentViewWrapper>
 </template>

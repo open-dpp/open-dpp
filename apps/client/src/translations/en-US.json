@@ -1227,12 +1227,21 @@
     "aiRequired": "Select an AI.",
     "valueRequired": "Value is required."
   },
-  "permalinkQrCode": {
+  "dataCarrier": {
+    "image": {
+      "alt": "Data carrier for {url}"
+    },
     "digitalLink": {
       "label": "GS1 Digital Link"
     },
     "elementString": {
       "label": "GS1 element string"
-    }
+    },
+    "download": {
+      "svg": "Download SVG",
+      "png": "Download PNG"
+    },
+    "loadError": "The data carrier could not be loaded.",
+    "downloadError": "The data carrier could not be downloaded."
   }
 }

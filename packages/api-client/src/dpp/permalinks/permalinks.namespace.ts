@@ -1,11 +1,12 @@
 import type {
+  CarrierExportQueryParams,
   PassportPermalinkBundleDto,
   PermalinkCreateRequest,
   PermalinkPaginationDto,
   PermalinkPublicDto,
   PermalinkUpdateRequest,
 } from "@open-dpp/dto";
-import type { AxiosInstance } from "axios";
+import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
 import type { CursorListParams } from "../cursor-list-params";
 
@@ -44,6 +45,17 @@ export class PermalinksNamespace {
     return this.axiosInstance.patch<PermalinkPublicDto>(
       `${this.backofficeEndpoint}/${encodeURIComponent(id)}`,
       data,
+    );
+  }
+
+  /** The Carrier Export (SVG or PNG) of one permalink; omitted settings fall back to the defaults. */
+  public async getCarrierExport(
+    id: string,
+    params?: CarrierExportQueryParams,
+  ): Promise<AxiosResponse<Blob>> {
+    return this.axiosInstance.get<Blob>(
+      `${this.backofficeEndpoint}/${encodeURIComponent(id)}/carrier`,
+      { params, responseType: "blob" },
     );
   }
 

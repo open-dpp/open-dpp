@@ -37,6 +37,13 @@ test("a new passport has exactly one open-dpp permalink with a QR code", async (
   await page.getByTestId(`permalink-show-qr-btn-${permalinkId}`).click();
   await expect(page.getByTestId("permalink-qr-url")).toHaveText(publicUrl);
   await expect(page.getByTestId("permalink-qr-copy-btn")).toBeVisible();
+
+  // the server-rendered SVG has loaded, not just its placeholder
+  const carrier = page.getByTestId("data-carrier-image");
+  await expect(carrier).toBeVisible();
+  await expect
+    .poll(() => carrier.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
 });
 
 test("a bare permalink can be created without selecting an identifier", async ({ page }) => {
