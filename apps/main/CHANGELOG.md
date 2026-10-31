@@ -1,5 +1,18 @@
 # @open-dpp/main
 
+## 6.3.5
+
+### Patch Changes
+
+- [#1134](https://github.com/open-dpp/open-dpp/pull/1134) [`0ce294e`](https://github.com/open-dpp/open-dpp/commit/0ce294e9dcbfef4eb419c3100aea91424bbb7710) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the container's Node.js runtime from 24.22.1 to 26.13.0 LTS. Node 24 entered maintenance on 2026-10-20, and Node 26 is the active LTS line, supported until 2029-04-30. Building from source now requires Node.js 26.13.0 or later: `pnpm install` stops with an error on older versions.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.5
+  - @open-dpp/dto@6.3.5
+  - @open-dpp/env@6.3.5
+  - @open-dpp/exception@6.3.5
+  - @open-dpp/permission@6.3.5
+
 ## 6.3.4
 
 ### Patch Changes
