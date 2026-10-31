@@ -20,7 +20,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: 24
+      NODE_VERSION: 26
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
       && !contains(github.event.pull_request.labels.*.name, 'dependencies')
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: 24
+      NODE_VERSION: 26
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,7 +91,7 @@ jobs:
     permissions:
       contents: read
     env:
-      NODE_VERSION: 24
+      NODE_VERSION: 26
       # Common
       OPEN_DPP_PORT: "3000"
       OPEN_DPP_URL: "http://dpp.example.de"
