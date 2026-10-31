@@ -11,6 +11,7 @@
     "**/*spec.ts",
     "**/*test.context.ts",
     "**/*.test-helpers.ts",
-    "**/*.test-env.ts"
+    "**/*.test-env.ts",
+    "vitest.config.ts"
   ]
 }

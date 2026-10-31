@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { AdministrativeInformation } from "./administrative-information";
 
 describe("AdministrativeInformation", () => {

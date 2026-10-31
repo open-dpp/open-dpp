@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { BulkImportProductLink } from "./bulk-import-product-link";
 
 describe("BulkImportProductLink", () => {

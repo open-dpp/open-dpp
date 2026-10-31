@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { Quota } from "../domain/quota";
@@ -17,18 +17,18 @@ describe("policyService", () => {
 
   beforeEach(async () => {
     limitRepository = {
-      findOneByOrganizationIdAndKey: jest.fn(),
-      update: jest.fn(),
+      findOneByOrganizationIdAndKey: vi.fn(),
+      update: vi.fn(),
     };
     quotaRepository = {
-      findOneByOrganizationIdAndKey: jest.fn(),
-      update: jest.fn(),
+      findOneByOrganizationIdAndKey: vi.fn(),
+      update: vi.fn(),
     };
     envService = {
-      get: jest.fn(),
+      get: vi.fn(),
     };
     limitEvaluatorService = {
-      getCurrent: jest.fn(),
+      getCurrent: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

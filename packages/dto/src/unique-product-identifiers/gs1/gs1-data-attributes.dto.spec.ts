@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Gs1DataAttributesSchema } from "./gs1-data-attributes.dto";
 
 describe("Gs1DataAttributesSchema", () => {

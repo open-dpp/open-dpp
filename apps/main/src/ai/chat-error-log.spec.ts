@@ -1,11 +1,11 @@
 import type { LoggerService } from "@nestjs/common";
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { logChatError } from "./chat-error-log";
 import { CHAT_CONTENT } from "./chat-logs.test-helpers";
 
 function loggerSpy() {
-  const error = jest.fn<LoggerService["error"]>();
-  return { logger: { error, log: jest.fn(), warn: jest.fn() } as LoggerService, error };
+  const error = vi.fn<LoggerService["error"]>();
+  return { logger: { error, log: vi.fn(), warn: vi.fn() } as LoggerService, error };
 }
 
 describe("logChatError", () => {

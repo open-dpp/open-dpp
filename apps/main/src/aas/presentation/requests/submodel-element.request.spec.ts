@@ -6,7 +6,7 @@ import {
   SubmodelElementSchema,
 } from "@open-dpp/dto";
 import { SubmodelElementRequest } from "./submodel-element.request";
-import { beforeAll } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 
 describe("SubmodelElementRequest", () => {

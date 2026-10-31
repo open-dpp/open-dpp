@@ -1,4 +1,4 @@
-import { beforeAll, expect } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { DataTypeDef, KeyTypes, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";

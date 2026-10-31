@@ -23,7 +23,8 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
-    "test": "jest --passWithNoTests"
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.6",
@@ -32,36 +33,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@swc/core": "^1.16.20",
-    "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
-    "jest": "^30.4.2",
     "typescript": "^5.9.3"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest",
-        {
-          "jsc": {
-            "target": "es2022",
-            "parser": {
-              "syntax": "typescript",
-              "decorators": true
-            },
-            "transform": {
-              "decoratorMetadata": true
-            }
-          },
-          "module": {
-            "type": "commonjs"
-          }
-        }
-      ]
-    }
   },
   "packageManager": "pnpm@11.28.9"
 }

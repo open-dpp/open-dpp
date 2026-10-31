@@ -1,5 +1,5 @@
 import { ApiVersionsDto, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
-import { beforeAll } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { ValueModificationRequest } from "./value-modification.request";
 

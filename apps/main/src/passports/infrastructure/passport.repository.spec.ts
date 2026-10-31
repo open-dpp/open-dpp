@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { Test } from "@nestjs/testing";
@@ -54,7 +54,7 @@ describe("passportRepository", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 

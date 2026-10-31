@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { PermalinkKind } from "@open-dpp/dto";
 import { NotFoundError } from "@open-dpp/exception";
 import { gs1DataAttributesPlainFactory, passportsPlainFactory } from "@open-dpp/testing";
@@ -26,8 +26,8 @@ function publishedOpenDpp(passportId: string, createdAt = new Date("2026-01-01")
 
 describe("euRegistryExportService", () => {
   const organizationId = randomUUID();
-  let passportRepository: { findAllByOrganizationId: jest.Mock<any> };
-  let permalinkRepository: { findAllByPassportId: jest.Mock<any> };
+  let passportRepository: { findAllByOrganizationId: Mock<any> };
+  let permalinkRepository: { findAllByPassportId: Mock<any> };
   let service: EuRegistryExportService;
   let permalinksByPassport: Map<string, Permalink[]>;
 
@@ -47,9 +47,9 @@ describe("euRegistryExportService", () => {
 
   beforeEach(() => {
     permalinksByPassport = new Map();
-    passportRepository = { findAllByOrganizationId: jest.fn() };
+    passportRepository = { findAllByOrganizationId: vi.fn() };
     permalinkRepository = {
-      findAllByPassportId: jest.fn(async (id: any) => permalinksByPassport.get(id) ?? []),
+      findAllByPassportId: vi.fn(async (id: any) => permalinksByPassport.get(id) ?? []),
     };
     service = new EuRegistryExportService(
       passportRepository as unknown as PassportRepository,
@@ -71,7 +71,7 @@ describe("euRegistryExportService", () => {
 
   it("throws NotFoundError before yielding when no published passport matches", async () => {
     servePassports([]);
-    const onFile = jest.fn<(file: RegistryExportFile) => void>();
+    const onFile = vi.fn<(file: RegistryExportFile) => void>();
     await expect(run({}, onFile)).rejects.toThrow(NotFoundError);
     expect(onFile).not.toHaveBeenCalled();
   });

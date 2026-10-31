@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -30,23 +30,23 @@ describe("EmailChangeRequestsService", () => {
   const currentUser = { id: "user-1", email: "current@x.com", firstName: "Ada" };
   const headers = { cookie: "session=abc" } as const;
 
-  let errorSpy: ReturnType<typeof jest.spyOn>;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
-    errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
 
     mockAccountsService = {
-      verifyPassword: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+      verifyPassword: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
     };
     mockAuth = {
       api: {
-        changeEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-        signInEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-        signOut: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        changeEmail: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        signInEmail: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        signOut: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
     };
     mockEmail = {
-      send: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+      send: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
 
     module = await Test.createTestingModule({
@@ -245,7 +245,7 @@ describe("EmailChangeRequestsService", () => {
 
     it("propagates the rollback error when changeEmail AND deleteByUserId both reject", async () => {
       mockAuth.api.changeEmail.mockRejectedValue(new Error("auth boom"));
-      jest.spyOn(repository, "deleteByUserId").mockRejectedValue(new Error("rollback failed"));
+      vi.spyOn(repository, "deleteByUserId").mockRejectedValue(new Error("rollback failed"));
 
       // The catch block awaits the rollback (deleteByUserId) BEFORE re-throwing
       // the original error, so when the rollback itself rejects that rejection

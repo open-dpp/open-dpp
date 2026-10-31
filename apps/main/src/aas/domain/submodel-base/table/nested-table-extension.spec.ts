@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { IdShortPath } from "../../common/id-short-path";
 import { LanguageText } from "../../common/language-text";
@@ -439,8 +439,8 @@ describe("NestedTableExtension", () => {
       Property.create({ idShort: "subCol1", valueType: DataTypeDef.String }),
       { ability },
     );
-    const onMoveMock = jest.fn();
-    const deleteColumnMock = jest.fn();
+    const onMoveMock = vi.fn();
+    const deleteColumnMock = vi.fn();
     submodel.deleteColumnFromGroup(table3Path, "group1", "subCol1", {
       ability,
       onMove: onMoveMock,
@@ -487,7 +487,7 @@ describe("NestedTableExtension", () => {
 
   it("should move top-level column into group in table3 and propagate to all instances", () => {
     const { submodel, ability } = createSubmodelWithGroupInTable3();
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
 
     submodel.moveColumnToGroup(table3Path, "col1", "group1", { ability, onMove: onMoveMock });
     for (const [index, row] of getAllTable3Rows(submodel).entries()) {

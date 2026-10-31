@@ -2,7 +2,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import type { Model } from "mongoose";
-import { expect } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";

@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Member } from "./member";
 import { MemberRole } from "./member-role.enum";
 

@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { EmailChangeVerificationMail } from "./email-change-verification-mail";
 
 describe("EmailChangeVerificationMail", () => {

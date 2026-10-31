@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import {
   DataTypeDef,
   EntityType,

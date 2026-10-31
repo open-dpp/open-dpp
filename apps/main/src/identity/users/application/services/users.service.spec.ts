@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Language } from "@open-dpp/dto";
@@ -16,18 +16,18 @@ describe("UsersService", () => {
 
   beforeEach(async () => {
     mockRepo = {
-      save: jest.fn(),
-      findOneOrFail: jest.fn(),
-      findOneById: jest.fn(),
-      findOneByEmail: jest.fn(),
-      findAllByIds: jest.fn(),
-      update: jest.fn(),
+      save: vi.fn(),
+      findOneOrFail: vi.fn(),
+      findOneById: vi.fn(),
+      findOneByEmail: vi.fn(),
+      findAllByIds: vi.fn(),
+      update: vi.fn(),
     };
 
     mockAuth = {
       api: {
-        requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-        sendVerificationEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        requestPasswordReset: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        sendVerificationEmail: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
     };
 
@@ -69,7 +69,7 @@ describe("UsersService", () => {
     mockRepo.save.mockResolvedValue(savedUser);
     const smtpError = new Error("smtp down");
     mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
-    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
 
     const result = await service.createUser("test@example.com", "John", "Doe");
 
@@ -89,7 +89,7 @@ describe("UsersService", () => {
     mockRepo.save.mockResolvedValue(savedUser);
     const smtpError = new Error("smtp down");
     mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
-    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
 
     const result = await service.createUser("test@example.com", "John", "Doe");
 

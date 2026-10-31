@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { Property } from "../submodel-base/property";

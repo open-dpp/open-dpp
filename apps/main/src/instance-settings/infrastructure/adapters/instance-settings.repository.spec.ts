@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";

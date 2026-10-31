@@ -6,12 +6,13 @@
  * no longer exist (before removal they fail as unused directives).
  */
 
+import { describe, expect, it, vi } from "vitest";
 import { PassportNamespace } from "./passports.namespace";
 
 function makeNamespace() {
-  const get = jest.fn().mockResolvedValue({ data: {} });
-  const put = jest.fn().mockResolvedValue({ data: {} });
-  const axiosDelete = jest.fn().mockResolvedValue({ data: undefined });
+  const get = vi.fn().mockResolvedValue({ data: {} });
+  const put = vi.fn().mockResolvedValue({ data: {} });
+  const axiosDelete = vi.fn().mockResolvedValue({ data: undefined });
   const axios = { get, put, delete: axiosDelete } as any;
   return { ns: new PassportNamespace(axios), axios };
 }

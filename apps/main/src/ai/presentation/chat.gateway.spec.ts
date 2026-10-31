@@ -3,7 +3,7 @@ import type { PermalinkApplicationService } from "../../permalink/application/se
 import type { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import type { CapturedLogs } from "../chat-logs.test-helpers";
 import type { ChatService } from "../chat.service";
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { CHAT_CONTENT, captureLogs } from "../chat-logs.test-helpers";
 import { ChatGateway } from "./chat.gateway";
@@ -11,25 +11,25 @@ import { ChatGateway } from "./chat.gateway";
 const BOT_REPLY = "The Pacemaker X2 holds 1.2 Ah.";
 
 describe("ChatGateway", () => {
-  let askAgent: jest.Mock<ChatService["askAgent"]>;
+  let askAgent: Mock<ChatService["askAgent"]>;
   let gateway: ChatGateway;
   let client: Socket;
   let logs: CapturedLogs;
 
   beforeEach(() => {
-    askAgent = jest.fn<ChatService["askAgent"]>();
+    askAgent = vi.fn<ChatService["askAgent"]>();
     const permalinkApplicationService = {
-      resolveToPassport: jest.fn(async () => ({ passport: { id: "passport-1" } })),
+      resolveToPassport: vi.fn(async () => ({ passport: { id: "passport-1" } })),
     } as unknown as PermalinkApplicationService;
     const uniqueProductIdentifierRepository = {
-      findOneByReferencedId: jest.fn(async () => ({ uuid: "upi-1" })),
+      findOneByReferencedId: vi.fn(async () => ({ uuid: "upi-1" })),
     } as unknown as UniqueProductIdentifierRepository;
     gateway = new ChatGateway(
       { askAgent } as unknown as ChatService,
       permalinkApplicationService,
       uniqueProductIdentifierRepository,
     );
-    client = { data: {}, emit: jest.fn() } as unknown as Socket;
+    client = { data: {}, emit: vi.fn() } as unknown as Socket;
     logs = captureLogs();
   });
 

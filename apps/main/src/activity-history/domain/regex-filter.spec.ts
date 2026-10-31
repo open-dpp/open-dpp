@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { RegexFilter } from "./regex-filter";
 
 describe("RegexFilter", () => {

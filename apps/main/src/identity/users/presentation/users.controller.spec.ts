@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
@@ -43,12 +43,12 @@ describe("UsersController", () => {
   let moduleRef: TestingModule;
   let usersRepository: UsersRepository;
   let usersService: UsersService;
-  let emailSendMock: jest.Mock;
+  let emailSendMock: Mock;
   let connection: Connection;
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
-    emailSendMock = jest.fn();
+    emailSendMock = vi.fn();
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
@@ -97,7 +97,7 @@ describe("UsersController", () => {
   });
 
   beforeEach(async () => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("POST /users", () => {

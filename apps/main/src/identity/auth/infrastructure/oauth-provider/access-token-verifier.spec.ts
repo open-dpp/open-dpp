@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import {
   accessTokenClaims,
   createSigningKey,
@@ -46,7 +46,7 @@ describe("Trusted Client access token verifier", () => {
   });
 
   it("fetches the key set once and reuses it for later tokens", async () => {
-    const jwksFetch = jest.fn(async () => key.jwks);
+    const jwksFetch = vi.fn(async () => key.jwks);
     const cachingVerifier = createAccessTokenVerifier({
       issuer: ISSUER,
       clientId: CLIENT_ID,
@@ -61,7 +61,7 @@ describe("Trusted Client access token verifier", () => {
 
   it("refetches the key set for a key id it has not seen (rotation)", async () => {
     const rotated = createSigningKey();
-    const jwksFetch = jest
+    const jwksFetch = vi
       .fn<() => Promise<{ keys: Record<string, unknown>[] }>>()
       .mockResolvedValueOnce(key.jwks)
       .mockResolvedValueOnce({ keys: [...key.jwks.keys, ...rotated.jwks.keys] });

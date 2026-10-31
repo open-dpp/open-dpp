@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, describe, expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
@@ -244,7 +244,7 @@ describe("submodel", () => {
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
 
     expect(() =>
       submodel.deleteColumn(
@@ -326,7 +326,7 @@ describe("submodel", () => {
     const [row0, row1] = tableExtension.rows;
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
 
     expect(() =>
       submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
@@ -434,7 +434,7 @@ describe("submodel", () => {
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
     expect(() =>
       submodel.deleteSubmodelElement(path, {
         ability: anonymousAbility,
@@ -478,14 +478,14 @@ describe("submodel", () => {
     const moved = submodel.moveSubmodelElement(
       IdShortPath.create({ path: "SectionB" }),
       { position: 0 },
-      { ability, onMove: jest.fn() },
+      { ability, onMove: vi.fn() },
     );
     expect(moved).toBe(sectionB);
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["SectionB", "SectionA"]);
 
     // reparent to a sibling collection, descendants should be recomputed
     submodel.withTracking();
-    const onMove = jest.fn();
+    const onMove = vi.fn();
     const movedSub1 = submodel.moveSubmodelElement(
       IdShortPath.create({ path: "SectionA.Sub1" }),
       { path: IdShortPath.create({ path: "SectionB" }) },
@@ -522,7 +522,7 @@ describe("submodel", () => {
     const movedLeaf = submodel.moveSubmodelElement(
       IdShortPath.create({ path: "SectionB.Sub1.Leaf1" }),
       { path: IdShortPath.fromSegments([]) },
-      { ability, onMove: jest.fn() },
+      { ability, onMove: vi.fn() },
     );
     expect(movedLeaf).toBe(leaf);
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual([
@@ -551,14 +551,14 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "Parent" }),
         { path: IdShortPath.create({ path: "Parent" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(ValueError);
     expect(() =>
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "Parent" }),
         { path: IdShortPath.create({ path: "Parent.Child" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(ValueError);
   });
@@ -588,7 +588,7 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "SectionA.Clash" }),
         { path: IdShortPath.create({ path: "SectionB" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(ValueError);
     // rolled back: still in its original position under SectionA
@@ -620,7 +620,7 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "Prop1" }),
         { path: IdShortPath.create({ path: "List1" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(
       new ValueError(
@@ -640,7 +640,7 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "Section1" }),
         { path: IdShortPath.create({ path: "List1" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(ValueError);
     expect(list.getSubmodelElements()).toEqual([]);
@@ -676,7 +676,7 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "PropForRow" }),
         { path: IdShortPath.create({ path: "List1.row_0" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(ValueError);
     expect(row.getSubmodelElements()).toEqual([group]);
@@ -691,7 +691,7 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "PropForGroup" }),
         { path: IdShortPath.create({ path: "List1.row_0.Group1" }) },
-        { ability, onMove: jest.fn() },
+        { ability, onMove: vi.fn() },
       ),
     ).toThrow(ValueError);
     expect(group.getSubmodelElements()).toEqual([]);
@@ -724,7 +724,7 @@ describe("submodel", () => {
       submodel.moveSubmodelElement(
         IdShortPath.create({ path: "Prop1" }),
         { path: IdShortPath.create({ path: "SectionA" }) },
-        { ability: anonymousAbility, onMove: jest.fn() },
+        { ability: anonymousAbility, onMove: vi.fn() },
       ),
     ).toThrow(ForbiddenError);
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["SectionA", "Prop1"]);

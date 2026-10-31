@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { type Mock, afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
@@ -287,14 +287,14 @@ describe("aasSerializationService", () => {
   let passportRepository: PassportRepository;
   let templateRepository: TemplateRepository;
   let module: TestingModule;
-  let mockMediaService: { findByIds: jest.Mock<any> };
+  let mockMediaService: { findByIds: Mock<any> };
   let environmentService: EnvironmentService;
 
   beforeAll(async () => {
     registerSubmodelElementClasses();
 
     mockMediaService = {
-      findByIds: jest.fn<any>().mockResolvedValue([]),
+      findByIds: vi.fn<any>().mockResolvedValue([]),
     };
 
     module = await Test.createTestingModule({
@@ -351,7 +351,7 @@ describe("aasSerializationService", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 
@@ -955,11 +955,11 @@ describe("aasSerializationService", () => {
       const aasRepository = module.get<AasRepository>(AasRepository);
       const submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
 
-      const saveSpy = jest
+      const saveSpy = vi
         .spyOn(presentationConfigurationRepository, "save")
         .mockRejectedValueOnce(new Error("boom"));
       const serviceLogger = (aasSerializationService as unknown as { logger: Logger }).logger;
-      const logSpy = jest.spyOn(serviceLogger, "error").mockImplementation(() => {});
+      const logSpy = vi.spyOn(serviceLogger, "error").mockImplementation(() => {});
 
       let capturedPassport: Passport | undefined;
       try {
@@ -1006,11 +1006,11 @@ describe("aasSerializationService", () => {
       const aasRepository = module.get<AasRepository>(AasRepository);
       const submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
 
-      const saveSpy = jest
+      const saveSpy = vi
         .spyOn(presentationConfigurationRepository, "save")
         .mockRejectedValueOnce(new Error("boom"));
       const serviceLogger = (aasSerializationService as unknown as { logger: Logger }).logger;
-      const logSpy = jest.spyOn(serviceLogger, "error").mockImplementation(() => {});
+      const logSpy = vi.spyOn(serviceLogger, "error").mockImplementation(() => {});
 
       let capturedTemplate: Template | undefined;
       try {

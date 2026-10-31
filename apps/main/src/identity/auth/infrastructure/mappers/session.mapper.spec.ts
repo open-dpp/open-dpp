@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Session as BetterAuthSessionSchema } from "better-auth";
 import { Session } from "../../domain/session";
 import { SessionDocument } from "../schemas/session.schema";

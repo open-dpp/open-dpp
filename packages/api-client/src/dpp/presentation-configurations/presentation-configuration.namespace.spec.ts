@@ -1,10 +1,11 @@
+import { describe, expect, it, vi } from "vitest";
 import { PresentationConfigurationNamespace } from "./presentation-configuration.namespace";
 
 function makeNamespace() {
-  const get = jest.fn().mockResolvedValue({ data: [] });
-  const post = jest.fn().mockResolvedValue({ data: {} });
-  const patch = jest.fn().mockResolvedValue({ data: {} });
-  const del = jest.fn().mockResolvedValue({ data: undefined });
+  const get = vi.fn().mockResolvedValue({ data: [] });
+  const post = vi.fn().mockResolvedValue({ data: {} });
+  const patch = vi.fn().mockResolvedValue({ data: {} });
+  const del = vi.fn().mockResolvedValue({ data: undefined });
   const axios = { get, post, patch, delete: del } as any;
   return { ns: new PresentationConfigurationNamespace(axios, "passports"), axios };
 }
@@ -51,7 +52,7 @@ describe("PresentationConfigurationNamespace plural", () => {
   });
 
   it("templates scope uses /templates path", async () => {
-    const get = jest.fn().mockResolvedValue({ data: [] });
+    const get = vi.fn().mockResolvedValue({ data: [] });
     const ns = new PresentationConfigurationNamespace({ get } as any, "templates");
     await ns.list("t-1");
     expect(get).toHaveBeenCalledWith("/templates/t-1/presentation-configurations");

@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { TimePeriod } from "./time-period";
 import { Timeseries } from "./timeseries";
 

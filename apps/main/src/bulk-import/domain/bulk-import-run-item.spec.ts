@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { BulkImportRunItemStatusDto } from "@open-dpp/dto";
 import { BulkImportRunItem } from "./bulk-import-run-item";
 

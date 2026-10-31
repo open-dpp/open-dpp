@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HttpService } from "@nestjs/axios";
 import { EnvService } from "@open-dpp/env";
 import { AxiosResponse } from "axios";
@@ -7,14 +7,14 @@ import { OfficialTemplateRepository } from "./official-template.repository";
 
 describe("OfficialTemplateRepository", () => {
   let officialTemplateRepository: OfficialTemplateRepository;
-  let httpServiceGetSpy: jest.SpiedFunction<HttpService["get"]>;
+  let httpServiceGetSpy: MockInstance<HttpService["get"]>;
   let repoEnvValue: string;
   const mockEnvService = {
-    get: jest.fn<EnvService["get"]>((): any => repoEnvValue),
+    get: vi.fn<EnvService["get"]>((): any => repoEnvValue),
   };
 
   beforeEach(() => {
-    httpServiceGetSpy = jest.spyOn(HttpService.prototype, "get");
+    httpServiceGetSpy = vi.spyOn(HttpService.prototype, "get");
     officialTemplateRepository = new OfficialTemplateRepository(
       new HttpService(),
       mockEnvService as unknown as EnvService,

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { getGs1AiDescription } from "./gs1-ai-description";
 import { GS1_AI_I18N, type Gs1AiI18nEntry } from "./gs1-ai-i18n";
 

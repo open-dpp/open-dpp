@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { type Mock, describe, expect, it, vi } from "vitest";
 import { NotFoundException } from "@nestjs/common";
 import { PermalinkKind } from "@open-dpp/dto";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
@@ -14,42 +14,42 @@ const RESOLVER_ORIGIN = "https://id.example.com";
 
 function makeService(overrides?: {
   upiRepo?: Partial<{
-    findByReferenceIdAndType: jest.Mock;
-    findByGs1Key: jest.Mock;
+    findByReferenceIdAndType: Mock;
+    findByGs1Key: Mock;
   }>;
   permalinkService?: Partial<{
-    resolveToPassport: jest.Mock;
-    resolvePublicUrlWithFreeze: jest.Mock;
-    getPermalinkBaseUrl: jest.Mock;
-    loadBranding: jest.Mock;
+    resolveToPassport: Mock;
+    resolvePublicUrlWithFreeze: Mock;
+    getPermalinkBaseUrl: Mock;
+    loadBranding: Mock;
   }>;
   permalinkRepo?: Partial<{
-    findGs1LinkByUpiId: jest.Mock;
+    findGs1LinkByUpiId: Mock;
   }>;
   baseUrlResolver?: Partial<{
-    getResolverBase: jest.Mock;
-    loadBrandingOrNull: jest.Mock;
+    getResolverBase: Mock;
+    loadBrandingOrNull: Mock;
   }>;
 }) {
   const upiRepo = {
-    findByReferenceIdAndType: jest.fn(),
-    findByGs1Key: jest.fn(),
+    findByReferenceIdAndType: vi.fn(),
+    findByGs1Key: vi.fn(),
     ...overrides?.upiRepo,
   };
   const permalinkService = {
-    resolveToPassport: jest.fn(),
-    resolvePublicUrlWithFreeze: jest.fn(),
-    getPermalinkBaseUrl: jest.fn(),
-    loadBranding: jest.fn(async () => ({ permalinkBaseUrl: null })),
+    resolveToPassport: vi.fn(),
+    resolvePublicUrlWithFreeze: vi.fn(),
+    getPermalinkBaseUrl: vi.fn(),
+    loadBranding: vi.fn(async () => ({ permalinkBaseUrl: null })),
     ...overrides?.permalinkService,
   };
   const permalinkRepo = {
-    findGs1LinkByUpiId: jest.fn(async () => undefined),
+    findGs1LinkByUpiId: vi.fn(async () => undefined),
     ...overrides?.permalinkRepo,
   };
   const baseUrlResolver = {
-    getResolverBase: jest.fn(async () => RESOLVER_BASE),
-    loadBrandingOrNull: jest.fn(async () => null),
+    getResolverBase: vi.fn(async () => RESOLVER_BASE),
+    loadBrandingOrNull: vi.fn(async () => null),
     ...overrides?.baseUrlResolver,
   };
   const service = new Gs1IdentityService(
@@ -103,7 +103,7 @@ describe("Gs1IdentityService.getIdentity", () => {
       serial: "SN-001",
     });
     const { service } = makeService({
-      upiRepo: { findByReferenceIdAndType: jest.fn(async () => upi) },
+      upiRepo: { findByReferenceIdAndType: vi.fn(async () => upi) },
     });
     const result = await service.getIdentity(referenceId);
     expect(result).toEqual({
@@ -118,7 +118,7 @@ describe("Gs1IdentityService.getIdentity", () => {
 
   it("returns null when the passport has no GS1 identity", async () => {
     const { service } = makeService({
-      upiRepo: { findByReferenceIdAndType: jest.fn(async () => undefined) },
+      upiRepo: { findByReferenceIdAndType: vi.fn(async () => undefined) },
     });
     expect(await service.getIdentity(randomUUID())).toBeNull();
   });
@@ -128,9 +128,9 @@ describe("Gs1IdentityService.getIdentity", () => {
     const organizationId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
     const { service, baseUrlResolver } = makeService({
-      upiRepo: { findByReferenceIdAndType: jest.fn(async () => upi) },
+      upiRepo: { findByReferenceIdAndType: vi.fn(async () => upi) },
       baseUrlResolver: {
-        getResolverBase: jest.fn(async () => "https://id.instance.example.com/p"),
+        getResolverBase: vi.fn(async () => "https://id.instance.example.com/p"),
       },
     });
 
@@ -146,7 +146,7 @@ describe("Gs1IdentityService.getIdentity", () => {
 describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
   it("404s when no GS1 UPI carries the key", async () => {
     const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => undefined) },
+      upiRepo: { findByGs1Key: vi.fn(async () => undefined) },
     });
     await expect(service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 })).rejects.toThrow(
       NotFoundException,
@@ -164,12 +164,12 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const gs1LinkPermalink = { id: randomUUID(), slug: null };
     const passport = { organizationId: randomUUID() };
     const { service, upiRepo } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -195,12 +195,12 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const gs1LinkPermalink = { id: randomUUID(), slug: "my-slug" };
     const passport = { organizationId: randomUUID() };
     const { service, permalinkService } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -218,10 +218,10 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
     const gs1LinkPermalink = { id: randomUUID(), slug: null };
     const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => {
+        resolveToPassport: vi.fn(async () => {
           throw new NotFoundException("gated");
         }),
       },
@@ -243,14 +243,14 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     };
     const passport = { organizationId: randomUUID() };
     const { service, permalinkRepo, permalinkService } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
       permalinkRepo: {
-        findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
+        findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink),
       },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -277,12 +277,12 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     };
     const passport = { organizationId: randomUUID() };
     const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -306,18 +306,18 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     };
     const passport = { organizationId: randomUUID() };
     const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://qr.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
       baseUrlResolver: {
-        loadBrandingOrNull: jest.fn(async () => ({
+        loadBrandingOrNull: vi.fn(async () => ({
           permalinkBaseUrl: "https://brand.example.com",
         })),
       },
@@ -334,14 +334,14 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const gs1LinkPermalink = { id: randomUUID(), slug: null, presentationConfigurationId: null };
     const passport = { organizationId: randomUUID() };
     const { service, permalinkRepo, permalinkService } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
       permalinkRepo: {
-        findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
+        findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink),
       },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -359,9 +359,9 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
     const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
       permalinkRepo: {
-        findGs1LinkByUpiId: jest.fn(async () => undefined),
+        findGs1LinkByUpiId: vi.fn(async () => undefined),
       },
     });
 
@@ -386,17 +386,17 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     };
     const configPassport = { organizationId: randomUUID() };
     const { service, permalinkService } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
       permalinkRepo: {
-        findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
+        findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink),
       },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({
+        resolveToPassport: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           passport: configPassport,
         })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+        getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -422,12 +422,12 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       presentationConfigurationId: randomUUID(),
     };
     const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      upiRepo: { findByGs1Key: vi.fn(async () => upi) },
       permalinkRepo: {
-        findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
+        findGs1LinkByUpiId: vi.fn(async () => gs1LinkPermalink),
       },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => {
+        resolveToPassport: vi.fn(async () => {
           throw new NotFoundException("gated: config passport is draft");
         }),
       },

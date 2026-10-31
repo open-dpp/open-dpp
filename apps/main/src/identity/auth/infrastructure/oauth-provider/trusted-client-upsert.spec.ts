@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Logger } from "@nestjs/common";
 import type { EnvService, TrustedClientEnv } from "@open-dpp/env";
 import type { Db } from "mongodb";
@@ -38,24 +38,22 @@ const EXPECTED_ROW = {
 const WHERE_CLIENT_ID = [{ field: "clientId", value: "landing-page" }];
 
 describe("ensureTrustedClientUpserted", () => {
-  let findOne: jest.Mock<OAuthClientAdapter["findOne"]>;
-  let create: jest.Mock<OAuthClientAdapter["create"]>;
-  let update: jest.Mock<OAuthClientAdapter["update"]>;
-  let createIndex: jest.Mock<(...args: unknown[]) => Promise<string>>;
+  let findOne: Mock<OAuthClientAdapter["findOne"]>;
+  let create: Mock<OAuthClientAdapter["create"]>;
+  let update: Mock<OAuthClientAdapter["update"]>;
+  let createIndex: Mock<(...args: unknown[]) => Promise<string>>;
   let adapter: OAuthClientAdapter;
   let db: Db;
   let logger: Logger;
 
   beforeEach(() => {
-    findOne = jest.fn<OAuthClientAdapter["findOne"]>().mockResolvedValue(null);
-    create = jest.fn<OAuthClientAdapter["create"]>().mockResolvedValue({});
-    update = jest.fn<OAuthClientAdapter["update"]>().mockResolvedValue({});
-    createIndex = jest
-      .fn<(...args: unknown[]) => Promise<string>>()
-      .mockResolvedValue("clientId_1");
+    findOne = vi.fn<OAuthClientAdapter["findOne"]>().mockResolvedValue(null);
+    create = vi.fn<OAuthClientAdapter["create"]>().mockResolvedValue({});
+    update = vi.fn<OAuthClientAdapter["update"]>().mockResolvedValue({});
+    createIndex = vi.fn<(...args: unknown[]) => Promise<string>>().mockResolvedValue("clientId_1");
     adapter = { findOne, create, update };
-    db = { collection: jest.fn(() => ({ createIndex })) } as unknown as Db;
-    logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger;
+    db = { collection: vi.fn(() => ({ createIndex })) } as unknown as Db;
+    logger = { log: vi.fn(), warn: vi.fn(), error: vi.fn() } as unknown as Logger;
   });
 
   it("creates the Trusted Client row when none exists", async () => {
@@ -180,7 +178,7 @@ describe("ensureTrustedClientUpserted", () => {
 });
 
 describe("bootstrapTrustedClient", () => {
-  const logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger;
+  const logger = { log: vi.fn(), warn: vi.fn(), error: vi.fn() } as unknown as Logger;
 
   function envServiceWith(trustedClient: TrustedClientEnv | undefined): EnvService {
     return {
@@ -190,8 +188,8 @@ describe("bootstrapTrustedClient", () => {
   }
 
   it("touches neither the database nor better-auth while the OAuth Provider is disabled", async () => {
-    const db = { collection: jest.fn() } as unknown as Db;
-    const context = jest.fn();
+    const db = { collection: vi.fn() } as unknown as Db;
+    const context = vi.fn();
     const auth = {
       get $context() {
         context();
@@ -206,12 +204,12 @@ describe("bootstrapTrustedClient", () => {
   });
 
   it("upserts the Trusted Client through better-auth's adapter and logs the issuer", async () => {
-    const createIndex = jest.fn<(...args: unknown[]) => Promise<string>>().mockResolvedValue("x");
-    const db = { collection: jest.fn(() => ({ createIndex })) } as unknown as Db;
+    const createIndex = vi.fn<(...args: unknown[]) => Promise<string>>().mockResolvedValue("x");
+    const db = { collection: vi.fn(() => ({ createIndex })) } as unknown as Db;
     const adapter: OAuthClientAdapter = {
-      findOne: jest.fn<OAuthClientAdapter["findOne"]>().mockResolvedValue(null),
-      create: jest.fn<OAuthClientAdapter["create"]>().mockResolvedValue({}),
-      update: jest.fn<OAuthClientAdapter["update"]>().mockResolvedValue({}),
+      findOne: vi.fn<OAuthClientAdapter["findOne"]>().mockResolvedValue(null),
+      create: vi.fn<OAuthClientAdapter["create"]>().mockResolvedValue({}),
+      update: vi.fn<OAuthClientAdapter["update"]>().mockResolvedValue({}),
     };
 
     await bootstrapTrustedClient(

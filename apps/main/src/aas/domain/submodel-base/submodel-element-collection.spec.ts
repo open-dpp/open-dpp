@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
@@ -118,7 +118,7 @@ describe("submodelElementCollection", () => {
       submodelElement1,
       submodelElement2,
     ]);
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
     submodelElementCollection.deleteSubmodelElement(submodelElement1.idShort, {
       ability,
       onDelete,

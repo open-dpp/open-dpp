@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Branding } from "../../../branding/domain/branding";
 import { Permalink } from "../../domain/permalink";
 import { resolveFallbackBaseUrl } from "./base-url-resolver.service";

@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { RequestEmailChangeDtoSchema } from "./request-email-change.dto";
 
 describe("RequestEmailChangeDtoSchema", () => {

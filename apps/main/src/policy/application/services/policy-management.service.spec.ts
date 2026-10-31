@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
@@ -23,15 +23,15 @@ describe("PolicyManagementService", () => {
 
     beforeEach(async () => {
       limitRepository = {
-        findOneByOrganizationIdAndKey: jest.fn(),
-        update: jest.fn(),
+        findOneByOrganizationIdAndKey: vi.fn(),
+        update: vi.fn(),
       };
       quotaRepository = {
-        findOneByOrganizationIdAndKey: jest.fn(),
-        update: jest.fn(),
+        findOneByOrganizationIdAndKey: vi.fn(),
+        update: vi.fn(),
       };
       envService = {
-        get: jest.fn(),
+        get: vi.fn(),
       };
 
       const module: TestingModule = await Test.createTestingModule({
@@ -41,7 +41,7 @@ describe("PolicyManagementService", () => {
           { provide: LimitRepository, useValue: limitRepository },
           { provide: QuotaRepository, useValue: quotaRepository },
           { provide: EnvService, useValue: envService },
-          { provide: LimitEvaluatorService, useValue: { getCurrent: jest.fn() } },
+          { provide: LimitEvaluatorService, useValue: { getCurrent: vi.fn() } },
         ],
       }).compile();
 
@@ -134,25 +134,25 @@ describe("PolicyManagementService", () => {
       };
 
       const limitRepository = {
-        findOneByOrganizationIdAndKey: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        findOneByOrganizationIdAndKey: vi.fn(async (_orgId: string, key: PolicyKey) =>
           storedLimits.get(key),
         ),
-        findOneByOrganizationIdAndKeyOrFail: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        findOneByOrganizationIdAndKeyOrFail: vi.fn(async (_orgId: string, key: PolicyKey) =>
           findOrFail(storedLimits, key),
         ),
-        update: jest.fn(async (limit: Limit) => {
+        update: vi.fn(async (limit: Limit) => {
           storedLimits.set(limit.getKey(), limit);
           return limit;
         }),
       };
       const quotaRepository = {
-        findOneByOrganizationIdAndKey: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        findOneByOrganizationIdAndKey: vi.fn(async (_orgId: string, key: PolicyKey) =>
           storedQuotas.get(key),
         ),
-        findOneByOrganizationIdAndKeyOrFail: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        findOneByOrganizationIdAndKeyOrFail: vi.fn(async (_orgId: string, key: PolicyKey) =>
           findOrFail(storedQuotas, key),
         ),
-        update: jest.fn(async (quota: Quota) => {
+        update: vi.fn(async (quota: Quota) => {
           storedQuotas.set(quota.getKey(), quota);
           return quota;
         }),
@@ -164,8 +164,8 @@ describe("PolicyManagementService", () => {
           PolicyService,
           { provide: LimitRepository, useValue: limitRepository },
           { provide: QuotaRepository, useValue: quotaRepository },
-          { provide: EnvService, useValue: { get: jest.fn(() => 0) } },
-          { provide: LimitEvaluatorService, useValue: { getCurrent: jest.fn(async () => 5) } },
+          { provide: EnvService, useValue: { get: vi.fn(() => 0) } },
+          { provide: LimitEvaluatorService, useValue: { getCurrent: vi.fn(async () => 5) } },
         ],
       }).compile();
 

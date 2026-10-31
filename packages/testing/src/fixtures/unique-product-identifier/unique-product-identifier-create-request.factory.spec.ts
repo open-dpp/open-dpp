@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { CreateGs1UniqueProductIdentifierRequestSchema } from "@open-dpp/dto";
 import { uniqueProductIdentifierCreateRequestPlainFactory } from "./unique-product-identifier-create-request.factory";

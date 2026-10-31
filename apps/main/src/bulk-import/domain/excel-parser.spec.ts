@@ -1,4 +1,4 @@
-import { expect, describe, it, beforeEach } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
 import { ExcelParser } from "./excel-parser";
 

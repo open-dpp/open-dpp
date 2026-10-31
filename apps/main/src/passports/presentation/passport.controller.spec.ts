@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, jest } from "@jest/globals";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -345,7 +345,7 @@ describe("passportController", () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const now = new Date("2022-01-01T00:00:00.000Z");
-    jest.spyOn(DateTime, "now").mockReturnValue(now);
+    vi.spyOn(DateTime, "now").mockReturnValue(now);
     const displayName = [{ language: "en", text: "Test passport" }];
     const body = {
       environment: {
@@ -395,7 +395,7 @@ describe("passportController", () => {
     const now = new Date("2022-01-01T00:00:00.000Z");
     const templateCreation = new Date("2020-01-01T00:00:00.000Z");
 
-    jest.spyOn(DateTime, "now").mockReturnValue(now);
+    vi.spyOn(DateTime, "now").mockReturnValue(now);
 
     const templateRepository = ctx.getModuleRef().get(TemplateRepository);
     const templateId = randomUUID().toString();
@@ -459,7 +459,7 @@ describe("passportController", () => {
 
     const permalinkAppService = ctx.getModuleRef().get(PermalinkApplicationService);
     let capturedPassportId: string | undefined;
-    const spy = jest
+    const spy = vi
       .spyOn(permalinkAppService, "createPermalinksForConfigs")
       .mockImplementation(async (configs: PresentationConfiguration[]) => {
         capturedPassportId = configs[0]?.referenceId;
@@ -1413,7 +1413,7 @@ describe("passportController", () => {
       const { org, apiKey } = await betterAuthHelper.createOrganizationAndUserWithApiKey();
 
       const now = new Date("2022-01-01T00:00:00.000Z");
-      jest.spyOn(DateTime, "now").mockReturnValue(now);
+      vi.spyOn(DateTime, "now").mockReturnValue(now);
 
       const displayName = [{ language: "en", text: "API key passport" }];
       const body = {
@@ -1461,6 +1461,6 @@ describe("passportController", () => {
   });
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

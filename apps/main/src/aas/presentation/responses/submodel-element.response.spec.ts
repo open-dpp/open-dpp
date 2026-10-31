@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ApiVersionsDto, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { SubmodelElementResponse } from "./submodel-element.response";
 import { Property } from "../../domain/submodel-base/property";

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotFoundError } from "@open-dpp/exception";
 import type { Archiver } from "archiver";
 import type { Response } from "express";
@@ -27,23 +27,23 @@ async function* generate(
 }
 
 describe("writeRegistryExportZip", () => {
-  let res: { set: jest.Mock<any>; destroy: jest.Mock<any> };
+  let res: { set: Mock<any>; destroy: Mock<any> };
   let archive: {
-    on: jest.Mock<any>;
-    pipe: jest.Mock<any>;
-    append: jest.Mock<any>;
+    on: Mock<any>;
+    pipe: Mock<any>;
+    append: Mock<any>;
     finalize: any;
-    abort: jest.Mock<any>;
+    abort: Mock<any>;
   };
 
   beforeEach(() => {
-    res = { set: jest.fn(), destroy: jest.fn() };
+    res = { set: vi.fn(), destroy: vi.fn() };
     archive = {
-      pipe: jest.fn(),
-      append: jest.fn(),
-      finalize: jest.fn(async () => undefined),
-      abort: jest.fn(),
-      on: jest.fn(),
+      pipe: vi.fn(),
+      append: vi.fn(),
+      finalize: vi.fn(async () => undefined),
+      abort: vi.fn(),
+      on: vi.fn(),
     };
   });
 

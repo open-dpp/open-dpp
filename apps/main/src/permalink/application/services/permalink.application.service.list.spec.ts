@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { PermalinkKind } from "@open-dpp/dto";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
@@ -135,8 +135,8 @@ describe("PermalinkApplicationService.listByOrganization", () => {
     await seedResolvableGs1Permalink(organizationId, "00075678164125");
     await seedResolvableGs1Permalink(organizationId, "88000000000107");
     const upiRepo = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
-    const findByIds = jest.spyOn(upiRepo, "findByIds");
-    const findOne = jest.spyOn(upiRepo, "findOne");
+    const findByIds = vi.spyOn(upiRepo, "findByIds");
+    const findOne = vi.spyOn(upiRepo, "findOne");
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
     await service.listByOrganization(organizationId);
