@@ -33,7 +33,7 @@
     "@open-dpp/env": "workspace:*",
     "class-transformer": "^0.5.1",
     "fishery": "^2.4.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@swc/core": "^1.16.20",
