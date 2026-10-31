@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { DisplayNameChanged } from "./language-text-collection-changed";
 import { LanguageText } from "../../../aas/domain/common/language-text";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";

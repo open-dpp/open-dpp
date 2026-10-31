@@ -1,7 +1,7 @@
 import { ApiVersionsDto, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { SubmodelRequest } from "./submodel.request";
 import { randomUUID } from "node:crypto";
-import { beforeAll } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 
 describe("SubmodelRequest", () => {

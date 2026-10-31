@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, jest } from "@jest/globals";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { Language } from "@open-dpp/dto";
 import { ObjectId } from "mongodb";
@@ -167,10 +167,10 @@ describe("userMapper", () => {
   });
 
   describe("preferredLanguage fallback logging", () => {
-    let warnSpy: jest.SpiedFunction<(message: any) => void>;
+    let warnSpy: MockInstance<(message: any) => void>;
 
     beforeEach(() => {
-      warnSpy = jest.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
+      warnSpy = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
     });
 
     afterEach(() => {

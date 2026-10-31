@@ -5,7 +5,7 @@ import type { UniqueProductIdentifierRepository } from "../unique-product-identi
 import type { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import type { CapturedLogs } from "./chat-logs.test-helpers";
 import type { AiService } from "./infrastructure/ai.service";
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { Logger } from "@nestjs/common";
@@ -23,24 +23,24 @@ describe("ChatService", () => {
       throw new Error(`Provider rejected: ${JSON.stringify(prompt)}`);
     });
     const aiService = {
-      getLLM: jest.fn(() => ({})),
-      getAgent: jest.fn(() => failingAgent),
+      getLLM: vi.fn(() => ({})),
+      getAgent: vi.fn(() => failingAgent),
     } as unknown as AiService;
     const uniqueProductIdentifierRepository = {
-      findOneOrFail: jest.fn(async () => ({ referenceId: "passport-1" })),
+      findOneOrFail: vi.fn(async () => ({ referenceId: "passport-1" })),
     } as unknown as UniqueProductIdentifierRepository;
     const aiConfigurationService = {
-      findOneByOrganizationId: jest.fn(async () => ({
+      findOneByOrganizationId: vi.fn(async () => ({
         isEnabled: true,
         provider: AiProvider.Mistral,
         model: "codestral-latest",
       })),
     } as unknown as AiConfigurationService;
     const policyService = {
-      enforce: jest.fn(async () => undefined),
+      enforce: vi.fn(async () => undefined),
     } as unknown as PolicyService;
     const passportRepository = {
-      findOne: jest.fn(async () => ({ id: "passport-1", organizationId: "org-1" })),
+      findOne: vi.fn(async () => ({ id: "passport-1", organizationId: "org-1" })),
     } as unknown as PassportRepository;
 
     chatService = new ChatService(

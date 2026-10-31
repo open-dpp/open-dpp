@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { AasSubmodelElements, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
@@ -87,7 +87,7 @@ describe("submodelElementList", () => {
     );
     submodelElementList.addSubmodelElement(submodelElement1, { ability });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
     submodelElementList.deleteSubmodelElement(submodelElement0.idShort, { ability, onDelete });
     expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement1]);

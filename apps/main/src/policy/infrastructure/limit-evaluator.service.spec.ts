@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MediaService } from "../../media/infrastructure/media.service";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -14,13 +14,13 @@ describe("limitEvaluatorService", () => {
 
   beforeEach(async () => {
     mediaService = {
-      calculateOrganizationStorageUsage: jest.fn(),
+      calculateOrganizationStorageUsage: vi.fn(),
     };
     passportRepository = {
-      countByOrganizationId: jest.fn(),
+      countByOrganizationId: vi.fn(),
     };
     membersRepository = {
-      countByOrganizationId: jest.fn(),
+      countByOrganizationId: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

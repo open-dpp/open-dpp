@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import express from "express";
 import request from "supertest";
@@ -32,13 +32,13 @@ describe("isFrontendAssetPath", () => {
 
 describe("createLoggerMiddleware", () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function spyOnLogger() {
     const calls: { level: string; message: unknown }[] = [];
     for (const level of ["verbose", "debug", "warn", "error"] as const) {
-      jest.spyOn(Logger.prototype, level).mockImplementation((message: unknown) => {
+      vi.spyOn(Logger.prototype, level).mockImplementation((message: unknown) => {
         calls.push({ level, message });
       });
     }

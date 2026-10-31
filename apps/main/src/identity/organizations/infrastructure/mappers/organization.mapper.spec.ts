@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { ObjectId } from "mongodb";
 import { Organization } from "../../domain/organization";
 import { OrganizationDocument } from "../schemas/organization.schema";

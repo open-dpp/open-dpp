@@ -1,5 +1,8 @@
 {
-  "extends": ["@tsconfig/node-lts/tsconfig.json", "@tsconfig/node-ts/tsconfig.json"],
+  "extends": [
+    "@tsconfig/node-lts/tsconfig.json",
+    "@tsconfig/node-ts/tsconfig.json"
+  ],
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -10,5 +13,8 @@
     "declarationMap": true,
     "outDir": "dist",
     "verbatimModuleSyntax": false
-  }
+  },
+  "include": [
+    "src"
+  ]
 }

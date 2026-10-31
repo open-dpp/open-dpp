@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -54,7 +54,7 @@ describe("templateRepository", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
     await module.init();

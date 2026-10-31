@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import {
+  type Mock,
   afterAll,
   afterEach,
   beforeAll,
@@ -7,8 +8,8 @@ import {
   describe,
   expect,
   it,
-  jest,
-} from "@jest/globals";
+  vi,
+} from "vitest";
 import { EnvService } from "@open-dpp/env";
 import { BaseEmail } from "./domain/base-email";
 import { EmailChangeNotificationMail } from "./domain/email-change-notification-mail";
@@ -27,7 +28,7 @@ const moduleDir = resolve(process.cwd(), "src/email");
 
 describe("EmailService template localization", () => {
   let service: EmailService;
-  let sendMail: jest.Mock<(options: { html: string }) => Promise<void>>;
+  let sendMail: Mock<(options: { html: string }) => Promise<void>>;
 
   const notificationMail = (language?: "en" | "de") =>
     EmailChangeNotificationMail.create({
@@ -57,19 +58,19 @@ describe("EmailService template localization", () => {
 
   beforeEach(() => {
     const env = {
-      get: jest.fn((key: string) =>
+      get: vi.fn((key: string) =>
         key === "OPEN_DPP_MAIL_SENDER_ADDRESS" ? "noreply@open-dpp.test" : undefined,
       ),
     } as unknown as EnvService;
     service = new EmailService(env);
-    sendMail = jest.fn<(options: { html: string }) => Promise<void>>().mockResolvedValue(undefined);
+    sendMail = vi.fn<(options: { html: string }) => Promise<void>>().mockResolvedValue(undefined);
     (service as unknown as { transporter: { sendMail: typeof sendMail } }).transporter = {
       sendMail,
     };
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("renders the German template when language is 'de' and the -de variant exists", async () => {

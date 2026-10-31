@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import {
   AssetKind,
   KeyTypes,

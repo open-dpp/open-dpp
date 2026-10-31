@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ValueError } from "@open-dpp/exception";
@@ -18,18 +18,18 @@ describe("MembersService", () => {
 
   beforeEach(async () => {
     mockMembersRepo = {
-      findOneByUserIdAndOrganizationId: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findOneByIdOrFail: jest.fn(),
-      deleteById: jest.fn(),
+      findOneByUserIdAndOrganizationId: vi.fn(),
+      findByOrganizationId: vi.fn(),
+      findOneByIdOrFail: vi.fn(),
+      deleteById: vi.fn(),
     };
     mockUsersRepo = {
-      findOneOrFail: jest.fn(),
-      findOneById: jest.fn(),
-      findAllByIds: jest.fn(),
+      findOneOrFail: vi.fn(),
+      findOneById: vi.fn(),
+      findAllByIds: vi.fn(),
     };
     mockSessionsRepo = {
-      clearActiveOrganization: jest.fn(),
+      clearActiveOrganization: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

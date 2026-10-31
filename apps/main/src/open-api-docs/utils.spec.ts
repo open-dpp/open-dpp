@@ -1,3 +1,4 @@
+import { expect, it } from "vitest";
 import { convertPathToOpenApi } from "./utils";
 
 it("should convert to open api path", () => {

@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
-import { expect, describe, it, afterEach, jest, afterAll, beforeAll } from "@jest/globals";
+import { type Mocked, afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import { INestApplication } from "@nestjs/common";
 import { BulkImportFileParserService } from "../infrastructure/bulk-import-file-parser.service";
@@ -20,13 +20,13 @@ import { EmailService } from "../../email/email.service";
 describe("BulkImportFileParserController", () => {
   let app: INestApplication;
   let module: TestingModule;
-  let mockService: jest.Mocked<BulkImportFileParserService>;
+  let mockService: Mocked<BulkImportFileParserService>;
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     mockService = {
-      parseFile: jest.fn(),
-    } as unknown as jest.Mocked<BulkImportFileParserService>;
+      parseFile: vi.fn(),
+    } as unknown as Mocked<BulkImportFileParserService>;
 
     module = await Test.createTestingModule({
       imports: [
@@ -51,7 +51,7 @@ describe("BulkImportFileParserController", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 
@@ -63,7 +63,7 @@ describe("BulkImportFileParserController", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(async () => {

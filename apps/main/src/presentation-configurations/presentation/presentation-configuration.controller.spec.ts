@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
@@ -36,37 +36,37 @@ import { getConnectionToken } from "@nestjs/mongoose";
 describe("PresentationConfigurationController", () => {
   let controller: PresentationConfigurationController;
   let service: {
-    list: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration[]>>;
-    create: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
-    getById: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
-    applyPatch: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
-    delete: jest.Mock<(...args: any[]) => Promise<void>>;
-    getEffective: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    list: Mock<(...args: any[]) => Promise<PresentationConfiguration[]>>;
+    create: Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    getById: Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    applyPatch: Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    delete: Mock<(...args: any[]) => Promise<void>>;
+    getEffective: Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
   };
   let templateRepository: {
-    findOneOrFail: jest.Mock<(...args: any[]) => Promise<Template>>;
+    findOneOrFail: Mock<(...args: any[]) => Promise<Template>>;
   };
   let passportRepository: {
-    findOneOrFail: jest.Mock<(...args: any[]) => Promise<Passport>>;
+    findOneOrFail: Mock<(...args: any[]) => Promise<Passport>>;
   };
   let environmentService: {
-    loadAbility: jest.Mock<(...args: any[]) => Promise<AasAbility>>;
+    loadAbility: Mock<(...args: any[]) => Promise<AasAbility>>;
   };
 
   beforeEach(async () => {
     service = {
-      list: jest.fn(),
-      create: jest.fn(),
-      getById: jest.fn(),
-      applyPatch: jest.fn(),
-      delete: jest.fn(),
-      getEffective: jest.fn(),
+      list: vi.fn(),
+      create: vi.fn(),
+      getById: vi.fn(),
+      applyPatch: vi.fn(),
+      delete: vi.fn(),
+      getEffective: vi.fn(),
     };
     templateRepository = {
-      findOneOrFail: jest.fn(),
+      findOneOrFail: vi.fn(),
     };
     passportRepository = {
-      findOneOrFail: jest.fn(),
+      findOneOrFail: vi.fn(),
     };
     const defaultSubject = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -74,7 +74,7 @@ describe("PresentationConfigurationController", () => {
     });
     const defaultAbility = Security.create({}).defineAbilityForSubject(defaultSubject);
     environmentService = {
-      loadAbility: jest.fn(async () => defaultAbility),
+      loadAbility: vi.fn(async () => defaultAbility),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -88,9 +88,9 @@ describe("PresentationConfigurationController", () => {
         {
           provide: getConnectionToken(),
           useValue: {
-            startSession: jest.fn(),
-            transaction: jest.fn(),
-            close: jest.fn(),
+            startSession: vi.fn(),
+            transaction: vi.fn(),
+            close: vi.fn(),
           },
         },
       ],

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { PassportEditingModeChangedActivity } from "./passport-editing-mode-changed.activity";
 import { Template } from "../../../templates/domain/template";

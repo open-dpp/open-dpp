@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import type { EnvService, TrustedClientEnv } from "@open-dpp/env";
 import { OAUTH_PROVIDER_DISABLED_PATHS, oauthProviderAuthOptions } from "./oauth-provider-plugins";
 

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import {
   ApiVersionsDto,
@@ -48,13 +48,13 @@ describe("BulkImportRunService", () => {
 
   function buildFakes() {
     const configRepository = {
-      findOneOrFail: jest.fn<(id: string) => Promise<BulkImportConfig>>(),
+      findOneOrFail: vi.fn<(id: string) => Promise<BulkImportConfig>>(),
     };
     const runRepository = {
-      save: jest.fn<(run: BulkImportRun) => Promise<BulkImportRun>>(),
-      findOneOrFail: jest.fn<(id: string) => Promise<BulkImportRun>>(),
-      findAllRunning: jest.fn<() => Promise<BulkImportRun[]>>(),
-      findAllByBulkImportConfigId: jest.fn<
+      save: vi.fn<(run: BulkImportRun) => Promise<BulkImportRun>>(),
+      findOneOrFail: vi.fn<(id: string) => Promise<BulkImportRun>>(),
+      findAllRunning: vi.fn<() => Promise<BulkImportRun[]>>(),
+      findAllByBulkImportConfigId: vi.fn<
         (
           bulkImportConfigId: string,
           options?: {
@@ -66,29 +66,27 @@ describe("BulkImportRunService", () => {
     };
     const runItemRepository = {
       createMany:
-        jest.fn<(items: BulkImportRunItem[], options?: DbSessionOptions) => Promise<void>>(),
+        vi.fn<(items: BulkImportRunItem[], options?: DbSessionOptions) => Promise<void>>(),
       findAllByRunId:
-        jest.fn<
-          (id: string, pagination?: Pagination) => Promise<PagingResult<BulkImportRunItem>>
-        >(),
-      save: jest.fn<(item: BulkImportRunItem, options?: DbSessionOptions) => Promise<void>>(),
+        vi.fn<(id: string, pagination?: Pagination) => Promise<PagingResult<BulkImportRunItem>>>(),
+      save: vi.fn<(item: BulkImportRunItem, options?: DbSessionOptions) => Promise<void>>(),
     };
     const productLinkRepository = {
       findOne:
-        jest.fn<
+        vi.fn<
           (
             organizationId: string,
             templateId: string,
             externalId: string,
           ) => Promise<BulkImportProductLink | undefined>
         >(),
-      save: jest.fn<
+      save: vi.fn<
         (link: BulkImportProductLink, options?: DbSessionOptions) => Promise<BulkImportProductLink>
       >(),
     };
     const passportService = {
       createPassportFromTemplate:
-        jest.fn<
+        vi.fn<
           (
             organizationId: string,
             templateId: string,
@@ -98,7 +96,7 @@ describe("BulkImportRunService", () => {
         >(),
       digitalProductDocumentService: {
         modifyValueOfMultipleSubmodels:
-          jest.fn<
+          vi.fn<
             (
               correlationId: string,
               organizationId: string,
@@ -113,7 +111,7 @@ describe("BulkImportRunService", () => {
     // Unlimited by default; tests that care about the cap re-mock enforce().
     const policyService = {
       enforce:
-        jest.fn<
+        vi.fn<
           (
             organizationId: string,
             keys: PolicyKey[],
@@ -124,7 +122,7 @@ describe("BulkImportRunService", () => {
 
     // No real Mongo session in these unit tests; just run the work directly.
     const transactionService = {
-      withTransaction: jest.fn<<T>(work: (options: DbSessionOptions) => Promise<T>) => Promise<T>>(
+      withTransaction: vi.fn<<T>(work: (options: DbSessionOptions) => Promise<T>) => Promise<T>>(
         async (work) => await work({}),
       ),
     };
@@ -251,7 +249,7 @@ describe("BulkImportRunService", () => {
     passportService.createPassportFromTemplate.mockResolvedValue({
       id: "passport-1",
     } as Passport);
-    const extractIdValueSpy = jest.spyOn(config, "extractIdValue");
+    const extractIdValueSpy = vi.spyOn(config, "extractIdValue");
 
     await (service as any).processRun(run.id);
 
@@ -702,7 +700,7 @@ describe("BulkImportRunService", () => {
     });
     run.startOrResume([]);
     runRepository.findAllRunning.mockResolvedValue([run]);
-    const processRunSpy = jest
+    const processRunSpy = vi
       .spyOn(service as any, "processRun")
       .mockResolvedValue(undefined as never);
 

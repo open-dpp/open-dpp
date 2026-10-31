@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Types } from "mongoose";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";

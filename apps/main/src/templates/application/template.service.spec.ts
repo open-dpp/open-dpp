@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -65,13 +65,13 @@ describe("templateService", () => {
         TemplateRepository,
         {
           provide: BulkImportConfigService,
-          useValue: { deleteAllByTemplateId: jest.fn() },
+          useValue: { deleteAllByTemplateId: vi.fn() },
         },
       ],
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
     await module.init();

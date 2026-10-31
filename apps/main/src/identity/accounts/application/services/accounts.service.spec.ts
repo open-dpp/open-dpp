@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
-import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
@@ -42,7 +42,7 @@ describe("AccountsService.verifyPassword (integration)", () => {
       ],
     })
       .overrideProvider(EmailService)
-      .useValue({ send: jest.fn() })
+      .useValue({ send: vi.fn() })
       .compile();
 
     auth = moduleRef.get<Auth>(AUTH);
@@ -87,10 +87,10 @@ describe("AccountsService.verifyPassword (integration)", () => {
       updatedAt: new Date(),
     });
     const context = await auth.$context;
-    const lookupSpy = jest
+    const lookupSpy = vi
       .spyOn(accountsRepository, "findCredentialByUserId")
       .mockResolvedValueOnce(account);
-    const verifySpy = jest.spyOn(context.password, "verify");
+    const verifySpy = vi.spyOn(context.password, "verify");
     try {
       expect(await service.verifyPassword(account.userId, "password1234")).toBe(false);
       expect(verifySpy).not.toHaveBeenCalled();
@@ -109,8 +109,8 @@ describe("AccountsService.verifyPassword (integration)", () => {
   // negative answer, whereas an infrastructure failure must surface loudly and
   // never masquerade as "this password is simply wrong".
   it("rethrows (does not swallow) and logs when the credential lookup fails", async () => {
-    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
-    const lookupSpy = jest
+    const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const lookupSpy = vi
       .spyOn(accountsRepository, "findCredentialByUserId")
       .mockRejectedValueOnce(new Error("db down"));
     try {
@@ -127,8 +127,8 @@ describe("AccountsService.verifyPassword (integration)", () => {
   it("rethrows and logs when password verification itself throws", async () => {
     const { user } = await betterAuthHelper.createUser();
     const context = await auth.$context;
-    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
-    const verifySpy = jest
+    const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const verifySpy = vi
       .spyOn(context.password, "verify")
       .mockRejectedValueOnce(new Error("db down"));
     try {

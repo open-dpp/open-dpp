@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
@@ -17,11 +17,11 @@ describe("RevokeEmailChangeController", () => {
 
   beforeEach(async () => {
     mockService = {
-      findByUserId: jest.fn(),
-      hardCancel: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+      findByUserId: vi.fn(),
+      hardCancel: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
     mockEnv = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         if (key === "OPEN_DPP_URL") return BASE_URL;
         if (key === "OPEN_DPP_AUTH_SECRET") return SECRET;
         return undefined;
@@ -118,7 +118,7 @@ describe("RevokeEmailChangeController", () => {
     });
 
     it("returns status:error (not invalid) when hardCancel fails, so a system failure is not masked as a bad link", async () => {
-      const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
       const existing = EmailChangeRequest.create({
         userId: "user-1",
         newEmail: "new@x.com",
@@ -141,7 +141,7 @@ describe("RevokeEmailChangeController", () => {
     });
 
     it("returns status:error when the request lookup fails", async () => {
-      const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
       mockService.findByUserId.mockRejectedValue(new Error("mongo down"));
       const token = signRevokeToken({ userId: "user-1", requestId: "req-1" }, SECRET, 60_000);
 
@@ -198,7 +198,7 @@ describe("RevokeEmailChangeController", () => {
     });
 
     it("returns valid:false when the request lookup fails", async () => {
-      const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
       mockService.findByUserId.mockRejectedValue(new Error("mongo down"));
       const token = signRevokeToken({ userId: "user-1", requestId: "req-1" }, SECRET, 60_000);
 

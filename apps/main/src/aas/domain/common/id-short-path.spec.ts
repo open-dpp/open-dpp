@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { IdShortPath } from "./id-short-path";
 import { ValueError } from "@open-dpp/exception";
 

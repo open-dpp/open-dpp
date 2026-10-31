@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { UNKNOWN_APP_VERSION, isValidAppVersion, resolveAppVersion } from "./app-version";
 
 describe("isValidAppVersion", () => {

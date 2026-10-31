@@ -1,6 +1,6 @@
 // Must stay the first import: it enables the OAuth Provider before the auth module validates env.
 import "./trusted-client.test-env";
-import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import request from "supertest";

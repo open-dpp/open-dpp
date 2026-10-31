@@ -1,13 +1,15 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
-const mockHandler = jest.fn();
-const mockToNodeHandler = jest.fn().mockReturnValue(mockHandler);
+// `vi.mock` is hoisted above the imports, so its factory may only use what `vi.hoisted` declares.
+const { mockHandler, mockToNodeHandler } = vi.hoisted(() => {
+  const handler = vi.fn();
+  return { mockHandler: handler, mockToNodeHandler: vi.fn().mockReturnValue(handler) };
+});
 
-// Mocking ESM module
-jest.unstable_mockModule("better-auth/node", () => ({
+vi.mock("better-auth/node", () => ({
   toNodeHandler: mockToNodeHandler,
 }));
 
@@ -50,7 +52,7 @@ describe("AuthController", () => {
         {
           provide: InstanceSettingsService,
           useValue: {
-            getSettings: jest.fn(async () => ({ signupEnabled: { value: signupEnabled } })),
+            getSettings: vi.fn(async () => ({ signupEnabled: { value: signupEnabled } })),
           },
         },
       ],
@@ -61,7 +63,7 @@ describe("AuthController", () => {
 
   const post = (url: string) => {
     const req = { method: "POST", url } as any;
-    const res = { status: jest.fn() } as any;
+    const res = { status: vi.fn() } as any;
     return controller.handleBetterAuthPostRequest(req, res).then(() => ({ req, res }));
   };
 
@@ -74,7 +76,7 @@ describe("AuthController", () => {
 
   it("should handle GET requests using better-auth handler", async () => {
     const req = { method: "GET", url: authUrl("/some-path") } as any;
-    const res = { status: jest.fn() } as any;
+    const res = { status: vi.fn() } as any;
 
     await controller.handleBetterAuthGetRequest(req, res);
 

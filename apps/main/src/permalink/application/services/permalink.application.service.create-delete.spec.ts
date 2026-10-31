@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, describe, expect, it } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { getModelToken } from "@nestjs/mongoose";
 import { ConflictException } from "@nestjs/common";
 import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";

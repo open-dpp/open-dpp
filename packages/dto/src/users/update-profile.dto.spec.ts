@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { UpdateProfileDtoSchema } from "./update-profile.dto";
 
 describe("updateProfileDto", () => {

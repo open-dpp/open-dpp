@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -22,21 +22,21 @@ describe("authGuard Allowlist Repro", () => {
 
   beforeEach(async () => {
     mockSessionsService = {
-      getSession: jest.fn<() => Promise<null>>().mockResolvedValue(null),
-      verifyApiKey: jest.fn<() => Promise<null>>().mockResolvedValue(null),
-      verifyAccessToken: jest.fn<() => Promise<null>>().mockResolvedValue(null),
+      getSession: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      verifyApiKey: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      verifyAccessToken: vi.fn<() => Promise<null>>().mockResolvedValue(null),
       acceptsAccessTokens: false,
     };
     mockMembersRepository = {
-      findOneByUserIdAndOrganizationId: jest
+      findOneByUserIdAndOrganizationId: vi
         .fn<() => Promise<Member | null>>()
         .mockResolvedValue(null),
     };
     mockUsersRepository = {
-      findOneById: jest.fn<() => Promise<unknown>>().mockResolvedValue(undefined),
+      findOneById: vi.fn<() => Promise<unknown>>().mockResolvedValue(undefined),
     };
     mockReflector = {
-      getAllAndOverride: jest.fn(),
+      getAllAndOverride: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,7 +49,7 @@ describe("authGuard Allowlist Repro", () => {
         {
           provide: EnvService,
           useValue: {
-            get: jest.fn(),
+            get: vi.fn(),
           },
         },
         {

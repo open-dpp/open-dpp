@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
@@ -215,8 +215,8 @@ describe("tableExtension", () => {
     });
     table.addColumn(group, { ability });
     table.addRow({ ability });
-    const onMoveMock = jest.fn();
-    const onDeleteMock = jest.fn();
+    const onMoveMock = vi.fn();
+    const onDeleteMock = vi.fn();
 
     table.deleteColumnFromGroup("group1", "subCol1", {
       ability,
@@ -264,8 +264,8 @@ describe("tableExtension", () => {
     const foundGroup = table.columns.find((c) => c.idShort === "group1");
 
     const expected = foundGroup!.copy().value;
-    const onDeleteMock = jest.fn();
-    const onMoveMock = jest.fn();
+    const onDeleteMock = vi.fn();
+    const onMoveMock = vi.fn();
     table.deleteColumnFromGroup("group1", "onlySubCol", {
       ability,
       onDelete: onDeleteMock,
@@ -344,7 +344,7 @@ describe("tableExtension", () => {
     table.addColumn(col1, { ability });
     table.addColumn(group, { ability });
     table.addRow({ ability });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
 
     table.moveColumnToGroup("col1", "group1", { ability, onMove: onMoveMock });
 
@@ -490,7 +490,7 @@ describe("tableExtension", () => {
     expect(table.columns.map((c) => c.idShort)).toEqual(["col2", "col1"]);
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1", value: [] });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
     table.createGroupFromColumn("col1", newGroup, { ability, onMove: onMoveMock });
 
     for (const row of table.rows) {
@@ -522,7 +522,7 @@ describe("tableExtension", () => {
     row1Col1.value = "row1-value";
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
     table.createGroupFromColumn("col1", newGroup, { ability, onMove: onMoveMock });
 
     const topLevelIds = table.columns.map((c) => c.idShort);
@@ -555,7 +555,7 @@ describe("tableExtension", () => {
     });
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
     expect(() =>
       table.createGroupFromColumn("doesNotExist", newGroup, { ability, onMove: onMoveMock }),
     ).toThrow(NotFoundError);
@@ -569,7 +569,7 @@ describe("tableExtension", () => {
     table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" })), {
       ability,
     });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
 
     const collidingGroup = SubmodelElementCollection.create({ idShort: "col2" });
     expect(() =>
@@ -582,7 +582,7 @@ describe("tableExtension", () => {
     table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" })), {
       ability,
     });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
 
     const notAGroup = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "group1" }));
     expect(() =>
@@ -603,7 +603,7 @@ describe("tableExtension", () => {
     const group = SubmodelElementCollection.create({ idShort: "group1", value: [initialSubCol] });
     table.addColumn(tableColumn, { ability });
     table.addColumn(group, { ability });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
 
     expect(() =>
       table.moveColumnToGroup("tableCol1", "group1", { ability, onMove: onMoveMock }),
@@ -634,7 +634,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.Property,
     });
     table.addColumn(tableColumn, { ability });
-    const onMoveMock = jest.fn();
+    const onMoveMock = vi.fn();
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
     expect(() =>
@@ -694,7 +694,7 @@ describe("tableExtension", () => {
     expect(
       table.rows.some((r) => r.getSubmodelElements().some((c) => c.idShort === col1.idShort)),
     ).toBeTruthy();
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
     table.deleteColumn(col1.idShort, { ability, onDelete });
     col1.setParentPointer(table.rows[0].getPointer());
     col2.setParentPointer(table.rows[0].getPointer());
@@ -804,7 +804,7 @@ describe("tableExtension", () => {
     const rowToDelete = table.addRow({ ability });
     table.addRow({ ability });
     expect(table.rows.some((r) => r.idShort === rowToDelete.idShort)).toBeTruthy();
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
     table.deleteRow(rowToDelete.idShort, { ability, onDelete });
     expect(onDelete).toHaveBeenCalledWith(rowToDelete);
     expect(table.rows.some((r) => r.idShort === rowToDelete.idShort)).toBeFalsy();

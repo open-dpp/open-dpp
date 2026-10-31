@@ -1,7 +1,7 @@
 // Must stay the first import: it enables the OAuth Provider before the auth module validates env.
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 import { randomUUID } from "node:crypto";
-import { afterEach, describe, expect, it } from "@jest/globals";
+import { afterEach, describe, expect, it } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 import type { Connection } from "mongoose";

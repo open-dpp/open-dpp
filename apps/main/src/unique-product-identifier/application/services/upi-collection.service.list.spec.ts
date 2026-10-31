@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { type Mock, describe, expect, it, vi } from "vitest";
 import { PagingResult } from "../../../pagination/paging-result";
 import { Pagination } from "../../../pagination/pagination";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
@@ -13,50 +13,50 @@ const RESOLVER_ORIGIN = "https://id.example.com";
 
 function makeService(overrides?: {
   upiRepo?: Partial<{
-    save: jest.Mock;
-    findOneOrFail: jest.Mock;
-    deleteById: jest.Mock;
-    findAllByOrganizationId: jest.Mock;
-    findAllByReferencedIdPaginated: jest.Mock;
+    save: Mock;
+    findOneOrFail: Mock;
+    deleteById: Mock;
+    findAllByOrganizationId: Mock;
+    findAllByReferencedIdPaginated: Mock;
   }>;
   passportRepo?: Partial<{
-    findOne: jest.Mock;
-    findByIds: jest.Mock;
+    findOne: Mock;
+    findByIds: Mock;
   }>;
   baseUrlResolver?: Partial<{
-    getResolverBase: jest.Mock;
+    getResolverBase: Mock;
   }>;
   permalinkApplicationService?: Partial<{
-    getPermalinkSummariesByUpiIds: jest.Mock;
-    deleteGs1LinkForUpi: jest.Mock;
+    getPermalinkSummariesByUpiIds: Mock;
+    deleteGs1LinkForUpi: Mock;
   }>;
 }) {
   const upiRepo = {
-    save: jest.fn(async (upi: UniqueProductIdentifier) => upi),
-    findOneOrFail: jest.fn(async () => {
+    save: vi.fn(async (upi: UniqueProductIdentifier) => upi),
+    findOneOrFail: vi.fn(async () => {
       throw new Error("findOneOrFail not configured");
     }),
-    deleteById: jest.fn(async () => undefined),
-    findAllByOrganizationId: jest.fn(async () =>
+    deleteById: vi.fn(async () => undefined),
+    findAllByOrganizationId: vi.fn(async () =>
       PagingResult.create({ pagination: Pagination.create({ limit: 100 }), items: [] }),
     ),
-    findAllByReferencedIdPaginated: jest.fn(async () =>
+    findAllByReferencedIdPaginated: vi.fn(async () =>
       PagingResult.create({ pagination: Pagination.create({ limit: 100 }), items: [] }),
     ),
     ...overrides?.upiRepo,
   };
   const passportRepo = {
-    findOne: jest.fn(async () => undefined),
-    findByIds: jest.fn(async () => new Map()),
+    findOne: vi.fn(async () => undefined),
+    findByIds: vi.fn(async () => new Map()),
     ...overrides?.passportRepo,
   };
   const baseUrlResolver = {
-    getResolverBase: jest.fn(async () => RESOLVER_BASE),
+    getResolverBase: vi.fn(async () => RESOLVER_BASE),
     ...overrides?.baseUrlResolver,
   };
   const permalinkApplicationService = {
-    getPermalinkSummariesByUpiIds: jest.fn(async () => new Map()),
-    deleteGs1LinkForUpi: jest.fn(async () => undefined),
+    getPermalinkSummariesByUpiIds: vi.fn(async () => new Map()),
+    deleteGs1LinkForUpi: vi.fn(async () => undefined),
     ...overrides?.permalinkApplicationService,
   };
   const service = new UpiCollectionService(
@@ -97,16 +97,16 @@ describe("UpiCollectionService.list", () => {
   function makeDraftPassportStub(id: string) {
     return {
       id,
-      isDraft: jest.fn(() => true),
-      isPublished: jest.fn(() => false),
+      isDraft: vi.fn(() => true),
+      isPublished: vi.fn(() => false),
     };
   }
 
   function makePublishedPassportStub(id: string) {
     return {
       id,
-      isDraft: jest.fn(() => false),
-      isPublished: jest.fn(() => true),
+      isDraft: vi.fn(() => false),
+      isPublished: vi.fn(() => true),
     };
   }
 
@@ -116,7 +116,7 @@ describe("UpiCollectionService.list", () => {
 
     const { service, passportRepo } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async () =>
+        findAllByOrganizationId: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [gs1Upi, systemUpi],
@@ -124,7 +124,7 @@ describe("UpiCollectionService.list", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(
+        findByIds: vi.fn(
           async () => new Map([[passportDraftId, makeDraftPassportStub(passportDraftId)]]),
         ),
       },
@@ -158,7 +158,7 @@ describe("UpiCollectionService.list", () => {
 
     const { service } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async () =>
+        findAllByOrganizationId: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [gs1Upi, systemUpi],
@@ -166,7 +166,7 @@ describe("UpiCollectionService.list", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(
+        findByIds: vi.fn(
           async () => new Map([[passportDraftId, makeDraftPassportStub(passportDraftId)]]),
         ),
       },
@@ -188,7 +188,7 @@ describe("UpiCollectionService.list", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async (id: string) => {
+        findAllByOrganizationId: vi.fn(async (id: string) => {
           if (id === organizationId) {
             return PagingResult.create({
               pagination: Pagination.create({ limit: 100 }),
@@ -202,7 +202,7 @@ describe("UpiCollectionService.list", () => {
         }),
       },
       passportRepo: {
-        findByIds: jest.fn(
+        findByIds: vi.fn(
           async () => new Map([[passportDraftId, makeDraftPassportStub(passportDraftId)]]),
         ),
       },
@@ -229,7 +229,7 @@ describe("UpiCollectionService.list", () => {
   it("(d) empty when none", async () => {
     const { service } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async () =>
+        findAllByOrganizationId: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [],
@@ -263,7 +263,7 @@ describe("UpiCollectionService.list", () => {
 
     const { service, passportRepo } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async () =>
+        findAllByOrganizationId: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [publishedUpi, draftUpi],
@@ -271,7 +271,7 @@ describe("UpiCollectionService.list", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(async () => passportMap),
+        findByIds: vi.fn(async () => passportMap),
       },
     });
 
@@ -295,7 +295,7 @@ describe("UpiCollectionService.list", () => {
 
   it("(f) threads limit/cursor to the repo and surfaces the repo's next cursor", async () => {
     const gs1Upi = makeGs1Upi(passportDraftId);
-    const findAllByOrganizationId = jest.fn(async () =>
+    const findAllByOrganizationId = vi.fn(async () =>
       PagingResult.create({
         pagination: Pagination.create({ limit: 1, cursor: "next-cursor" }),
         items: [gs1Upi],
@@ -305,7 +305,7 @@ describe("UpiCollectionService.list", () => {
     const { service } = makeService({
       upiRepo: { findAllByOrganizationId },
       passportRepo: {
-        findByIds: jest.fn(
+        findByIds: vi.fn(
           async () => new Map([[passportDraftId, makeDraftPassportStub(passportDraftId)]]),
         ),
       },
@@ -356,14 +356,14 @@ describe("UpiCollectionService.listByPassport", () => {
     const systemUpi = makeSystemUpi(referenceId);
     const { service } = makeService({
       upiRepo: {
-        findAllByReferencedIdPaginated: jest.fn(async () =>
+        findAllByReferencedIdPaginated: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [gs1Upi, systemUpi],
           }),
         ),
       },
-      passportRepo: { findOne: jest.fn(async () => makeDraftPassportStub(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makeDraftPassportStub(referenceId)) },
     });
 
     const result = await service.listByPassport(referenceId);
@@ -385,14 +385,14 @@ describe("UpiCollectionService.listByPassport", () => {
     const gs1Upi = makeGs1Upi(referenceId);
     const { service, passportRepo } = makeService({
       upiRepo: {
-        findAllByReferencedIdPaginated: jest.fn(async () =>
+        findAllByReferencedIdPaginated: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [gs1Upi],
           }),
         ),
       },
-      passportRepo: { findOne: jest.fn(async () => makePublishedPassportStub(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makePublishedPassportStub(referenceId)) },
     });
 
     const result = await service.listByPassport(referenceId);
@@ -405,7 +405,7 @@ describe("UpiCollectionService.listByPassport", () => {
   it("(c) empty when the passport has no UPIs — no passport/resolver lookups", async () => {
     const { service, passportRepo, baseUrlResolver } = makeService({
       upiRepo: {
-        findAllByReferencedIdPaginated: jest.fn(async () =>
+        findAllByReferencedIdPaginated: vi.fn(async () =>
           PagingResult.create({ pagination: Pagination.create({ limit: 100 }), items: [] }),
         ),
       },
@@ -421,7 +421,7 @@ describe("UpiCollectionService.listByPassport", () => {
 
   it("(d) threads limit/cursor to the repo, surfaces next cursor, resolves via the passport org", async () => {
     const gs1Upi = makeGs1Upi(referenceId);
-    const findAllByReferencedIdPaginated = jest.fn(async () =>
+    const findAllByReferencedIdPaginated = vi.fn(async () =>
       PagingResult.create({
         pagination: Pagination.create({ limit: 1, cursor: "next-cursor" }),
         items: [gs1Upi],
@@ -429,7 +429,7 @@ describe("UpiCollectionService.listByPassport", () => {
     );
     const { service, baseUrlResolver } = makeService({
       upiRepo: { findAllByReferencedIdPaginated },
-      passportRepo: { findOne: jest.fn(async () => makeDraftPassportStub(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makeDraftPassportStub(referenceId)) },
     });
 
     const result = await service.listByPassport(
@@ -479,10 +479,10 @@ describe("UpiCollectionService permalink enrichment", () => {
       publicUrl: "https://dpp.example.com/my-link",
     };
 
-    const getPermalinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
+    const getPermalinkSummariesByUpiIds = vi.fn(async () => new Map([[linkedUpi.uuid, summary]]));
     const { service } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async () =>
+        findAllByOrganizationId: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [linkedUpi, unlinkedUpi, systemUpi],
@@ -490,9 +490,7 @@ describe("UpiCollectionService permalink enrichment", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(
-          async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]]),
-        ),
+        findByIds: vi.fn(async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]])),
       },
       permalinkApplicationService: { getPermalinkSummariesByUpiIds },
     });
@@ -519,17 +517,17 @@ describe("UpiCollectionService permalink enrichment", () => {
       publicUrl: "https://dpp.example.com/my-link",
     };
 
-    const getPermalinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
+    const getPermalinkSummariesByUpiIds = vi.fn(async () => new Map([[linkedUpi.uuid, summary]]));
     const { service } = makeService({
       upiRepo: {
-        findAllByReferencedIdPaginated: jest.fn(async () =>
+        findAllByReferencedIdPaginated: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [linkedUpi, systemUpi],
           }),
         ),
       },
-      passportRepo: { findOne: jest.fn(async () => makeDraftPassportStub(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makeDraftPassportStub(referenceId)) },
       permalinkApplicationService: { getPermalinkSummariesByUpiIds },
     });
 
@@ -547,10 +545,10 @@ describe("UpiCollectionService permalink enrichment", () => {
 
   it("list: rows without permalinks — the summary service is called with every page uuid and yields nulls", async () => {
     const systemUpi = makeSystemUpi();
-    const getPermalinkSummariesByUpiIds = jest.fn(async () => new Map());
+    const getPermalinkSummariesByUpiIds = vi.fn(async () => new Map());
     const { service } = makeService({
       upiRepo: {
-        findAllByOrganizationId: jest.fn(async () =>
+        findAllByOrganizationId: vi.fn(async () =>
           PagingResult.create({
             pagination: Pagination.create({ limit: 100 }),
             items: [systemUpi],
@@ -558,9 +556,7 @@ describe("UpiCollectionService permalink enrichment", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(
-          async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]]),
-        ),
+        findByIds: vi.fn(async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]])),
       },
       permalinkApplicationService: { getPermalinkSummariesByUpiIds },
     });

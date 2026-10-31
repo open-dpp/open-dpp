@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -53,7 +53,7 @@ describe("Better Auth Schema Sync", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 

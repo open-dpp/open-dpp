@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { getConnectionToken, getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";

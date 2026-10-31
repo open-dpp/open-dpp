@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { INestApplication, ModuleMetadata, VersioningType } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
@@ -75,7 +75,7 @@ export async function createAuthTestContext(
     providers: options.withAuthGuard ? [{ provide: APP_GUARD, useClass: AuthGuard }] : [],
   })
     .overrideProvider(EmailService)
-    .useValue({ send: jest.fn() })
+    .useValue({ send: vi.fn() })
     .compile();
 
   const app = moduleRef.createNestApplication();

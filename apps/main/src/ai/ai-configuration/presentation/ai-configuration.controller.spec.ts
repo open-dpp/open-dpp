@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -70,7 +70,7 @@ describe("aiConfigurationController", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 
@@ -88,7 +88,7 @@ describe("aiConfigurationController", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it(`/PUT create configuration`, async () => {
@@ -155,7 +155,7 @@ describe("aiConfigurationController", () => {
 
   it(`/GET find configuration`, async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
+    vi.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     const aiConfiguration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({ ownedByOrganizationId: org.id }),
     );

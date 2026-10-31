@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";

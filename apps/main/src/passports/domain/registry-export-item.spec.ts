@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { PermalinkKind } from "@open-dpp/dto";
 import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";
 import { Permalink } from "../../permalink/domain/permalink";
