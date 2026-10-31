@@ -10,6 +10,9 @@ export default defineConfig({
     exclude: [...configDefaults.exclude],
     setupFiles: "./setupTest.ts",
     environment: "jsdom",
+    // Node 26 ships its own global `localStorage`, which is undefined without
+    // `--localstorage-file` and shadows jsdom's. Turn it off in the test workers.
+    execArgv: ["--no-experimental-webstorage"],
   },
   ssr: {
     noExternal: ["zod-vue-i18n"],

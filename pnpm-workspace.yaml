@@ -5,6 +5,11 @@ packages:
 
 injectWorkspacePackages: true
 
+# Turns the root `engines.node` floor (package.json) into a hard install error.
+# Without it pnpm only prints a warning and carries on, and an older Node fails
+# later with something cryptic. Dependencies' `engines` are enforced too.
+engineStrict: true
+
 # Supply-chain policy: only install versions published at least 24 h ago.
 # This is pnpm 11's default, spelled out so every tool that runs pnpm here
 # (CI, Docker build, Renovate) applies the same gate at resolution time.
