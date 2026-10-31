@@ -50,3 +50,13 @@ _Not to be confused with_: leaving an Organization (self-initiated, a separate c
 
 **Organization Slug**:
 better-auth's internal alias of an Organization. It always equals the Organization's id — set at creation and backfilled for older Organizations — is never chosen by a User and never exposed by the API. Organization names therefore need not be unique.
+
+## Data Carrier
+
+**Data Carrier**:
+The machine-readable symbol on a product, its packaging or its accompanying documents that leads whoever scans it to a passport. It encodes exactly one Permalink's public URL, so a passport with several Permalinks has several possible Data Carriers. QR code is the symbology it is drawn in today.
+_Avoid_: QR code (names the symbology, not the thing), barcode.
+
+**Carrier Export**:
+A downloadable file of one Data Carrier, ready to print or embed: the symbol with its quiet zone at a chosen size and quality, together with any text that accompanies it.
+_Not to be confused with_: the Data Carrier itself (the symbol, in whatever form) or the code shown on screen in the back office.

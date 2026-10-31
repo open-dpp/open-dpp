@@ -1227,12 +1227,21 @@
     "aiRequired": "AI auswählen.",
     "valueRequired": "Wert ist erforderlich."
   },
-  "permalinkQrCode": {
+  "dataCarrier": {
+    "image": {
+      "alt": "Datenträger für {url}"
+    },
     "digitalLink": {
       "label": "GS1 Digital Link"
     },
     "elementString": {
       "label": "GS1 Elementstring"
-    }
+    },
+    "download": {
+      "svg": "SVG herunterladen",
+      "png": "PNG herunterladen"
+    },
+    "loadError": "Der Datenträger konnte nicht geladen werden.",
+    "downloadError": "Der Datenträger konnte nicht heruntergeladen werden."
   }
 }

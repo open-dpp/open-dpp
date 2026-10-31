@@ -1,4 +1,4 @@
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref } from "vue";
 import { createI18n } from "vue-i18n";
@@ -49,18 +49,20 @@ vi.mock("primevue/dialog", () => ({
   }),
 }));
 
-vi.mock("primevue/usetoast", () => ({
-  useToast: () => ({ add: vi.fn() }),
-}));
-
-vi.mock("@vueuse/core", () => ({
-  useClipboard: () => ({ copy: vi.fn() }),
-  useWindowSize: () => ({ width: ref(1024), height: ref(768) }),
-}));
-
-// Stub QrCode component
-vi.mock("../../components/QrCode.vue", () => ({
-  default: defineComponent({ name: "QrCode", template: "<div />" }),
+// Stub DataCarrier: it fetches its own image, which DataCarrier.spec.ts covers
+vi.mock("../permalinks/DataCarrier.vue", () => ({
+  default: defineComponent({
+    name: "DataCarrier",
+    props: { permalink: { type: Object, required: true }, presentation: Boolean },
+    setup(props) {
+      return () =>
+        h("div", {
+          "data-testid": "data-carrier-stub",
+          "data-permalink-id": props.permalink.id,
+          "data-presentation": String(props.presentation),
+        });
+    },
+  }),
 }));
 
 // Button stub — renders the label as text and forwards data-* attrs so we can
@@ -159,6 +161,36 @@ describe("PassportQrCodeDialog", () => {
     // The Dialog stub renders its slot when visible=true
     expect(wrapper.html()).not.toBe("");
     expect(getByPassport).toHaveBeenCalledWith("passport-7");
+  });
+
+  it("shows the Data Carrier of the passport's last permalink, large for presentation", async () => {
+    getByPassport.mockResolvedValueOnce({
+      data: [
+        { id: "permalink-1", kind: "open-dpp", publicUrl: "https://example.com/p/1" },
+        { id: "permalink-2", kind: "open-dpp", publicUrl: "https://example.com/p/2" },
+      ],
+    });
+    const wrapper = mount(PassportQrCodeDialog, {
+      global: { plugins: [i18n] },
+      props: { visible: true, passportId: "passport-1" },
+    });
+    await flushPromises();
+
+    const carrier = wrapper.get("[data-testid='data-carrier-stub']");
+    expect(carrier.attributes("data-permalink-id")).toBe("permalink-2");
+    expect(carrier.attributes("data-presentation")).toBe("true");
+    expect(wrapper.text()).not.toContain("No permalink");
+  });
+
+  it("says so when the passport has no permalink", async () => {
+    const wrapper = mount(PassportQrCodeDialog, {
+      global: { plugins: [i18n] },
+      props: { visible: true, passportId: "passport-1" },
+    });
+    await flushPromises();
+
+    expect(wrapper.find("[data-testid='data-carrier-stub']").exists()).toBe(false);
+    expect(wrapper.text()).toContain("No permalink");
   });
 
   describe("draft/archived warning banner", () => {

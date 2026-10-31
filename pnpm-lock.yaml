@@ -56,7 +56,7 @@ importers:
     dependencies:
       '@better-auth/api-key':
         specifier: ^1.6.17
-        version: 1.6.17(@better-auth/core@1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.1)(better-auth@1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3)))(better-call@1.3.6(zod@4.4.3))
+        version: 1.6.17(@better-auth/core@1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.1)(better-auth@1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3)))(better-call@1.3.6(zod@4.4.3))
       '@heroicons/vue':
         specifier: ^2.2.0
         version: 2.2.0(vue@3.5.44(typescript@5.9.3))
@@ -78,9 +78,6 @@ importers:
       '@tailwindcss/forms':
         specifier: ^0.5.11
         version: 0.5.11(tailwindcss@4.3.3)
-      '@types/qrcode':
-        specifier: ^1.5.6
-        version: 1.5.6
       '@vee-validate/zod':
         specifier: ^4.15.1
         version: 4.15.1(vue@3.5.44(typescript@5.9.3))(zod@4.4.3)
@@ -92,7 +89,7 @@ importers:
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       better-auth:
         specifier: ^1.6.17
-        version: 1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3))
+        version: 1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3))
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
@@ -120,9 +117,6 @@ importers:
       primevue:
         specifier: ^4.5.5
         version: 4.5.5(vue@3.5.44(typescript@5.9.3))
-      qrcode:
-        specifier: ^1.5.4
-        version: 1.5.4
       socket.io-client:
         specifier: ^4.8.4
         version: 4.8.4(supports-color@8.1.1)
@@ -143,7 +137,7 @@ importers:
         version: 11.4.14(vue@3.5.44(typescript@5.9.3))
       vue-router:
         specifier: ^5.1.0
-        version: 5.1.0(@vue/compiler-sfc@3.5.42)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
+        version: 5.1.0(@vue/compiler-sfc@3.5.42)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -177,10 +171,10 @@ importers:
         version: 4.17.27
       '@vitejs/plugin-vue':
         specifier: ^6.0.10
-        version: 6.0.10(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
+        version: 6.0.10(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
       '@vitejs/plugin-vue-jsx':
         specifier: ^5.1.6
-        version: 5.1.6(supports-color@8.1.1)(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
+        version: 5.1.6(supports-color@8.1.1)(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
       '@vue/test-utils':
         specifier: ^2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))
@@ -219,10 +213,10 @@ importers:
         version: 13.0.2
       vite:
         specifier: ^8.3.5
-        version: 8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
+        version: 8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
       vue-tsc:
         specifier: ^3.3.11
         version: 3.3.11(typescript@5.9.3)
@@ -397,6 +391,9 @@ importers:
       nodemailer:
         specifier: ^10.2.1
         version: 10.2.1
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -491,6 +488,9 @@ importers:
       '@types/nodemailer':
         specifier: ^6.4.24
         version: 6.4.24
+      '@types/qrcode':
+        specifier: ^1.5.6
+        version: 1.5.6
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0
@@ -503,6 +503,9 @@ importers:
       jest:
         specifier: ^30.4.2
         version: 30.4.2(@types/node@25.9.9)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.16.20(@swc/helpers@0.5.23))(@types/node@25.9.9)(typescript@5.9.3))
+      jsqr:
+        specifier: ^1.4.0
+        version: 1.4.0
       mongodb-memory-server:
         specifier: ^11.3.0
         version: 11.3.0(supports-color@8.1.1)
@@ -6649,6 +6652,9 @@ packages:
   jsonfile@6.2.1:
     resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
 
+  jsqr@1.4.0:
+    resolution: {integrity: sha512-dxLob7q65Xg2DvstYkRpkYtmKm2sPJ9oFhrhmudT1dZvNFFTlroai3AWSpLey/w5vMcLBXRgOJsbXpdN9HzU/A==}
+
   juice@10.0.1:
     resolution: {integrity: sha512-ZhJT1soxJCkOiO55/mz8yeBKTAJhRzX9WBO+16ZTqNTONnnVlUPyVBIzQ7lDRjaBdTbid+bAnyIon/GM3yp4cA==}
     engines: {node: '>=10.0.0'}
@@ -9786,11 +9792,11 @@ snapshots:
       better-call: 1.3.6(zod@4.4.3)
       zod: 4.4.3
 
-  '@better-auth/api-key@1.6.17(@better-auth/core@1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.1)(better-auth@1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3)))(better-call@1.3.6(zod@4.4.3))':
+  '@better-auth/api-key@1.6.17(@better-auth/core@1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.1)(better-auth@1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3)))(better-call@1.3.6(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0)
       '@better-auth/utils': 0.4.1
-      better-auth: 1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3))
+      better-auth: 1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3))
       better-call: 1.3.6(zod@4.4.3)
       zod: 4.4.3
 
@@ -10392,14 +10398,6 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.9.9
 
-  '@inquirer/confirm@6.1.1(@types/node@22.20.5)':
-    dependencies:
-      '@inquirer/core': 11.2.1(@types/node@22.20.5)
-      '@inquirer/type': 4.0.7(@types/node@22.20.5)
-    optionalDependencies:
-      '@types/node': 22.20.5
-    optional: true
-
   '@inquirer/confirm@6.1.1(@types/node@25.9.9)':
     dependencies:
       '@inquirer/core': 11.2.1(@types/node@25.9.9)
@@ -10419,19 +10417,6 @@ snapshots:
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
       '@types/node': 25.9.9
-
-  '@inquirer/core@11.2.1(@types/node@22.20.5)':
-    dependencies:
-      '@inquirer/ansi': 2.0.7
-      '@inquirer/figures': 2.0.7
-      '@inquirer/type': 4.0.7(@types/node@22.20.5)
-      cli-width: 4.1.0
-      fast-wrap-ansi: 0.2.2
-      mute-stream: 3.0.0
-      signal-exit: 4.1.0
-    optionalDependencies:
-      '@types/node': 22.20.5
-    optional: true
 
   '@inquirer/core@11.2.1(@types/node@25.9.9)':
     dependencies:
@@ -10561,11 +10546,6 @@ snapshots:
   '@inquirer/type@3.0.10(@types/node@25.9.9)':
     optionalDependencies:
       '@types/node': 25.9.9
-
-  '@inquirer/type@4.0.7(@types/node@22.20.5)':
-    optionalDependencies:
-      '@types/node': 22.20.5
-    optional: true
 
   '@inquirer/type@4.0.7(@types/node@25.9.9)':
     optionalDependencies:
@@ -12251,22 +12231,22 @@ snapshots:
     transitivePeerDependencies:
       - vue
 
-  '@vitejs/plugin-vue-jsx@5.1.6(supports-color@8.1.1)(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))':
+  '@vitejs/plugin-vue-jsx@5.1.6(supports-color@8.1.1)(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))':
     dependencies:
       '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/plugin-syntax-typescript': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@rolldown/pluginutils': 1.0.1
       '@vue/babel-plugin-jsx': 2.0.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
-      vite: 8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
+      vite: 8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
       vue: 3.5.44(typescript@5.9.3)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue@6.0.10(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))':
+  '@vitejs/plugin-vue@6.0.10(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
+      vite: 8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
       vue: 3.5.44(typescript@5.9.3)
 
   '@vitejs/plugin-vue@6.0.9(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.43(typescript@5.9.3))':
@@ -12284,15 +12264,6 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.11(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))':
-    dependencies:
-      '@vitest/spy': 4.1.11
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      msw: 2.15.0(@types/node@22.20.5)(typescript@5.9.3)
-      vite: 8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
-
   '@vitest/mocker@4.1.11(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))':
     dependencies:
       '@vitest/spy': 4.1.11
@@ -12301,7 +12272,6 @@ snapshots:
     optionalDependencies:
       msw: 2.15.0(@types/node@25.9.9)(typescript@5.9.3)
       vite: 8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
-    optional: true
 
   '@vitest/pretty-format@4.1.11':
     dependencies:
@@ -13238,7 +13208,7 @@ snapshots:
       - '@cloudflare/workers-types'
       - '@opentelemetry/api'
 
-  better-auth@1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3)):
+  better-auth@1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)))(vue@3.5.44(typescript@5.9.3)):
     dependencies:
       '@better-auth/core': 1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0)
       '@better-auth/drizzle-adapter': 1.6.17(@better-auth/core@1.6.17(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.3.0)(@opentelemetry/api@1.9.1)(better-call@1.3.6(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.1)
@@ -13259,7 +13229,7 @@ snapshots:
       zod: 4.4.3
     optionalDependencies:
       mongodb: 7.5.0
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
       vue: 3.5.44(typescript@5.9.3)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -15710,6 +15680,8 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  jsqr@1.4.0: {}
+
   juice@10.0.1:
     dependencies:
       cheerio: 1.0.0-rc.12
@@ -16567,32 +16539,6 @@ snapshots:
   ms@2.0.0: {}
 
   ms@2.1.3: {}
-
-  msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3):
-    dependencies:
-      '@inquirer/confirm': 6.1.1(@types/node@22.20.5)
-      '@mswjs/interceptors': 0.41.9
-      '@open-draft/deferred-promise': 3.0.0
-      '@types/statuses': 2.0.6
-      cookie: 1.1.1
-      graphql: 16.14.2
-      headers-polyfill: 5.0.1
-      is-node-process: 1.2.0
-      outvariant: 1.4.3
-      path-to-regexp: 6.3.0
-      picocolors: 1.1.1
-      rettime: 0.11.11
-      statuses: 2.0.2
-      strict-event-emitter: 0.5.1
-      tough-cookie: 6.0.1
-      type-fest: 5.7.0
-      until-async: 3.0.2
-      yargs: 17.7.2
-    optionalDependencies:
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - '@types/node'
-    optional: true
 
   msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3):
     dependencies:
@@ -18385,7 +18331,6 @@ snapshots:
       terser: 5.48.0
       tsx: 4.23.15
       yaml: 2.9.0
-    optional: true
 
   vitepress@2.0.0-alpha.20(@types/node@22.20.5)(axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(change-case@5.4.4)(esbuild@0.28.1)(jiti@2.7.0)(postcss@8.5.31)(qrcode@1.5.4)(terser@5.48.0)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.0):
     dependencies:
@@ -18434,35 +18379,6 @@ snapshots:
       - universal-cookie
       - yaml
 
-  vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)):
-    dependencies:
-      '@vitest/expect': 4.1.11
-      '@vitest/mocker': 4.1.11(msw@2.15.0(@types/node@22.20.5)(typescript@5.9.3))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
-      '@vitest/pretty-format': 4.1.11
-      '@vitest/runner': 4.1.11
-      '@vitest/snapshot': 4.1.11
-      '@vitest/spy': 4.1.11
-      '@vitest/utils': 4.1.11
-      es-module-lexer: 2.1.0
-      expect-type: 1.3.0
-      magic-string: 0.30.21
-      obug: 2.1.3
-      pathe: 2.0.3
-      picomatch: 4.0.7
-      std-env: 4.1.0
-      tinybench: 2.9.0
-      tinyexec: 1.2.4
-      tinyglobby: 0.2.17
-      tinyrainbow: 3.1.0
-      vite: 8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-      '@types/node': 22.20.5
-      jsdom: 27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1)
-    transitivePeerDependencies:
-      - msw
-
   vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.9)(jsdom@27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1))(msw@2.15.0(@types/node@25.9.9)(typescript@5.9.3))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.11
@@ -18491,7 +18407,6 @@ snapshots:
       jsdom: 27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1)
     transitivePeerDependencies:
       - msw
-    optional: true
 
   vscode-uri@3.1.0: {}
 
@@ -18522,7 +18437,7 @@ snapshots:
       '@vue/devtools-api': 6.6.4
       vue: 3.5.44(typescript@5.9.3)
 
-  vue-router@5.1.0(@vue/compiler-sfc@3.5.42)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3)):
+  vue-router@5.1.0(@vue/compiler-sfc@3.5.42)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3)))(vite@8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3)):
     dependencies:
       '@babel/generator': 8.0.0-rc.6
       '@vue-macros/common': 3.1.2(vue@3.5.44(typescript@5.9.3))
@@ -18545,7 +18460,7 @@ snapshots:
     optionalDependencies:
       '@vue/compiler-sfc': 3.5.42
       pinia: 3.0.4(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3))
-      vite: 8.3.5(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
+      vite: 8.3.5(@types/node@25.9.9)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
 
   vue-tsc@3.3.11(typescript@5.9.3):
     dependencies:
