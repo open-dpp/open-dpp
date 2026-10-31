@@ -7,7 +7,6 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "lint:style": "eslint",
-    "lint:style:prune-suppressions": "eslint --prune-suppressions",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "gen:gs1": "tsx scripts/gs1-generator/index.mts && oxfmt --write packages/dto/src/unique-product-identifiers/gs1",
