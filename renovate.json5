@@ -50,5 +50,13 @@
       matchPackageNames: ["node", "@types/node"],
       allowedVersions: "<27",
     },
+    {
+      // A NestJS major moves core and every satellite (swagger, mongoose, config,
+      // serve-static, axios, ...) together: each satellite peers on the new core only,
+      // so split PRs can never be green on their own. One PR per Nest major.
+      groupName: "nestjs majors",
+      matchPackageNames: ["@nestjs/**"],
+      matchUpdateTypes: ["major"],
+    },
   ],
 }

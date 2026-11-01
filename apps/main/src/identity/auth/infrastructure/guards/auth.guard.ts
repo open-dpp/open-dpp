@@ -72,6 +72,11 @@ export class AuthGuard implements CanActivate {
    * @returns True if the request is authorized to proceed, throws an error otherwise
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // NestJS 12 also runs APP_GUARDs on WebSocket gateways; a gateway authenticates its
+    // sockets with its own guard (WebsocketAuthGuard), as it did when Nest 11 skipped them.
+    if (context.getType() !== "http") {
+      return true;
+    }
     const request = context.switchToHttp().getRequest();
     request.correlationId = request.headers["x-correlation-id"] ?? randomUUID();
     const url = request.url as string;
