@@ -1,6 +1,11 @@
 {
+  // Type-check config (`check-ts`, editors, Vitest): src, test and vitest.config.ts.
+  // Output settings (`outDir`, `rootDir`) live in tsconfig.build.json: with an
+  // `outDir` here, TypeScript 6's default `rootDir` (this directory) rejects
+  // vitest.config.ts's import of the root vitest.shared.ts.
   "compilerOptions": {
     "incremental": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "target": "ES2023",
     "lib": ["ES2021", "esnext"],
     "types": ["node"],
@@ -10,15 +15,12 @@
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "strictBindCallApply": true,
-    "strictFunctionTypes": true,
-    "strictNullChecks": true,
+    "strict": true,
+    // Mongoose @Schema classes declare fields that Mongoose fills, and AAS domain
+    // classes assign backing fields through setters (276 TS2564 errors with it on).
     "strictPropertyInitialization": false,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
     "inlineSources": true,
     "noEmitOnError": true,
-    "outDir": "./dist",
     "sourceMap": true,
     "esModuleInterop": true,
     "skipLibCheck": true
