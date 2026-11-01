@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { OrganizationCreatedEvent } from "../../../identity/organizations/domain/events/organization-created.event";
 import { OfficialTemplatesImportService } from "../services/official-templates-import.service";
@@ -8,12 +8,12 @@ describe("OrganizationCreatedListener", () => {
   let listener: OrganizationCreatedListener;
 
   const mockOfficialTemplatesImportService = {
-    importOfficialTemplates: jest.fn<OfficialTemplatesImportService["importOfficialTemplates"]>(),
+    importOfficialTemplates: vi.fn<OfficialTemplatesImportService["importOfficialTemplates"]>(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    vi.clearAllMocks();
+    vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
     listener = new OrganizationCreatedListener(
       mockOfficialTemplatesImportService as unknown as OfficialTemplatesImportService,
     );

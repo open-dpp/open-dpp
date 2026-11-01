@@ -1,10 +1,10 @@
-import { afterAll, describe, expect, it } from "@jest/globals";
+import { afterAll, describe, expect, it } from "vitest";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import request, { Test } from "supertest";
 
 /**
- * Guards `test/setup-after-env.ts`: under the parallel full run, foreign IPv4-only
+ * Guards `test/setup-file.ts`: under the parallel full run, foreign IPv4-only
  * listeners on 127.0.0.1 intercept the ephemeral ports supertest picks, so supertest
  * has to talk to the IPv6 loopback whenever the server it started is dual-stack.
  */

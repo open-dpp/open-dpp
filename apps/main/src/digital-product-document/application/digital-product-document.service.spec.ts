@@ -28,7 +28,7 @@ import { SubjectAttributes } from "../../aas/domain/security/subject-attributes"
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect, jest } from "@jest/globals";
+import { type Mock, afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { DigitalProductDocumentService } from "./digital-product-document.service";
@@ -101,7 +101,7 @@ describe("DigitalProductDocumentService", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
     await module.init();
@@ -428,13 +428,13 @@ describe("DigitalProductDocumentService", () => {
     const activities = [event1, event2, event3, event4];
     await activityRepository.createMany(activities);
     const res = {
-      set: jest.fn(),
+      set: vi.fn(),
     } as unknown as Response;
 
     const mockArchive = {
-      pipe: jest.fn(),
-      append: jest.fn(),
-      finalize: jest.fn(),
+      pipe: vi.fn(),
+      append: vi.fn(),
+      finalize: vi.fn(),
     } as unknown as Archiver;
 
     await service.downloadActivitiesWithArchiver(
@@ -448,7 +448,7 @@ describe("DigitalProductDocumentService", () => {
       mockArchive,
     );
 
-    const appendMock = mockArchive.append as jest.Mock;
+    const appendMock = mockArchive.append as Mock;
 
     let [arg1, arg2] = appendMock.mock.calls[0];
     expect(JSON.parse(arg1 as string)).toEqual([event1.toPlain(), event2.toPlain()]);

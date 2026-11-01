@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { PermalinkDtoSchema } from "@open-dpp/dto";
 import { randomUUID } from "node:crypto";
 import { gs1DataAttributesPlainFactory } from "../gs1/gs1-data-attributes.factory";

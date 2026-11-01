@@ -1,4 +1,4 @@
-import { describe, expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { parseApiVersion } from "./api-version.decorator";
 import { ApiVersionsDto } from "@open-dpp/dto";
 

@@ -30,7 +30,7 @@
   },
   "scripts": {
     "build": "tsc && rollup -c",
-    "test": "jest",
+    "test": "vitest run",
     "check-ts": "tsc --noEmit",
     "run-before-versions": "npm run build && npm run test",
     "prepatch": "npm run run-before-versions",
@@ -39,7 +39,8 @@
     "minor": "git fetch --tags && npm version minor && git push --follow-tags",
     "premajor": "npm run run-before-versions",
     "major": "git fetch --tags && npm version major && git push --follow-tags",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test:cov": "vitest run --coverage"
   },
   "dependencies": {
     "@open-dpp/dto": "workspace:*",
@@ -48,16 +49,10 @@
   "devDependencies": {
     "@open-dpp/testing": "workspace:*",
     "@rollup/plugin-typescript": "^12.3.1",
-    "@swc/core": "^1.16.20",
-    "@swc/jest": "^0.2.39",
-    "@types/jest": "^30.0.0",
     "@types/node": "^26.6.6",
-    "jest": "^30.4.2",
     "msw": "^2.15.0",
     "rollup": "^4.65.0",
     "rollup-plugin-dts": "^6.5.1",
-    "ts-jest": "^29.4.15",
-    "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3"
   }

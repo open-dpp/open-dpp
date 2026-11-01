@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Logger } from "@nestjs/common";
 import type { Db } from "mongodb";
 import type { EmailService } from "../../../email/email.service";
@@ -16,25 +16,25 @@ function contextWithToken(payload: Record<string, unknown>): unknown {
 }
 
 describe("email-change-hooks", () => {
-  let userFindOne: jest.Mock;
-  let ecrFindOne: jest.Mock;
-  let ecrDeleteOne: jest.Mock;
-  let collection: jest.Mock;
+  let userFindOne: Mock;
+  let ecrFindOne: Mock;
+  let ecrDeleteOne: Mock;
+  let collection: Mock;
   let db: Db;
   let logger: Logger;
-  let send: jest.Mock;
+  let send: Mock;
   let emailService: EmailService;
 
   beforeEach(() => {
-    userFindOne = jest.fn();
-    ecrFindOne = jest.fn();
-    ecrDeleteOne = jest.fn();
-    collection = jest.fn((name: string) =>
+    userFindOne = vi.fn();
+    ecrFindOne = vi.fn();
+    ecrDeleteOne = vi.fn();
+    collection = vi.fn((name: string) =>
       name === "user" ? { findOne: userFindOne } : { findOne: ecrFindOne, deleteOne: ecrDeleteOne },
-    ) as jest.Mock;
+    ) as Mock;
     db = { collection } as unknown as Db;
-    logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger;
-    send = jest.fn();
+    logger = { log: vi.fn(), warn: vi.fn(), error: vi.fn() } as unknown as Logger;
+    send = vi.fn();
     emailService = { send } as unknown as EmailService;
   });
 

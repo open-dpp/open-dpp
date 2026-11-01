@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { expect, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { HttpModule, HttpService } from "@nestjs/axios";
 
 import {
@@ -403,7 +403,7 @@ describe("templateController", () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const now = new Date("2022-01-01T00:00:00.000Z");
-    jest.spyOn(DateTime, "now").mockReturnValue(now);
+    vi.spyOn(DateTime, "now").mockReturnValue(now);
     const displayName = [{ language: "en", text: "Test" }];
 
     const body = {
@@ -537,7 +537,7 @@ describe("templateController", () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const validPayload = buildEmptyExportPayload();
 
-    const getSpy = jest.spyOn(HttpService.prototype, "get").mockImplementation((url: string) => {
+    const getSpy = vi.spyOn(HttpService.prototype, "get").mockImplementation((url: string) => {
       if (url.includes("api.github.com")) {
         return of({
           data: [

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -23,35 +23,35 @@ describe("OrganizationsService", () => {
 
   const mockOrganizationsRepository = {
     create:
-      jest.fn<
+      vi.fn<
         (organization: Organization, headers: BetterAuthHeaders) => Promise<Organization | null>
       >(),
-    findOneById: jest.fn(),
-    findManyByIds: jest.fn<(ids: string[]) => Promise<Organization[]>>(),
-    update: jest.fn(),
+    findOneById: vi.fn(),
+    findManyByIds: vi.fn<(ids: string[]) => Promise<Organization[]>>(),
+    update: vi.fn(),
   };
 
   const mockMembersRepository = {
-    findOneByUserIdAndOrganizationId: jest.fn(),
-    findByUserId: jest.fn<(userId: string) => Promise<Member[]>>(),
+    findOneByUserIdAndOrganizationId: vi.fn(),
+    findByUserId: vi.fn<(userId: string) => Promise<Member[]>>(),
   };
 
   const mockUsersRepository = {
-    findOneById: jest.fn(),
+    findOneById: vi.fn(),
   };
 
   const mockInstanceSettingsService = {
-    getSettings: jest.fn<() => Promise<InstanceSettings>>(),
+    getSettings: vi.fn<() => Promise<InstanceSettings>>(),
   };
 
   const mockInvitationsRepository = {};
 
   const mockPolicyService = {
-    ensureDefaultPolicies: jest.fn<(organizationId: string) => Promise<void>>(),
+    ensureDefaultPolicies: vi.fn<(organizationId: string) => Promise<void>>(),
   };
 
   const mockEventEmitter = {
-    emit: jest.fn<EventEmitter2["emit"]>(),
+    emit: vi.fn<EventEmitter2["emit"]>(),
   };
 
   beforeEach(async () => {
@@ -93,7 +93,7 @@ describe("OrganizationsService", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("getMemberOrganizations", () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { permalinkPaths } from "./permalink.paths";
 
 describe("permalinkPaths", () => {

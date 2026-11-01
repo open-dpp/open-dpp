@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { MeasurementType } from "./passport-metric";
 import { PassportMetricAggregation } from "./passport-metric-aggregation";
 import { TimePeriod } from "./time-period";

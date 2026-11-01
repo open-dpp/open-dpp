@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { presentationConfigurationPaths } from "./presentation-configuration.paths";
 
 describe("presentationConfigurationPaths", () => {
