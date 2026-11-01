@@ -30,6 +30,20 @@ describe("PolicyGuard", () => {
     expect(guard).toBeDefined();
   });
 
+  it("does not enforce quotas on WebSocket messages", async () => {
+    const wsContext = {
+      getType: () => "ws",
+      switchToHttp: () => {
+        throw new Error("a WebSocket context has no HTTP request");
+      },
+      getHandler: () => {},
+      getClass: () => {},
+    } as unknown as ExecutionContext;
+
+    await expect(guard.canActivate(wsContext)).resolves.toBe(true);
+    expect(policyService.enforce).not.toHaveBeenCalled();
+  });
+
   it("should enforce policy using organizationId from X-OPEN-DPP-ORGANIZATION-ID header", async () => {
     const context = createMockContext({
       headers: { "x-open-dpp-organization-id": "org-1" },
@@ -106,6 +120,7 @@ describe("PolicyGuard", () => {
 
 function createMockContext(req: any): ExecutionContext {
   return {
+    getType: () => "http",
     switchToHttp: () => ({
       getRequest: () => req,
     }),

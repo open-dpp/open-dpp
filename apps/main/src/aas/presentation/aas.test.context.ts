@@ -6,7 +6,7 @@ import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadat
 import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
-import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
+import type { ModelDefinition } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
   AasSubmodelElements,
