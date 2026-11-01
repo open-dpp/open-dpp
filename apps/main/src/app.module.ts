@@ -11,6 +11,7 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
+import { APP_ROOT } from "./app-root";
 import { BrandingModule } from "./branding/branding.module";
 import { BulkImportModule } from "./bulk-import/bulk-import.module";
 import { generateMongoConfig } from "./database/config";
@@ -58,7 +59,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     HttpModule,
     TraceabilityEventsModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, "client", "dist"),
+      rootPath: join(APP_ROOT, "client", "dist"),
       exclude: ["/api", "/api/{*test}"],
       serveStaticOptions: {
         fallthrough: true,
