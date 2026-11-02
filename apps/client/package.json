@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "6.3.0",
+  "version": "6.3.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -38,7 +38,7 @@
     "socket.io-client": "^4.8.4",
     "ts-pattern": "^5.9.2",
     "vee-validate": "^4.15.1",
-    "vue": "^3.5.43",
+    "vue": "^3.5.44",
     "vue-chartjs": "^5.3.4",
     "vue-i18n": "^11.4.14",
     "vue-router": "^5.1.0",
@@ -69,8 +69,8 @@
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
     "vite": "^8.3.5",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "vue-tsc": "^3.3.11"
   },
-  "packageManager": "pnpm@11.28.5"
+  "packageManager": "pnpm@11.28.9"
 }

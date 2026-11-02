@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/testing",
-  "version": "6.3.0",
+  "version": "6.3.5",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -76,5 +76,5 @@
       "node_modules/(?!.*(@open-dpp|uuid))"
     ]
   },
-  "packageManager": "pnpm@11.28.5"
+  "packageManager": "pnpm@11.28.9"
 }

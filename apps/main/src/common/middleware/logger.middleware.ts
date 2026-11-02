@@ -1,23 +1,32 @@
 import type { NextFunction, Request, Response } from "express";
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { EnvService } from "@open-dpp/env";
-import { CorrelationIdService } from "./correlation-id.service";
+import { Logger } from "@nestjs/common";
+import { CORRELATION_ID_HEADER } from "./correlation-id.middleware";
 
-@Injectable()
-export class LoggerMiddleware implements NestMiddleware {
-  private readonly logger = new Logger("HTTP");
-  private readonly logFormat: "json" | "plain";
+const DEV_SERVER_PATH_REGEX = /^\/(?:@[\w-]+|src|node_modules)\//;
+const FILE_EXTENSION_REGEX = /\.\w+$/;
+const BACKEND_PATH_REGEX = /^\/(?:api|gs1)(?:\/|$)/;
 
-  constructor(
-    private readonly envService: EnvService,
-    private correlationIdService: CorrelationIdService,
-  ) {
-    this.logFormat = this.envService.get("OPEN_DPP_LOG_FORMAT");
+export function isFrontendAssetPath(path: string): boolean {
+  if (BACKEND_PATH_REGEX.test(path)) {
+    return false;
   }
+  return (
+    path.startsWith("/assets/") ||
+    DEV_SERVER_PATH_REGEX.test(path) ||
+    (FILE_EXTENSION_REGEX.test(path) && !path.endsWith(".html"))
+  );
+}
 
-  use(req: Request, res: Response, next: NextFunction): void {
-    const { method, originalUrl, ip } = req;
+// Registered as plain express middleware in main.ts (not via Nest's MiddlewareConsumer),
+// so it also logs requests outside the global "/api" prefix, e.g. the served frontend.
+export function createLoggerMiddleware(logFormat: "json" | "plain") {
+  const logger = new Logger("HTTP");
+
+  return (req: Request, res: Response, next: NextFunction): void => {
+    // Log the path only: query strings can carry secrets, e.g. /password-reset?token=…
+    const { method, ip, path } = req;
     const userAgent = req.get("user-agent") || "";
+    const correlationId = req.headers[CORRELATION_ID_HEADER];
     const startTime = Date.now();
 
     // Capture response finish event
@@ -25,28 +34,31 @@ export class LoggerMiddleware implements NestMiddleware {
       const { statusCode } = res;
       const duration = Date.now() - startTime;
       let message: string | object;
-      if (this.logFormat === "json") {
+      if (logFormat === "json") {
         message = {
+          correlationId,
           method,
-          url: originalUrl,
+          url: path,
           status: statusCode,
           ip,
           userAgent,
           duration,
         };
       } else {
-        message = `${this.correlationIdService.getCorrelationId()} ${method} ${originalUrl} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
+        message = `${correlationId} ${method} ${path} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
       }
 
       if (statusCode >= 500) {
-        this.logger.error(message);
+        logger.error(message);
       } else if (statusCode >= 400) {
-        this.logger.warn(message);
+        logger.warn(message);
+      } else if (isFrontendAssetPath(path)) {
+        logger.verbose(message);
       } else {
-        this.logger.debug(message);
+        logger.debug(message);
       }
     });
 
     next();
-  }
+  };
 }

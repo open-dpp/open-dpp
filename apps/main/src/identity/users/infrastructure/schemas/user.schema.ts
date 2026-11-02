@@ -51,6 +51,9 @@ export class User {
 
   @Prop({ default: Language.en, type: String, enum: Object.values(Language) })
   preferredLanguage: LanguageType;
+
+  @Prop({ default: null, type: Date })
+  lastLoginAt: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
