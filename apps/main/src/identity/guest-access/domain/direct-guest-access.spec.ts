@@ -45,6 +45,15 @@ describe("directGuestAccess", () => {
     expect(access.acceptedByUserId).toBeUndefined();
   });
 
+  it("recognizes the invited person by the verified invited email", () => {
+    const access = createPending();
+
+    expect(access.isInvitedUser(createUser())).toBe(true);
+    expect(access.isInvitedUser(createUser({ email: "REPAIRER@example.com" }))).toBe(true);
+    expect(access.isInvitedUser(createUser({ email: "other@example.com" }))).toBe(false);
+    expect(access.isInvitedUser(createUser({ emailVerified: false }))).toBe(false);
+  });
+
   it("grants nothing while pending", () => {
     const access = createPending();
 

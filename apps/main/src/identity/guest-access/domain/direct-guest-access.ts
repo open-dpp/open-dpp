@@ -109,6 +109,11 @@ export class DirectGuestAccess implements GuestAccess {
     return this.status === GuestAccessStatus.ACCEPTED && this._acceptedByUserId === caller.userId;
   }
 
+  /** Whether the user is the invited person: the account has the verified invited email. */
+  isInvitedUser(user: User): boolean {
+    return user.emailVerified && DirectGuestAccess.normalizeEmail(user.email) === this.email;
+  }
+
   accept(user: User, now: Date): void {
     if (this._revokedAt) {
       throw new ValueError("A revoked guest access cannot be accepted");
@@ -116,7 +121,7 @@ export class DirectGuestAccess implements GuestAccess {
     if (this._acceptedByUserId) {
       throw new ValueError("The guest access is already accepted");
     }
-    if (!user.emailVerified || DirectGuestAccess.normalizeEmail(user.email) !== this.email) {
+    if (!this.isInvitedUser(user)) {
       throw new ValueError("The guest access can only be accepted with the invited verified email");
     }
     this._acceptedByUserId = user.id;
