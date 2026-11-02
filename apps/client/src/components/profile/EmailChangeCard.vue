@@ -15,8 +15,6 @@ import { useNotificationStore } from "../../stores/notification.ts";
 const props = defineProps<{
   email: string;
   emailVerified: boolean;
-  /** false = the instance sends no mail, so verification/change flows cannot complete */
-  mailEnabled: boolean;
   pendingEmailChange: { newEmail: string; requestedAt: Date } | null;
   loaded: boolean;
   hydrationFailed: boolean;
@@ -221,7 +219,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
           {{ t("user.emailPending", { email: pendingEmail }) }}
         </span>
         <span
-          v-else-if="mailEnabled && !emailVerified"
+          v-else-if="!emailVerified"
           class="border-status-warning/20 bg-status-warning/10 text-status-warning inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider wrap-break-word"
           role="status"
           aria-live="polite"
@@ -247,7 +245,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
         />
         <template v-else>
           <Button
-            v-if="mailEnabled && !emailVerified"
+            v-if="!emailVerified"
             type="button"
             severity="secondary"
             size="small"
@@ -258,7 +256,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             @click="resendVerification"
           />
           <Button
-            v-if="mailEnabled && !emailPanelOpen"
+            v-if="!emailPanelOpen"
             ref="changeEmailButtonRef"
             type="button"
             severity="secondary"

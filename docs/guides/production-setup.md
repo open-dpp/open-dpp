@@ -121,12 +121,13 @@ Instance settings are cached in memory per replica for 60 seconds and refreshed 
 
 ### What changes while mail is off
 
-The backend keeps every route; only delivery changes. The frontend hides the self-service actions that can only complete by mail:
+Only delivery changes. The backend keeps every route, and the frontend looks the same whether mail is on or off. Every action that sends a mail still works, both self-service and admin:
 
-- sign-in: the "Forgot password?" link
-- profile: the change-email button, the resend-verification button and the "not verified" badge
+- sign-in: "Forgot password?"
+- profile: change email, resend verification
+- admin: create or invite users, resend reset or verification mails
 
-Admin actions — creating or inviting users, resending reset or verification mails — stay visible, since an admin can pick the link from the log. Signing in with an unverified address is allowed either way.
+The user still sees the usual "mail sent" confirmation, but the link only reaches the log. To complete the flow, the user asks an admin, who picks the link from the log and hands it over. Signing in with an unverified address is allowed either way.
 
 ## S3-compatible object storage
 

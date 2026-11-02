@@ -97,16 +97,4 @@ describe("instanceSettings composable", () => {
     await fetchInstanceSettings();
     await waitFor(() => expect(canCreateOrganization.value).toBeTruthy());
   });
-
-  it("exposes mailEnabled from the public settings", async () => {
-    const { mailEnabled, fetchInstanceSettings } = mountHarness();
-    expect(mailEnabled.value).toBe(true);
-
-    mocks.getPublic.mockResolvedValueOnce({
-      data: { signupEnabled: true, mailEnabled: false },
-    });
-
-    await fetchInstanceSettings();
-    expect(mailEnabled.value).toBe(false);
-  });
 });

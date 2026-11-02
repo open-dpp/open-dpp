@@ -38,8 +38,6 @@ export type InstanceSettingsUpdateDto = z.infer<typeof InstanceSettingsUpdateDto
 export const PublicInstanceSettingsDtoSchema = z.object({
   signupEnabled: z.boolean(),
   organizationCreationEnabled: z.boolean().optional(),
-  // anonymous: the sign-in page hides "Forgot password?" when mail is off
-  mailEnabled: z.boolean(),
 });
 
 export type PublicInstanceSettingsDto = z.infer<typeof PublicInstanceSettingsDtoSchema>;

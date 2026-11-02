@@ -12,10 +12,10 @@ describe("InstanceSettingsController", () => {
     { get: () => "https://dpp.example.com" } as unknown as EnvService,
   );
 
-  it("tells anonymous callers whether mail is enabled", async () => {
+  it("does not tell anonymous callers whether mail is enabled", async () => {
     const dto = await controller.getPublicSettings(UserRole.ANONYMOUS);
 
-    expect(dto.mailEnabled).toBe(false);
+    expect(dto).not.toHaveProperty("mailEnabled");
     expect(dto).not.toHaveProperty("organizationCreationEnabled");
   });
 
