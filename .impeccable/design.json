@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T19:18:14+00:00",
+  "title": "Design System: open-dpp",
+  "extensions": {
+    "colorMeta": {
+      "primary-500": {
+        "role": "primary",
+        "displayName": "open-dpp Green",
+        "canonical": "#6bad87",
+        "tonalRamp": [
+          "#1e3026",
+          "#2b4536",
+          "#385a46",
+          "#446f56",
+          "#518367",
+          "#6bad87",
+          "#7db795",
+          "#8fc1a4"
+        ],
+        "note": "Seed only. At runtime createColorPalette() derives a 100-900 ramp from the Organization's color (default #6bad87 lands at step 300) and writes 500/600 into --primary-500/--primary-600 and the Aura primary palette. The ramp shown is the derived default palette (900→100, step 400 omitted)."
+      },
+      "primary-600": {
+        "role": "primary",
+        "displayName": "open-dpp Green, deep",
+        "canonical": "oklch(59.3% 0.138 158)",
+        "tonalRamp": [
+          "#000f06",
+          "#002a17",
+          "#02472a",
+          "#02663f",
+          "#008754",
+          "#3fb87d",
+          "#9edfb9",
+          "#def5e7"
+        ],
+        "note": "Static seed; replaced at runtime by the derived 600 step (#446f56 for the default color)."
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "oklch(21.0% 0.034 263)",
+        "tonalRamp": [
+          "#070b14",
+          "#1a2231",
+          "#313b4d",
+          "#4b5569",
+          "#677286",
+          "#939fb4",
+          "#c7cedc",
+          "#eceef4"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "oklch(44.2% 0.035 257)",
+        "tonalRamp": [
+          "#060b14",
+          "#182231",
+          "#2f3b4d",
+          "#495669",
+          "#657387",
+          "#91a0b5",
+          "#c5cfdc",
+          "#ebeff4"
+        ]
+      },
+      "ink-subtle": {
+        "role": "neutral",
+        "displayName": "Subtle Ink",
+        "canonical": "oklch(71.0% 0.027 261)",
+        "tonalRamp": [
+          "#070b12",
+          "#1b222e",
+          "#333b49",
+          "#4d5665",
+          "#697282",
+          "#959fb0",
+          "#c8ced9",
+          "#eceff3"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline Rule",
+        "canonical": "oklch(92.7% 0.007 260)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#202225",
+          "#383b3f",
+          "#53555a",
+          "#6f7276",
+          "#9c9ea3",
+          "#ccced1",
+          "#eeeef0"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "oklch(100.0% 0.000 89)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#222222",
+          "#3a3a3a",
+          "#555555",
+          "#717171",
+          "#9e9e9e",
+          "#cecece",
+          "#eeeeee"
+        ]
+      },
+      "surface-recessed": {
+        "role": "neutral",
+        "displayName": "Recessed Gray",
+        "canonical": "oklch(98.5% 0.000 89)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#222222",
+          "#3a3a3a",
+          "#555555",
+          "#717171",
+          "#9e9e9e",
+          "#cecece",
+          "#eeeeee"
+        ]
+      },
+      "status-success": {
+        "role": "status",
+        "displayName": "Success",
+        "canonical": "oklch(58.6% 0.143 155)",
+        "tonalRamp": [
+          "#001005",
+          "#012a14",
+          "#024726",
+          "#006739",
+          "#03884d",
+          "#43b876",
+          "#a0dfb5",
+          "#def5e5"
+        ]
+      },
+      "status-warning": {
+        "role": "status",
+        "displayName": "Warning",
+        "canonical": "oklch(64.6% 0.170 50)",
+        "tonalRamp": [
+          "#180600",
+          "#391601",
+          "#5f2901",
+          "#873d02",
+          "#b15304",
+          "#ef7926",
+          "#febd99",
+          "#feeadf"
+        ]
+      },
+      "status-danger": {
+        "role": "status",
+        "displayName": "Danger",
+        "canonical": "oklch(57.6% 0.209 29)",
+        "tonalRamp": [
+          "#1f0000",
+          "#470000",
+          "#730100",
+          "#a30400",
+          "#d02115",
+          "#ff6553",
+          "#ffbaaf",
+          "#fee9e5"
+        ]
+      },
+      "slate-100": {
+        "role": "neutral",
+        "displayName": "Aura Slate 100",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ],
+        "note": "Aura's internal surface scale (Tailwind slate); reach it through PrimeVue props, not Tailwind classes."
+      },
+      "slate-200": {
+        "role": "neutral",
+        "displayName": "Aura Slate 200",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ],
+        "note": "Aura's internal surface scale (Tailwind slate); reach it through PrimeVue props, not Tailwind classes."
+      },
+      "slate-300": {
+        "role": "neutral",
+        "displayName": "Aura Slate 300",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ],
+        "note": "Aura's internal surface scale (Tailwind slate); reach it through PrimeVue props, not Tailwind classes."
+      },
+      "slate-500": {
+        "role": "neutral",
+        "displayName": "Aura Slate 500",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ],
+        "note": "Aura's internal surface scale (Tailwind slate); reach it through PrimeVue props, not Tailwind classes."
+      },
+      "slate-600": {
+        "role": "neutral",
+        "displayName": "Aura Slate 600",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ],
+        "note": "Aura's internal surface scale (Tailwind slate); reach it through PrimeVue props, not Tailwind classes."
+      },
+      "slate-700": {
+        "role": "neutral",
+        "displayName": "Aura Slate 700",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ],
+        "note": "Aura's internal surface scale (Tailwind slate); reach it through PrimeVue props, not Tailwind classes."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Big-number metric tiles on passports and in analytics; tabular figures."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page and section headings, DataTable header titles, profile sections."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Passport section and card titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running application text, table cells, definition-list rows."
+      },
+      "body-strong": {
+        "displayName": "Body Strong",
+        "purpose": "Sidebar navigation items and emphasized row labels."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Text inside PrimeVue inputs (Aura default size)."
+      },
+      "control-strong": {
+        "displayName": "Control Strong",
+        "purpose": "PrimeVue button labels."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Sidebar group headings and small meta lines."
+      },
+      "label-caps": {
+        "displayName": "Label Caps",
+        "purpose": "Uppercase caption under metric values only."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Passport IDs, UUIDs and other identifiers a person may copy."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ambient",
+        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "purpose": "Passport sections, metric tiles, Aura Cards."
+      },
+      {
+        "name": "bar-hairline",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "The back-office top bar."
+      },
+      {
+        "name": "overlay-small",
+        "value": "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)",
+        "purpose": "Menus, selects, popovers."
+      },
+      {
+        "name": "overlay-modal",
+        "value": "0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+        "purpose": "Dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "0.2s",
+        "purpose": "Aura's transition duration for colors and borders on buttons, inputs and tables."
+      },
+      {
+        "name": "route-fade",
+        "value": "75ms opacity, out-in",
+        "purpose": "Back-office route changes and the page-loading swap."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled action per view, in the Organization's primary.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Add passport</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.5rem; padding: 0.5rem 0.75rem; background: var(--primary-500, #6bad87); color: #ffffff; border: 1px solid var(--primary-500, #6bad87); border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, border-color 0.2s, color 0.2s; } .ds-btn-primary:hover { background: var(--primary-600, #00965e); border-color: var(--primary-600, #00965e); } .ds-btn-primary:active { background: var(--p-primary-700, #385a46); border-color: var(--p-primary-700, #385a46); } .ds-btn-primary:focus-visible { outline: 1px solid var(--primary-500, #6bad87); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The workhorse for every non-final action (severity=\"secondary\").",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.5rem; padding: 0.5rem 0.75rem; background: #f1f5f9; color: #475569; border: 1px solid #f1f5f9; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, border-color 0.2s, color 0.2s; } .ds-btn-secondary:hover { background: #e2e8f0; border-color: #e2e8f0; color: #334155; } .ds-btn-secondary:active { background: #cbd5e1; border-color: #cbd5e1; color: #1e293b; } .ds-btn-secondary:focus-visible { outline: 1px solid #475569; outline-offset: 2px; }"
+    },
+    {
+      "name": "Toolbar Icon Button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Text icon button as used in document toolbars; always aria-label plus tooltip.",
+      "html": "<button class=\"ds-btn-icon\" type=\"button\" aria-label=\"Activity history\" title=\"Activity history\"><svg class=\"\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\"/></svg></button>",
+      "css": ".ds-btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; padding: 0; background: transparent; color: #64748b; border: 1px solid transparent; border-radius: 6px; cursor: pointer; transition: background-color 0.2s, color 0.2s; } .ds-btn-icon:hover { background: #f8fafc; color: #475569; } .ds-btn-icon:active { background: #f1f5f9; } .ds-btn-icon:focus-visible { outline: 1px solid #64748b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Aura InputText; focus is shown by the border turning primary (no separate ring).",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Product name\" aria-label=\"Product name\" />",
+      "css": ".ds-input { width: 16rem; padding: 0.5rem 0.75rem; background: #ffffff; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; font-size: 1rem; box-shadow: 0 1px 2px 0 rgba(18, 18, 23, 0.05); outline: none; transition: border-color 0.2s; } .ds-input::placeholder { color: #64748b; } .ds-input:hover { border-color: #94a3b8; } .ds-input:focus-visible { border-color: var(--primary-500, #6bad87); }"
+    },
+    {
+      "name": "Lifecycle Tag",
+      "kind": "chip",
+      "refersTo": "tag-status",
+      "description": "Aura Tag severity=\"secondary\" for Draft / Published / Archived.",
+      "html": "<span class=\"ds-tag\">Published</span>",
+      "css": ".ds-tag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f1f5f9; color: #475569; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; font-size: 0.875rem; font-weight: 700; }"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "description": "Pending or unverified flags: round, 10% tint fill and 20% tint border. Text uses a darker warning step to meet the Contrast Floor Rule (the current profile pill uses status-warning directly, at 3.5:1).",
+      "html": "<span class=\"ds-pill-warning\" role=\"status\">Email not verified</span>",
+      "css": ".ds-pill-warning { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.625rem; background: color-mix(in srgb, var(--status-warning, #dc6803) 10%, transparent); color: #873d02; border: 1px solid color-mix(in srgb, var(--status-warning, #dc6803) 20%, transparent); border-radius: 9999px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Back-office sidebar group: label heading, Body Strong items, 24px Heroicons outline, recessed wash when active.",
+      "html": "<nav class=\"ds-sidebar\" aria-label=\"Main\"><div class=\"ds-sidebar-label\">Products</div><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\" aria-current=\"page\"><svg class=\"ds-nav-icon\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z\"/></svg>Passports</a><a class=\"ds-nav-item\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6\"/></svg>Templates</a></nav>",
+      "css": ".ds-sidebar { display: flex; flex-direction: column; gap: 0.25rem; width: 18rem; padding: 1rem 1.5rem; background: #ffffff; border-right: 1px solid var(--rule, #e4e7ec); font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; } .ds-sidebar-label { font-size: 0.75rem; line-height: 1.5rem; font-weight: 600; color: var(--ink-muted, #475467); } .ds-nav-item { display: flex; align-items: center; gap: 0.75rem; margin: 0 -0.5rem; padding: 0.5rem; border-radius: 6px; font-size: 0.875rem; line-height: 1.5rem; font-weight: 600; color: var(--ink-muted, #475467); text-decoration: none; transition: background-color 0.2s, color 0.2s; } .ds-nav-icon { flex-shrink: 0; color: var(--ink-subtle, #98a2b3); } .ds-nav-item:hover, .ds-nav-item-active { background: var(--surface-recessed, #fafafa); color: var(--ink, #101828); } .ds-nav-item:hover .ds-nav-icon, .ds-nav-item-active .ds-nav-icon { color: var(--ink, #101828); } .ds-nav-item:focus-visible { outline: 1px solid var(--primary-500, #6bad87); outline-offset: 2px; }"
+    },
+    {
+      "name": "Dossier Section",
+      "kind": "card",
+      "refersTo": "card-dossier",
+      "description": "Signature component: a passport submodel as a white card with a 3px primary rule beside the title and hairline-split definition rows.",
+      "html": "<section class=\"ds-dossier\"><header class=\"ds-dossier-head\"><h3 class=\"ds-dossier-title\">General information</h3><p class=\"ds-dossier-desc\">General information about the product.</p></header><dl class=\"ds-dossier-list\"><div class=\"ds-dossier-row\"><dt>Name</dt><dd>Cordless Drill CD-18</dd></div><div class=\"ds-dossier-row\"><dt>ID</dt><dd class=\"ds-mono\">3f9c2a1e-7b44-4d0a-9e21-c5a8f1d06b92</dd></div></dl></section>",
+      "css": ".ds-dossier { box-sizing: border-box; width: 40rem; max-width: 100%; padding: 1.5rem; background: #ffffff; border: 1px solid var(--rule, #e4e7ec); border-radius: 12px; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; } .ds-dossier-head { margin-bottom: 1.5rem; padding-left: 1rem; border-left: 3px solid var(--primary-500, #6bad87); } .ds-dossier-title { margin: 0; font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; color: var(--ink, #101828); } .ds-dossier-desc { margin: 0.25rem 0 0; font-size: 0.875rem; line-height: 1.25rem; color: var(--ink-muted, #475467); } .ds-dossier-list { margin: 0; } .ds-dossier-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--rule, #e4e7ec); font-size: 0.875rem; } .ds-dossier-row:last-child { border-bottom: 0; } .ds-dossier-row dt { color: var(--ink-muted, #475467); } .ds-dossier-row dd { margin: 0; font-weight: 500; color: var(--ink, #101828); text-align: right; } .ds-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; }"
+    },
+    {
+      "name": "Metric Tile",
+      "kind": "card",
+      "description": "Big-number value in tabular figures above an uppercase caption.",
+      "html": "<div class=\"ds-metric\"><span class=\"ds-metric-value\">18</span><span class=\"ds-metric-label\">Rated voltage (V)</span></div>",
+      "css": ".ds-metric { display: inline-block; padding: 1rem 1.25rem; text-align: center; background: #ffffff; border: 1px solid var(--rule, #e4e7ec); border-radius: 12px; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", Arial, sans-serif; } .ds-metric-value { display: block; font-size: 2.25rem; line-height: 1; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: var(--ink, #101828); } .ds-metric-label { display: block; margin-top: 0.5rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted, #475467); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Product Dossier",
+    "overview": "Every passport is an orderly dossier. Facts sit in white sections, each with a labelled title, laid out as definition lists of name and value split by hairline rules. Lifecycle states and validation results appear as clear, quiet stamps. The back office around it is the filing room: a white sidebar, a hairline top bar, and data tables with actions kept to the edge. Nothing decorates the record. Typography, rules and spacing do the ordering.\n\nThe system is **trustworthy and orderly**. It should read like an authoritative record, never like a marketing page. Density is moderate. Application text is set at 14px (24px line height), and the tables and toolbars suit people who edit many passports. The palette is close to colorless on purpose. The one accent belongs to the Organization: open-dpp Green is only the default, and every Owner can replace it, so the system's own character comes from precise structure rather than from a hue.\n\nComponents are PrimeVue 4 with the Aura preset, styled around with Tailwind CSS v4 and the semantic tokens in `index.css`. The app is light-only: PrimeVue's dark mode is disabled (`darkModeSelector: false`), and the `dark:` variant exists but nothing uses it.",
+    "keyCharacteristics": [
+      "White surfaces, hairline borders, faint ambient card shadows; only overlays lift.",
+      "One borrowed accent (the Organization's primary), applied at runtime to every primary token.",
+      "Passport data laid out as dossier sections: a 12px-radius card, a 3px accent rule beside the title, and definition-list rows.",
+      "The system UI font stack, mostly at 14px, with tabular figures for numbers.",
+      "PrimeVue Aura components as the default vocabulary, mostly secondary and text buttons, and one filled primary action per view."
+    ],
+    "rules": [
+      {
+        "name": "The Borrowed Accent Rule",
+        "body": "The primary belongs to the Organization, not to open-dpp. Reach it only through the primary tokens: PrimeVue `severity` and props, the Tailwind `primary-500` and `primary-600` utilities, or `var(--primary-500)`. Never hardcode a green, and never hardcode indigo. A screen is finished only when it holds up under a dark, a pale and a saturated Organization color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Contrast Floor Rule",
+        "body": "WCAG 2.1 AA applies to every surface: 4.5:1 for text and 3:1 for UI components and focus indicators, whatever color an Owner picks. The current system does not meet this yet, and these are the known gaps: White on the seed `primary-500` is 2.6:1 (sign-in and sign-up pages, and first paint). White on the runtime default `#518367` is 4.4:1, just under the text floor. Text in `status-warning` (3.5:1) and `status-success` (3.9:1) is below 4.5:1. Sidebar group labels in gray-400 are 2.6:1. Aura's `danger` fill (`#ef4444`) under white text is 3.8:1. Status hues and the seed green may carry icons, borders and tints. Text needs a step that clears 4.5:1.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status Is State Rule",
+        "body": "Status hues mark state and nothing else: never a section accent, a chart default or a decorative fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Small-Base Rule",
+        "body": "Application text is 14px on a 24px line. 16px appears only inside form controls and buttons. Don't raise body text to 16px on one screen.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Numbers that are compared or scanned (metrics, counts, quantities in tables) use tabular figures (`tabular-nums`).",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Frames Rule",
+        "body": "Back-office screens never adopt the centered passport column, and passport screens never show the sidebar shell. A new surface picks one frame.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline-First Rule",
+        "body": "Separate content with a rule border before reaching for a shadow. A shadow heavier than Card ambient belongs only to something floating above the page.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Two Radii Rule",
+        "body": "6px for things you operate, 12px for things that hold content, full for pills. A new radius needs a reason the existing three can't cover.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do build from PrimeVue Aura components (`Button`, `DataTable`, `Dialog`, `Message`, `Toast`, `Tag`, `Skeleton`) before hand-rolling, and style around them with the `index.css` tokens.",
+      "Do map raw Tailwind grays onto tokens whenever you touch a file: gray-900 → `ink`, gray-700/600/500 → `ink-muted`, gray-400 → `ink-subtle` (decorative only), gray-200/100 → `rule`, gray-50 → `surface-recessed`.",
+      "Do reach the accent only through the primary tokens, and check each new screen under a dark, a pale and a saturated Organization color.",
+      "Do lay out passport data as Dossier Sections: a 12px white card, a hairline border, 24px padding, the 3px primary rule beside the title, and definition-list rows split by hairlines.",
+      "Do keep to one filled primary button per view, and use secondary or text buttons for everything else.",
+      "Do give every icon-only button an `aria-label` and a tooltip, as the document toolbar does.",
+      "Do use tabular figures for compared numbers, and the mono stack for identifiers.",
+      "Do check every layout with German strings (de-DE), which run noticeably longer than English."
+    ],
+    "donts": [
+      "Don't use indigo (`bg-indigo-600`, `text-indigo-*`, …). It is Tailwind UI residue on the sign-in and sign-up pages, `ListHeader`, `SimpleTable`, notifications and `BaseButton`, and it ignores the Organization's color.",
+      "Don't write `text-surface-*`, `bg-surface-0` or `border-surface-*` utilities. No Tailwind bridge for Aura's palette is installed, so they compile to nothing (the passport sections currently fall back to the base-layer gray-200 border and inherited text color). Use `ink`, `rule` and `surface`.",
+      "Don't hardcode `#6bad87` or `#00965e` in components. They are seeds that the branding composable replaces.",
+      "Don't set meaningful text in `ink-subtle` or gray-400 (2.6:1 on white).",
+      "Don't set small text in `status-warning` or `status-success`, or white text on the seed green. Both fall below 4.5:1.",
+      "Don't add shadows heavier than Card ambient to anything that sits in the page, and don't use `raised` buttons. Lift belongs to overlays.",
+      "Don't use a status hue as decoration or as a section accent."
+    ]
+  }
+}

@@ -533,6 +533,7 @@
     },
     "usage": {
       "title": "Usage policies",
+      "manage": "Manage usage",
       "setLimitsDialog": {
         "title": "Set usage limits",
         "nullIsUnlimited": "A value of 0 will make the limit be unlimited."
@@ -566,6 +567,7 @@
       "users": "All users",
       "settings": "Settings",
       "emailNotVerified": "Email not verified",
+      "lastLogin": "Last active",
       "inviteUserDialog": {
         "title": "Create user",
         "create": "Create",

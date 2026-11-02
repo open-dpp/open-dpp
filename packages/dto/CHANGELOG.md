@@ -1,5 +1,27 @@
 # @open-dpp/dto
 
+## 6.3.5
+
+## 6.3.4
+
+### Patch Changes
+
+- [#1108](https://github.com/open-dpp/open-dpp/pull/1108) [`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe) Thanks [@Hentra](https://github.com/Hentra)! - A button to manage usage appears on the usage page when `OPEN_DPP_USAGE_MANAGEMENT_URL` is set. A `{organizationId}` placeholder in the URL is replaced with the current organization's ID.
+
+## 6.3.3
+
+## 6.3.2
+
+## 6.3.1
+
+## 6.3.0
+
+## 6.2.4
+
+## 6.2.3
+
+## 6.2.2
+
 ## 6.2.1
 
 ### Patch Changes

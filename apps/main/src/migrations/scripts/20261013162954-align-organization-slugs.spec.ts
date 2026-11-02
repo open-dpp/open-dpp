@@ -4,17 +4,17 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
-import { generateMongoConfig } from "../../../../database/config";
-import { AUTH } from "../../../auth/auth.provider";
+import { generateMongoConfig } from "../../database/config";
 import {
   Organization as OrganizationSchemaClass,
   OrganizationSchema,
-} from "../schemas/organization.schema";
-import { OrganizationsRepository } from "./organizations.repository";
+} from "../../identity/organizations/infrastructure/schemas/organization.schema";
+import { expectMigrationToBeIdempotent } from "../../../test/utils.for.test";
+import { AlignOrganizationSlugsMigration } from "./20261013162954-align-organization-slugs";
 
-describe("OrganizationsRepository slug backfill", () => {
+describe("AlignOrganizationSlugsMigration", () => {
   let module: TestingModule;
-  let repository: OrganizationsRepository;
+  let migration: AlignOrganizationSlugsMigration;
   let organizationModel: Model<OrganizationSchemaClass>;
 
   beforeAll(async () => {
@@ -30,10 +30,10 @@ describe("OrganizationsRepository slug backfill", () => {
           { name: OrganizationSchemaClass.name, schema: OrganizationSchema },
         ]),
       ],
-      providers: [OrganizationsRepository, { provide: AUTH, useValue: { api: {} } }],
+      providers: [AlignOrganizationSlugsMigration],
     }).compile();
 
-    repository = module.get(OrganizationsRepository);
+    migration = module.get(AlignOrganizationSlugsMigration);
     organizationModel = module.get(getModelToken(OrganizationSchemaClass.name));
   });
 
@@ -67,9 +67,8 @@ describe("OrganizationsRepository slug backfill", () => {
     const otherLegacyId = await insertOrganization("ACME GmbH");
     const alignedId = await insertOrganization();
 
-    const aligned = await repository.alignSlugsWithIds();
+    await migration.up();
 
-    expect(aligned).toBe(2);
     expect(await slugOf(legacyId)).toBe(legacyId);
     expect(await slugOf(otherLegacyId)).toBe(otherLegacyId);
     expect(await slugOf(alignedId)).toBe(alignedId);
@@ -77,12 +76,14 @@ describe("OrganizationsRepository slug backfill", () => {
 
   it("is idempotent", async () => {
     await insertOrganization("acme-gmbh");
-    await repository.alignSlugsWithIds();
+    await insertOrganization();
 
-    expect(await repository.alignSlugsWithIds()).toBe(0);
+    await expectMigrationToBeIdempotent(migration, () =>
+      organizationModel.find().sort({ _id: 1 }).lean(),
+    );
   });
 
-  it("reports zero without organizations", async () => {
-    expect(await repository.alignSlugsWithIds()).toBe(0);
+  it("succeeds without organizations", async () => {
+    await expect(migration.up()).resolves.toBeUndefined();
   });
 });

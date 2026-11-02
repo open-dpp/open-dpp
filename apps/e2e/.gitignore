@@ -6,7 +6,3 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
-
-# Check report of the conformance project (dpp-standards/PLAYBOOK.md): an artefact, never committed
-/conformance-report.json
-/conformance-report.md

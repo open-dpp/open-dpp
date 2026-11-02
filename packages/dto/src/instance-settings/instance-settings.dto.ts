@@ -38,6 +38,7 @@ export type InstanceSettingsUpdateDto = z.infer<typeof InstanceSettingsUpdateDto
 export const PublicInstanceSettingsDtoSchema = z.object({
   signupEnabled: z.boolean(),
   organizationCreationEnabled: z.boolean().optional(),
+  usageManagementUrl: z.string().optional(),
 });
 
 export type PublicInstanceSettingsDto = z.infer<typeof PublicInstanceSettingsDtoSchema>;

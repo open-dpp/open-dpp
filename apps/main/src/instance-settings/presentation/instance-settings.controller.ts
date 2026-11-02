@@ -55,10 +55,13 @@ export class InstanceSettingsController {
     @UserRoleDecorator() userRole: UserRoleType,
   ): Promise<PublicInstanceSettingsDto> {
     const settings = await this.instanceSettingsService.getSettings();
-    const settingsVisibleToRegisteredUsers =
-      userRole !== UserRole.ANONYMOUS
-        ? { organizationCreationEnabled: settings.organizationCreationEnabled.value }
-        : {};
+    let settingsVisibleToRegisteredUsers = {};
+    if (userRole !== UserRole.ANONYMOUS) {
+      settingsVisibleToRegisteredUsers = {
+        organizationCreationEnabled: settings.organizationCreationEnabled.value,
+        usageManagementUrl: this.envService.get("OPEN_DPP_USAGE_MANAGEMENT_URL"),
+      };
+    }
     return PublicInstanceSettingsDtoSchema.parse({
       signupEnabled: settings.signupEnabled.value,
       ...settingsVisibleToRegisteredUsers,

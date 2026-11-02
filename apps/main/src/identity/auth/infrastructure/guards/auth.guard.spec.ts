@@ -87,40 +87,13 @@ describe("authGuard Allowlist Repro", () => {
     } as ExecutionContext & { _request: any };
   };
 
-  it(`should allow /api/${LatestApiVersionWithPrefixDto}/sse exactly`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse`);
-    expect(await guard.canActivate(context)).toBe(true);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/sse/something`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse/123`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
-
-  it(`should allow /api/${LatestApiVersionWithPrefixDto}/sse?query=123`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse?foo=bar`);
-    expect(await guard.canActivate(context)).toBe(true);
-  });
-
-  it(`should allow /api/${LatestApiVersionWithPrefixDto}/messages exactly`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages`);
-    expect(await guard.canActivate(context)).toBe(true);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/messages/something`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages/123`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/sse-extension (partial match prefix)`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse-extension`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/messages-extension (partial match prefix)`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages-extension`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
+  it.each(["sse", "messages"])(
+    `should NOT allow anonymous requests to the former MCP endpoint /api/${LatestApiVersionWithPrefixDto}/%s`,
+    async (path) => {
+      const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/${path}`);
+      expect(await guard.canActivate(context)).toBe(false);
+    },
+  );
 
   describe("api key authentication", () => {
     it("should create synthetic session when API key is valid", async () => {

@@ -13,7 +13,6 @@ import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-con
 import { AiConfigurationController } from "./ai-configuration/presentation/ai-configuration.controller";
 import { ChatService } from "./chat.service";
 import { AiService } from "./infrastructure/ai.service";
-import { McpClientModule } from "./mcp-client/mcp-client.module";
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { McpClientModule } from "./mcp-client/mcp-client.module";
     ]),
     UniqueProductIdentifierModule,
     EnvModule,
-    McpClientModule,
     PolicyModule,
     PassportsModule,
     PermalinkModule,

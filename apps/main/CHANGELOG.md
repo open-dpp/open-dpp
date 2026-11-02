@@ -1,5 +1,124 @@
 # @open-dpp/main
 
+## 6.3.5
+
+### Patch Changes
+
+- [#1134](https://github.com/open-dpp/open-dpp/pull/1134) [`0ce294e`](https://github.com/open-dpp/open-dpp/commit/0ce294e9dcbfef4eb419c3100aea91424bbb7710) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the container's Node.js runtime from 24.22.1 to 26.13.0 LTS. Node 24 entered maintenance on 2026-10-20, and Node 26 is the active LTS line, supported until 2029-04-30. Building from source now requires Node.js 26.13.0 or later: `pnpm install` stops with an error on older versions.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.5
+  - @open-dpp/dto@6.3.5
+  - @open-dpp/env@6.3.5
+  - @open-dpp/exception@6.3.5
+  - @open-dpp/permission@6.3.5
+
+## 6.3.4
+
+### Patch Changes
+
+- [#1108](https://github.com/open-dpp/open-dpp/pull/1108) [`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe) Thanks [@Hentra](https://github.com/Hentra)! - A button to manage usage appears on the usage page when `OPEN_DPP_USAGE_MANAGEMENT_URL` is set. A `{organizationId}` placeholder in the URL is replaced with the current organization's ID.
+
+- Updated dependencies [[`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe)]:
+  - @open-dpp/env@6.3.4
+  - @open-dpp/dto@6.3.4
+  - @open-dpp/api-client@6.3.4
+  - @open-dpp/exception@6.3.4
+  - @open-dpp/permission@6.3.4
+
+## 6.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`23201ff`](https://github.com/open-dpp/open-dpp/commit/23201ffe3c041ecdc24e1fa28bb6805614a66c05)]:
+  - @open-dpp/api-client@6.3.3
+  - @open-dpp/dto@6.3.3
+  - @open-dpp/env@6.3.3
+  - @open-dpp/exception@6.3.3
+  - @open-dpp/permission@6.3.3
+
+## 6.3.2
+
+### Patch Changes
+
+- [#1076](https://github.com/open-dpp/open-dpp/pull/1076) [`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64) Thanks [@Hentra](https://github.com/Hentra)! - Log every request, including frontend page visits and `/gs1` resolver hits, with a correlation id that is returned in the `x-correlation-id` response header. A caller-supplied `x-correlation-id` is reused when it is a plain token of up to 128 characters; otherwise a new one is generated. Request logs record the path without the query string, so tokens in links such as `/password-reset?token=…` stay out of the logs.
+
+  Two new settings: `OPEN_DPP_LOG_LEVEL` sets the most verbose level that is printed (default `debug`, which hides `verbose` output printed before), and `OPEN_DPP_TRUST_PROXY` sets Express's `trust proxy` so the real client IP is logged and used for rate limiting behind a reverse proxy. Invalid `OPEN_DPP_TRUST_PROXY` values are rejected at startup.
+
+- Updated dependencies [[`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64)]:
+  - @open-dpp/env@6.3.2
+  - @open-dpp/api-client@6.3.2
+  - @open-dpp/dto@6.3.2
+  - @open-dpp/exception@6.3.2
+  - @open-dpp/permission@6.3.2
+
+## 6.3.1
+
+### Patch Changes
+
+- [#1102](https://github.com/open-dpp/open-dpp/pull/1102) [`8e2596f`](https://github.com/open-dpp/open-dpp/commit/8e2596f7605fcf0e18ce3bbc503ff303840cb935) Thanks [@Hentra](https://github.com/Hentra)! - Show last time a user logged in in the admin overview
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.1
+  - @open-dpp/dto@6.3.1
+  - @open-dpp/env@6.3.1
+  - @open-dpp/exception@6.3.1
+  - @open-dpp/permission@6.3.1
+
+## 6.3.0
+
+### Minor Changes
+
+- [#1071](https://github.com/open-dpp/open-dpp/pull/1071) [`aa82258`](https://github.com/open-dpp/open-dpp/commit/aa822584c6f463d15b6a4d1a0c07ccdfc901a334) Thanks [@Hentra](https://github.com/Hentra)! - Create a migration process on startup
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.0
+  - @open-dpp/dto@6.3.0
+  - @open-dpp/env@6.3.0
+  - @open-dpp/exception@6.3.0
+  - @open-dpp/permission@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.4
+  - @open-dpp/dto@6.2.4
+  - @open-dpp/env@6.2.4
+  - @open-dpp/exception@6.2.4
+  - @open-dpp/permission@6.2.4
+
+## 6.2.3
+
+### Patch Changes
+
+- [#1090](https://github.com/open-dpp/open-dpp/pull/1090) [`d1b182f`](https://github.com/open-dpp/open-dpp/commit/d1b182fb7c292999bd3b85b2db5500dfa0f49f9e) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the container's Node.js runtime from 25.9.0 (end-of-life, no fix) to 24.22.1 LTS to patch CVE-2026-111497, an out-of-bounds write in Node's bundled Brotli decoder reachable via `Content-Encoding: br` request bodies and Brotli-encoded `fetch()` responses.
+
+  The production container now runs as the unprivileged `node` user (uid 1000) instead of root.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.3
+  - @open-dpp/dto@6.2.3
+  - @open-dpp/env@6.2.3
+  - @open-dpp/exception@6.2.3
+  - @open-dpp/permission@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- [#1078](https://github.com/open-dpp/open-dpp/pull/1078) [`28ebc44`](https://github.com/open-dpp/open-dpp/commit/28ebc44e713c24307975078495c7d813a365c2b3) Thanks [@Hentra](https://github.com/Hentra)! - Remove loopback MCP Server
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.2
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+  - @open-dpp/exception@6.2.2
+  - @open-dpp/permission@6.2.2
+
 ## 6.2.1
 
 ### Patch Changes
