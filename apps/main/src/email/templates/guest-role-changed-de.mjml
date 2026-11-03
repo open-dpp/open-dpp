@@ -14,8 +14,10 @@
         >
         {{#if link}}
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Du hast die Einladung noch nicht angenommen. Melde dich mit dieser E-Mail-Adresse an oder
-          registriere dich und nimm sie mit dem Button unten an.</mj-text
+          >Du hast die Einladung noch nicht angenommen. {{#if hasAccount}}Melde dich mit dieser
+          E-Mail-Adresse an und nimm sie mit dem Button unten an.{{else}}Erstelle ein Konto mit
+          dieser E-Mail-Adresse und nimm sie an. Du erh&auml;ltst eine zweite E-Mail, um deine
+          Adresse zu best&auml;tigen.{{/if}}</mj-text
         >
         <mj-button
           background-color="#6BAD87"
@@ -25,7 +27,7 @@
           padding="20px 0 0 0"
           font-weight="bold"
           font-size="16px"
-          >Einladung annehmen</mj-button
+          >{{#if hasAccount}}Einladung annehmen{{else}}Konto erstellen{{/if}}</mj-button
         >
         {{/if}}
       </mj-column>

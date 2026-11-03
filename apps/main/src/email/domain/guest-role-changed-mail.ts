@@ -15,6 +15,7 @@ export interface GuestRoleChangedMailTemplateProps extends BaseEmailTemplateProp
   guestRoleName: string;
   // Only for an invitation which is not accepted yet
   link?: string;
+  hasAccount?: boolean;
 }
 export interface GuestRoleChangedMailCreateProps {
   to: string;
