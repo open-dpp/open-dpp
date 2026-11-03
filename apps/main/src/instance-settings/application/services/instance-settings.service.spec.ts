@@ -197,6 +197,23 @@ describe("InstanceSettingsService", () => {
       expect(result.organizationCreationEnabled.value).toBe(false);
       expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
     });
+
+    it("does not let a read that started before an update overwrite the updated cache", async () => {
+      const before = InstanceSettings.create();
+      let resolveSlowRead!: (s: InstanceSettings) => void;
+      mockRepository.findOne
+        .mockReturnValueOnce(new Promise<InstanceSettings>((resolve) => (resolveSlowRead = resolve)))
+        .mockResolvedValueOnce(before);
+
+      const slowRead = service.getSettings();
+      await service.updateSettings({ signupEnabled: false });
+      resolveSlowRead(before);
+      await slowRead;
+      const result = await service.getSettings();
+
+      expect(result.signupEnabled.value).toBe(false);
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("getSettings — no env vars set", () => {

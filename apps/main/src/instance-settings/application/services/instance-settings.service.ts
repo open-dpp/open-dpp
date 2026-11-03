@@ -13,6 +13,8 @@ export const INSTANCE_SETTINGS_CACHE_TTL_MS = 60_000;
 @Injectable()
 export class InstanceSettingsService {
   private readonly cache = new InstanceSettingsCache(INSTANCE_SETTINGS_CACHE_TTL_MS);
+  // bumped by every write, so a read that was already in flight can't cache the pre-write document
+  private cacheGeneration = 0;
 
   constructor(
     private readonly repository: InstanceSettingsRepository,
@@ -31,6 +33,7 @@ export class InstanceSettingsService {
     // the stored ones so env-forced values never end up in the DB
     const persistable = this.applyEnvOverrides(stored).persistableUpdates(updates);
     const saved = await this.repository.save(stored.update(persistable));
+    this.cacheGeneration += 1;
     this.cache.set(saved);
     return this.applyEnvOverrides(saved);
   }
@@ -40,10 +43,13 @@ export class InstanceSettingsService {
     if (cached) {
       return cached;
     }
+    const generation = this.cacheGeneration;
     const stored =
       (await this.repository.findOne()) ??
       (await this.repository.save(InstanceSettings.create({ signupEnabled: { value: true } })));
-    this.cache.set(stored);
+    if (generation === this.cacheGeneration) {
+      this.cache.set(stored);
+    }
     return stored;
   }
 
