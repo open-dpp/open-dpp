@@ -1,5 +1,6 @@
 import type {
   CreateGuestAccessDto,
+  GuestAccessInvitationDto,
   GuestAccessResponseDto,
   UpdateGuestAccessRoleDto,
 } from "@open-dpp/dto";
@@ -32,6 +33,13 @@ export class GuestAccessNamespace {
   public async revoke(id: string) {
     return this.axiosInstance.post<GuestAccessResponseDto>(
       `${this.basePath}/${encodeURIComponent(id)}/revoke`,
+    );
+  }
+
+  /** What the invited person sees before accepting, only for the account with the invited email. */
+  public async getInvitation(id: string) {
+    return this.axiosInstance.get<GuestAccessInvitationDto>(
+      `${this.basePath}/${encodeURIComponent(id)}/invitation`,
     );
   }
 

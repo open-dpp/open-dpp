@@ -75,6 +75,15 @@ export const guestAccessHandlers = [
     );
   }),
   // The invited person is not a member and sends no organization header.
+  http.get(`${baseURL}/guest-accesses/:id/invitation`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      organizationName: "ACME GmbH",
+      email: pendingGuestAccess.email,
+      guestRole: pendingGuestAccess.guestRole,
+      status: "Pending",
+    });
+  }),
   http.post(`${baseURL}/guest-accesses/:id/accept`, ({ params }) => {
     return HttpResponse.json(
       {

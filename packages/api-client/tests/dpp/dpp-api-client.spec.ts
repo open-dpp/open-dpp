@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   DigitalProductDocumentStatusDto,
+  GuestAccessInvitationDtoSchema,
   GuestAccessResponseDtoSchema,
   GuestRoleDto,
   InvitationStatusDto,
@@ -122,6 +123,14 @@ describe("apiClient", () => {
       const response = await createOwnerSdk().dpp.guestAccess.revoke(pendingGuestAccess.id);
       expect(response.data.status).toEqual("Revoked");
       expect(GuestAccessResponseDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should get the invitation without an organization via GET /guest-accesses/:id/invitation", async () => {
+      const sdk = new OpenDppClient({ dpp: { baseURL } });
+      const response = await sdk.dpp.guestAccess.getInvitation(pendingGuestAccess.id);
+      expect(response.data.organizationName).toEqual("ACME GmbH");
+      expect(response.data.guestRole).toEqual(pendingGuestAccess.guestRole);
+      expect(GuestAccessInvitationDtoSchema.safeParse(response.data).success).toBe(true);
     });
 
     it("should accept without an organization via POST /guest-accesses/:id/accept", async () => {
