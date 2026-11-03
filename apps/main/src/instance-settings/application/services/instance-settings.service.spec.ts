@@ -202,7 +202,9 @@ describe("InstanceSettingsService", () => {
       const before = InstanceSettings.create();
       let resolveSlowRead!: (s: InstanceSettings) => void;
       mockRepository.findOne
-        .mockReturnValueOnce(new Promise<InstanceSettings>((resolve) => (resolveSlowRead = resolve)))
+        .mockReturnValueOnce(
+          new Promise<InstanceSettings>((resolve) => (resolveSlowRead = resolve)),
+        )
         .mockResolvedValueOnce(before);
 
       const slowRead = service.getSettings();
