@@ -55,13 +55,16 @@ export class EmailService {
   }
 
   async send(mail: BaseEmail) {
-    // rendered either way, so a broken template fails the same with mail on or off
-    const html = await this.render(mail);
     const transporter = await this.activeTransporter();
     if (!transporter) {
+      // logged before rendering, so the links reach the operator even if the template breaks
       this.logger.warn(
         `Mail not sent (mail disabled): type=${mail.type} to=${mail.to} subject="${mail.subject}" links=${mail.links().join(" ") || "-"}`,
       );
+    }
+    // rendered either way, so a broken template fails the same with mail on or off
+    const html = await this.render(mail);
+    if (!transporter) {
       return;
     }
     await transporter.sendMail({

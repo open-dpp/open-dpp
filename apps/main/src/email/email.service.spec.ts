@@ -108,6 +108,25 @@ describe("EmailService when mail is disabled", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("VERIFY_EMAIL"));
   });
 
+  it("still logs the link, then surfaces the error, when the template fails to render", async () => {
+    const service = new EmailService(envWith({}), settingsWith(true), null);
+    const brokenMail = new BaseEmail(
+      "test-id",
+      "VERIFY_EMAIL",
+      new EmailTemplate("does-not-exist.mjml", {
+        link: "https://app.open-dpp.test/verify-email?token=abc",
+      } as never),
+      "ada@example.com",
+      "Verify E-Mail address",
+    );
+
+    await expect(service.send(brokenMail)).rejects.toThrow();
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("https://app.open-dpp.test/verify-email?token=abc"),
+    );
+  });
+
   it("sends via SMTP when configured and enabled", async () => {
     const smtp = smtpStub();
     const service = new EmailService(envWith(SMTP_ENV), settingsWith(true), smtp.transporter);
