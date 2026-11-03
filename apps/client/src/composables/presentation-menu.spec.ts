@@ -5,6 +5,7 @@ import { usePresentationMenu } from "./presentation-menu";
 const mocks = vi.hoisted(() => ({
   routerPush: vi.fn(),
   routeParams: { permalink: "my-product" } as Record<string, string>,
+  routeFullPath: "/p/my-product?language=de",
   sessionData: null as unknown,
 }));
 
@@ -15,7 +16,7 @@ vi.mock("vue-i18n", () => ({
 }));
 
 vi.mock("vue-router", () => ({
-  useRoute: () => ({ params: mocks.routeParams }),
+  useRoute: () => ({ params: mocks.routeParams, fullPath: mocks.routeFullPath }),
   useRouter: () => ({
     push: mocks.routerPush,
   }),
@@ -31,6 +32,7 @@ describe("usePresentationMenu", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.routeParams = { permalink: "my-product" };
+    mocks.routeFullPath = "/p/my-product?language=de";
     mocks.sessionData = null;
   });
 
@@ -51,10 +53,16 @@ describe("usePresentationMenu", () => {
   });
 
   describe("menuItems", () => {
-    it("includes toPass and chatWithAI items when not signed in", () => {
+    it("includes toPass, chatWithAI and signInAsProfessional items when not signed in", () => {
       const { menuItems } = usePresentationMenu();
 
-      expect(menuItems.value).toHaveLength(2);
+      expect(menuItems.value).toHaveLength(3);
+      expect(menuItems.value[2]).toEqual(
+        expect.objectContaining({
+          label: "presentation.signInAsProfessional",
+          icon: "pi pi-sign-in",
+        }),
+      );
       expect(menuItems.value[0]).toEqual(
         expect.objectContaining({
           label: "presentation.toPass",
@@ -69,12 +77,15 @@ describe("usePresentationMenu", () => {
       );
     });
 
-    it("includes backToApp item when signed in", () => {
+    it("includes backToApp item and no sign in when signed in", () => {
       mocks.sessionData = { user: { id: "u1" } };
 
       const { menuItems } = usePresentationMenu();
 
       expect(menuItems.value).toHaveLength(3);
+      expect(menuItems.value.map((item) => item.label)).not.toContain(
+        "presentation.signInAsProfessional",
+      );
       expect(menuItems.value[2]).toEqual(
         expect.objectContaining({
           label: "presentation.backToApp",
@@ -97,6 +108,19 @@ describe("usePresentationMenu", () => {
       menuItems.value[1]!.command();
 
       expect(mocks.routerPush).toHaveBeenCalledWith("/p/my-product/chat");
+    });
+
+    it("signInAsProfessional command signs in and returns to the current product page", () => {
+      const { menuItems } = usePresentationMenu();
+
+      menuItems.value[2]!.command();
+
+      expect(mocks.routerPush).toHaveBeenCalledWith({
+        name: "Signin",
+        query: {
+          redirect: encodeURIComponent(`${window.location.origin}/p/my-product?language=de`),
+        },
+      });
     });
 
     it("backToApp command navigates to root", () => {

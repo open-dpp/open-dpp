@@ -29,6 +29,14 @@ export function usePresentationMenu() {
     router.push(`/p/${permalink.value}/chat`);
   }
 
+  // Guests and members sign in on the page they came from and return to it
+  function signInAsProfessional() {
+    router.push({
+      name: "Signin",
+      query: { redirect: encodeURIComponent(window.location.origin + route.fullPath) },
+    });
+  }
+
   function backToApp() {
     router.push("/");
   }
@@ -64,7 +72,16 @@ export function usePresentationMenu() {
       ];
     }
 
-    return items;
+    return [
+      ...items,
+      {
+        label: t("presentation.signInAsProfessional"),
+        icon: "pi pi-sign-in",
+        command: () => {
+          signInAsProfessional();
+        },
+      },
+    ];
   });
 
   return { permalink, menuItems, navigateToAiChat };
