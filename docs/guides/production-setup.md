@@ -113,6 +113,8 @@ When `OPEN_DPP_MAIL_HOST` is unset (or empty) the backend starts normally, logs 
 WARN [EmailService] Mail not sent (mail disabled): type=VERIFY_EMAIL to=ada@example.com subject="Verify E-Mail address" links=https://dpp.example.com/api/v1/auth/verify-email?token=…
 ```
 
+These lines are logged at `warn` level, so they are hidden while `OPEN_DPP_LOG_LEVEL` is `error` or `fatal`; keep it at `warn` or more verbose (the default `debug` qualifies). The startup warning appears either way, because it is printed before `OPEN_DPP_LOG_LEVEL` takes effect.
+
 An operator can complete the flow by handing that link to the user. The same happens when an admin switches the **Sending mail enabled** toggle off on the admin Settings page while SMTP is configured.
 
 > [!WARNING]
