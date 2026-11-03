@@ -55,7 +55,7 @@ export class BaseEmail {
    */
   links(): string[] {
     return Object.values(this.templateProperties as Record<string, unknown>).filter(
-      (value): value is string => typeof value === "string" && /^https?:\/\//.test(value),
+      (value): value is string => typeof value === "string" && /^https?:\/\//i.test(value),
     );
   }
 }

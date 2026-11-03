@@ -25,6 +25,18 @@ describe("BaseEmail.links", () => {
     ]);
   });
 
+  it("matches the URL scheme case-insensitively", () => {
+    const mail = mailWith({
+      link: "HTTPS://app.open-dpp.test/verify-email?token=abc",
+      revokeUrl: "Http://localhost:3000/account/email-change-revoke?token=xyz",
+    });
+
+    expect(mail.links()).toEqual([
+      "HTTPS://app.open-dpp.test/verify-email?token=abc",
+      "Http://localhost:3000/account/email-change-revoke?token=xyz",
+    ]);
+  });
+
   it("ignores properties that are no URL", () => {
     const mail = mailWith({ firstName: "Ada", newEmail: "new@example.com", count: 3 });
 
