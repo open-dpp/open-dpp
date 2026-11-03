@@ -78,23 +78,42 @@ export class GuestAccessService {
     }
 
     const saved = await this.guestAccessRepository.save(guestAccess);
-    await this.notifyGuest(guestAccess, data.actingUserId, "invitation", (context) =>
-      InviteGuestMail.create({
+    await this.notifyGuest(guestAccess, data.actingUserId, "invitation", async (context) => {
+      const { link, hasAccount } = await this.invitationLink(guestAccess);
+      return InviteGuestMail.create({
         to: guestAccess.email,
         language: context.language,
         templateProperties: {
-          link: this.acceptLink(guestAccess),
+          link,
+          hasAccount,
           organizationName: context.organizationName,
           guestRoleName: GUEST_ROLE_NAME_BY_LANGUAGE[context.language][guestAccess.guestRole],
         },
-      }),
-    );
+      });
+    });
     return saved;
   }
 
   async list(organizationId: string, actingUserId: string): Promise<GuestAccess[]> {
     await this.ensureOwnerOrFail(organizationId, actingUserId);
     return await this.guestAccessRepository.findAllByOrganizationId(organizationId);
+  }
+
+  /**
+   * What the invited person sees before accepting. Only the account with the invited verified
+   * email gets it. For anybody else the invitation is reported as missing, so nobody learns who is
+   * invited to which organization.
+   */
+  async getInvitation(
+    guestAccessId: string,
+    user: User,
+  ): Promise<{ guestAccess: DirectGuestAccess; organizationName: string }> {
+    const guestAccess = await this.guestAccessRepository.findOneByIdOrFail(guestAccessId);
+    if (!(guestAccess instanceof DirectGuestAccess) || !guestAccess.isInvitedUser(user)) {
+      throw new NotFoundInDatabaseException(DirectGuestAccess.name);
+    }
+    const organization = await this.organizationsRepository.findOneById(guestAccess.organizationId);
+    return { guestAccess, organizationName: organization?.name ?? "" };
   }
 
   /**
@@ -138,21 +157,23 @@ export class GuestAccessService {
     guestAccess.changeGuestRole(data.guestRole);
     const saved = await this.guestAccessRepository.save(guestAccess);
     if (previousRole !== guestAccess.guestRole) {
-      await this.notifyGuest(guestAccess, data.actingUserId, "role change", (context) =>
-        GuestRoleChangedMail.create({
+      await this.notifyGuest(guestAccess, data.actingUserId, "role change", async (context) => {
+        // A guest who has not accepted yet needs the link to do so
+        const invitation =
+          guestAccess.status === GuestAccessStatus.PENDING
+            ? await this.invitationLink(guestAccess)
+            : undefined;
+        return GuestRoleChangedMail.create({
           to: guestAccess.email,
           language: context.language,
           templateProperties: {
             organizationName: context.organizationName,
             guestRoleName: GUEST_ROLE_NAME_BY_LANGUAGE[context.language][guestAccess.guestRole],
-            // A guest who has not accepted yet needs the link to do so
-            link:
-              guestAccess.status === GuestAccessStatus.PENDING
-                ? this.acceptLink(guestAccess)
-                : undefined,
+            link: invitation?.link,
+            hasAccount: invitation?.hasAccount,
           },
-        }),
-      );
+        });
+      });
     }
     return saved;
   }
@@ -214,8 +235,26 @@ export class GuestAccessService {
     return guestAccess;
   }
 
-  private acceptLink(guestAccess: GuestAccess): string {
-    return `${this.envService.get("OPEN_DPP_URL")}/accept-guest-access/${guestAccess.id}`;
+  /**
+   * The link of the mail leads to the page where the invitation is accepted, by way of the page the
+   * person needs: signing up if the address has no account yet, otherwise signing in. Both bring the
+   * invited address along and return to the accept page afterwards. Only the recipient of the mail
+   * sees which one it is, the owner never learns whether an address has an account.
+   */
+  private async invitationLink(
+    guestAccess: DirectGuestAccess,
+  ): Promise<{ link: string; hasAccount: boolean }> {
+    const baseUrl = this.envService.get("OPEN_DPP_URL");
+    const account = await this.usersRepository.findOneByEmail(guestAccess.email);
+    // The sign in and sign up pages expect the return URL encoded once more, like the router does
+    const query = new URLSearchParams({
+      email: guestAccess.email,
+      redirect: encodeURIComponent(`${baseUrl}/accept-guest-access/${guestAccess.id}`),
+    });
+    return {
+      link: `${baseUrl}/${account ? "signin" : "signup"}?${query.toString()}`,
+      hasAccount: account !== null,
+    };
   }
 
   /**
@@ -227,7 +266,10 @@ export class GuestAccessService {
     guestAccess: DirectGuestAccess,
     actingUserId: string,
     description: string,
-    buildMail: (context: { language: DisplayLanguageType; organizationName: string }) => BaseEmail,
+    buildMail: (context: {
+      language: DisplayLanguageType;
+      organizationName: string;
+    }) => BaseEmail | Promise<BaseEmail>,
   ): Promise<void> {
     try {
       const organization = await this.organizationsRepository.findOneById(
@@ -237,7 +279,7 @@ export class GuestAccessService {
         guestAccess.acceptedByUserId ?? actingUserId,
       );
       await this.emailService.send(
-        buildMail({
+        await buildMail({
           language: recipientOrInviter?.preferredLanguage ?? "en",
           organizationName: organization?.name ?? "",
         }),
