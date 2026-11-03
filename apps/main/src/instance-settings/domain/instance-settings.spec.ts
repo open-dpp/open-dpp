@@ -168,6 +168,71 @@ describe("InstanceSettings", () => {
     });
   });
 
+  describe("withMailNotConfigured", () => {
+    it("forces mail off and locks it, even over an env lock that says on", () => {
+      const settings = InstanceSettings.create()
+        .withEnvOverrides({ mailEnabled: true })
+        .withMailNotConfigured();
+
+      expect(settings.mailEnabled.value).toBe(false);
+      expect(settings.mailEnabled.locked).toBe(true);
+    });
+
+    it("names the missing SMTP host when an update tries to turn mail on", () => {
+      const settings = InstanceSettings.create().withMailNotConfigured();
+
+      expect(() => settings.update({ mailEnabled: true })).toThrow(
+        "Cannot override mailEnabled when OPEN_DPP_MAIL_HOST is not set",
+      );
+    });
+
+    it("leaves the other settings alone", () => {
+      const original = InstanceSettings.create({ signupEnabled: { value: false } });
+      const settings = original.withMailNotConfigured();
+
+      expect(settings.id).toBe(original.id);
+      expect(settings.signupEnabled.value).toBe(false);
+      expect(original.mailEnabled.value).toBe(true);
+    });
+  });
+
+  describe("persistableUpdates", () => {
+    it("passes updates to unlocked settings through", () => {
+      const settings = InstanceSettings.create();
+
+      expect(settings.persistableUpdates({ signupEnabled: false, mailEnabled: false })).toEqual({
+        signupEnabled: false,
+        mailEnabled: false,
+      });
+    });
+
+    it("rejects an update that would change a locked setting", () => {
+      const settings = InstanceSettings.create().withEnvOverrides({ signupEnabled: true });
+
+      expect(() => settings.persistableUpdates({ signupEnabled: false })).toThrow(
+        "Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is set",
+      );
+    });
+
+    it("drops an update that repeats a locked value, so the env value is never persisted", () => {
+      const settings = InstanceSettings.create().withMailNotConfigured();
+
+      expect(settings.persistableUpdates({ mailEnabled: false, signupEnabled: false })).toEqual({
+        signupEnabled: false,
+      });
+    });
+
+    it("keeps an explicit null that clears permalinkBaseUrl", () => {
+      const settings = InstanceSettings.create({
+        permalinkBaseUrl: { value: "https://acme.com/p" },
+      });
+
+      expect(settings.persistableUpdates({ permalinkBaseUrl: null })).toEqual({
+        permalinkBaseUrl: null,
+      });
+    });
+  });
+
   describe("update", () => {
     it("should return a new instance with updated value", () => {
       const original = InstanceSettings.create({

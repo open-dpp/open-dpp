@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMailConfigured } from "./mail";
 import { isHttpsOrLoopbackUrl, parseTrustedClientEnv } from "./trusted-client";
 
 // "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>". Only "github" is
@@ -223,7 +224,7 @@ export const envSchema = z
         });
       }
     }
-    if (val.OPEN_DPP_MAIL_HOST && !val.OPEN_DPP_MAIL_SENDER_ADDRESS) {
+    if (isMailConfigured(val) && !val.OPEN_DPP_MAIL_SENDER_ADDRESS) {
       ctx.addIssue({
         code: "custom",
         message: "OPEN_DPP_MAIL_SENDER_ADDRESS is required when OPEN_DPP_MAIL_HOST is set.",

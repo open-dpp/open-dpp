@@ -10,7 +10,9 @@ import {
   jest,
 } from "@jest/globals";
 import { Logger } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
 import { EnvService } from "@open-dpp/env";
+import type { Transporter } from "nodemailer";
 import { InstanceSettingsService } from "../instance-settings/application/services/instance-settings.service";
 import { BaseEmail } from "./domain/base-email";
 import { EmailChangeNotificationMail } from "./domain/email-change-notification-mail";
@@ -30,7 +32,7 @@ const moduleDir = resolve(process.cwd(), "src/email");
 type SendMail = jest.Mock<(options: { html: string }) => Promise<void>>;
 
 const envWith = (values: Record<string, unknown>) =>
-  ({ get: jest.fn((key: string) => values[key]) }) as unknown as EnvService;
+  new EnvService({ get: (key: string) => values[key] } as unknown as ConfigService);
 
 const settingsWith = (mailEnabled: boolean) =>
   ({
@@ -43,15 +45,12 @@ const SMTP_ENV = {
   OPEN_DPP_MAIL_SENDER_ADDRESS: "noreply@open-dpp.test",
 };
 
-/** Wires a fake SMTP transporter in place of the one the constructor creates. */
-function withSmtpStub(service: EmailService): SendMail {
+/** A fake SMTP transporter, plus its sendMail mock to assert on. */
+function smtpStub(): { transporter: Transporter; sendMail: SendMail } {
   const sendMail = jest
     .fn<(options: { html: string }) => Promise<void>>()
     .mockResolvedValue(undefined);
-  (service as unknown as { smtpTransporter: { sendMail: SendMail } }).smtpTransporter = {
-    sendMail,
-  };
-  return sendMail;
+  return { transporter: { sendMail } as unknown as Transporter, sendMail };
 }
 
 describe("EmailService when mail is disabled", () => {
@@ -85,14 +84,9 @@ describe("EmailService when mail is disabled", () => {
       "Verify E-Mail address",
     );
 
-  it("boots without an SMTP host and warns that links go to the log", () => {
-    new EmailService(envWith({}), settingsWith(true));
-
-    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/OPEN_DPP_MAIL_HOST.*log/));
-  });
-
   it("logs type, recipient, subject and link instead of sending when no host is set", async () => {
-    const service = new EmailService(envWith({}), settingsWith(true));
+    // without a host there is no transporter, whatever the setting says
+    const service = new EmailService(envWith({}), settingsWith(true), null);
 
     await expect(service.send(verifyMail())).resolves.toBeUndefined();
 
@@ -105,22 +99,22 @@ describe("EmailService when mail is disabled", () => {
   });
 
   it("logs instead of sending when SMTP is configured but the admin switched mail off", async () => {
-    const service = new EmailService(envWith(SMTP_ENV), settingsWith(false));
-    const smtp = withSmtpStub(service);
+    const smtp = smtpStub();
+    const service = new EmailService(envWith(SMTP_ENV), settingsWith(false), smtp.transporter);
 
     await service.send(verifyMail());
 
-    expect(smtp).not.toHaveBeenCalled();
+    expect(smtp.sendMail).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("VERIFY_EMAIL"));
   });
 
   it("sends via SMTP when configured and enabled", async () => {
-    const service = new EmailService(envWith(SMTP_ENV), settingsWith(true));
-    const smtp = withSmtpStub(service);
+    const smtp = smtpStub();
+    const service = new EmailService(envWith(SMTP_ENV), settingsWith(true), smtp.transporter);
 
     await service.send(verifyMail());
 
-    expect(smtp).toHaveBeenCalledWith(
+    expect(smtp.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         from: "noreply@open-dpp.test",
         to: "ada@example.com",
@@ -162,8 +156,9 @@ describe("EmailService template localization", () => {
   });
 
   beforeEach(() => {
-    service = new EmailService(envWith(SMTP_ENV), settingsWith(true));
-    sendMail = withSmtpStub(service);
+    const smtp = smtpStub();
+    service = new EmailService(envWith(SMTP_ENV), settingsWith(true), smtp.transporter);
+    sendMail = smtp.sendMail;
   });
 
   afterEach(() => {

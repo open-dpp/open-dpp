@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import type { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
@@ -15,7 +16,7 @@ const SMTP_HOST = "smtp.example.com";
 describe("InstanceSettingsService", () => {
   let service: InstanceSettingsService;
   let mockRepository: any;
-  let mockEnvService: any;
+  let mockConfigService: any;
 
   beforeEach(async () => {
     mockRepository = {
@@ -25,7 +26,9 @@ describe("InstanceSettingsService", () => {
         .mockImplementation(async (s: InstanceSettings) => s),
     };
 
-    mockEnvService = {
+    // a real EnvService over a mocked ConfigService, so derived checks like
+    // isMailConfigured() run their production logic
+    mockConfigService = {
       get: jest.fn<(key: string) => any>().mockReturnValue(undefined),
     };
 
@@ -33,7 +36,10 @@ describe("InstanceSettingsService", () => {
       providers: [
         InstanceSettingsService,
         { provide: InstanceSettingsRepository, useValue: mockRepository },
-        { provide: EnvService, useValue: mockEnvService },
+        {
+          provide: EnvService,
+          useValue: new EnvService(mockConfigService as unknown as ConfigService),
+        },
       ],
     }).compile();
 
@@ -46,7 +52,7 @@ describe("InstanceSettingsService", () => {
 
   describe("mailEnabled precedence", () => {
     const envWith = (values: Record<string, unknown>) =>
-      mockEnvService.get.mockImplementation((key: string) => values[key]);
+      mockConfigService.get.mockImplementation((key: string) => values[key]);
 
     it("is forced off and locked when no SMTP host is configured, even if the env lock says on", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
@@ -107,6 +113,17 @@ describe("InstanceSettingsService", () => {
       await expect(service.updateSettings({ mailEnabled: true })).rejects.toThrow(
         /OPEN_DPP_MAIL_HOST is not set/,
       );
+    });
+
+    it("accepts mailEnabled=false without a host but never persists the forced value", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({});
+
+      const result = await service.updateSettings({ mailEnabled: false });
+
+      expect(result.mailEnabled.value).toBe(false);
+      const persisted = mockRepository.save.mock.calls[0][0] as InstanceSettings;
+      expect(persisted.mailEnabled.value).toBe(true);
     });
 
     it("rejects updating mailEnabled locked by the env variable", async () => {
@@ -217,7 +234,7 @@ describe("InstanceSettingsService", () => {
     it("should override DB value with enforced env var", async () => {
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
       mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -234,7 +251,7 @@ describe("InstanceSettingsService", () => {
 
     it("should mark signupEnabled as locked", async () => {
       mockRepository.findOne.mockResolvedValue(null);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return true;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -248,7 +265,7 @@ describe("InstanceSettingsService", () => {
 
     it("should apply OPEN_DPP_PERMALINK_BASE_URL env override and lock the setting", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === PermalinkBaseUrlSetting.ENV_NAME) return "https://env.example.com/p";
         return undefined;
       });
@@ -261,7 +278,7 @@ describe("InstanceSettingsService", () => {
 
     it("should leave permalinkBaseUrl unlocked when env is not set", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
-      mockEnvService.get.mockReturnValue(undefined);
+      mockConfigService.get.mockReturnValue(undefined);
 
       const result = await service.getSettings();
 
@@ -295,7 +312,7 @@ describe("InstanceSettingsService", () => {
         organizationCreationEnabled: { value: true },
       });
       mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -309,7 +326,7 @@ describe("InstanceSettingsService", () => {
 
     it("should include descriptive error message for locked fields", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -332,7 +349,7 @@ describe("InstanceSettingsService", () => {
         organizationCreationEnabled: { value: true },
       });
       mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -349,7 +366,7 @@ describe("InstanceSettingsService", () => {
     it("hardcoded default when nothing else is set", async () => {
       // No DB, no env → result should be true (hardcoded)
       mockRepository.findOne.mockResolvedValue(null);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return undefined;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return undefined;
         return undefined;

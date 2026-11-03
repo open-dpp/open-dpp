@@ -48,4 +48,14 @@ export class BaseEmail {
   get templateProperties(): BaseEmailTemplateProperties {
     return this.template.properties;
   }
+
+  /**
+   * The Mail Links this mail carries: the absolute URLs among its template properties.
+   * They are taken before HTML escaping, so they stay copy-pasteable.
+   */
+  links(): string[] {
+    return Object.values(this.templateProperties as Record<string, unknown>).filter(
+      (value): value is string => typeof value === "string" && /^https?:\/\//.test(value),
+    );
+  }
 }

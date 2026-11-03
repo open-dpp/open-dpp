@@ -5,31 +5,26 @@ import { useI18n } from "vue-i18n";
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
-import { type BooleanSettingsResponseDto, type StringSettingsResponseDto } from "@open-dpp/dto";
+import {
+  BOOLEAN_INSTANCE_SETTING_KEYS,
+  type BooleanInstanceSettingKey,
+  type BooleanSettingsResponseDto,
+  type StringSettingsResponseDto,
+} from "@open-dpp/dto";
 import { authClient } from "../../auth-client.ts";
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const toast = useToast();
 type BooleanInstanceSetting = {
-  key: "signupEnabled" | "organizationCreationEnabled" | "mailEnabled";
+  key: BooleanInstanceSettingKey;
   setting: BooleanSettingsResponseDto;
 };
 
-const instanceSettings = ref<BooleanInstanceSetting[]>([
-  {
-    key: "signupEnabled",
-    setting: { value: true },
-  },
-  {
-    key: "organizationCreationEnabled",
-    setting: { value: true },
-  },
-  {
-    key: "mailEnabled",
-    setting: { value: true },
-  },
-]);
+// one toggle per boolean setting of the admin DTO
+const instanceSettings = ref<BooleanInstanceSetting[]>(
+  BOOLEAN_INSTANCE_SETTING_KEYS.map((key) => ({ key, setting: { value: true } })),
+);
 
 const permalinkBaseUrl = ref<StringSettingsResponseDto>({ value: null });
 const effectiveFallback = ref<string>("");
