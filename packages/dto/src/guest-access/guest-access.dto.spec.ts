@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import {
   CreateGuestAccessDtoSchema,
+  GuestAccessInvitationDtoSchema,
   GuestAccessResponseDtoSchema,
   GuestRoleDtoEnum,
   UpdateGuestAccessRoleDtoSchema,
@@ -88,5 +89,36 @@ describe("GuestAccessResponseDtoSchema", () => {
 
   it("rejects an unknown status", () => {
     expect(() => GuestAccessResponseDtoSchema.parse({ ...pending, status: "Active" })).toThrow();
+  });
+});
+
+describe("GuestAccessInvitationDtoSchema", () => {
+  const invitation = {
+    id: "0a6e9a7e-2b0c-4a9b-9a53-8c2a3bd0a111",
+    organizationName: "ACME GmbH",
+    email: "repairer@example.com",
+    guestRole: "Repairer",
+    status: "Pending",
+  };
+
+  it("parses an invitation", () => {
+    expect(GuestAccessInvitationDtoSchema.parse(invitation)).toEqual(invitation);
+  });
+
+  it("does not expose who invited or when", () => {
+    const parsed = GuestAccessInvitationDtoSchema.parse({
+      ...invitation,
+      grantedBy: "owner-1",
+      organizationId: "org-1",
+      createdAt: "2026-10-27T10:00:00.000Z",
+    });
+
+    expect(parsed).toEqual(invitation);
+  });
+
+  it("rejects an unknown role", () => {
+    expect(() =>
+      GuestAccessInvitationDtoSchema.parse({ ...invitation, guestRole: "Owner" }),
+    ).toThrow();
   });
 });

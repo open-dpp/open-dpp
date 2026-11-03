@@ -67,3 +67,15 @@ export const GuestAccessResponseDtoSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type GuestAccessResponseDto = z.infer<typeof GuestAccessResponseDtoSchema>;
+
+// What the invited person sees before accepting. Only the account with the invited verified email
+// may read it.
+export const GuestAccessInvitationDtoSchema = z.object({
+  id: z.string(),
+  organizationName: z.string(),
+  email: z.email(),
+  guestRole: GuestRoleDtoEnum,
+  status: GuestAccessStatusDtoEnum,
+});
+
+export type GuestAccessInvitationDto = z.infer<typeof GuestAccessInvitationDtoSchema>;
