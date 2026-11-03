@@ -6,7 +6,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { GuestAccessResponseDtoSchema } from "@open-dpp/dto";
+import { GuestAccessInvitationDtoSchema, GuestAccessResponseDtoSchema } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -323,5 +323,57 @@ describe("GuestAccessController", () => {
     ]);
 
     expect(responses.map((r) => r.status)).toEqual(responses.map(() => 403));
+  });
+
+  it("shows the invited person the invitation before accepting", async () => {
+    const owner = await createOwner();
+    const email = `guest-${randomUUID()}@example.com`;
+    const invited = await invite(owner.userCookie, owner.org.id, {
+      kind: "Direct",
+      email,
+      guestRole: GuestRole.INDEPENDENT_OPERATOR,
+    });
+    const { user } = await betterAuthHelper.createUser({ email });
+    const { userCookie } = await betterAuthHelper.getUserWithCookie(user.id);
+
+    const response = await request(app.getHttpServer())
+      .get(`/guest-accesses/${invited.body.id}/invitation`)
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(GuestAccessInvitationDtoSchema.parse(response.body)).toEqual({
+      id: invited.body.id,
+      organizationName: owner.org.name,
+      email,
+      guestRole: GuestRole.INDEPENDENT_OPERATOR,
+      status: "Pending",
+    });
+    expect(response.body).not.toHaveProperty("grantedBy");
+    expect(response.body).not.toHaveProperty("organizationId");
+  });
+
+  it("does not show an invitation to another account or without a session", async () => {
+    const owner = await createOwner();
+    const invited = await invite(owner.userCookie, owner.org.id);
+    const { user } = await betterAuthHelper.createUser();
+    const { userCookie } = await betterAuthHelper.getUserWithCookie(user.id);
+
+    const other = await request(app.getHttpServer())
+      .get(`/guest-accesses/${invited.body.id}/invitation`)
+      .set("Cookie", userCookie);
+    const ownerSelf = await request(app.getHttpServer())
+      .get(`/guest-accesses/${invited.body.id}/invitation`)
+      .set("Cookie", owner.userCookie);
+    const missing = await request(app.getHttpServer())
+      .get(`/guest-accesses/${randomUUID()}/invitation`)
+      .set("Cookie", userCookie);
+    const anonymous = await request(app.getHttpServer()).get(
+      `/guest-accesses/${invited.body.id}/invitation`,
+    );
+
+    expect(other.status).toEqual(404);
+    expect(ownerSelf.status).toEqual(404);
+    expect(missing.status).toEqual(404);
+    expect(anonymous.status).toEqual(403);
   });
 });

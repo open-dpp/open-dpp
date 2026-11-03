@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
 import {
   type CreateGuestAccessDto,
   CreateGuestAccessDtoSchema,
+  type GuestAccessInvitationDto,
   type GuestAccessResponseDto,
   type UpdateGuestAccessRoleDto,
   UpdateGuestAccessRoleDtoSchema,
@@ -13,7 +14,7 @@ import { OrganizationId } from "../../auth/presentation/decorators/organization-
 import { MemberRole } from "../../organizations/domain/member-role.enum";
 import { UsersRepository } from "../../users/infrastructure/adapters/users.repository";
 import { GuestAccessService } from "../application/services/guest-access.service";
-import { toGuestAccessResponseDto } from "./guest-access-dto.mapper";
+import { toGuestAccessInvitationDto, toGuestAccessResponseDto } from "./guest-access-dto.mapper";
 
 @Controller("guest-accesses")
 export class GuestAccessController {
@@ -78,6 +79,17 @@ export class GuestAccessController {
       actingUserId: userId,
     });
     return toGuestAccessResponseDto(guestAccess);
+  }
+
+  // Called by the invited person before accepting, who does not belong to the organization either
+  @Get(":id/invitation")
+  async getInvitation(
+    @Param("id") id: string,
+    @UserIdDecorator() userId: string,
+  ): Promise<GuestAccessInvitationDto> {
+    const user = await this.usersRepository.findOneOrFail(userId);
+    const { guestAccess, organizationName } = await this.guestAccessService.getInvitation(id, user);
+    return toGuestAccessInvitationDto(guestAccess, organizationName);
   }
 
   // Called by the invited person, who does not belong to the organization and sends no
