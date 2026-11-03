@@ -15,8 +15,10 @@
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Sign in or sign up with this email address and accept the invitation using the button
-          below.</mj-text
+          >{{#if hasAccount}}Sign in with this email address and accept the invitation using the
+          button below.{{else}}Create an account with this email address and accept the invitation.
+          You will receive a second email to verify your address. After clicking its link you come
+          back and can accept the invitation.{{/if}}</mj-text
         >
         <mj-button
           background-color="#6BAD87"
@@ -26,7 +28,7 @@
           padding="20px 0 0 0"
           font-weight="bold"
           font-size="16px"
-          >Accept invitation</mj-button
+          >{{#if hasAccount}}Accept invitation{{else}}Create account{{/if}}</mj-button
         >
       </mj-column>
     </mj-section>

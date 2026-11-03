@@ -12,6 +12,8 @@ const SUBJECT_BY_LANGUAGE: Record<DisplayLanguageType, string> = {
 
 export interface InviteGuestMailTemplateProps extends BaseEmailTemplateProperties {
   link: string;
+  // Whether the invited address has an account. If not, the link leads to the sign up.
+  hasAccount: boolean;
   organizationName: string;
   guestRoleName: string;
 }

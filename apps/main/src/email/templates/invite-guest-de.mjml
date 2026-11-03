@@ -15,8 +15,11 @@
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Melde dich mit dieser E-Mail-Adresse an oder registriere dich und nimm die Einladung mit
-          dem Button unten an.</mj-text
+          >{{#if hasAccount}}Melde dich mit dieser E-Mail-Adresse an und nimm die Einladung mit dem
+          Button unten an.{{else}}Erstelle ein Konto mit dieser E-Mail-Adresse und nimm die
+          Einladung an. Du erh&auml;ltst eine zweite E-Mail, um deine Adresse zu best&auml;tigen.
+          Nach dem Klick auf den Link in dieser E-Mail kommst du zur&uuml;ck und kannst die
+          Einladung annehmen.{{/if}}</mj-text
         >
         <mj-button
           background-color="#6BAD87"
@@ -26,7 +29,7 @@
           padding="20px 0 0 0"
           font-weight="bold"
           font-size="16px"
-          >Einladung annehmen</mj-button
+          >{{#if hasAccount}}Einladung annehmen{{else}}Konto erstellen{{/if}}</mj-button
         >
       </mj-column>
     </mj-section>
