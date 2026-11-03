@@ -12,13 +12,14 @@ export class InstanceSettingsCache {
 
   /** The cached settings, or `undefined` when nothing is cached or the TTL has passed. */
   get(): InstanceSettings | undefined {
-    if (!this.entry || Date.now() - this.entry.cachedAt >= this.ttlMs) {
+    // performance.now() is monotonic, so wall-clock jumps (NTP, manual changes) can't skew the TTL
+    if (!this.entry || performance.now() - this.entry.cachedAt >= this.ttlMs) {
       return undefined;
     }
     return this.entry.settings;
   }
 
   set(settings: InstanceSettings): void {
-    this.entry = { settings, cachedAt: Date.now() };
+    this.entry = { settings, cachedAt: performance.now() };
   }
 }
