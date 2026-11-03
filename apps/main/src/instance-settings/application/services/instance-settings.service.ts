@@ -15,6 +15,9 @@ export class InstanceSettingsService {
   private readonly cache = new InstanceSettingsCache(INSTANCE_SETTINGS_CACHE_TTL_MS);
   // bumped by every write, so a read that was already in flight can't cache the pre-write document
   private cacheGeneration = 0;
+  // updates on this replica run one at a time, so each starts from the previous save
+  // and an older save can't land in the cache after a newer one
+  private updateQueue: Promise<unknown> = Promise.resolve();
 
   constructor(
     private readonly repository: InstanceSettingsRepository,
@@ -25,7 +28,14 @@ export class InstanceSettingsService {
     return this.applyEnvOverrides(await this.loadStored());
   }
 
-  async updateSettings(updates: InstanceSettingsUpdate): Promise<InstanceSettings> {
+  updateSettings(updates: InstanceSettingsUpdate): Promise<InstanceSettings> {
+    const run = this.updateQueue.then(() => this.applyUpdate(updates));
+    // a failed update must not block the ones queued behind it
+    this.updateQueue = run.catch(() => undefined);
+    return run;
+  }
+
+  private async applyUpdate(updates: InstanceSettingsUpdate): Promise<InstanceSettings> {
     // save() replaces the whole singleton document, so the write must start from
     // the DB, not from a possibly stale cache of another replica's state
     const stored = await this.loadStored({ fresh: true });

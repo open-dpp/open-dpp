@@ -358,6 +358,44 @@ describe("InstanceSettingsService", () => {
         `Cannot override organizationCreationEnabled when ${OrganizationCreationEnabledSetting.ENV_NAME} is set`,
       );
     });
+
+    it("runs concurrent updates one after another, each on top of the previous save", async () => {
+      let stored = InstanceSettings.create();
+      mockRepository.findOne.mockImplementation(async () => stored);
+      mockRepository.save.mockImplementation(async (s: InstanceSettings) => (stored = s));
+      let releaseFirstSave!: () => void;
+      const firstSaveStarted = new Promise<void>((started) => {
+        mockRepository.save.mockImplementationOnce(async (s: InstanceSettings) => {
+          started();
+          await new Promise<void>((release) => (releaseFirstSave = release));
+          return (stored = s);
+        });
+      });
+
+      const first = service.updateSettings({ signupEnabled: false });
+      const second = service.updateSettings({ organizationCreationEnabled: false });
+      await firstSaveStarted;
+      releaseFirstSave();
+      await Promise.all([first, second]);
+      const result = await service.getSettings();
+
+      expect(stored.signupEnabled.value).toBe(false);
+      expect(stored.organizationCreationEnabled.value).toBe(false);
+      expect(result.signupEnabled.value).toBe(false);
+      expect(result.organizationCreationEnabled.value).toBe(false);
+    });
+
+    it("still runs queued updates after one fails", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      mockRepository.save.mockRejectedValueOnce(new Error("write failed"));
+
+      const failing = service.updateSettings({ signupEnabled: false });
+      const next = service.updateSettings({ organizationCreationEnabled: false });
+
+      await expect(failing).rejects.toThrow("write failed");
+      const result = await next;
+      expect(result.organizationCreationEnabled.value).toBe(false);
+    });
   });
 
   describe("hierarchy precedence", () => {
