@@ -123,26 +123,59 @@ describe("EmailService template localization", () => {
   });
 
   describe("guest mails", () => {
-    const link = "https://app.open-dpp.test/accept-guest-access/access-1";
+    // like the real link: the address and the encoded return URL as query parameters
+    const link =
+      "https://app.open-dpp.test/signup?email=repairer%40example.com&redirect=https%253A%252F%252Fapp.open-dpp.test%252Faccept-guest-access%252Faccess-1";
 
-    it("renders the invitation in English and German", async () => {
-      const properties = { link, organizationName: "ACME GmbH", guestRoleName: "Repairer" };
-
-      await service.send(
-        InviteGuestMail.create({ to: "to@example.com", templateProperties: properties }),
+    const hrefs = (html: string) =>
+      [...html.matchAll(/href="([^"]+)"/g)].map((match) =>
+        match[1].replaceAll("&amp;", "&").replaceAll("&#x3D;", "="),
       );
+
+    const invitation = (hasAccount: boolean, language?: "en" | "de") =>
+      InviteGuestMail.create({
+        to: "to@example.com",
+        language,
+        templateProperties: {
+          link,
+          hasAccount,
+          organizationName: "ACME GmbH",
+          guestRoleName: "Repairer",
+        },
+      });
+
+    it("renders the invitation for someone who has an account", async () => {
+      await service.send(invitation(true));
       expect(lastHtml()).toContain("You have been invited as a guest");
-      expect(lastHtml()).toContain(link);
+      expect(lastHtml()).toContain("Sign in with this email address");
+      expect(lastHtml()).toMatch(/>\s*Accept invitation\s*</);
+      expect(lastHtml()).not.toContain("Create an account");
 
-      await service.send(
-        InviteGuestMail.create({
-          to: "to@example.com",
-          language: "de",
-          templateProperties: properties,
-        }),
-      );
+      await service.send(invitation(true, "de"));
       expect(lastHtml()).toContain("Du wurdest als Gast eingeladen");
-      expect(lastHtml()).toContain(link);
+      expect(lastHtml()).toContain("Melde dich mit dieser E-Mail-Adresse an");
+      expect(lastHtml()).toMatch(/>\s*Einladung annehmen\s*</);
+      expect(lastHtml()).not.toContain("Erstelle ein Konto");
+    });
+
+    it("renders the invitation for someone who needs an account first", async () => {
+      await service.send(invitation(false));
+      expect(lastHtml()).toContain("Create an account with this email address");
+      expect(lastHtml()).toContain("second email to verify your address");
+      expect(lastHtml()).toMatch(/>\s*Create account\s*</);
+      expect(lastHtml()).not.toMatch(/>\s*Accept invitation\s*</);
+
+      await service.send(invitation(false, "de"));
+      expect(lastHtml()).toContain("Erstelle ein Konto mit dieser E-Mail-Adresse");
+      expect(lastHtml()).toContain("zweite E-Mail");
+      expect(lastHtml()).toMatch(/>\s*Konto erstellen\s*</);
+      expect(lastHtml()).not.toMatch(/>\s*Einladung annehmen\s*</);
+    });
+
+    it("keeps the link of the invitation intact", async () => {
+      await service.send(invitation(false));
+
+      expect(hrefs(lastHtml())).toContain(link);
     });
 
     it("renders the role change with the link only for an invitation not accepted yet", async () => {
@@ -154,25 +187,44 @@ describe("EmailService template localization", () => {
       expect(lastHtml()).toContain("Your guest role has changed");
       expect(lastHtml()).toContain("Supplier");
       expect(lastHtml()).not.toContain("Accept invitation");
+      expect(lastHtml()).not.toContain("Create account");
 
       await service.send(
         GuestRoleChangedMail.create({
           to: "to@example.com",
-          templateProperties: { ...properties, link },
+          templateProperties: { ...properties, link, hasAccount: true },
         }),
       );
       expect(lastHtml()).toContain("Accept invitation");
-      expect(lastHtml()).toContain(link);
+      expect(hrefs(lastHtml())).toContain(link);
+
+      await service.send(
+        GuestRoleChangedMail.create({
+          to: "to@example.com",
+          templateProperties: { ...properties, link, hasAccount: false },
+        }),
+      );
+      expect(lastHtml()).toContain("Create account");
+      expect(lastHtml()).toContain("second email to verify your address");
 
       await service.send(
         GuestRoleChangedMail.create({
           to: "to@example.com",
           language: "de",
-          templateProperties: { ...properties, link },
+          templateProperties: { ...properties, link, hasAccount: true },
         }),
       );
       expect(lastHtml()).toContain("Deine Gastrolle wurde ge&auml;ndert");
       expect(lastHtml()).toContain("Einladung annehmen");
+
+      await service.send(
+        GuestRoleChangedMail.create({
+          to: "to@example.com",
+          language: "de",
+          templateProperties: { ...properties, link, hasAccount: false },
+        }),
+      );
+      expect(lastHtml()).toContain("Konto erstellen");
     });
 
     it("renders a revoked access or a withdrawn invitation", async () => {
