@@ -471,6 +471,22 @@
       "message": "Möchtest du den Zugriff von {email} wirklich entziehen? Der Gast kann dann keine Daten deiner Organisation mehr sehen."
     },
     "errorLoading": "Die Gäste konnten nicht geladen werden.",
+    "accept": {
+      "title": "Gastzugriff annehmen",
+      "organization": "Organisation",
+      "readOnly": "Als Gast kannst du ausgewählte Daten von Produktpässen nur lesen. Du kannst sonst nichts aus der Organisation sehen oder ändern.",
+      "accept": "Zugriff annehmen",
+      "accepted": "Du hast jetzt Zugriff. Öffne die Produktseite erneut, zum Beispiel über den QR-Code, um die Daten zu sehen, die du sehen darfst.",
+      "revoked": "Diese Einladung ist nicht mehr gültig.",
+      "unavailable": "Diese Einladung ist für dein Konto nicht verfügbar. Melde dich mit der E-Mail-Adresse an, an die die Einladung gesendet wurde, und stelle sicher, dass die Adresse bestätigt ist.",
+      "verifyEmail": "Bitte bestätige zuerst deine E-Mail-Adresse. Wir haben einen Bestätigungslink an {email} gesendet. Klicke darauf, danach kommst du zu dieser Seite zurück und kannst den Zugriff annehmen.",
+      "resend": "Bestätigungs-E-Mail erneut senden",
+      "resent": "Die Bestätigungs-E-Mail wurde erneut gesendet.",
+      "checkAgain": "Ich habe meine Adresse bestätigt",
+      "errorResending": "Die Bestätigungs-E-Mail konnte nicht gesendet werden.",
+      "errorLoading": "Die Einladung konnte nicht geladen werden.",
+      "errorAccepting": "Der Zugriff konnte nicht angenommen werden."
+    },
     "empty": "Noch keine Gäste eingeladen."
   },
   "members": {
@@ -1033,6 +1049,7 @@
     "openPresentationChat": "KI-Chat öffnen"
   },
   "presentation": {
+    "signInAsProfessional": "Als Fachperson anmelden",
     "productDetails": "Produktdetails",
     "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
     "additionalSections": "Weiterführende Abschnitte",

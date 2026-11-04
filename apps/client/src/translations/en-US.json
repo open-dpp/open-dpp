@@ -471,6 +471,22 @@
       "message": "Do you really want to revoke the access of {email}? The guest can no longer see data of your organization."
     },
     "errorLoading": "The guests could not be loaded.",
+    "accept": {
+      "title": "Accept guest access",
+      "organization": "Organization",
+      "readOnly": "As a guest you can only read selected product passport data. You cannot see or change anything else of the organization.",
+      "accept": "Accept access",
+      "accepted": "You have access now. Open the product page again, for example by scanning its QR code, to see the data you are allowed to see.",
+      "revoked": "This invitation is no longer valid.",
+      "unavailable": "This invitation is not available for your account. Sign in with the email address the invitation was sent to and make sure that the address is verified.",
+      "verifyEmail": "Please verify your email address first. We sent a verification link to {email}. Click it and you will come back to this page to accept the access.",
+      "resend": "Send the verification email again",
+      "resent": "The verification email was sent again.",
+      "checkAgain": "I have verified my address",
+      "errorResending": "The verification email could not be sent.",
+      "errorLoading": "The invitation could not be loaded.",
+      "errorAccepting": "The access could not be accepted."
+    },
     "empty": "No guests invited yet."
   },
   "members": {
@@ -1033,6 +1049,7 @@
     "openPresentationChat": "Open AI chat"
   },
   "presentation": {
+    "signInAsProfessional": "Sign in as professional",
     "productDetails": "Product details",
     "productDetailsDesc": "General information about the product.",
     "additionalSections": "Additional sections",
