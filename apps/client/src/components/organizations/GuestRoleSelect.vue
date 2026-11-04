@@ -20,6 +20,7 @@ const description = computed(() => getGuestRoleDescription(model.value));
     </label>
     <Select
       v-model="model"
+      data-testid="guest-role-select"
       :input-id="inputId"
       :options="guestRoleOptions"
       option-label="label"

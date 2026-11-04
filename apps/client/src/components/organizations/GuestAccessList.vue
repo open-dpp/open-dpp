@@ -24,14 +24,18 @@ onMounted(fetchGuestAccesses);
 <template>
   <InviteGuestDialog ref="inviteGuestDialog" @success="fetchGuestAccesses" />
   <ChangeGuestRoleDialog ref="changeGuestRoleDialog" @success="fetchGuestAccesses" />
-  <DataTable :value="guestAccesses" data-key="id">
+  <DataTable :value="guestAccesses" data-key="id" data-testid="guest-access-table">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <span class="text-xl font-bold">{{ t("guestAccess.title") }}</span>
           <p class="mt-1 text-sm font-normal text-gray-500">{{ t("guestAccess.description") }}</p>
         </div>
-        <Button :label="t('guestAccess.invite')" @click="inviteGuestDialog?.open()" />
+        <Button
+          :label="t('guestAccess.invite')"
+          data-testid="guest-invite-btn"
+          @click="inviteGuestDialog?.open()"
+        />
       </div>
     </template>
     <template #empty>{{ t("guestAccess.empty") }}</template>
@@ -43,16 +47,24 @@ onMounted(fetchGuestAccesses);
     </Column>
     <Column field="status" :header="t('guestAccess.status.label')">
       <template #body="{ data }: { data: GuestAccessResponseDto }">
-        {{ statusLabel(data) }}
+        <span :data-testid="`guest-status-${data.id}`">{{ statusLabel(data) }}</span>
       </template>
     </Column>
     <Column :header="t('common.actions')">
       <template #body="{ data }: { data: GuestAccessResponseDto }">
         <div v-if="isEditable(data)" class="flex gap-2">
-          <Button severity="secondary" @click="changeGuestRoleDialog?.open(data)">
+          <Button
+            severity="secondary"
+            :data-testid="`guest-change-role-btn-${data.id}`"
+            @click="changeGuestRoleDialog?.open(data)"
+          >
             {{ t("guestAccess.changeRole") }}
           </Button>
-          <Button severity="danger" @click="revokeGuestAccess(data, fetchGuestAccesses)">
+          <Button
+            severity="danger"
+            :data-testid="`guest-revoke-btn-${data.id}`"
+            @click="revokeGuestAccess(data, fetchGuestAccesses)"
+          >
             {{ t("guestAccess.revoke") }}
           </Button>
         </div>

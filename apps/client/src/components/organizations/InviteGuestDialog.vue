@@ -59,7 +59,9 @@ defineExpose({ open });
     </div>
     <div class="mt-3 text-center sm:mt-5">
       <div v-if="success" class="mt-3">
-        <div class="text-sm text-green-600">{{ t("guestAccess.inviteSuccess") }}</div>
+        <div class="text-sm text-green-600" data-testid="guest-invite-success">
+          {{ t("guestAccess.inviteSuccess") }}
+        </div>
         <Button class="mt-3" :label="t('common.close')" @click="visible = false" />
       </div>
       <div v-else class="mt-3">
@@ -71,6 +73,7 @@ defineExpose({ open });
             <InputText
               id="guest-email"
               v-model="email"
+              data-testid="guest-invite-email"
               type="text"
               :invalid="!!emailError"
               class="w-full"
@@ -78,7 +81,12 @@ defineExpose({ open });
             <small v-if="emailError" class="text-red-600">{{ emailError }}</small>
           </div>
           <GuestRoleSelect v-model="guestRole" />
-          <Button :label="t('guestAccess.invite')" type="submit" class="w-full" />
+          <Button
+            :label="t('guestAccess.invite')"
+            type="submit"
+            class="w-full"
+            data-testid="guest-invite-submit"
+          />
         </form>
         <RingLoader v-show="loading" class="mx-auto w-fit" />
       </div>

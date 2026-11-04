@@ -48,6 +48,7 @@ defineExpose({ open });
       <GuestRoleSelect v-model="guestRole" />
       <Button
         type="submit"
+        data-testid="guest-change-role-submit"
         class="w-full"
         :label="t('guestAccess.changeRole')"
         :loading="loading"
