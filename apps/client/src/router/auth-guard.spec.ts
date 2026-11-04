@@ -27,6 +27,33 @@ describe("resolveAuthRedirect", () => {
     expect(resolveAuthRedirect(route("/signin", { meta: ANONYMOUS_ONLY }), true, ORIGIN)).toBe("/");
   });
 
+  it("sends a signed-in user who followed a link to the sign-in on to its return URL", () => {
+    // e.g. the invitation of a guest, opened in a browser which is signed in already
+    const link = route("/signin", {
+      meta: ANONYMOUS_ONLY,
+      query: {
+        email: "repairer@example.com",
+        redirect: encodeURIComponent(`${ORIGIN}/accept-guest-access/access-1`),
+      },
+    });
+
+    expect(resolveAuthRedirect(link, true, ORIGIN)).toBe("/accept-guest-access/access-1");
+  });
+
+  it("does not follow a return URL of another site or one which leads back to the same page", () => {
+    const otherSite = route("/signin", {
+      meta: ANONYMOUS_ONLY,
+      query: { redirect: encodeURIComponent("https://evil.example.com/x") },
+    });
+    const samePage = route("/signin", {
+      meta: ANONYMOUS_ONLY,
+      query: { redirect: encodeURIComponent(`${ORIGIN}/signin`) },
+    });
+
+    expect(resolveAuthRedirect(otherSite, true, ORIGIN)).toBe("/");
+    expect(resolveAuthRedirect(samePage, true, ORIGIN)).toBe("/");
+  });
+
   it("lets a signed-in user reach an anonymous-only page the OAuth Provider opened", () => {
     // prompt=login re-authentication and prompt=create must render for a signed-in user too
     const opened = route("/signin", {
