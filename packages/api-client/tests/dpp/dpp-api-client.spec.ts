@@ -196,6 +196,34 @@ describe("apiClient", () => {
       expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
     });
 
+    it("should resend the verification email without a body via POST /users/me/resend-verification-email", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.resendMyVerificationEmail();
+      expect(response.status).toEqual(200);
+      expect(response.data.email).toEqual(meResponse.user.email);
+    });
+
+    it("should resend the verification email with the path to return to", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.resendMyVerificationEmail({
+        callbackPath: "/accept-guest-access/access-1",
+      });
+      expect(response.status).toEqual(200);
+    });
+
+    it("should not resend the verification email to a path outside the application", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      await expect(
+        sdk.dpp.users.resendMyVerificationEmail({ callbackPath: "https://evil.example.com" }),
+      ).rejects.toMatchObject({ response: { status: 422 } });
+    });
+
     it("should cancel the pending email change via DELETE /users/me/email-change", async () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },

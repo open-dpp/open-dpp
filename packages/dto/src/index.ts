@@ -95,6 +95,7 @@ export * from "./users/create-user.dto";
 export * from "./users/me.dto";
 export * from "./users/pending-email-change.dto";
 export * from "./users/request-email-change.dto";
+export * from "./users/resend-verification-email.dto";
 export * from "./users/set-user-role.dto";
 export * from "./users/update-profile.dto";
 export * from "./users/display-language.dto";
