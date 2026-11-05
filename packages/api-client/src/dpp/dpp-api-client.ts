@@ -3,6 +3,7 @@ import type { ApiClientOptions, IApiClient } from "../api-client";
 import { createAxiosClient } from "../api-client";
 import { BrandingNamespace } from "./branding/branding.namespace";
 import { BulkImportNamespace } from "./bulk-import/bulk-import.namespace";
+import { GuestAccessNamespace } from "./guest-access/guest-access.namespace";
 import { InstanceSettingsNamespace } from "./instance-settings/instance-settings.namespace";
 import { AasIntegrationNamespace } from "./integrations/aas-integration.namespace";
 import { OAuthProviderNamespace } from "./oauth-provider/oauth-provider.namespace";
@@ -17,6 +18,7 @@ import { DEFAULT_API_URL } from "../urls";
 
 export class DppApiClient implements IApiClient {
   public organizations!: OrganizationsNamespace;
+  public guestAccess!: GuestAccessNamespace;
   public templates!: TemplatesNamespace;
   public passports!: PassportNamespace;
   public branding!: BrandingNamespace;
@@ -50,6 +52,7 @@ export class DppApiClient implements IApiClient {
   private createNewAxiosInstance() {
     this.axiosInstance = createAxiosClient(this.options, DEFAULT_API_URL);
     this.organizations = new OrganizationsNamespace(this.axiosInstance);
+    this.guestAccess = new GuestAccessNamespace(this.axiosInstance);
 
     this.templates = new TemplatesNamespace(this.axiosInstance);
     this.passports = new PassportNamespace(this.axiosInstance);

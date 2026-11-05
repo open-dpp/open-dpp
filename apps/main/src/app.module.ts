@@ -18,6 +18,7 @@ import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
 import { EmailChangeRequestsModule } from "./identity/email-change-requests/email-change-requests.module";
+import { GuestAccessModule } from "./identity/guest-access/guest-access.module";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { ApiKeysModule } from "./identity/api-keys/api-keys.module";
 import { UsersModule } from "./identity/users/users.module";
@@ -52,6 +53,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     TemplatesModule,
     PassportsModule,
     OrganizationsModule,
+    GuestAccessModule,
     UsersModule,
     ApiKeysModule,
     EmailChangeRequestsModule,

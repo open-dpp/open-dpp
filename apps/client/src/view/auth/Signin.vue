@@ -8,6 +8,7 @@ import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
+import { prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
 import { readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
@@ -26,10 +27,13 @@ const loading = ref<boolean>(false);
 const signupEnabled = ref<boolean>(false);
 const checkingSettings = ref<boolean>(true);
 
+// A link can bring the address along, e.g. the invitation of a guest. The address stays fixed then.
+const prefilledEmail = prefilledEmailOf(route.query);
+
 const { handleSubmit, errors, submitCount, defineField, resetField } = useForm({
   validationSchema: toTypedSchema(SigninFormSchema),
   initialValues: {
-    email: "",
+    email: prefilledEmail ?? "",
     password: "",
   },
 });
@@ -53,9 +57,9 @@ onMounted(async () => {
   }
 });
 
-const redirectUri = computed(() => {
-  return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
-});
+const redirectUri = computed(
+  () => sameOriginRedirectOf(route.query, window.location.origin) ?? "/",
+);
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-in. */
 const oauthContinuation = readOAuthContinuation(window.location.search);
@@ -139,6 +143,7 @@ const signin = handleSubmit(async (values) => {
                   autocomplete="email"
                   class="w-full"
                   :disabled="loading"
+                  :readonly="prefilledEmail !== undefined"
                   :invalid="showErrors && !!errors.email"
                 />
               </div>

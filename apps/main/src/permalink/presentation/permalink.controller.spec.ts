@@ -81,7 +81,7 @@ describe("PermalinkController", () => {
   );
 
   async function createPassportWithPermalink(
-    options: { slug?: string | null; published?: boolean } = {},
+    options: { slug?: string | null; published?: boolean; organizationId?: string } = {},
   ): Promise<any> {
     const { aas, submodels } = ctx.getAasObjects();
 
@@ -91,7 +91,7 @@ describe("PermalinkController", () => {
       conceptDescriptions: [],
     });
 
-    const organizationId = randomUUID();
+    const organizationId = options.organizationId ?? randomUUID();
     const lastStatusChange =
       options.published === false
         ? DigitalProductDocumentStatusChange.create({})
@@ -131,6 +131,10 @@ describe("PermalinkController", () => {
       toPlain: () => ({ id: permalink.id }),
     };
   }
+
+  // The read endpoints resolve the caller against the organization that owns the passport.
+  const createPassportOfOrganization = (organizationId?: string) =>
+    createPassportWithPermalink({ organizationId });
 
   it(`/GET bundle from permalink by UUID`, async () => {
     const { userCookie } = await ctx
@@ -446,31 +450,31 @@ describe("PermalinkController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassportWithPermalink);
+    await ctx.asserts.getShells(createPassportOfOrganization);
   });
 
   it(`/GET submodels`, async () => {
-    await ctx.asserts.getSubmodels(createPassportWithPermalink);
+    await ctx.asserts.getSubmodels(createPassportOfOrganization);
   });
 
   it(`/GET submodel by id`, async () => {
-    await ctx.asserts.getSubmodelById(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelById(createPassportOfOrganization);
   });
 
   it(`/GET submodel value`, async () => {
-    await ctx.asserts.getSubmodelValue(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelValue(createPassportOfOrganization);
   });
 
   it(`/GET submodel elements`, async () => {
-    await ctx.asserts.getSubmodelElements(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelElements(createPassportOfOrganization);
   });
 
   it(`/GET submodel element by id`, async () => {
-    await ctx.asserts.getSubmodelElementById(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelElementById(createPassportOfOrganization);
   });
 
   it(`/GET submodel element value`, async () => {
-    await ctx.asserts.getSubmodelElementValue(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelElementValue(createPassportOfOrganization);
   });
 
   describe("draft passports — privacy gate", () => {

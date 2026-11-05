@@ -10,6 +10,7 @@ import {
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { allPermissionsPlainAllow } from "@open-dpp/testing";
+import { GuestRole } from "../../identity/guest-access/domain/guest-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
@@ -318,6 +319,22 @@ describe("assetAdministrationShell", () => {
           }),
         ],
       }),
+      ...Object.values(GuestRole).map((guestRole) =>
+        AccessPermissionRule.create({
+          targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, guestRole }),
+          permissionsPerObject: [
+            PermissionPerObject.create({
+              object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
+              permissions: [
+                Permission.create({
+                  permission: Permissions.Read,
+                  kindOfPermission: PermissionKind.Allow,
+                }),
+              ],
+            }),
+          ],
+        }),
+      ),
     ]);
   });
 

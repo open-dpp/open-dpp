@@ -1,4 +1,8 @@
-export { PermissionAction } from "./PermissionAction";
-export type { PermissionAction_TYPE } from "./PermissionAction";
-export { OrganizationSubject } from "./subjects/OrganizationSubject";
-export { defineAbilitiesForAuthContext, hasPermission } from "./util";
+export {
+  compareSubjects,
+  isEqualSubjectRoles,
+  levelOfSubject,
+  subjectHierarchy,
+  subjectsBelow,
+} from "./subject-hierarchy";
+export type { SubjectRoles } from "./subject-hierarchy";

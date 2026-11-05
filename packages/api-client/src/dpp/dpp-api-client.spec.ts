@@ -2,11 +2,13 @@ import { DppApiClient } from "./dpp-api-client";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
 import { PoliciesNamespace } from "./policy/policies.namespace";
+import { GuestAccessNamespace } from "./guest-access/guest-access.namespace";
 import { OAuthProviderNamespace } from "./oauth-provider/oauth-provider.namespace";
 
 import {
   UniqueProductIdentifiersNamespace as UpiNsFromIndex,
   PermalinksNamespace as PermalinksNsFromIndex,
+  GuestAccessNamespace as GuestAccessNsFromIndex,
 } from "../index";
 
 import type {
@@ -44,6 +46,11 @@ describe("DppApiClient", () => {
       expect(client.policies).toBeInstanceOf(PoliciesNamespace);
     });
 
+    it("client.guestAccess is an instance of GuestAccessNamespace", () => {
+      const client = new DppApiClient({});
+      expect(client.guestAccess).toBeInstanceOf(GuestAccessNamespace);
+    });
+
     it("client.oauthProvider is an instance of OAuthProviderNamespace", () => {
       const client = new DppApiClient({});
       expect(client.oauthProvider).toBeInstanceOf(OAuthProviderNamespace);
@@ -61,6 +68,10 @@ describe("DppApiClient", () => {
     it("UniqueProductIdentifiersNamespace is re-exported from the package index", () => {
       expect(UpiNsFromIndex).toBeDefined();
       expect(UpiNsFromIndex).toBe(UniqueProductIdentifiersNamespace);
+    });
+
+    it("GuestAccessNamespace is re-exported from the package index", () => {
+      expect(GuestAccessNsFromIndex).toBe(GuestAccessNamespace);
     });
 
     it("PermalinksNamespace is re-exported from the package index", () => {

@@ -71,7 +71,16 @@ export class BetterAuthHelper {
     return cookie;
   }
 
-  async createUser(userData?: { role?: UserRoleType; email?: string; preferredLanguage?: string }) {
+  /**
+   * Signs a user up. The email address is verified unless `emailVerified` is false, e.g. to test
+   * what happens before the verification (the verification mail is sent in both cases).
+   */
+  async createUser(userData?: {
+    role?: UserRoleType;
+    email?: string;
+    preferredLanguage?: string;
+    emailVerified?: boolean;
+  }) {
     const userEmail = userData?.email ?? `${randomUUID()}@test.test`;
     if (!this.auth) {
       throw new Error("No auth setup");
@@ -89,7 +98,9 @@ export class BetterAuthHelper {
     const data = await this.auth.api.signUpEmail({
       body,
     });
-    await this.usersService.setUserEmailVerified(data.user.email, true);
+    if (userData?.emailVerified !== false) {
+      await this.usersService.setUserEmailVerified(data.user.email, true);
+    }
     if (userData?.role) {
       await this.usersService.setUserRole(data.user.id, userData.role);
     }

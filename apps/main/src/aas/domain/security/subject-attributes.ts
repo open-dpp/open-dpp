@@ -1,8 +1,17 @@
 import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import {
+  compareSubjects,
+  isEqualSubjectRoles,
+  subjectsBelow,
+  type SubjectRoles,
+} from "@open-dpp/permission";
 import { z } from "zod/v4";
 import {
-  MemberRole,
+  GuestRoleEnum,
+  GuestRoleType,
+} from "../../../identity/guest-access/domain/guest-role.enum";
+import {
   MemberRoleEnum,
   MemberRoleType,
 } from "../../../identity/organizations/domain/member-role.enum";
@@ -17,18 +26,11 @@ export const SubjectAttributesSchema = z.object({
   subjectAttribute: PropertyJsonSchema.array(),
 });
 
-const roleHierarchy: { userRole: UserRoleType; memberRole?: MemberRoleType }[] = [
-  { userRole: UserRole.ADMIN }, // instance admin, the organization role is not relevant
-  { userRole: UserRole.USER, memberRole: MemberRole.OWNER }, // organization owner
-  { userRole: UserRole.USER, memberRole: MemberRole.MEMBER }, // organization member
-  { userRole: UserRole.USER, memberRole: undefined }, // user without organization membership
-  { userRole: UserRole.ANONYMOUS }, // anonymous user without an account
-] as const;
-
 export class SubjectAttributes {
   private _subjectAttribute: Property[];
   public static UserRoleKey = "userRole";
   public static MemberRoleKey = "memberRole";
+  public static GuestRoleKey = "guestRole";
   private constructor(subjectAttribute: Property[]) {
     this.subjectAttribute = subjectAttribute;
   }
@@ -49,7 +51,10 @@ export class SubjectAttributes {
     return this._subjectAttribute;
   }
 
-  static create(data: { userRole: UserRoleType; memberRole?: MemberRoleType }): SubjectAttributes {
+  static create(data: SubjectRoles): SubjectAttributes {
+    if (data.guestRole && (data.userRole !== UserRole.USER || data.memberRole)) {
+      throw new ValueError("A guest role is only allowed for a user without a member role");
+    }
     return new SubjectAttributes([
       Property.create({
         idShort: SubjectAttributes.UserRoleKey,
@@ -62,6 +67,15 @@ export class SubjectAttributes {
               idShort: SubjectAttributes.MemberRoleKey,
               valueType: DataTypeDef.String,
               value: data.memberRole,
+            }),
+          ]
+        : []),
+      ...(data.guestRole
+        ? [
+            Property.create({
+              idShort: SubjectAttributes.GuestRoleKey,
+              valueType: DataTypeDef.String,
+              value: data.guestRole,
             }),
           ]
         : []),
@@ -96,52 +110,30 @@ export class SubjectAttributes {
     );
   }
 
-  private computeRoleHierarchyIndex(roles: {
-    userRole: UserRoleType;
-    memberRole?: MemberRoleType;
-  }): number {
-    return roleHierarchy.findIndex(
-      (role) =>
-        (role.userRole === roles.userRole && role.userRole === UserRole.ADMIN) ||
-        (role.userRole === roles.userRole && role.memberRole === roles.memberRole),
+  get guestRole(): GuestRoleType | undefined {
+    return GuestRoleEnum.optional().parse(
+      this.subjectAttribute.find((p) => p.idShort === SubjectAttributes.GuestRoleKey)?.value ??
+        undefined,
     );
   }
 
-  getRoles() {
-    return { userRole: this.userRole, memberRole: this.memberRole };
-  }
-
-  /*
-   * Returns negative integer if subjectAttributes1 < subjectAttributes2.
-   * Returns 0 if subjectAttributes1 == subjectAttributes2.
-   * Returns positive integer if subjectAttributes1 > subjectAttributes2.
-   */
-  private compareRoles(
-    subjectAttributes1: SubjectAttributes,
-    subjectAttributes2: SubjectAttributes,
-  ): number {
-    const hierarchyIndex1 = this.computeRoleHierarchyIndex(subjectAttributes1.getRoles());
-    const hierarchyIndex2 = this.computeRoleHierarchyIndex(subjectAttributes2.getRoles());
-    return hierarchyIndex2 - hierarchyIndex1;
+  getRoles(): SubjectRoles {
+    return { userRole: this.userRole, memberRole: this.memberRole, guestRole: this.guestRole };
   }
 
   hasHigherThanOrEqualRoles(other: SubjectAttributes): boolean {
-    return this.compareRoles(this, other) >= 0;
+    return compareSubjects(this.getRoles(), other.getRoles()) >= 0;
   }
 
   hasLowerThanOrEqualRoles(other: SubjectAttributes): boolean {
-    return this.compareRoles(this, other) <= 0;
+    return compareSubjects(this.getRoles(), other.getRoles()) <= 0;
   }
 
   isEqual(other: SubjectAttributes): boolean {
-    return (
-      (this.userRole === other.userRole && this.userRole === UserRole.ADMIN) ||
-      (this.userRole === other.userRole && this.memberRole === other.memberRole)
-    );
+    return isEqualSubjectRoles(this.getRoles(), other.getRoles());
   }
 
   getSubjectsWithSubordinatedRoles(): SubjectAttributes[] {
-    const index = this.computeRoleHierarchyIndex(this.getRoles());
-    return roleHierarchy.slice(index + 1).map((roles) => SubjectAttributes.create(roles));
+    return subjectsBelow(this.getRoles()).map((roles) => SubjectAttributes.create(roles));
   }
 }

@@ -1,0 +1,28 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        {{#if accepted}}
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Dein Gastzugriff wurde entzogen</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Die Organisation {{ organizationName }} hat dir den Zugriff entzogen. Du kannst keine
+          Daten dieser Organisation mehr sehen.</mj-text
+        >
+        {{else}}
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Deine Einladung wurde zur&uuml;ckgezogen</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Die Organisation {{ organizationName }} hat deine Einladung als Gast zur&uuml;ckgezogen.
+          Der Link in der Einladung funktioniert nicht mehr.</mj-text
+        >
+        {{/if}}
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

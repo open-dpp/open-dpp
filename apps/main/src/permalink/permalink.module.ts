@@ -4,6 +4,7 @@ import { EnvModule } from "@open-dpp/env";
 import { AasModule } from "../aas/aas.module";
 import { BrandingModule } from "../branding/branding.module";
 import { DatabaseModule } from "../database/database.module";
+import { GuestAccessModule } from "../identity/guest-access/guest-access.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { InstanceSettingsModule } from "../instance-settings/instance-settings.module";
@@ -17,6 +18,7 @@ import { UniqueProductIdentifierModule } from "../unique-product-identifier/uniq
 import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema";
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
 import { BaseUrlResolver } from "./application/services/base-url-resolver.service";
+import { PassportSubjectResolver } from "./application/services/passport-subject-resolver.service";
 import { PermalinkApplicationService } from "./application/services/permalink.application.service";
 import { PermalinkController } from "./presentation/permalink.controller";
 
@@ -30,6 +32,7 @@ import { PermalinkController } from "./presentation/permalink.controller";
     DatabaseModule,
     EnvModule,
     OrganizationsModule,
+    GuestAccessModule,
     UsersModule,
     InstanceSettingsModule,
     forwardRef(() => PassportsModule),
@@ -38,7 +41,12 @@ import { PermalinkController } from "./presentation/permalink.controller";
     PresentationConfigurationsModule,
   ],
   controllers: [PermalinkController],
-  providers: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver],
+  providers: [
+    PermalinkRepository,
+    PermalinkApplicationService,
+    BaseUrlResolver,
+    PassportSubjectResolver,
+  ],
   exports: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver],
 })
 export class PermalinkModule {}

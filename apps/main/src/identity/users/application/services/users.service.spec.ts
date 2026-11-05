@@ -166,6 +166,21 @@ describe("UsersService", () => {
       expect(result).toBe(user);
     });
 
+    it("leads the link of the email to the given callback path", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      await service.resendVerificationEmail(user.id, "/accept-guest-access/access-1");
+
+      expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+        body: { email: user.email, callbackURL: "/accept-guest-access/access-1" },
+      });
+    });
+
     it("propagates not-found errors from the repository", async () => {
       mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
 
