@@ -24,10 +24,11 @@ export interface MailpitMessage {
 // Mail HTML entity-encodes link query separators (the verify link arrives as
 // ".../verify-email?token&#x3D;eyJ..."), so decode before any page.goto().
 function decodeEntities(s: string): string {
+  // "&amp;" last: decoding it first would turn "&amp;#x3D;" into "=" as well
   return s
-    .replace(/&amp;/g, "&")
     .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)));
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&amp;/g, "&");
 }
 
 function firstHref(msg: MailpitMessage, pattern: RegExp): string {

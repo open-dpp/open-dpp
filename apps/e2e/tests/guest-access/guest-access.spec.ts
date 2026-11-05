@@ -1,5 +1,5 @@
 import type { APIRequestContext, Browser, BrowserContext, Page } from "@playwright/test";
-import { ApiBase, EnvConfig } from "../config";
+import { ApiBase } from "../config";
 import { expect, test } from "../fixtures";
 import { newAnonymousContext } from "../helpers/anonymous";
 import { DEFAULT_PASSWORD, uniqueEmail } from "../helpers/disposable-user";
@@ -7,8 +7,8 @@ import { MailpitClient } from "../helpers/mailpit";
 import {
   createBlankPassport,
   ORG_ID_HEADER,
-  publishPassport,
   type PassportIds,
+  publishPassport,
 } from "../helpers/passport";
 import { GuestAccessListPage } from "./guest-access-list.page";
 import { GuestInvitationPage } from "./guest-invitation.page";

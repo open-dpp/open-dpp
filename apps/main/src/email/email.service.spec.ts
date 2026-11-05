@@ -129,7 +129,8 @@ describe("EmailService template localization", () => {
 
     const hrefs = (html: string) =>
       [...html.matchAll(/href="([^"]+)"/g)].map((match) =>
-        match[1].replaceAll("&amp;", "&").replaceAll("&#x3D;", "="),
+        // "&amp;" last: decoding it first would turn "&amp;#x3D;" into "=" as well
+        match[1].replaceAll("&#x3D;", "=").replaceAll("&amp;", "&"),
       );
 
     const invitation = (hasAccount: boolean, language?: "en" | "de") =>
