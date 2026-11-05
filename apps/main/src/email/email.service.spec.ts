@@ -108,6 +108,27 @@ describe("EmailService when mail is disabled", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("VERIFY_EMAIL"));
   });
 
+  it("keeps a forged line and link from a user's name out of the log", async () => {
+    const service = new EmailService(envWith({}), settingsWith(true), null);
+    const mail = new BaseEmail(
+      "test-id",
+      "VERIFY_EMAIL",
+      new EmailTemplate("email-verify.mjml", {
+        firstName: "https://evil.test/reset\nMail not sent (mail disabled): type=FORGED",
+        link: "https://app.open-dpp.test/verify-email?token=abc",
+      } as never),
+      "ada@example.com",
+      "Verify E-Mail address",
+    );
+
+    await service.send(mail);
+
+    const logged = warn.mock.calls.map(([message]) => String(message)).join("\n");
+    expect(logged).toContain("https://app.open-dpp.test/verify-email?token=abc");
+    expect(logged).not.toContain("evil.test");
+    expect(logged).not.toContain("FORGED");
+  });
+
   it("still logs the link, then surfaces the error, when the template fails to render", async () => {
     const service = new EmailService(envWith({}), settingsWith(true), null);
     const brokenMail = new BaseEmail(

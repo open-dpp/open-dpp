@@ -12,7 +12,7 @@ const mailWith = (properties: Record<string, unknown>) =>
   );
 
 describe("BaseEmail.links", () => {
-  it("returns the absolute URLs among the template properties, unescaped", () => {
+  it("returns the action links among the template properties, unescaped", () => {
     const mail = mailWith({
       firstName: "Ada",
       link: "https://app.open-dpp.test/verify-email?token=abc&callbackURL=%2F",
@@ -41,5 +41,15 @@ describe("BaseEmail.links", () => {
     const mail = mailWith({ firstName: "Ada", newEmail: "new@example.com", count: 3 });
 
     expect(mail.links()).toEqual([]);
+  });
+
+  it("leaves out display text that users set, even when it reads as a URL", () => {
+    const mail = mailWith({
+      firstName: "https://evil.test/first\nMail not sent (mail disabled): forged",
+      organizationName: "https://evil.test/org",
+      link: "https://app.open-dpp.test/accept-invitation/abc",
+    });
+
+    expect(mail.links()).toEqual(["https://app.open-dpp.test/accept-invitation/abc"]);
   });
 });

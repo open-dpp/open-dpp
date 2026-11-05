@@ -12,6 +12,12 @@ export const BaseEmailTypes = {
 } as const;
 export type BaseEmailType = (typeof BaseEmailTypes)[keyof typeof BaseEmailTypes];
 
+/**
+ * The template properties that hold a Mail Link. Operators copy these out of the log and hand
+ * them on, so the rest stay out: they are display text a user can set, such as a first name.
+ */
+const MAIL_LINK_PROPERTIES = ["link", "revokeUrl"] as const;
+
 export interface BaseEmailCreateProps {
   type: BaseEmailType;
   template: EmailTemplate;
@@ -50,11 +56,12 @@ export class BaseEmail {
   }
 
   /**
-   * The Mail Links this mail carries: the absolute URLs among its template properties.
+   * The Mail Links this mail carries, read from MAIL_LINK_PROPERTIES only.
    * They are taken before HTML escaping, so they stay copy-pasteable.
    */
   links(): string[] {
-    return Object.values(this.templateProperties as Record<string, unknown>).filter(
+    const properties = this.templateProperties as Record<string, unknown>;
+    return MAIL_LINK_PROPERTIES.map((name) => properties[name]).filter(
       (value): value is string => typeof value === "string" && /^https?:\/\//i.test(value),
     );
   }
