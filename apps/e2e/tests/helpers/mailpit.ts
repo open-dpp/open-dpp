@@ -128,6 +128,14 @@ export class MailpitClient {
     return firstHref(msg, /href="([^"]*\/verify-email\?token[^"]*)"/);
   }
 
+  /**
+   * The button of a guest invitation: it leads to the sign up for an address without an account
+   * and to the sign in otherwise, with the address and the way back to the accept page.
+   */
+  static getGuestInvitationLink(msg: MailpitMessage): string {
+    return firstHref(msg, /href="([^"]*\/(?:signup|signin)\?[^"]*accept-guest-access[^"]*)"/);
+  }
+
   static getRevokeLink(msg: MailpitMessage): string {
     return firstHref(msg, /href="([^"]*\/account\/email-change-revoke\?token[^"]*)"/);
   }
