@@ -41,7 +41,7 @@
     "vue-chartjs": "^5.3.4",
     "vue-i18n": "^11.4.14",
     "vue-router": "^5.1.0",
-    "zod": "^4.4.3",
+    "zod": "^4.6.6",
     "zod-vue-i18n": "^0.0.10"
   },
   "devDependencies": {
