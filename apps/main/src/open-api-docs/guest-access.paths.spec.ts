@@ -16,10 +16,12 @@ describe("guestAccessPaths", () => {
   });
 
   it("requires the organization header for owner endpoints only", () => {
-    const hasOrgHeader = (path: string, method: "get" | "post" | "patch") =>
-      (document.paths?.[path]?.[method]?.parameters as { $ref?: string }[]).some(
-        (p) => p.$ref === "#/components/parameters/OrganizationIdHeader",
-      );
+    const hasOrgHeader = (path: string, method: "get" | "post" | "patch") => {
+      const parameters = (document.paths?.[path]?.[method]?.parameters ?? []) as {
+        $ref?: string;
+      }[];
+      return parameters.some((p) => p.$ref === "#/components/parameters/OrganizationIdHeader");
+    };
 
     expect(hasOrgHeader("/guest-accesses", "post")).toBe(true);
     expect(hasOrgHeader("/guest-accesses/{id}/role", "patch")).toBe(true);

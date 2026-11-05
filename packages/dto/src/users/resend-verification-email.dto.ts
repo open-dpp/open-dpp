@@ -10,6 +10,10 @@ export const ResendVerificationEmailDtoSchema = z.object({
     .regex(/^\/(?![/\\])/)
     // eslint-disable-next-line no-control-regex
     .refine((path) => !/[\u0000-\u001F\u007F]/.test(path))
+    .meta({
+      description: "Path of this application the verification link leads to once verified",
+      example: "/accept-guest-access/958b741c-c2ef-4366-a134-fafd30210ed4",
+    })
     .optional(),
 });
 
