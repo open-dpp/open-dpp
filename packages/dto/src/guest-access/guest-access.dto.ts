@@ -8,7 +8,10 @@ export const GuestRoleDto = {
   SUPPLIER: "Supplier",
 } as const;
 
-export const GuestRoleDtoEnum = z.enum(GuestRoleDto);
+export const GuestRoleDtoEnum = z.enum(GuestRoleDto).meta({
+  description: "What the guest is: the template defines which fields this role can read.",
+  example: GuestRoleDto.REPAIRER,
+});
 export type GuestRoleDtoType = z.infer<typeof GuestRoleDtoEnum>;
 
 export const GuestAccessKindDto = {
@@ -27,9 +30,14 @@ export const GuestAccessStatusDto = {
 export const GuestAccessStatusDtoEnum = z.enum(GuestAccessStatusDto);
 export type GuestAccessStatusDtoType = z.infer<typeof GuestAccessStatusDtoEnum>;
 
+const GuestEmailSchema = z.email().meta({
+  description: "Email address of the invited person",
+  example: "guest@example.com",
+});
+
 export const CreateDirectGuestAccessDtoSchema = z.object({
   kind: z.literal(GuestAccessKindDto.DIRECT),
-  email: z.email(),
+  email: GuestEmailSchema,
   guestRole: GuestRoleDtoEnum,
 });
 
@@ -57,7 +65,7 @@ const GuestAccessBaseResponseSchema = z.object({
 
 export const DirectGuestAccessResponseDtoSchema = GuestAccessBaseResponseSchema.extend({
   kind: z.literal(GuestAccessKindDto.DIRECT),
-  email: z.email(),
+  email: GuestEmailSchema,
   acceptedAt: z.iso.datetime().optional(),
   acceptedByUserId: z.string().optional(),
 });
@@ -73,7 +81,7 @@ export type GuestAccessResponseDto = z.infer<typeof GuestAccessResponseDtoSchema
 export const GuestAccessInvitationDtoSchema = z.object({
   id: z.string(),
   organizationName: z.string(),
-  email: z.email(),
+  email: GuestEmailSchema,
   guestRole: GuestRoleDtoEnum,
   status: GuestAccessStatusDtoEnum,
 });
