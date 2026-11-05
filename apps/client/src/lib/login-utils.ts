@@ -31,9 +31,14 @@ export function sameOriginRedirectOf(query: LocationQuery, origin: string): stri
   }
   try {
     const target = new URL(redirectUriOf(query), origin);
-    return target.origin === origin
-      ? `${target.pathname}${target.search}${target.hash}`
-      : undefined;
+    if (target.origin !== origin) {
+      return undefined;
+    }
+    // Dot segments are resolved by the parser, so "/.//evil.example.com" leaves the path
+    // "//evil.example.com", which a browser takes as another site.
+    return target.pathname.startsWith("//")
+      ? undefined
+      : `${target.pathname}${target.search}${target.hash}`;
   } catch {
     return undefined;
   }

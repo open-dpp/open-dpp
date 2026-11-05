@@ -37,6 +37,8 @@ describe("login utils", () => {
         "//evil.example.com/x",
         "/\\evil.example.com/x",
         "javascript:alert(1)",
+        "/.//evil.example.com/x",
+        "/a/..//evil.example.com/x",
       ]) {
         expect(
           sameOriginRedirectOf({ redirect: encodeURIComponent(target) }, origin),
