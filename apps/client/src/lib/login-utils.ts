@@ -1,13 +1,13 @@
 import type { LocationQuery } from "vue-router";
 import { z } from "zod";
 
-/** Where to go after signing in or up: the `redirect` query holds an encoded URL, "/" if absent. */
-export function redirectUriOf(query: LocationQuery): string {
+/** The `redirect` query holds an encoded URL. Untrusted: use `sameOriginRedirectOf` to follow it. */
+function redirectUriOf(query: LocationQuery): string {
   const redirect = query.redirect;
   return typeof redirect === "string" && redirect.length > 0 ? decodeURIComponent(redirect) : "/";
 }
 
-export function hasRedirect(query: LocationQuery): boolean {
+function hasRedirect(query: LocationQuery): boolean {
   return typeof query.redirect === "string" && query.redirect.length > 0;
 }
 
@@ -21,8 +21,9 @@ export function prefilledEmailOf(query: LocationQuery): string | undefined {
 }
 
 /**
- * The return URL as a path of this application, or undefined if it is missing or leads to another
- * site. A signed-in user who follows a link to the sign-in or sign-up goes there directly.
+ * Where to go after signing in or up, as a path of this application, or undefined if the `redirect`
+ * query is missing or leads to another site. The query comes from a link and is untrusted, so it is
+ * never followed without this check.
  */
 export function sameOriginRedirectOf(query: LocationQuery, origin: string): string | undefined {
   if (!hasRedirect(query)) {

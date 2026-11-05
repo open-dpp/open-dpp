@@ -8,7 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
-import { hasRedirect, prefilledEmailOf, redirectUriOf } from "../../lib/login-utils.ts";
+import { prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
 import { continueOAuthSignup, readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
@@ -44,7 +44,9 @@ const showErrors = computed(() => {
   return submitCount.value > 0;
 });
 
-const redirectUri = computed(() => redirectUriOf(route.query));
+// undefined without a redirect, or if it leads to another site
+const redirectTarget = computed(() => sameOriginRedirectOf(route.query, window.location.origin));
+const redirectUri = computed(() => redirectTarget.value ?? "/");
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-up. */
 const oauthContinuation = readOAuthContinuation(window.location.search);
@@ -102,8 +104,8 @@ const signup = handleSubmit(async (values) => {
       return;
     }
     // Whoever came from a link, e.g. an invitation, continues there instead of in the onboarding
-    if (hasRedirect(route.query)) {
-      window.location.assign(redirectUri.value);
+    if (redirectTarget.value !== undefined) {
+      window.location.assign(redirectTarget.value);
       return;
     }
     router.push("/signin");

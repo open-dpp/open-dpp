@@ -1,35 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  hasRedirect,
-  prefilledEmailOf,
-  redirectUriOf,
-  sameOriginRedirectOf,
-} from "./login-utils.ts";
+import { prefilledEmailOf, sameOriginRedirectOf } from "./login-utils.ts";
 
 describe("login utils", () => {
-  describe("redirectUriOf", () => {
-    it("decodes the encoded url", () => {
-      const url = "https://app.open-dpp.test/accept-guest-access/access-1?x=1";
-
-      expect(redirectUriOf({ redirect: encodeURIComponent(url) })).toEqual(url);
-    });
-
-    it("falls back to the root", () => {
-      expect(redirectUriOf({})).toEqual("/");
-      expect(redirectUriOf({ redirect: "" })).toEqual("/");
-      expect(redirectUriOf({ redirect: ["a", "b"] })).toEqual("/");
-    });
-  });
-
-  describe("hasRedirect", () => {
-    it("is true only for a non empty redirect", () => {
-      expect(hasRedirect({ redirect: encodeURIComponent("/x") })).toBe(true);
-      expect(hasRedirect({})).toBe(false);
-      expect(hasRedirect({ redirect: "" })).toBe(false);
-      expect(hasRedirect({ redirect: ["a", "b"] })).toBe(false);
-    });
-  });
-
   describe("prefilledEmailOf", () => {
     it("returns a valid email address", () => {
       expect(prefilledEmailOf({ email: "repairer@example.com" })).toEqual("repairer@example.com");
@@ -60,7 +32,12 @@ describe("login utils", () => {
     });
 
     it("rejects other sites and protocol-relative urls", () => {
-      for (const target of ["https://evil.example.com/x", "//evil.example.com/x"]) {
+      for (const target of [
+        "https://evil.example.com/x",
+        "//evil.example.com/x",
+        "/\\evil.example.com/x",
+        "javascript:alert(1)",
+      ]) {
         expect(
           sameOriginRedirectOf({ redirect: encodeURIComponent(target) }, origin),
         ).toBeUndefined();
@@ -69,6 +46,8 @@ describe("login utils", () => {
 
     it("has nothing without a usable redirect", () => {
       expect(sameOriginRedirectOf({}, origin)).toBeUndefined();
+      expect(sameOriginRedirectOf({ redirect: "" }, origin)).toBeUndefined();
+      expect(sameOriginRedirectOf({ redirect: ["a", "b"] }, origin)).toBeUndefined();
       expect(sameOriginRedirectOf({ redirect: "http://[" }, origin)).toBeUndefined();
     });
   });
