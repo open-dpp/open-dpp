@@ -19,6 +19,47 @@ die() {
   exit 1
 }
 
+# The SMTP host the open-dpp container gets, empty when it has none. Asks compose
+# instead of parsing .env, so quotes, comments and duplicates resolve as they do
+# in the container.
+configured_mail_host() {
+  docker compose config open-dpp 2>/dev/null \
+    | sed -n 's/^[[:space:]]*OPEN_DPP_MAIL_HOST:[[:space:]]*//p' \
+    | tr -d "\"'"
+}
+
+# An existing .env is kept, so the mail setup can differ from .env.example here.
+print_mail_status() {
+  local mail_host
+  # the stack is already up: an unknown mail setup is no reason to fail, and
+  # nothing below may be claimed without knowing it
+  mail_host="$(configured_mail_host)" || return 0
+
+  case "${mail_host}" in
+    "")
+      cat <<'EOF'
+No SMTP server is configured, so verification and password-reset links are
+written to the app log instead of being mailed: `docker compose logs -f open-dpp`
+
+EOF
+      ;;
+    mailpit)
+      cat <<'EOF'
+warning: OPEN_DPP_MAIL_HOST in .env still points at mailpit, which this stack no
+longer runs. Mail fails to send and its links are not logged. Comment out the
+OPEN_DPP_MAIL_* block in .env to log links instead, or point it at your SMTP
+server, then run `docker compose up -d`.
+
+EOF
+      ;;
+    *)
+      echo "Mail is sent through ${mail_host}. Links only reach the app log while"
+      echo "sending is switched off in the admin settings."
+      echo
+      ;;
+  esac
+}
+
 main() {
 
 # run from the repo root when invoked from a checkout ($0 is "bash" when the
@@ -71,9 +112,11 @@ open-dpp is up. Open:
   app:     http://localhost:3000
   RustFS:  http://localhost:9001 (object storage console; log in with the S3 keys from .env)
 
-No SMTP server is configured, so verification and password-reset links are
-written to the app log instead of being mailed: `docker compose logs -f open-dpp`
+EOF
 
+print_mail_status
+
+cat <<'EOF'
 Restart the stack later with `docker compose up -d` (or re-run this script).
 EOF
 
