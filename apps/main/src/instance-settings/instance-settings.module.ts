@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { DatabaseModule } from "../database/database.module";
 import { InstanceSettingsService } from "./application/services/instance-settings.service";
 import { InstanceSettingsRepository } from "./infrastructure/adapters/instance-settings.repository";
 import {
@@ -13,6 +14,7 @@ import { InstanceSettingsController } from "./presentation/instance-settings.con
     MongooseModule.forFeature([
       { name: InstanceSettingsSchema.name, schema: InstanceSettingsMongooseSchema },
     ]),
+    DatabaseModule,
   ],
   controllers: [InstanceSettingsController],
   providers: [InstanceSettingsService, InstanceSettingsRepository],

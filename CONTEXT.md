@@ -50,3 +50,10 @@ _Not to be confused with_: leaving an Organization (self-initiated, a separate c
 
 **Organization Slug**:
 better-auth's internal alias of an Organization. It always equals the Organization's id — set at creation and backfilled for older Organizations — is never chosen by a User and never exposed by the API. Organization names therefore need not be unique.
+
+## Mail
+
+**Mail Link**:
+The URL a mail gives its recipient for completing a flow: verifying an address, resetting a password, revoking an Email Change Request or accepting an invitation. While mail is off, the Mail Link goes to the server log instead of the recipient's inbox, and an admin hands it over.
+_Not to be confused with_: the verification token the link carries (the secret that proves the recipient received the mail).
+_Avoid_: action token, mail URL.

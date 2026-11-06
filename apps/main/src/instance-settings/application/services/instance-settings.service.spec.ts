@@ -1,18 +1,24 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import type { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
+import type { DbSessionOptions } from "../../../database/query-options";
+import { TransactionService } from "../../../database/transaction.service";
 import { InstanceSettings } from "../../domain/instance-settings";
 import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
 import { InstanceSettingsService } from "./instance-settings.service";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
+import { MailEnabledSetting } from "../../domain/mail-enabled-setting";
+
+const SMTP_HOST = "smtp.example.com";
 
 describe("InstanceSettingsService", () => {
   let service: InstanceSettingsService;
   let mockRepository: any;
-  let mockEnvService: any;
+  let mockConfigService: any;
 
   beforeEach(async () => {
     mockRepository = {
@@ -22,7 +28,9 @@ describe("InstanceSettingsService", () => {
         .mockImplementation(async (s: InstanceSettings) => s),
     };
 
-    mockEnvService = {
+    // a real EnvService over a mocked ConfigService, so derived checks like
+    // isMailConfigured() run their production logic
+    mockConfigService = {
       get: jest.fn<(key: string) => any>().mockReturnValue(undefined),
     };
 
@@ -30,11 +38,192 @@ describe("InstanceSettingsService", () => {
       providers: [
         InstanceSettingsService,
         { provide: InstanceSettingsRepository, useValue: mockRepository },
-        { provide: EnvService, useValue: mockEnvService },
+        {
+          provide: EnvService,
+          useValue: new EnvService(mockConfigService as unknown as ConfigService),
+        },
+        {
+          provide: TransactionService,
+          useValue: {
+            withTransaction: <T>(work: (options: DbSessionOptions) => Promise<T>) => work({}),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<InstanceSettingsService>(InstanceSettingsService);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe("mailEnabled precedence", () => {
+    const envWith = (values: Record<string, unknown>) =>
+      mockConfigService.get.mockImplementation((key: string) => values[key]);
+
+    it("is forced off and locked when no SMTP host is configured, even if the env lock says on", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ [MailEnabledSetting.ENV_NAME]: true });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBe(true);
+    });
+
+    it("is forced off and locked when the SMTP host is an empty string", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: "" });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBe(true);
+    });
+
+    it("is locked to OPEN_DPP_INSTANCE_MAIL_ENABLED when the host is set", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST, [MailEnabledSetting.ENV_NAME]: false });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBe(true);
+    });
+
+    it("uses the stored value when the host is set and no env lock exists", async () => {
+      mockRepository.findOne.mockResolvedValue(
+        InstanceSettings.create({ mailEnabled: { value: false } }),
+      );
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBeUndefined();
+    });
+
+    it("defaults to on when the host is set and nothing is stored", async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(true);
+      expect(result.mailEnabled.locked).toBeUndefined();
+    });
+
+    it("rejects updating mailEnabled with a message naming the missing host", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({});
+
+      await expect(service.updateSettings({ mailEnabled: true })).rejects.toThrow(
+        /OPEN_DPP_MAIL_HOST is not set/,
+      );
+    });
+
+    it("accepts mailEnabled=false without a host but never persists the forced value", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({});
+
+      const result = await service.updateSettings({ mailEnabled: false });
+
+      expect(result.mailEnabled.value).toBe(false);
+      const persisted = mockRepository.save.mock.calls[0][0] as InstanceSettings;
+      expect(persisted.mailEnabled.value).toBe(true);
+    });
+
+    it("rejects updating mailEnabled locked by the env variable", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST, [MailEnabledSetting.ENV_NAME]: true });
+
+      await expect(service.updateSettings({ mailEnabled: false })).rejects.toThrow(
+        `Cannot override mailEnabled when ${MailEnabledSetting.ENV_NAME} is set`,
+      );
+    });
+
+    it("can be toggled off by an admin when unlocked", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST });
+
+      const result = await service.updateSettings({ mailEnabled: false });
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(mockRepository.save).toHaveBeenCalled();
+    });
+
+    it("does not persist the env-forced value when another setting is updated", async () => {
+      // No SMTP host → mail forced off. Turning signup off must not write that
+      // forced `false` into the DB, or mail stays off once SMTP gets configured.
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({});
+
+      await service.updateSettings({ signupEnabled: false });
+
+      const persisted = mockRepository.save.mock.calls[0][0] as InstanceSettings;
+      expect(persisted.mailEnabled.value).toBe(true);
+      expect(persisted.signupEnabled.value).toBe(false);
+    });
+  });
+
+  describe("cache", () => {
+    it("serves repeated reads from memory", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+
+      await service.getSettings();
+      await service.getSettings();
+
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+    });
+
+    it("reloads after the 60 s TTL", async () => {
+      jest.useFakeTimers();
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+
+      await service.getSettings();
+      jest.advanceTimersByTime(59_000);
+      await service.getSettings();
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(2_000);
+      await service.getSettings();
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+    });
+
+    it("writes on top of a fresh DB read, then serves the update from memory", async () => {
+      // another replica may have changed the singleton since this one cached it
+      const cached = InstanceSettings.create();
+      const fromOtherReplica = cached.update({ organizationCreationEnabled: false });
+      mockRepository.findOne.mockResolvedValueOnce(cached).mockResolvedValueOnce(fromOtherReplica);
+      await service.getSettings();
+
+      await service.updateSettings({ signupEnabled: false });
+      const result = await service.getSettings();
+
+      expect(result.signupEnabled.value).toBe(false);
+      expect(result.organizationCreationEnabled.value).toBe(false);
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+    });
+
+    it("does not let a read that started before an update overwrite the updated cache", async () => {
+      const before = InstanceSettings.create();
+      let resolveSlowRead!: (s: InstanceSettings) => void;
+      mockRepository.findOne
+        .mockReturnValueOnce(
+          new Promise<InstanceSettings>((resolve) => (resolveSlowRead = resolve)),
+        )
+        .mockResolvedValueOnce(before);
+
+      const slowRead = service.getSettings();
+      await service.updateSettings({ signupEnabled: false });
+      resolveSlowRead(before);
+      await slowRead;
+      const result = await service.getSettings();
+
+      expect(result.signupEnabled.value).toBe(false);
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("getSettings — no env vars set", () => {
@@ -72,7 +261,7 @@ describe("InstanceSettingsService", () => {
     it("should override DB value with enforced env var", async () => {
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
       mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -89,7 +278,7 @@ describe("InstanceSettingsService", () => {
 
     it("should mark signupEnabled as locked", async () => {
       mockRepository.findOne.mockResolvedValue(null);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return true;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -103,7 +292,7 @@ describe("InstanceSettingsService", () => {
 
     it("should apply OPEN_DPP_PERMALINK_BASE_URL env override and lock the setting", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === PermalinkBaseUrlSetting.ENV_NAME) return "https://env.example.com/p";
         return undefined;
       });
@@ -116,7 +305,7 @@ describe("InstanceSettingsService", () => {
 
     it("should leave permalinkBaseUrl unlocked when env is not set", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
-      mockEnvService.get.mockReturnValue(undefined);
+      mockConfigService.get.mockReturnValue(undefined);
 
       const result = await service.getSettings();
 
@@ -150,7 +339,7 @@ describe("InstanceSettingsService", () => {
         organizationCreationEnabled: { value: true },
       });
       mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -164,7 +353,7 @@ describe("InstanceSettingsService", () => {
 
     it("should include descriptive error message for locked fields", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -177,6 +366,44 @@ describe("InstanceSettingsService", () => {
         `Cannot override organizationCreationEnabled when ${OrganizationCreationEnabledSetting.ENV_NAME} is set`,
       );
     });
+
+    it("runs concurrent updates one after another, each on top of the previous save", async () => {
+      let stored = InstanceSettings.create();
+      mockRepository.findOne.mockImplementation(async () => stored);
+      mockRepository.save.mockImplementation(async (s: InstanceSettings) => (stored = s));
+      let releaseFirstSave!: () => void;
+      const firstSaveStarted = new Promise<void>((started) => {
+        mockRepository.save.mockImplementationOnce(async (s: InstanceSettings) => {
+          started();
+          await new Promise<void>((release) => (releaseFirstSave = release));
+          return (stored = s);
+        });
+      });
+
+      const first = service.updateSettings({ signupEnabled: false });
+      const second = service.updateSettings({ organizationCreationEnabled: false });
+      await firstSaveStarted;
+      releaseFirstSave();
+      await Promise.all([first, second]);
+      const result = await service.getSettings();
+
+      expect(stored.signupEnabled.value).toBe(false);
+      expect(stored.organizationCreationEnabled.value).toBe(false);
+      expect(result.signupEnabled.value).toBe(false);
+      expect(result.organizationCreationEnabled.value).toBe(false);
+    });
+
+    it("still runs queued updates after one fails", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      mockRepository.save.mockRejectedValueOnce(new Error("write failed"));
+
+      const failing = service.updateSettings({ signupEnabled: false });
+      const next = service.updateSettings({ organizationCreationEnabled: false });
+
+      await expect(failing).rejects.toThrow("write failed");
+      const result = await next;
+      expect(result.organizationCreationEnabled.value).toBe(false);
+    });
   });
 
   describe("hierarchy precedence", () => {
@@ -187,7 +414,7 @@ describe("InstanceSettingsService", () => {
         organizationCreationEnabled: { value: true },
       });
       mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return false;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return false;
         return undefined;
@@ -204,7 +431,7 @@ describe("InstanceSettingsService", () => {
     it("hardcoded default when nothing else is set", async () => {
       // No DB, no env → result should be true (hardcoded)
       mockRepository.findOne.mockResolvedValue(null);
-      mockEnvService.get.mockImplementation((key: string) => {
+      mockConfigService.get.mockImplementation((key: string) => {
         if (key === SignupEnabledSetting.ENV_NAME) return undefined;
         else if (key === OrganizationCreationEnabledSetting.ENV_NAME) return undefined;
         return undefined;

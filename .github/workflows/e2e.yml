@@ -41,8 +41,11 @@ jobs:
       OPEN_DPP_S3_SECRET_KEY: "test-rustfs-password"
       OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
       OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
-      # Mail. The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ
-      # mail from Mailpit's HTTP API on 8025 (the MAILPIT_URL default).
+      # Mail. Mailpit sits behind the `mail` compose profile (mail is optional);
+      # the suite reads verification mails from it, so the profile is on here.
+      # The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ mail
+      # from Mailpit's HTTP API on 8025 (the MAILPIT_URL default).
+      COMPOSE_PROFILES: "mail"
       OPEN_DPP_MAIL_HOST: "localhost"
       OPEN_DPP_MAIL_PORT: "8026"
       OPEN_DPP_MAIL_USER: "admin"
