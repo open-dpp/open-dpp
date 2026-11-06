@@ -5,7 +5,7 @@
 "@open-dpp/client": minor
 ---
 
-Mail is optional. `OPEN_DPP_MAIL_HOST` is no longer required: without it the backend starts, warns once, and writes each mail's type, recipient, subject and links to the log instead of sending. `OPEN_DPP_MAIL_PORT` defaults to `587` (implicit TLS on `465`), `OPEN_DPP_MAIL_USER` / `OPEN_DPP_MAIL_PASSWORD` are optional (no `AUTH` when unset), and `OPEN_DPP_MAIL_SENDER_ADDRESS` is only required once a host is set. The Mailpit-only variables `OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH` / `OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE` were dropped from the env schema (compose still reads them).
+Mail is optional. `OPEN_DPP_MAIL_HOST` is no longer required: without it the backend starts, warns once, and writes each mail's type, recipient, subject and links to the log instead of sending, at every `OPEN_DPP_LOG_LEVEL`. `OPEN_DPP_MAIL_PORT` defaults to `587` (implicit TLS on `465`), `OPEN_DPP_MAIL_USER` / `OPEN_DPP_MAIL_PASSWORD` are optional (no `AUTH` when unset), and `OPEN_DPP_MAIL_SENDER_ADDRESS` is only required once a host is set. The Mailpit-only variables `OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH` / `OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE` were dropped from the env schema (compose still reads them).
 
 New admin instance setting `mailEnabled` (third toggle on the Settings page, lockable via `OPEN_DPP_INSTANCE_MAIL_ENABLED`, forced off while no SMTP host is set) and a 60 s per-replica cache for instance settings. Users see the same frontend whether mail is on or off: every mail-dependent flow still runs, and while mail is off its links land in the log for an admin to hand over.
 

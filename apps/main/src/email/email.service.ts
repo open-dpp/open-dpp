@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { ConsoleLogger, Inject, Injectable } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import Handlebars from "handlebars";
 import mjml2html from "mjml";
@@ -11,7 +11,7 @@ import { SMTP_TRANSPORTER } from "./infrastructure/smtp-transporter.provider";
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
+  private readonly mailLinkLogger: ConsoleLogger;
   private readonly logoUrl: string;
 
   constructor(
@@ -20,6 +20,12 @@ export class EmailService {
     @Inject(SMTP_TRANSPORTER) private readonly smtpTransporter: Transporter | null,
   ) {
     this.logoUrl = `${this.configService.get("OPEN_DPP_URL")}/api/branding/instance/logo`;
+    // not the app logger: while mail is off this line is the only way a Mail Link reaches
+    // anyone, so OPEN_DPP_LOG_LEVEL must not be able to filter it out
+    this.mailLinkLogger = new ConsoleLogger(EmailService.name, {
+      json: this.configService.get("OPEN_DPP_LOG_FORMAT") === "json",
+      logLevels: ["warn"],
+    });
     this.registerPartial("emailHead", "_head.mjml");
     this.registerPartial("emailHeader", "_header.mjml");
   }
@@ -58,7 +64,7 @@ export class EmailService {
     const transporter = await this.activeTransporter();
     if (!transporter) {
       // logged before rendering, so the links reach the operator even if the template breaks
-      this.logger.warn(
+      this.mailLinkLogger.warn(
         `Mail not sent (mail disabled): type=${mail.type} to=${mail.to} subject="${mail.subject}" links=${mail.links().join(" ") || "-"}`,
       );
     }

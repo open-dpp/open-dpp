@@ -9,10 +9,11 @@ import {
   it,
   jest,
 } from "@jest/globals";
-import { Logger } from "@nestjs/common";
+import { ConsoleLogger, Logger, type LogLevel } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import { EnvService } from "@open-dpp/env";
 import type { Transporter } from "nodemailer";
+import { logLevelsUpTo } from "../common/logging/log-levels";
 import { InstanceSettingsService } from "../instance-settings/application/services/instance-settings.service";
 import { BaseEmail } from "./domain/base-email";
 import { EmailChangeNotificationMail } from "./domain/email-change-notification-mail";
@@ -53,8 +54,22 @@ function smtpStub(): { transporter: Transporter; sendMail: SendMail } {
   return { transporter: { sendMail } as unknown as Transporter, sendMail };
 }
 
+const VERIFY_LINK = "https://app.open-dpp.test/verify-email?token=abc";
+
+const verifyMail = () =>
+  new BaseEmail(
+    "test-id",
+    "VERIFY_EMAIL",
+    new EmailTemplate("email-verify.mjml", {
+      firstName: "Ada",
+      link: VERIFY_LINK,
+    } as never),
+    "ada@example.com",
+    "Verify E-Mail address",
+  );
+
 describe("EmailService when mail is disabled", () => {
-  let warn: jest.SpiedFunction<Logger["warn"]>;
+  let warn: jest.SpiedFunction<ConsoleLogger["warn"]>;
 
   beforeAll(() => {
     (globalThis as Record<string, unknown>).__dirname = moduleDir;
@@ -65,24 +80,12 @@ describe("EmailService when mail is disabled", () => {
   });
 
   beforeEach(() => {
-    warn = jest.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
+    warn = jest.spyOn(ConsoleLogger.prototype, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
-
-  const verifyMail = () =>
-    new BaseEmail(
-      "test-id",
-      "VERIFY_EMAIL",
-      new EmailTemplate("email-verify.mjml", {
-        firstName: "Ada",
-        link: "https://app.open-dpp.test/verify-email?token=abc",
-      } as never),
-      "ada@example.com",
-      "Verify E-Mail address",
-    );
 
   it("logs type, recipient, subject and link instead of sending when no host is set", async () => {
     // without a host there is no transporter, whatever the setting says
@@ -162,6 +165,79 @@ describe("EmailService when mail is disabled", () => {
       }),
     );
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+// The real logger on purpose: the level filter runs inside ConsoleLogger.warn(), so
+// a spec that mocks warn() cannot see a line being dropped.
+describe("EmailService when the log level hides warnings", () => {
+  let stdout: jest.SpiedFunction<typeof process.stdout.write>;
+
+  const printed = () => stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
+
+  /** Wires the app logger the way main.ts does. */
+  const useAppLogger = (level: LogLevel) =>
+    Logger.overrideLogger(new ConsoleLogger({ logLevels: logLevelsUpTo(level) }));
+
+  beforeAll(() => {
+    (globalThis as Record<string, unknown>).__dirname = moduleDir;
+  });
+
+  afterAll(() => {
+    delete (globalThis as Record<string, unknown>).__dirname;
+  });
+
+  beforeEach(() => {
+    stdout = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    Logger.overrideLogger(new ConsoleLogger());
+  });
+
+  it.each(["error", "fatal"] as const)(
+    "still prints the link at OPEN_DPP_LOG_LEVEL=%s",
+    async (level) => {
+      useAppLogger(level);
+      const service = new EmailService(envWith({}), settingsWith(true), null);
+
+      await service.send(verifyMail());
+      new Logger("Control").warn("an ordinary warning");
+
+      expect(printed()).toContain(VERIFY_LINK);
+      expect(printed()).toContain("WARN");
+      expect(printed()).toContain("[EmailService]");
+      expect(printed()).not.toContain("an ordinary warning");
+    },
+  );
+
+  it("still prints the link when an admin switched mail off", async () => {
+    useAppLogger("error");
+    const smtp = smtpStub();
+    const service = new EmailService(envWith(SMTP_ENV), settingsWith(false), smtp.transporter);
+
+    await service.send(verifyMail());
+
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+    expect(printed()).toContain(VERIFY_LINK);
+  });
+
+  it("prints the line as JSON when OPEN_DPP_LOG_FORMAT is json", async () => {
+    useAppLogger("error");
+    const service = new EmailService(
+      envWith({ OPEN_DPP_LOG_FORMAT: "json" }),
+      settingsWith(true),
+      null,
+    );
+
+    await service.send(verifyMail());
+
+    expect(JSON.parse(printed())).toMatchObject({
+      level: "warn",
+      context: "EmailService",
+      message: expect.stringContaining(VERIFY_LINK),
+    });
   });
 });
 
