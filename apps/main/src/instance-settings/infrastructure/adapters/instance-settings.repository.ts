@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { DbSessionOptions } from "../../../database/query-options";
 import { convertToDomain, save } from "../../../lib/repositories";
 import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
 import {
@@ -20,20 +21,22 @@ export class InstanceSettingsRepository {
     return InstanceSettings.loadFromDb(plain as InstanceSettingsDbProps);
   }
 
-  async findOne(): Promise<InstanceSettings | null> {
-    const document = await this.model.findOne();
+  async findOne(options?: DbSessionOptions): Promise<InstanceSettings | null> {
+    const document = await this.model.findOne().session(options?.session ?? null);
     if (!document) {
       return null;
     }
     return convertToDomain(document, this.fromPlain.bind(this));
   }
 
-  async save(settings: InstanceSettings): Promise<InstanceSettings> {
+  async save(settings: InstanceSettings, options?: DbSessionOptions): Promise<InstanceSettings> {
     return await save(
       settings,
       this.model,
       InstanceSettingsDocVersion.v1_4_0,
       this.fromPlain.bind(this),
+      undefined,
+      options,
     );
   }
 }

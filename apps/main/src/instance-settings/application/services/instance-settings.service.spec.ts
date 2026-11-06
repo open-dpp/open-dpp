@@ -3,6 +3,8 @@ import type { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
+import type { DbSessionOptions } from "../../../database/query-options";
+import { TransactionService } from "../../../database/transaction.service";
 import { InstanceSettings } from "../../domain/instance-settings";
 import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
 import { InstanceSettingsService } from "./instance-settings.service";
@@ -39,6 +41,12 @@ describe("InstanceSettingsService", () => {
         {
           provide: EnvService,
           useValue: new EnvService(mockConfigService as unknown as ConfigService),
+        },
+        {
+          provide: TransactionService,
+          useValue: {
+            withTransaction: <T>(work: (options: DbSessionOptions) => Promise<T>) => work({}),
+          },
         },
       ],
     }).compile();

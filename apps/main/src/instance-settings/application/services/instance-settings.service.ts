@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
+import { DbSessionOptions } from "../../../database/query-options";
+import { TransactionService } from "../../../database/transaction.service";
 import { InstanceSettings, InstanceSettingsUpdate } from "../../domain/instance-settings";
 import { MailEnabledSetting } from "../../domain/mail-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
@@ -15,13 +17,14 @@ export class InstanceSettingsService {
   private readonly cache = new InstanceSettingsCache(INSTANCE_SETTINGS_CACHE_TTL_MS);
   // bumped by every write, so a read that was already in flight can't cache the pre-write document
   private cacheGeneration = 0;
-  // updates on this replica run one at a time, so each starts from the previous save
-  // and an older save can't land in the cache after a newer one
+  // updates on this replica run one at a time, so an older save can't land in the
+  // cache after a newer one
   private updateQueue: Promise<unknown> = Promise.resolve();
 
   constructor(
     private readonly repository: InstanceSettingsRepository,
     private readonly envService: EnvService,
+    private readonly transactionService: TransactionService,
   ) {}
 
   async getSettings(): Promise<InstanceSettings> {
@@ -36,31 +39,42 @@ export class InstanceSettingsService {
   }
 
   private async applyUpdate(updates: InstanceSettingsUpdate): Promise<InstanceSettings> {
-    // save() replaces the whole singleton document, so the write must start from
-    // the DB, not from a possibly stale cache of another replica's state
-    const stored = await this.loadStored({ fresh: true });
-    // locks are checked on the effective settings, but the update is persisted on
-    // the stored ones so env-forced values never end up in the DB
-    const persistable = this.applyEnvOverrides(stored).persistableUpdates(updates);
-    const saved = await this.repository.save(stored.update(persistable));
+    // save() replaces the whole singleton document, so the read and the write share a
+    // transaction: when another replica commits in between, the write conflicts and
+    // withTransaction reruns this on that replica's document instead of undoing its change
+    const saved = await this.transactionService.withTransaction(async (options) => {
+      const stored = await this.readOrCreate(options);
+      // locks are checked on the effective settings, but the update is persisted on
+      // the stored ones so env-forced values never end up in the DB
+      const persistable = this.applyEnvOverrides(stored).persistableUpdates(updates);
+      return this.repository.save(stored.update(persistable), options);
+    });
     this.cacheGeneration += 1;
     this.cache.set(saved);
     return this.applyEnvOverrides(saved);
   }
 
-  private async loadStored(options?: { fresh: boolean }): Promise<InstanceSettings> {
-    const cached = options?.fresh ? undefined : this.cache.get();
+  private async loadStored(): Promise<InstanceSettings> {
+    const cached = this.cache.get();
     if (cached) {
       return cached;
     }
     const generation = this.cacheGeneration;
-    const stored =
-      (await this.repository.findOne()) ??
-      (await this.repository.save(InstanceSettings.create({ signupEnabled: { value: true } })));
+    const stored = await this.readOrCreate();
     if (generation === this.cacheGeneration) {
       this.cache.set(stored);
     }
     return stored;
+  }
+
+  private async readOrCreate(options?: DbSessionOptions): Promise<InstanceSettings> {
+    return (
+      (await this.repository.findOne(options)) ??
+      (await this.repository.save(
+        InstanceSettings.create({ signupEnabled: { value: true } }),
+        options,
+      ))
+    );
   }
 
   private applyEnvOverrides(settings: InstanceSettings): InstanceSettings {
