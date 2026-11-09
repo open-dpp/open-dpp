@@ -20,6 +20,8 @@ const guestAccessBody = {
   },
 };
 
+const notSignedIn = { description: "The caller is not signed in." };
+
 const conflictResponse = {
   description:
     "The guest access was changed by someone else after it was read, for example revoked. " +
@@ -115,7 +117,8 @@ export const guestAccessPaths = {
       summary: "Returns the invitation shown to the invited person before accepting",
       description:
         "Only the account with the invited verified email address may read it. Requires no " +
-        "organization header.",
+        "organization header. For everybody else the invitation is reported as missing, so " +
+        "nobody learns who is invited to which organization.",
       parameters: [IdParamSchema],
       responses: {
         [HTTPCode.OK]: {
@@ -123,10 +126,13 @@ export const guestAccessPaths = {
             [ContentType.JSON]: { schema: GuestAccessInvitationDtoSchema },
           },
         },
-        [HTTPCode.FORBIDDEN]: {
-          description: "The account is not the invited one or its email is not verified.",
+        [HTTPCode.FORBIDDEN]: notSignedIn,
+        [HTTPCode.NOT_FOUND]: {
+          description:
+            "No invitation is available to the caller. This covers an unknown id as well as an " +
+            "invitation for another account or for an email address which is not verified. " +
+            "The cases are deliberately indistinguishable.",
         },
-        [HTTPCode.NOT_FOUND]: { description: "The invitation does not exist." },
       },
       security,
     },
@@ -141,10 +147,13 @@ export const guestAccessPaths = {
       parameters: [IdParamSchema],
       responses: {
         [HTTPCode.OK]: guestAccessBody,
-        [HTTPCode.BAD_REQUEST]: { description: "The invitation is revoked or already accepted." },
-        [HTTPCode.FORBIDDEN]: {
-          description: "The account is not the invited one or its email is not verified.",
+        [HTTPCode.BAD_REQUEST]: {
+          description:
+            "The invitation cannot be accepted: it is revoked or already accepted, the verified " +
+            "email of the account is not the invited one, or the account is a member of the " +
+            "organization. The invitation stays as it was.",
         },
+        [HTTPCode.FORBIDDEN]: notSignedIn,
         [HTTPCode.NOT_FOUND]: { description: "The invitation does not exist." },
         [HTTPCode.CONFLICT]: conflictResponse,
       },

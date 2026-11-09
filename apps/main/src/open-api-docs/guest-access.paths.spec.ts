@@ -42,6 +42,21 @@ describe("guestAccessPaths", () => {
     expect(successCodes("/guest-accesses/{id}/accept", "post")).toEqual(["200"]);
   });
 
+  it("documents 403 as not signed in and 404 as an invitation which is not available to the caller", () => {
+    const description = (path: string, code: string) =>
+      (document.paths?.[path]?.post?.responses?.[code] as { description?: string } | undefined)
+        ?.description ?? "";
+    const invitation = document.paths?.["/guest-accesses/{id}/invitation"]?.get?.responses as
+      | Record<string, { description?: string }>
+      | undefined;
+
+    expect(invitation?.["403"]?.description).toMatch(/not signed in/i);
+    expect(invitation?.["404"]?.description).toMatch(/another account/i);
+    expect(invitation?.["404"]?.description).toMatch(/indistinguishable/i);
+    expect(description("/guest-accesses/{id}/accept", "403")).toMatch(/not signed in/i);
+    expect(description("/guest-accesses/{id}/accept", "400")).toMatch(/not the invited one/i);
+  });
+
   it("documents the conflict of a concurrent change for the endpoints which change an access", () => {
     const has409 = (path: string, method: "post" | "patch") =>
       "409" in (document.paths?.[path]?.[method]?.responses ?? {});
