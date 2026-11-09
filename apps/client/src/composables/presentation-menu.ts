@@ -51,6 +51,14 @@ export function usePresentationMenu() {
     });
   }
 
+  // Without an app there is no profile in it: the one without the app structure
+  function openProfile() {
+    router.push({
+      name: "GuestProfile",
+      query: { redirect: encodeURIComponent(window.location.origin + route.fullPath) },
+    });
+  }
+
   // The app belongs to the organizations the user is a member of. A guest without any has none.
   const hasApp = computed<boolean>(() => organizationsStore.organizations.length > 0);
 
@@ -86,6 +94,17 @@ export function usePresentationMenu() {
               },
             ]
           : []),
+        ...(hasApp.value
+          ? []
+          : [
+              {
+                label: t("user.profile"),
+                icon: "pi pi-user",
+                command: () => {
+                  openProfile();
+                },
+              },
+            ]),
         {
           label: t("user.logout"),
           icon: "pi pi-sign-out",

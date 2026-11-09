@@ -24,6 +24,14 @@ export class ProductPage {
     await this.professionalSignIn().first().click();
   }
 
+  profileEntry(): Locator {
+    return this.page.getByText(/Dein Profil|Your profile/i);
+  }
+
+  async openProfile() {
+    await this.profileEntry().first().click();
+  }
+
   signOutEntry(): Locator {
     return this.page.getByText(/Abmelden|Logout/i);
   }

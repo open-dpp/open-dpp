@@ -12,6 +12,7 @@ import {
 } from "../helpers/passport";
 import { GuestAccessListPage } from "./guest-access-list.page";
 import { GuestInvitationPage } from "./guest-invitation.page";
+import { GuestProfilePage } from "./guest-profile.page";
 import { ProductPage } from "./product.page";
 import { SigninPage } from "./signin.page";
 import { SignupPage } from "./signup.page";
@@ -157,6 +158,19 @@ test.describe("guest access", () => {
     expect(await sectionsSeenBy(guest.request, permalinkId)).toEqual([GUEST_SECTION]);
     const anonymous = await newAnonymousContext(browser);
     expect(await sectionsSeenBy(anonymous.request, permalinkId)).toEqual([]);
+
+    // The guest has no organization and so no app: the product page offers the profile and the
+    // sign out instead of "back to app", and the profile leads back to the page
+    const product = new ProductPage(guestPage, permalinkId);
+    await product.goto();
+    await expect(product.profileEntry().first()).toBeVisible();
+    await expect(product.signOutEntry().first()).toBeVisible();
+    await product.openProfile();
+    const profile = new GuestProfilePage(guestPage);
+    await profile.waitForPage();
+    await profile.expectShown();
+    await profile.goBack();
+    await product.waitForPage();
 
     // The owner sees the accepted guest and revokes the access
     await page.reload();

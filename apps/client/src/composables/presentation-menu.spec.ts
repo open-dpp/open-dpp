@@ -103,7 +103,7 @@ describe("usePresentationMenu", () => {
       expect(menuItems.value[3]).toEqual(expect.objectContaining({ icon: "pi pi-sign-out" }));
     });
 
-    it("has no backToApp for a signed-in user without any organization, but can log out", () => {
+    it("has no backToApp for a signed-in user without any organization, but profile and logout", () => {
       mocks.sessionData = { user: { id: "guest" } };
       mocks.organizations = [];
 
@@ -112,8 +112,33 @@ describe("usePresentationMenu", () => {
       expect(menuItems.value.map((item) => item.label)).toEqual([
         "presentation.toPass",
         "presentation.chatWithAI",
+        "user.profile",
         "user.logout",
       ]);
+    });
+
+    it("has no profile entry for a member, who finds it in the app", () => {
+      mocks.sessionData = { user: { id: "u1" } };
+      mocks.organizations = [{ id: "org-1" }];
+
+      const { menuItems } = usePresentationMenu();
+
+      expect(menuItems.value.map((item) => item.label)).not.toContain("user.profile");
+    });
+
+    it("profile command opens the profile and returns to the current product page", () => {
+      mocks.sessionData = { user: { id: "guest" } };
+
+      const { menuItems } = usePresentationMenu();
+
+      menuItems.value[2]!.command();
+
+      expect(mocks.routerPush).toHaveBeenCalledWith({
+        name: "GuestProfile",
+        query: {
+          redirect: encodeURIComponent(`${window.location.origin}/p/my-product?language=de`),
+        },
+      });
     });
 
     it("keeps backToApp for a user who is a member somewhere else than the shown passport", () => {
@@ -177,7 +202,7 @@ describe("usePresentationMenu", () => {
 
       const { menuItems } = usePresentationMenu();
 
-      menuItems.value[2]!.command();
+      menuItems.value[3]!.command();
 
       expect(mocks.routerPush).toHaveBeenCalledWith({
         name: "Signout",
