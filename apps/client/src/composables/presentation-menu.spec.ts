@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   routeParams: { permalink: "my-product" } as Record<string, string>,
   routeFullPath: "/p/my-product?language=de",
   sessionData: null as unknown,
+  organizations: [] as { id: string }[],
 }));
 
 vi.mock("vue-i18n", () => ({
@@ -28,12 +29,21 @@ vi.mock("../auth-client.ts", () => ({
   },
 }));
 
+vi.mock("../stores/organizations.ts", () => ({
+  useOrganizationsStore: () => ({
+    get organizations() {
+      return mocks.organizations;
+    },
+  }),
+}));
+
 describe("usePresentationMenu", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.routeParams = { permalink: "my-product" };
     mocks.routeFullPath = "/p/my-product?language=de";
     mocks.sessionData = null;
+    mocks.organizations = [];
   });
 
   describe("permalink", () => {
@@ -77,21 +87,49 @@ describe("usePresentationMenu", () => {
       );
     });
 
-    it("includes backToApp item and no sign in when signed in", () => {
+    it("includes backToApp and logout items and no sign in for a member", () => {
       mocks.sessionData = { user: { id: "u1" } };
+      mocks.organizations = [{ id: "org-1" }];
 
       const { menuItems } = usePresentationMenu();
 
-      expect(menuItems.value).toHaveLength(3);
-      expect(menuItems.value.map((item) => item.label)).not.toContain(
-        "presentation.signInAsProfessional",
-      );
-      expect(menuItems.value[2]).toEqual(
-        expect.objectContaining({
-          label: "presentation.backToApp",
-          icon: "pi pi-arrow-left",
-        }),
-      );
+      expect(menuItems.value.map((item) => item.label)).toEqual([
+        "presentation.toPass",
+        "presentation.chatWithAI",
+        "presentation.backToApp",
+        "user.logout",
+      ]);
+      expect(menuItems.value[2]).toEqual(expect.objectContaining({ icon: "pi pi-arrow-left" }));
+      expect(menuItems.value[3]).toEqual(expect.objectContaining({ icon: "pi pi-sign-out" }));
+    });
+
+    it("has no backToApp for a signed-in user without any organization, but can log out", () => {
+      mocks.sessionData = { user: { id: "guest" } };
+      mocks.organizations = [];
+
+      const { menuItems } = usePresentationMenu();
+
+      expect(menuItems.value.map((item) => item.label)).toEqual([
+        "presentation.toPass",
+        "presentation.chatWithAI",
+        "user.logout",
+      ]);
+    });
+
+    it("keeps backToApp for a user who is a member somewhere else than the shown passport", () => {
+      // member of one organization, guest of the organization which owns this passport
+      mocks.sessionData = { user: { id: "u1" } };
+      mocks.organizations = [{ id: "own-org" }];
+
+      const { menuItems } = usePresentationMenu();
+
+      expect(menuItems.value.map((item) => item.label)).toContain("presentation.backToApp");
+    });
+
+    it("has no logout when not signed in", () => {
+      const { menuItems } = usePresentationMenu();
+
+      expect(menuItems.value.map((item) => item.label)).not.toContain("user.logout");
     });
 
     it("toPass command navigates to presentation view", () => {
@@ -125,12 +163,28 @@ describe("usePresentationMenu", () => {
 
     it("backToApp command navigates to root", () => {
       mocks.sessionData = { user: { id: "u1" } };
+      mocks.organizations = [{ id: "org-1" }];
 
       const { menuItems } = usePresentationMenu();
 
       menuItems.value[2]!.command();
 
       expect(mocks.routerPush).toHaveBeenCalledWith("/");
+    });
+
+    it("logout command signs out and returns to the current product page", () => {
+      mocks.sessionData = { user: { id: "guest" } };
+
+      const { menuItems } = usePresentationMenu();
+
+      menuItems.value[2]!.command();
+
+      expect(mocks.routerPush).toHaveBeenCalledWith({
+        name: "Signout",
+        query: {
+          redirect: encodeURIComponent(`${window.location.origin}/p/my-product?language=de`),
+        },
+      });
     });
   });
 

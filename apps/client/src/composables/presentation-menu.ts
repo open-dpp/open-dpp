@@ -2,6 +2,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../auth-client.ts";
+import { useOrganizationsStore } from "../stores/organizations.ts";
 
 export interface PresentationMenuItem {
   readonly label: string;
@@ -14,6 +15,7 @@ export function usePresentationMenu() {
   const route = useRoute();
   const router = useRouter();
   const session = authClient.useSession();
+  const organizationsStore = useOrganizationsStore();
 
   const permalink = computed(() => String(route.params.permalink ?? ""));
 
@@ -41,6 +43,17 @@ export function usePresentationMenu() {
     router.push("/");
   }
 
+  // Signs out and comes back to this page as a visitor without a session
+  function signOut() {
+    router.push({
+      name: "Signout",
+      query: { redirect: encodeURIComponent(window.location.origin + route.fullPath) },
+    });
+  }
+
+  // The app belongs to the organizations the user is a member of. A guest without any has none.
+  const hasApp = computed<boolean>(() => organizationsStore.organizations.length > 0);
+
   const menuItems = computed<PresentationMenuItem[]>(() => {
     const items: PresentationMenuItem[] = [
       {
@@ -62,11 +75,22 @@ export function usePresentationMenu() {
     if (isSignedIn.value) {
       return [
         ...items,
+        ...(hasApp.value
+          ? [
+              {
+                label: t("presentation.backToApp"),
+                icon: "pi pi-arrow-left",
+                command: () => {
+                  backToApp();
+                },
+              },
+            ]
+          : []),
         {
-          label: t("presentation.backToApp"),
-          icon: "pi pi-arrow-left",
+          label: t("user.logout"),
+          icon: "pi pi-sign-out",
           command: () => {
-            backToApp();
+            signOut();
           },
         },
       ];

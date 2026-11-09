@@ -24,6 +24,14 @@ export class ProductPage {
     await this.professionalSignIn().first().click();
   }
 
+  signOutEntry(): Locator {
+    return this.page.getByText(/Abmelden|Logout/i);
+  }
+
+  async signOut() {
+    await this.signOutEntry().first().click();
+  }
+
   async waitForPage() {
     await this.page.waitForURL(new RegExp(`/p/${this.permalinkId}`));
   }
