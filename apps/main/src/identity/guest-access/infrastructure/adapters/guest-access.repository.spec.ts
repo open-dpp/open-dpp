@@ -2,18 +2,28 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
+import {
+  ConcurrentModificationError,
+  NotFoundInDatabaseException,
+  ValueError,
+} from "@open-dpp/exception";
 import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { User } from "../../../users/domain/user";
 import { DirectGuestAccess } from "../../domain/direct-guest-access";
+import { GuestAccessStatus } from "../../domain/guest-access-kind.enum";
 import { GuestRole } from "../../domain/guest-role.enum";
+import { GuestAccessMapper } from "../mappers/guest-access.mapper";
 import {
   GUEST_ACCESS_COLLECTION,
   GuestAccess as GuestAccessSchemaClass,
   GuestAccessSchema,
 } from "../schemas/guest-access.schema";
-import { GUEST_ACCESS_ALREADY_EXISTS, GuestAccessRepository } from "./guest-access.repository";
+import {
+  GUEST_ACCESS_ALREADY_EXISTS,
+  GUEST_ACCESS_CHANGED_MESSAGE,
+  GuestAccessRepository,
+} from "./guest-access.repository";
 
 describe("GuestAccessRepository", () => {
   let module: TestingModule;
@@ -109,8 +119,7 @@ describe("GuestAccessRepository", () => {
 
     it("allows to revoke and invite the same email again, any number of times", async () => {
       for (let round = 1; round <= 3; round++) {
-        const access = createAccess();
-        await repository.save(access);
+        const access = await repository.save(createAccess());
         access.revoke(new Date(`2026-10-0${round}T10:00:00.000Z`));
         await repository.save(access);
       }
@@ -122,8 +131,7 @@ describe("GuestAccessRepository", () => {
     });
 
     it("rejects a second live access for an email whose first access was only changed", async () => {
-      const first = createAccess();
-      await repository.save(first);
+      const first = await repository.save(createAccess());
       first.changeGuestRole(GuestRole.RECYCLER);
       await repository.save(first);
 
@@ -138,8 +146,8 @@ describe("GuestAccessRepository", () => {
     const found = await repository.findOneById(access.id);
 
     expect(saved).toBeInstanceOf(DirectGuestAccess);
-    expect(saved.toPlain()).toEqual(access.toPlain());
-    expect(found?.toPlain()).toEqual(access.toPlain());
+    expect(saved.toPlain()).toEqual({ ...access.toPlain(), revision: 0 });
+    expect(found?.toPlain()).toEqual({ ...access.toPlain(), revision: 0 });
   });
 
   it("stores the schema version and the kind", async () => {
@@ -150,27 +158,117 @@ describe("GuestAccessRepository", () => {
       _id: access.id,
     });
 
-    expect(raw).toMatchObject({ _schemaVersion: "1.0.0", kind: "Direct", guestRole: "Repairer" });
+    expect(raw).toMatchObject({
+      _schemaVersion: "1.0.0",
+      kind: "Direct",
+      guestRole: "Repairer",
+      revision: 0,
+    });
     expect(raw).not.toHaveProperty("acceptedByUserId");
+    expect(raw).not.toHaveProperty("__v");
   });
 
   it("persists acceptance, a role change and revocation on update", async () => {
-    const access = createAccess();
-    await repository.save(access);
+    const access = await repository.save(createAccess());
 
     const user = createUser();
     access.accept(user, new Date("2026-10-16T10:00:00.000Z"));
     access.changeGuestRole(GuestRole.SUPPLIER);
-    await repository.save(access);
+    const savedAccepted = await repository.save(access);
     const accepted = await repository.findOneByIdOrFail(access.id);
-    expect(accepted.toPlain()).toEqual(access.toPlain());
+    expect(accepted.toPlain()).toEqual({ ...access.toPlain(), revision: 1 });
+    expect(savedAccepted.toPlain()).toEqual(accepted.toPlain());
     expect(accepted.isActiveFor({ userId: user.id })).toBe(true);
 
-    access.revoke(new Date("2026-10-17T10:00:00.000Z"));
-    await repository.save(access);
+    savedAccepted.revoke(new Date("2026-10-17T10:00:00.000Z"));
+    await repository.save(savedAccepted);
     const revoked = await repository.findOneByIdOrFail(access.id);
     expect(revoked.isActiveFor({ userId: user.id })).toBe(false);
     expect(await connection.collection(GUEST_ACCESS_COLLECTION).countDocuments()).toBe(1);
+  });
+
+  describe("concurrent changes", () => {
+    it("counts the saves of an access", async () => {
+      const inserted = await repository.save(createAccess());
+      inserted.changeGuestRole(GuestRole.SUPPLIER);
+      const replaced = await repository.save(inserted);
+      replaced.changeGuestRole(GuestRole.RECYCLER);
+      const replacedAgain = await repository.save(replaced);
+
+      expect([inserted.revision, replaced.revision, replacedAgain.revision]).toEqual([0, 1, 2]);
+      expect((await repository.findOneByIdOrFail(inserted.id)).revision).toBe(2);
+    });
+
+    it("does not bring back an access which was revoked after it was read", async () => {
+      const saved = await repository.save(createAccess());
+      const readByGuest = await repository.findOneByIdOrFail(saved.id);
+      const readByOwner = await repository.findOneByIdOrFail(saved.id);
+      readByOwner.revoke(new Date("2026-10-17T10:00:00.000Z"));
+      await repository.save(readByOwner);
+
+      const guest = createUser();
+      readByGuest.accept(guest, new Date("2026-10-17T10:00:01.000Z"));
+      const lateAccept = repository.save(readByGuest);
+
+      await expect(lateAccept).rejects.toBeInstanceOf(ConcurrentModificationError);
+      await expect(lateAccept).rejects.toMatchObject({ message: GUEST_ACCESS_CHANGED_MESSAGE });
+      const stored = await repository.findOneByIdOrFail(saved.id);
+      expect(stored.revokedAt).toEqual(new Date("2026-10-17T10:00:00.000Z"));
+      expect(stored.revision).toBe(1);
+      expect(stored.status).toBe(GuestAccessStatus.REVOKED);
+      expect(stored.isActiveFor({ userId: guest.id })).toBe(false);
+    });
+
+    it("does not undo a role change with a late acceptance", async () => {
+      const saved = await repository.save(createAccess());
+      const readByGuest = await repository.findOneByIdOrFail(saved.id);
+      const readByOwner = await repository.findOneByIdOrFail(saved.id);
+      readByOwner.changeGuestRole(GuestRole.SUPPLIER);
+      await repository.save(readByOwner);
+
+      readByGuest.accept(createUser(), new Date());
+
+      await expect(repository.save(readByGuest)).rejects.toBeInstanceOf(
+        ConcurrentModificationError,
+      );
+      expect((await repository.findOneByIdOrFail(saved.id)).guestRole).toBe(GuestRole.SUPPLIER);
+    });
+
+    it("lets only one of two saves of the same revision win", async () => {
+      const saved = await repository.save(createAccess());
+      const first = await repository.findOneByIdOrFail(saved.id);
+      const second = await repository.findOneByIdOrFail(saved.id);
+      first.changeGuestRole(GuestRole.SUPPLIER);
+      second.changeGuestRole(GuestRole.RECYCLER);
+
+      const results = await Promise.allSettled([repository.save(first), repository.save(second)]);
+
+      expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      expect(results.find((r) => r.status === "rejected")).toMatchObject({
+        reason: expect.any(ConcurrentModificationError),
+      });
+    });
+
+    it("rejects a save of an access which is no longer stored", async () => {
+      const saved = await repository.save(createAccess());
+      await connection.collection(GUEST_ACCESS_COLLECTION).deleteMany({});
+      saved.changeGuestRole(GuestRole.SUPPLIER);
+
+      await expect(repository.save(saved)).rejects.toBeInstanceOf(ConcurrentModificationError);
+    });
+
+    it("reads an access stored without a revision as revision 0", async () => {
+      const access = createAccess();
+      // like a document written by hand: only the fields which are set, and no revision
+      const stored = Object.fromEntries(
+        Object.entries(GuestAccessMapper.toPersistence(access)).filter(
+          ([key, value]) => value !== undefined && key !== "revision",
+        ),
+      ) as { _id: string };
+      await connection.collection<{ _id: string }>(GUEST_ACCESS_COLLECTION).insertOne(stored);
+
+      expect((await repository.findOneByIdOrFail(access.id)).revision).toBe(0);
+    });
   });
 
   it("returns null or throws for an unknown id", async () => {

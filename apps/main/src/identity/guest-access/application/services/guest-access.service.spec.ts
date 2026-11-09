@@ -4,7 +4,11 @@ import { ForbiddenException, Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
+import {
+  ConcurrentModificationError,
+  NotFoundInDatabaseException,
+  ValueError,
+} from "@open-dpp/exception";
 import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { BaseEmail, BaseEmailTypes } from "../../../../email/domain/base-email";
@@ -15,6 +19,7 @@ import { DisplayLanguage, DisplayLanguageType } from "@open-dpp/dto";
 import { User } from "../../../users/domain/user";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { UserRole } from "../../../users/domain/user-role.enum";
+import type { GuestAccess } from "../../domain/guest-access";
 import { GuestAccessStatus } from "../../domain/guest-access-kind.enum";
 import { GuestRole } from "../../domain/guest-role.enum";
 import { GuestAccessRepository } from "../../infrastructure/adapters/guest-access.repository";
@@ -467,6 +472,91 @@ describe("GuestAccessService", () => {
       expect((await repository.findOneByIdOrFail(pending.id)).status).toEqual(
         GuestAccessStatus.PENDING,
       );
+    });
+  });
+
+  describe("concurrent changes", () => {
+    async function inviteAccepted() {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+      const user = createUser();
+      await service.accept(pending.id, user);
+      sentMails.length = 0;
+      return { id: pending.id, user };
+    }
+
+    // The next load of the access returns the state it had before somebody else changed it
+    function readStaleOnce(stale: GuestAccess) {
+      vi.spyOn(repository, "findOneByIdOrFail").mockResolvedValueOnce(stale);
+    }
+
+    it("does not bring back a revoked access with a role change that read it before", async () => {
+      const { id, user } = await inviteAccepted();
+      const stale = await repository.findOneByIdOrFail(id);
+      await service.revoke({ organizationId, guestAccessId: id, actingUserId: ownerId });
+      sentMails.length = 0;
+      readStaleOnce(stale);
+
+      await expect(
+        service.changeGuestRole({
+          organizationId,
+          guestAccessId: id,
+          actingUserId: ownerId,
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toBeInstanceOf(ConcurrentModificationError);
+
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+      expect((await repository.findOneByIdOrFail(id)).status).toEqual(GuestAccessStatus.REVOKED);
+      expect(sentMails).toHaveLength(0);
+    });
+
+    it("does not accept an invitation which was revoked after it was read", async () => {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+      const stale = await repository.findOneByIdOrFail(pending.id);
+      await service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: ownerId });
+      const user = createUser();
+      readStaleOnce(stale);
+
+      await expect(service.accept(pending.id, user)).rejects.toBeInstanceOf(
+        ConcurrentModificationError,
+      );
+
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+    });
+
+    it("does not tell the guest about a role change which was not saved", async () => {
+      const { id } = await inviteAccepted();
+      const stale = await repository.findOneByIdOrFail(id);
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId: id,
+        actingUserId: ownerId,
+        guestRole: GuestRole.RECYCLER,
+      });
+      sentMails.length = 0;
+      readStaleOnce(stale);
+
+      await expect(
+        service.changeGuestRole({
+          organizationId,
+          guestAccessId: id,
+          actingUserId: ownerId,
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toBeInstanceOf(ConcurrentModificationError);
+
+      expect((await repository.findOneByIdOrFail(id)).guestRole).toEqual(GuestRole.RECYCLER);
+      expect(sentMails).toHaveLength(0);
     });
   });
 

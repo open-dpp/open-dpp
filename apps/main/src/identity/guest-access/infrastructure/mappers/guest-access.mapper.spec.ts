@@ -27,7 +27,15 @@ describe("GuestAccessMapper", () => {
       guestRole: GuestRole.REPAIRER,
       grantedBy: "user-1",
       createdAt: access.createdAt,
+      revision: undefined,
     });
+  });
+
+  it("reads the stored revision, and 0 for an access stored without one", () => {
+    const { _id, ...rest } = GuestAccessMapper.toPersistence(createPending());
+
+    expect(GuestAccessMapper.toDomain({ _id, ...rest, revision: 3 }).revision).toBe(3);
+    expect(GuestAccessMapper.toDomain({ _id, ...rest }).revision).toBe(0);
   });
 
   it("round-trips an accepted and revoked access through persistence", () => {
@@ -46,6 +54,6 @@ describe("GuestAccessMapper", () => {
     const restored = GuestAccessMapper.toDomain(GuestAccessMapper.toPersistence(access));
 
     expect(restored).toBeInstanceOf(DirectGuestAccess);
-    expect(restored.toPlain()).toEqual(access.toPlain());
+    expect(restored.toPlain()).toEqual({ ...access.toPlain(), revision: 0 });
   });
 });

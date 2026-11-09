@@ -41,4 +41,14 @@ describe("guestAccessPaths", () => {
     expect(successCodes("/guest-accesses/{id}/revoke", "post")).toEqual(["200"]);
     expect(successCodes("/guest-accesses/{id}/accept", "post")).toEqual(["200"]);
   });
+
+  it("documents the conflict of a concurrent change for the endpoints which change an access", () => {
+    const has409 = (path: string, method: "post" | "patch") =>
+      "409" in (document.paths?.[path]?.[method]?.responses ?? {});
+
+    expect(has409("/guest-accesses/{id}/role", "patch")).toBe(true);
+    expect(has409("/guest-accesses/{id}/revoke", "post")).toBe(true);
+    expect(has409("/guest-accesses/{id}/accept", "post")).toBe(true);
+    expect(has409("/guest-accesses", "post")).toBe(false);
+  });
 });

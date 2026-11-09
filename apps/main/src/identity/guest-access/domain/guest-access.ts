@@ -25,6 +25,8 @@ export interface GuestAccess {
   readonly createdAt: Date;
   readonly guestRole: GuestRoleType;
   readonly revokedAt: Date | undefined;
+  /** The revision the access was read with; unset while it was never saved. */
+  readonly revision: number | undefined;
   readonly status: GuestAccessStatusType;
   isActiveFor: (caller: CallerFacts) => boolean;
   revoke: (now: Date) => void;

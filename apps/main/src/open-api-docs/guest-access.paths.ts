@@ -20,6 +20,12 @@ const guestAccessBody = {
   },
 };
 
+const conflictResponse = {
+  description:
+    "The guest access was changed by someone else after it was read, for example revoked. " +
+    "Reload it and try again.",
+};
+
 const ownerErrorResponses = {
   [HTTPCode.FORBIDDEN]: { description: "The caller is not an owner of the organization." },
   [HTTPCode.NOT_FOUND]: { description: "The guest access does not exist." },
@@ -83,6 +89,7 @@ export const guestAccessPaths = {
         [HTTPCode.OK]: guestAccessBody,
         ...ownerErrorResponses,
         [HTTPCode.BAD_REQUEST]: { description: "The body is invalid or the access is revoked." },
+        [HTTPCode.CONFLICT]: conflictResponse,
       },
       security: security,
     },
@@ -97,6 +104,7 @@ export const guestAccessPaths = {
       responses: {
         [HTTPCode.OK]: guestAccessBody,
         ...ownerErrorResponses,
+        [HTTPCode.CONFLICT]: conflictResponse,
       },
       security,
     },
@@ -138,6 +146,7 @@ export const guestAccessPaths = {
           description: "The account is not the invited one or its email is not verified.",
         },
         [HTTPCode.NOT_FOUND]: { description: "The invitation does not exist." },
+        [HTTPCode.CONFLICT]: conflictResponse,
       },
       security,
     },

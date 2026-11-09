@@ -20,7 +20,12 @@ export type GuestAccessDocument = HydratedDocument<GuestAccess>;
  * One collection for all access kinds. `kind` selects the domain class; fields that only apply to
  * some kinds are optional here and required per kind.
  */
-@Schema({ collection: GUEST_ACCESS_COLLECTION, autoCreate: process.env.NODE_ENV === "test" })
+@Schema({
+  collection: GUEST_ACCESS_COLLECTION,
+  autoCreate: process.env.NODE_ENV === "test",
+  // The revision below does the job of Mongoose's version key
+  versionKey: false,
+})
 export class GuestAccess {
   @Prop({ required: true })
   _id: string;
@@ -58,6 +63,11 @@ export class GuestAccess {
 
   @Prop({ type: Date })
   revokedAt?: Date;
+
+  // Counts the saves of the access: 0 on insert, plus one with every later save. A save only
+  // succeeds while the stored revision is the one the entity was read with.
+  @Prop({ type: Number, required: true, default: 0 })
+  revision: number;
 
   @Prop({
     required: true,

@@ -12,6 +12,7 @@ export class GuestAccessMapper {
 
   static toDomain(persistence: GuestAccessPersistence): GuestAccess {
     const { _id, ...rest } = persistence;
-    return guestAccessFromPlain({ ...rest, id: _id });
+    // A stored access always has been saved once, even if it was written without a revision
+    return guestAccessFromPlain({ ...rest, id: _id, revision: persistence.revision ?? 0 });
   }
 }

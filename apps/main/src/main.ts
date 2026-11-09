@@ -12,6 +12,7 @@ import {
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
+  ConcurrentModificationErrorFilter,
   ForbiddenExceptionFilter,
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
@@ -147,6 +148,7 @@ async function bootstrap() {
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
     new ForbiddenExceptionFilter(),
+    new ConcurrentModificationErrorFilter(),
   );
   applyBodySizeHandler(app);
   app.use("/media/upload-dpp-file/:upi", bodyParser.urlencoded({ limit: "50mb", extended: true }));

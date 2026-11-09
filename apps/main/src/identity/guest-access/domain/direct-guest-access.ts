@@ -21,6 +21,8 @@ export const DirectGuestAccessPlainSchema = z.object({
   acceptedByUserId: z.string().optional(),
   acceptedAt: z.coerce.date().optional(),
   revokedAt: z.coerce.date().optional(),
+  // Counts the saves of the access; unset until it was saved once.
+  revision: z.number().int().nonnegative().optional(),
 });
 
 export type DirectGuestAccessPlain = z.infer<typeof DirectGuestAccessPlainSchema>;
@@ -51,6 +53,11 @@ export class DirectGuestAccess implements GuestAccess {
     private _acceptedByUserId: string | undefined,
     private _acceptedAt: Date | undefined,
     private _revokedAt: Date | undefined,
+    /**
+     * The revision this access was read with. A save only succeeds while the stored access still
+     * has this revision. Unset for an access that was never saved.
+     */
+    public readonly revision: number | undefined,
   ) {}
 
   static create(data: DirectGuestAccessCreateProps): DirectGuestAccess {
@@ -61,6 +68,7 @@ export class DirectGuestAccess implements GuestAccess {
       data.guestRole,
       data.grantedBy,
       data.now ?? new Date(),
+      undefined,
       undefined,
       undefined,
       undefined,
@@ -79,6 +87,7 @@ export class DirectGuestAccess implements GuestAccess {
       data.acceptedByUserId,
       data.acceptedAt,
       data.revokedAt,
+      data.revision,
     );
   }
 
@@ -161,6 +170,7 @@ export class DirectGuestAccess implements GuestAccess {
       acceptedByUserId: this._acceptedByUserId,
       acceptedAt: this._acceptedAt,
       revokedAt: this._revokedAt,
+      revision: this.revision,
     };
   }
 }

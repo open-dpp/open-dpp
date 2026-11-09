@@ -9,6 +9,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { GuestAccessInvitationDtoSchema, GuestAccessResponseDtoSchema } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
+  ConcurrentModificationErrorFilter,
   ForbiddenExceptionFilter,
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
@@ -31,6 +32,7 @@ import { UsersService } from "../../users/application/services/users.service";
 import { UsersModule } from "../../users/users.module";
 import { GuestRole } from "../domain/guest-role.enum";
 import { GuestAccessModule } from "../guest-access.module";
+import { GuestAccessRepository } from "../infrastructure/adapters/guest-access.repository";
 
 describe("GuestAccessController", () => {
   let app: INestApplication;
@@ -69,6 +71,7 @@ describe("GuestAccessController", () => {
       new NotFoundExceptionFilter(),
       new ValueErrorFilter(),
       new ForbiddenExceptionFilter(),
+      new ConcurrentModificationErrorFilter(),
     );
     await app.init();
   });
@@ -280,6 +283,27 @@ describe("GuestAccessController", () => {
     expect(revoked.status).toEqual(200);
     expect(revoked.body).toEqual(expect.objectContaining({ status: "Revoked" }));
     expect(revoked.body.revokedAt).toEqual(expect.any(String));
+  });
+
+  it("answers 409 when the access was changed after it was read", async () => {
+    const owner = await createOwner();
+    const { id } = await createAcceptedGuest(owner);
+    const repository = moduleRef.get(GuestAccessRepository);
+    const stale = await repository.findOneByIdOrFail(id);
+    await request(app.getHttpServer())
+      .post(`/guest-accesses/${id}/revoke`)
+      .set("Cookie", owner.userCookie)
+      .set(ORGANIZATION_ID_HEADER, owner.org.id);
+    vi.spyOn(repository, "findOneByIdOrFail").mockResolvedValueOnce(stale);
+
+    const changed = await request(app.getHttpServer())
+      .patch(`/guest-accesses/${id}/role`)
+      .set("Cookie", owner.userCookie)
+      .set(ORGANIZATION_ID_HEADER, owner.org.id)
+      .send({ guestRole: GuestRole.SUPPLIER });
+
+    expect(changed.status).toEqual(409);
+    expect((await repository.findOneByIdOrFail(id)).status).toEqual("Revoked");
   });
 
   it("does not let an owner of another organization touch the access", async () => {
