@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { CarrierErrorCorrectionLevel } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import sharp from "sharp";
-import { darkModuleRuns, decodeDataCarrier } from "../../../test/decode-data-carrier";
+import {
+  darkModuleRuns,
+  decodeDataCarrier,
+  pngQuietZone,
+  svgQuietZone,
+} from "../../../test/decode-data-carrier";
 import { DataCarrier, QUIET_ZONE_MODULES } from "../domain/data-carrier";
 import {
   MAX_PNG_EDGE_PX,
@@ -13,6 +18,12 @@ import {
 
 const url = "https://cloud.open-dpp.de/p/3f2c9a54-6b1e-4d7a-9c1f-2a8e5b7d4c10";
 const carrier = DataCarrier.encode(url, CarrierErrorCorrectionLevel.M);
+const FOUR_MODULES_EACH_SIDE = {
+  top: QUIET_ZONE_MODULES,
+  right: QUIET_ZONE_MODULES,
+  bottom: QUIET_ZONE_MODULES,
+  left: QUIET_ZONE_MODULES,
+};
 
 describe("renderCarrierSvg", () => {
   it("states its physical size in mm, one viewBox unit per module", () => {
@@ -26,14 +37,10 @@ describe("renderCarrierSvg", () => {
   });
 
   it("draws no dark module inside the four-module quiet zone", () => {
-    const runs = darkModuleRuns(renderCarrierSvg(carrier, 0.495));
-    const lastSymbolIndex = carrier.size - QUIET_ZONE_MODULES - 1;
+    const svg = renderCarrierSvg(carrier, 0.495);
 
-    expect(runs.length).toBeGreaterThan(0);
-    expect(Math.min(...runs.map((run) => run.column))).toBe(QUIET_ZONE_MODULES);
-    expect(Math.min(...runs.map((run) => run.row))).toBe(QUIET_ZONE_MODULES);
-    expect(Math.max(...runs.map((run) => run.column + run.length - 1))).toBe(lastSymbolIndex);
-    expect(Math.max(...runs.map((run) => run.row))).toBe(lastSymbolIndex);
+    expect(darkModuleRuns(svg).length).toBeGreaterThan(0);
+    expect(svgQuietZone(svg)).toEqual(FOUR_MODULES_EACH_SIDE);
   });
 
   it("scans back to the encoded content", async () => {
@@ -87,25 +94,11 @@ describe("renderCarrierPng", () => {
   });
 
   it("keeps the four-module quiet zone light", async () => {
-    const scale = pixelsPerModule(0.495, 300);
     const png = await renderCarrierPng(carrier, 0.495, 300);
-    const { data, info } = await sharp(png)
-      .toColourspace("b-w")
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    const pixelAt = (x: number, y: number) => data[y * info.width + x];
-    const quietZonePx = QUIET_ZONE_MODULES * scale;
 
-    for (let y = 0; y < quietZonePx; y++) {
-      for (let x = 0; x < info.width; x++) {
-        expect(pixelAt(x, y)).toBe(255);
-        expect(pixelAt(y, x)).toBe(255);
-        expect(pixelAt(x, info.height - 1 - y)).toBe(255);
-        expect(pixelAt(info.width - 1 - y, x)).toBe(255);
-      }
-    }
-    // the finder pattern starts right after the quiet zone
-    expect(pixelAt(quietZonePx, quietZonePx)).toBe(0);
+    await expect(pngQuietZone(png, pixelsPerModule(0.495, 300))).resolves.toEqual(
+      FOUR_MODULES_EACH_SIDE,
+    );
   });
 
   it("scans back to the encoded content", async () => {

@@ -10,6 +10,12 @@ export type CarrierExportFormatType =
 
 export const CarrierExportFormatSchema = z.enum([CarrierExportFormat.SVG, CarrierExportFormat.PNG]);
 
+/** The media type a Carrier Export is served and saved as, per format. */
+export const CARRIER_EXPORT_CONTENT_TYPES: Readonly<Record<CarrierExportFormatType, string>> = {
+  [CarrierExportFormat.SVG]: "image/svg+xml",
+  [CarrierExportFormat.PNG]: "image/png",
+};
+
 /** QR Code error-correction levels; they restore about 7 %, 15 %, 25 % and 30 % of the symbol. */
 export const CarrierErrorCorrectionLevel = {
   L: "L",
@@ -54,7 +60,7 @@ export const CarrierExportQuerySchema = z.object({
     .min(CARRIER_EXPORT_LIMITS.moduleSize.min)
     .max(CARRIER_EXPORT_LIMITS.moduleSize.max)
     .default(CARRIER_EXPORT_DEFAULTS.moduleSize),
-  /** Resolution of a PNG; ignored for SVG. */
+  /** Resolution of a PNG; validated for every format, used only for PNG. */
   dpi: z.coerce
     .number()
     .int()

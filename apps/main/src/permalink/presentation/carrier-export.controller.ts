@@ -1,9 +1,14 @@
-import { Controller, Get, Param, Query, StreamableFile } from "@nestjs/common";
+import { Controller, Get, Param, Query, StreamableFile, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { AllApiVersions, type CarrierExportQuery, CarrierExportQuerySchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { UserOrIpThrottlerGuard } from "../../common/throttler/user-or-ip.throttler-guard";
 import type { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { CarrierExportService } from "../application/services/carrier-export.service";
+
+/** Exports per user and minute; each one renders an image of up to 6000 px per side. */
+export const CARRIER_EXPORT_RATE_LIMIT = { limit: 60, ttl: 60_000 } as const;
 
 @Controller({ version: AllApiVersions })
 export class CarrierExportController {
@@ -11,6 +16,8 @@ export class CarrierExportController {
 
   /** The Carrier Export (SVG or PNG) of one permalink, for Members of the passport's organization. */
   @Get("/permalinks/:id/carrier")
+  @UseGuards(UserOrIpThrottlerGuard)
+  @Throttle({ default: CARRIER_EXPORT_RATE_LIMIT })
   async getCarrierExport(
     @Param("id") id: string,
     @Query(new ZodValidationPipe(CarrierExportQuerySchema)) settings: CarrierExportQuery,

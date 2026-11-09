@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { CarrierExportFormat, type CarrierExportQuery } from "@open-dpp/dto";
+import { Injectable } from "@nestjs/common";
+import {
+  CARRIER_EXPORT_CONTENT_TYPES,
+  CarrierExportFormat,
+  type CarrierExportFormatType,
+  type CarrierExportQuery,
+} from "@open-dpp/dto";
+import { NotFoundError } from "@open-dpp/exception";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
 import { DataCarrier } from "../../domain/data-carrier";
 import { Permalink } from "../../domain/permalink";
@@ -13,11 +19,6 @@ export interface CarrierExport {
   contentType: string;
   fileName: string;
 }
-
-const CONTENT_TYPES = {
-  [CarrierExportFormat.SVG]: "image/svg+xml",
-  [CarrierExportFormat.PNG]: "image/png",
-} as const;
 
 @Injectable()
 export class CarrierExportService {
@@ -47,7 +48,7 @@ export class CarrierExportService {
       !passport ||
       !(await this.permalinkApplicationService.isMemberOfPassportOrg(passport, { userId }))
     ) {
-      throw new NotFoundException(`Permalink ${permalinkId} not found`);
+      throw new NotFoundError(`Permalink ${permalinkId} not found`);
     }
     // the same URL the back-office reads show, frozen once the passport is published
     const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
@@ -59,7 +60,7 @@ export class CarrierExportService {
     const carrier = DataCarrier.encode(publicUrl, settings.errorCorrection);
     return {
       content: await this.render(carrier, settings),
-      contentType: CONTENT_TYPES[settings.format],
+      contentType: CARRIER_EXPORT_CONTENT_TYPES[settings.format],
       fileName: carrierExportFileName(permalink, settings.format),
     };
   }
@@ -72,6 +73,6 @@ export class CarrierExportService {
   }
 }
 
-function carrierExportFileName(permalink: Permalink, format: string): string {
+function carrierExportFileName(permalink: Permalink, format: CarrierExportFormatType): string {
   return `data-carrier-${permalink.slug ?? permalink.id}.${format}`;
 }

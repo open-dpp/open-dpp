@@ -1,9 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { LatestApiVersionWithPrefixDto, PermalinkKind } from "@open-dpp/dto";
+import {
+  CARRIER_EXPORT_DEFAULTS,
+  LatestApiVersionWithPrefixDto,
+  PermalinkKind,
+} from "@open-dpp/dto";
 import sharp from "sharp";
 import request from "supertest";
-import { darkModuleRuns, decodeDataCarrier } from "../../../test/decode-data-carrier";
+import { decodeDataCarrier, pngQuietZone, svgQuietZone } from "../../../test/decode-data-carrier";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
@@ -40,11 +44,20 @@ import { UniqueProductIdentifierModule } from "../../unique-product-identifier/u
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
 import { QUIET_ZONE_MODULES } from "../domain/data-carrier";
 import { Permalink } from "../domain/permalink";
+import { pixelsPerModule } from "../infrastructure/carrier-export.renderer";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schema";
 import { PermalinkModule } from "../permalink.module";
+import { CARRIER_EXPORT_RATE_LIMIT } from "./carrier-export.controller";
 
 type Caller = { cookie: string; organizationId?: string } | { apiKey: string };
+
+const FOUR_MODULES_EACH_SIDE = {
+  top: QUIET_ZONE_MODULES,
+  right: QUIET_ZONE_MODULES,
+  bottom: QUIET_ZONE_MODULES,
+  left: QUIET_ZONE_MODULES,
+};
 
 function binaryParser(res: any, callback: (error: Error | null, body: Buffer) => void) {
   const chunks: Buffer[] = [];
@@ -196,7 +209,7 @@ describe("CarrierExportController", () => {
     await expect(decodeDataCarrier(response.body)).resolves.toEqual(publicUrl);
   });
 
-  it("keeps a quiet zone of four modules around the symbol", async () => {
+  it("keeps a quiet zone of four modules on every side of the SVG", async () => {
     const { org, userCookie, permalink } = await memberWithPermalink();
 
     const response = await getCarrier(permalink.id, {
@@ -204,9 +217,25 @@ describe("CarrierExportController", () => {
       organizationId: org.id,
     });
 
-    const runs = darkModuleRuns(response.body.toString("utf8"));
-    expect(Math.min(...runs.map((run) => run.column))).toEqual(QUIET_ZONE_MODULES);
-    expect(Math.min(...runs.map((run) => run.row))).toEqual(QUIET_ZONE_MODULES);
+    expect(svgQuietZone(response.body.toString("utf8"))).toEqual(FOUR_MODULES_EACH_SIDE);
+  });
+
+  it("keeps a quiet zone of four modules on every side of the PNG", async () => {
+    const { org, userCookie, permalink } = await memberWithPermalink();
+
+    const response = await getCarrier(
+      permalink.id,
+      { cookie: userCookie, organizationId: org.id },
+      { format: "png" },
+    );
+
+    expect(response.status).toEqual(200);
+    await expect(
+      pngQuietZone(
+        response.body,
+        pixelsPerModule(CARRIER_EXPORT_DEFAULTS.moduleSize, CARRIER_EXPORT_DEFAULTS.dpi),
+      ),
+    ).resolves.toEqual(FOUR_MODULES_EACH_SIDE);
   });
 
   it("returns a PNG with whole-pixel modules and the chosen DPI", async () => {
@@ -324,6 +353,17 @@ describe("CarrierExportController", () => {
     );
 
     expect(response.status).toEqual(400);
+  });
+
+  it("rate-limits exports per user, returning 429 once the limit is used up", async () => {
+    const { org, userCookie, permalink } = await memberWithPermalink();
+    const caller = { cookie: userCookie, organizationId: org.id };
+
+    for (let attempt = 0; attempt < CARRIER_EXPORT_RATE_LIMIT.limit; attempt++) {
+      expect((await getCarrier(permalink.id, caller)).status).toEqual(200);
+    }
+
+    expect((await getCarrier(permalink.id, caller)).status).toEqual(429);
   });
 
   it("returns 400 for a PNG beyond the pixel limit", async () => {

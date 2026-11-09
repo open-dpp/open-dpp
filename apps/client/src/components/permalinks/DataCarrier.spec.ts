@@ -14,7 +14,10 @@ const { getCarrierExport, downloadBlob, logErrorWithNotification, addSuccessNoti
 vi.mock("../../lib/api-client", () => ({
   default: { dpp: { permalinks: { getCarrierExport } } },
 }));
-vi.mock("../../lib/download", () => ({ downloadBlob }));
+vi.mock("../../lib/download", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../lib/download")>()),
+  downloadBlob,
+}));
 vi.mock("../../stores/error.handling", () => ({
   useErrorHandlingStore: () => ({ logErrorWithNotification }),
 }));
@@ -90,8 +93,11 @@ describe("DataCarrier", () => {
     createObjectURL.mockImplementation(() => `blob:carrier-${++objectUrls}`);
     globalThis.URL.createObjectURL = createObjectURL;
     globalThis.URL.revokeObjectURL = revokeObjectURL;
-    getCarrierExport.mockImplementation(async (_id: string, params: { format: string }) => ({
+    getCarrierExport.mockImplementation(async (id: string, params: { format: string }) => ({
       data: new Blob([params.format === "svg" ? "<svg/>" : "png"]),
+      headers: {
+        "content-disposition": `attachment; filename="data-carrier-${id}.${params.format}"`,
+      },
     }));
     writeText.mockResolvedValue(undefined);
     setClipboard({ writeText });
@@ -198,14 +204,30 @@ describe("DataCarrier", () => {
     );
   });
 
-  it("names the download after the slug when the permalink has one", async () => {
-    const wrapper = mountDataCarrier({ permalink: { ...openDppPermalink, slug: "my-product" } });
+  it("saves the download under the name the server suggests", async () => {
+    // the identifier list passes a permalink summary without its slug
+    const wrapper = mountDataCarrier();
     await flushPromises();
+    getCarrierExport.mockResolvedValueOnce({
+      data: new Blob(["png"]),
+      headers: { "content-disposition": 'attachment; filename="data-carrier-my-product.png"' },
+    });
 
     await wrapper.get("[data-testid='data-carrier-download-png']").trigger("click");
     await flushPromises();
 
     expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), "data-carrier-my-product.png");
+  });
+
+  it("falls back to a generic name when the server suggests none", async () => {
+    const wrapper = mountDataCarrier();
+    await flushPromises();
+    getCarrierExport.mockResolvedValueOnce({ data: new Blob(["png"]), headers: {} });
+
+    await wrapper.get("[data-testid='data-carrier-download-png']").trigger("click");
+    await flushPromises();
+
+    expect(downloadBlob).toHaveBeenCalledWith(expect.any(Blob), "data-carrier.png");
   });
 
   it("tells the user when the download fails", async () => {
@@ -228,8 +250,8 @@ describe("DataCarrier", () => {
     const wrapper = mountDataCarrier();
     await flushPromises();
 
-    expect(wrapper.get("[data-testid='permalink-qr-url']").text()).toBe(openDppPermalink.publicUrl);
-    await wrapper.get("[data-testid='permalink-qr-copy-btn']").trigger("click");
+    expect(wrapper.get("[data-testid='data-carrier-url']").text()).toBe(openDppPermalink.publicUrl);
+    await wrapper.get("[data-testid='data-carrier-copy-btn']").trigger("click");
     await flushPromises();
 
     expect(writeText).toHaveBeenCalledWith(openDppPermalink.publicUrl);
@@ -242,7 +264,7 @@ describe("DataCarrier", () => {
     const wrapper = mountDataCarrier();
     await flushPromises();
 
-    await wrapper.get("[data-testid='permalink-qr-copy-btn']").trigger("click");
+    await wrapper.get("[data-testid='data-carrier-copy-btn']").trigger("click");
     await flushPromises();
 
     expect(addSuccessNotification).not.toHaveBeenCalled();
@@ -258,7 +280,7 @@ describe("DataCarrier", () => {
     const wrapper = mountDataCarrier();
     await flushPromises();
 
-    await wrapper.get("[data-testid='permalink-qr-copy-btn']").trigger("click");
+    await wrapper.get("[data-testid='data-carrier-copy-btn']").trigger("click");
     await flushPromises();
 
     expect(addSuccessNotification).not.toHaveBeenCalled();
@@ -276,9 +298,25 @@ describe("DataCarrier", () => {
     });
     await flushPromises();
 
-    expect(wrapper.get("[data-testid='permalink-qr-element-string']").text()).toBe(
+    expect(wrapper.get("[data-testid='data-carrier-element-string']").text()).toBe(
       "(01) 09501101020917 (21) SER-1",
     );
     expect(wrapper.text()).toContain("GS1 Digital Link");
+  });
+
+  it("logs and leaves out an element string it cannot format", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const wrapper = mountDataCarrier({
+      permalink: { ...openDppPermalink, kind: "gs1-link" },
+      identity: { gtin: "123" },
+    });
+    await flushPromises();
+
+    expect(wrapper.find("[data-testid='data-carrier-element-string']").exists()).toBe(false);
+    expect(consoleError).toHaveBeenCalledWith(
+      "Cannot format the GS1 element string",
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
   });
 });

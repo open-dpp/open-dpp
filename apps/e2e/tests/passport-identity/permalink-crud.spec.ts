@@ -35,8 +35,8 @@ test("a new passport has exactly one open-dpp permalink with a QR code", async (
   expect(publicUrl).toContain("/p/");
 
   await page.getByTestId(`permalink-show-qr-btn-${permalinkId}`).click();
-  await expect(page.getByTestId("permalink-qr-url")).toHaveText(publicUrl);
-  await expect(page.getByTestId("permalink-qr-copy-btn")).toBeVisible();
+  await expect(page.getByTestId("data-carrier-url")).toHaveText(publicUrl);
+  await expect(page.getByTestId("data-carrier-copy-btn")).toBeVisible();
 
   // the server-rendered SVG has loaded, not just its placeholder
   const carrier = page.getByTestId("data-carrier-image");

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CARRIER_EXPORT_CONTENT_TYPES,
   CARRIER_EXPORT_DEFAULTS,
   CARRIER_EXPORT_LIMITS,
   CarrierErrorCorrectionLevel,
@@ -51,5 +52,14 @@ describe("CarrierExportQuerySchema", () => {
     ["a lower-case error-correction level", { errorCorrection: "m" }],
   ])("rejects %s", (_label, query) => {
     expect(CarrierExportQuerySchema.safeParse(query).success).toBe(false);
+  });
+});
+
+describe("CARRIER_EXPORT_CONTENT_TYPES", () => {
+  it("names the media type of every format", () => {
+    expect(CARRIER_EXPORT_CONTENT_TYPES).toEqual({
+      [CarrierExportFormat.SVG]: "image/svg+xml",
+      [CarrierExportFormat.PNG]: "image/png",
+    });
   });
 });

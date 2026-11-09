@@ -12,3 +12,10 @@ export function downloadBlob(data: Blob, filename: string) {
     globalThis.URL.revokeObjectURL(url);
   }
 }
+
+/** The file name a `Content-Disposition` header suggests, quoted or not; undefined when it has none. */
+export function fileNameFromContentDisposition(header?: string): string | undefined {
+  const match = /filename\s*=\s*(?:"([^"]*)"|([^;\s]+))/i.exec(header ?? "");
+  const fileName = match?.[1] ?? match?.[2];
+  return fileName ? fileName : undefined;
+}
