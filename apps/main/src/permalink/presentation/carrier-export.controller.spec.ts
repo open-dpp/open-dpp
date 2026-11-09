@@ -226,8 +226,8 @@ describe("CarrierExportController", () => {
     );
     const metadata = await sharp(response.body).metadata();
     expect(metadata.density).toEqual(600);
-    // 0.99 mm at 600 DPI is 23 whole pixels per module
-    expect(metadata.width! % 23).toEqual(0);
+    // 0.99 mm at 600 DPI is 23.39 px, rounded up to 24 whole pixels per module
+    expect(metadata.width! % 24).toEqual(0);
     await expect(decodeDataCarrier(response.body)).resolves.toEqual(publicUrl);
   });
 

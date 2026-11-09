@@ -55,9 +55,15 @@ export function renderCarrierSvg(carrier: DataCarrier, moduleSizeMm: number): st
   );
 }
 
-/** Whole pixels per module for a module size at a print resolution; at least one. */
+/** Absorbs floating-point noise so an exact pixel count (0.254 mm at 300 DPI) is not rounded up. */
+const PIXEL_TOLERANCE = 1e-9;
+
+/**
+ * Whole pixels per module for a module size at a print resolution, rounded up so a module never
+ * prints smaller than its module size (the X-dimension is a minimum); at least one.
+ */
 export function pixelsPerModule(moduleSizeMm: number, dpi: number): number {
-  return Math.max(1, Math.round((moduleSizeMm * dpi) / MM_PER_INCH));
+  return Math.max(1, Math.ceil((moduleSizeMm * dpi) / MM_PER_INCH - PIXEL_TOLERANCE));
 }
 
 /**

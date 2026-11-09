@@ -49,9 +49,20 @@ describe("pixelsPerModule", () => {
     [0.396, 300, 5],
     [0.495, 203, 4],
     [1.058, 96, 4],
-    [0.99, 600, 23],
+    [0.99, 600, 24],
+    [0.254, 203, 3],
+    [0.254, 300, 3],
+    [0.508, 300, 6],
   ])("maps %s mm at %s DPI to %s whole pixels", (moduleSize, dpi, expected) => {
     expect(pixelsPerModule(moduleSize, dpi)).toBe(expected);
+  });
+
+  it.each([
+    [0.254, 203],
+    [0.99, 600],
+    [0.27, 300],
+  ])("never prints a %s mm module smaller at %s DPI", (moduleSize, dpi) => {
+    expect((pixelsPerModule(moduleSize, dpi) * 25.4) / dpi).toBeGreaterThanOrEqual(moduleSize);
   });
 
   it("never goes below one pixel", () => {
