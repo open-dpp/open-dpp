@@ -1,34 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { Member } from "../../identity/organizations/domain/member";
-import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
-import { User } from "../../identity/users/domain/user";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { PassportService } from "../../passports/application/services/passport.service";
-import { chatSubject, createPassportTool } from "./passport.tool";
-
-describe("chatSubject", () => {
-  const user = { role: UserRole.USER } as User;
-  const member = { organizationId: "org-1", role: MemberRole.OWNER } as Member;
-
-  it("is anonymous without a user", () => {
-    expect(chatSubject(null, null, "org-1")).toEqual(
-      SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
-    );
-  });
-
-  it("carries the member role within the passport's organization", () => {
-    expect(chatSubject(user, member, "org-1")).toEqual(
-      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
-    );
-  });
-
-  it("drops the member role of another organization", () => {
-    expect(chatSubject(user, member, "org-2")).toEqual(
-      SubjectAttributes.create({ userRole: UserRole.USER }),
-    );
-  });
-});
+import { createPassportTool } from "./passport.tool";
 
 describe("createPassportTool", () => {
   it("exports the bound passport for the bound subject, ignoring model input", async () => {

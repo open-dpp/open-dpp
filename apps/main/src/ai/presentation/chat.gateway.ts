@@ -52,12 +52,9 @@ export class ChatGateway {
         throw new Error("No product identifier found for the provided permalink");
       }
 
-      const reply = await this.chatService.askAgent(
-        message.msg,
-        upi.uuid,
-        client.data.user,
-        client.data.member,
-      );
+      // What the caller may read is decided by the passport's own organization, not by an
+      // organization the client names in the handshake
+      const reply = await this.chatService.askAgent(message.msg, upi.uuid, client.data.user);
       client.emit("botMessage", reply);
       const endTime = Date.now();
       const executionTime = endTime - startTime;
