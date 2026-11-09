@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
@@ -16,14 +16,14 @@ describe("InstanceSettingsService", () => {
 
   beforeEach(async () => {
     mockRepository = {
-      findOne: jest.fn<() => Promise<InstanceSettings | null>>(),
-      save: jest
+      findOne: vi.fn<() => Promise<InstanceSettings | null>>(),
+      save: vi
         .fn<(s: InstanceSettings) => Promise<InstanceSettings>>()
         .mockImplementation(async (s: InstanceSettings) => s),
     };
 
     mockEnvService = {
-      get: jest.fn<(key: string) => any>().mockReturnValue(undefined),
+      get: vi.fn<(key: string) => any>().mockReturnValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({

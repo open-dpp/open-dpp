@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { KeyTypes } from "../aas/enums/key-types-enum";
 import {
   PresentationComponentName,

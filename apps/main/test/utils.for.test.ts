@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import type { App } from "supertest/types";
-import { expect } from "@jest/globals";
+import { expect } from "vitest";
 import _ from "lodash";
 import type { Migration } from "../src/migrations/domain/migration";
 

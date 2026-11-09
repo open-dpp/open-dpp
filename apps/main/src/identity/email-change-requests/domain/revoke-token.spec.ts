@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { ValueError } from "@open-dpp/exception";
 import { signRevokeToken, verifyRevokeToken } from "./revoke-token";
 

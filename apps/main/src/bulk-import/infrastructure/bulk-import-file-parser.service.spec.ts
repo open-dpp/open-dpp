@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { expect, describe, it, beforeEach } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
 import { BulkImportFileParserService } from "./bulk-import-file-parser.service";
 

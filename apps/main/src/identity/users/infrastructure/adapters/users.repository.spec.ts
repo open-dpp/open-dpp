@@ -1,7 +1,7 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -60,7 +60,7 @@ describe("UsersRepository", () => {
       ],
     })
       .overrideProvider(EmailService)
-      .useValue({ send: jest.fn() })
+      .useValue({ send: vi.fn() })
       .compile();
 
     app = module.createNestApplication();

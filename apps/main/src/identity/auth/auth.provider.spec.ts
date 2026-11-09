@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import type { EnvService } from "@open-dpp/env";
 import type { Db } from "mongodb";
@@ -13,24 +13,24 @@ describe("ensureAdminSeeded", () => {
   type FindOneFn = (...args: unknown[]) => Promise<{ _id: string } | null>;
   type CreateUserFn = (...args: unknown[]) => Promise<unknown>;
 
-  let findOne: jest.Mock<FindOneFn>;
-  let createUser: jest.Mock<CreateUserFn>;
-  let collection: jest.Mock;
+  let findOne: Mock<FindOneFn>;
+  let createUser: Mock<CreateUserFn>;
+  let collection: Mock;
   let db: Db;
   let auth: { api: Record<string, any> };
   let logger: Logger;
 
   function makeConfig(env: Record<string, string | undefined>): EnvService {
-    return { get: jest.fn((key: string) => env[key]) } as unknown as EnvService;
+    return { get: vi.fn((key: string) => env[key]) } as unknown as EnvService;
   }
 
   beforeEach(() => {
-    findOne = jest.fn<FindOneFn>();
-    createUser = jest.fn<CreateUserFn>();
-    collection = jest.fn(() => ({ findOne }));
+    findOne = vi.fn<FindOneFn>();
+    createUser = vi.fn<CreateUserFn>();
+    collection = vi.fn(() => ({ findOne }));
     db = { collection } as unknown as Db;
     auth = { api: { createUser } };
-    logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger;
+    logger = { log: vi.fn(), warn: vi.fn(), error: vi.fn() } as unknown as Logger;
   });
 
   it("does nothing when the admin env credentials are not provided", async () => {

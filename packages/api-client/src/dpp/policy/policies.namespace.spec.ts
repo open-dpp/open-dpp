@@ -1,9 +1,10 @@
+import { describe, expect, it, vi } from "vitest";
 import { PolicyKeyList } from "@open-dpp/dto";
 import { PoliciesNamespace } from "./policies.namespace";
 
 function makeNamespace() {
-  const get = jest.fn().mockResolvedValue({ data: {} });
-  const patch = jest.fn().mockResolvedValue({ data: {} });
+  const get = vi.fn().mockResolvedValue({ data: {} });
+  const patch = vi.fn().mockResolvedValue({ data: {} });
   const axios = { get, patch } as any;
   return { ns: new PoliciesNamespace(axios), axios };
 }

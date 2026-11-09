@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { PermalinkListDtoSchema, PermalinkPublicDtoSchema } from "@open-dpp/dto";
 import { randomUUID } from "node:crypto";
 import { permalinkPublicPlainFactory } from "./permalink-public.factory";

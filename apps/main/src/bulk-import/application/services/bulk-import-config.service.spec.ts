@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -14,24 +14,24 @@ import { PagingResult } from "../../../pagination/paging-result";
 describe("BulkImportConfigService", () => {
   function buildFakes() {
     const configRepository = {
-      save: jest.fn<
+      save: vi.fn<
         (config: BulkImportConfig, options?: DbSessionOptions) => Promise<BulkImportConfig>
       >(),
-      findOneOrFail: jest.fn<(id: string) => Promise<BulkImportConfig>>(),
+      findOneOrFail: vi.fn<(id: string) => Promise<BulkImportConfig>>(),
       findAllByOrganizationId:
-        jest.fn<
+        vi.fn<
           (organizationId: string, filter?: { templateId?: string }) => Promise<BulkImportConfig[]>
         >(),
-      findAllByTemplateId: jest.fn<(templateId: string) => Promise<BulkImportConfig[]>>(),
-      deleteById: jest.fn<(id: string, options?: DbSessionOptions) => Promise<void>>(),
+      findAllByTemplateId: vi.fn<(templateId: string) => Promise<BulkImportConfig[]>>(),
+      deleteById: vi.fn<(id: string, options?: DbSessionOptions) => Promise<void>>(),
       deleteAllByTemplateId:
-        jest.fn<(templateId: string, options?: DbSessionOptions) => Promise<void>>(),
+        vi.fn<(templateId: string, options?: DbSessionOptions) => Promise<void>>(),
     };
     const runRepository = {
       deleteAllByBulkImportConfigId:
-        jest.fn<(bulkImportConfigId: string, options?: DbSessionOptions) => Promise<string[]>>(),
+        vi.fn<(bulkImportConfigId: string, options?: DbSessionOptions) => Promise<string[]>>(),
       findAllByBulkImportConfigId:
-        jest.fn<
+        vi.fn<
           (
             bulkImportConfigId: string,
             options?: { pagination?: Pagination; filter?: { status?: string[] } },
@@ -39,14 +39,14 @@ describe("BulkImportConfigService", () => {
         >(),
     };
     const runItemRepository = {
-      deleteAllByRunIds: jest.fn<(runIds: string[], options?: DbSessionOptions) => Promise<void>>(),
+      deleteAllByRunIds: vi.fn<(runIds: string[], options?: DbSessionOptions) => Promise<void>>(),
     };
     const templateRepository = {
-      findOneOrFail: jest.fn<(id: string) => Promise<Template>>(),
+      findOneOrFail: vi.fn<(id: string) => Promise<Template>>(),
     };
     // No real Mongo session in these unit tests; just run the work directly.
     const transactionService = {
-      withTransaction: jest.fn<<T>(work: (options: DbSessionOptions) => Promise<T>) => Promise<T>>(
+      withTransaction: vi.fn<<T>(work: (options: DbSessionOptions) => Promise<T>) => Promise<T>>(
         async (work) => await work({}),
       ),
     };

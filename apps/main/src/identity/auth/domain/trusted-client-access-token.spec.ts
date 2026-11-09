@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { checkTrustedClientClaims } from "./trusted-client-access-token";
 
 const CLIENT_ID = "landing-page";

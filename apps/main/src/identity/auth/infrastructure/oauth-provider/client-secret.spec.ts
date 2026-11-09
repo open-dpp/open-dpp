@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { hashClientSecret, verifyClientSecret } from "./client-secret";
 
 const SECRET = "landing-page-secret";

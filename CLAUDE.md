@@ -26,12 +26,12 @@ pnpm run lint
 
 # Test (requires: make test to start test Docker services)
 pnpm run test                 # all tests
-pnpm run test:main            # backend (Jest)
+pnpm run test:main            # backend (Vitest)
 pnpm run test:client          # frontend (Vitest)
 pnpm run test:e2e             # Playwright E2E
 
 # Run a single backend test
-cd apps/main && NODE_OPTIONS=--experimental-vm-modules pnpm exec jest path/to/file.spec.ts
+cd apps/main && pnpm exec vitest run path/to/file.spec.ts
 
 # Run a single frontend test
 cd apps/client && pnpm exec vitest run src/path/to/file.spec.ts
@@ -59,7 +59,7 @@ packages/testing/    # Fishery factories for test data
 
 - **Backend**: NestJS v11, Mongoose (MongoDB 7), Better Auth, LangChain + Mistral
 - **Frontend**: Vue 3, Pinia, PrimeVue, Tailwind CSS v4, Vite 7
-- **Testing**: Jest + @swc/jest (backend), Vitest (frontend), Cypress (component), Playwright (E2E)
+- **Testing**: Vitest everywhere (backend and packages via `unplugin-swc` for decorator metadata, shared config in `vitest.shared.ts`), Cypress (component), Playwright (E2E)
 - **Validation**: Zod everywhere (DTOs, env vars, route params)
 
 ### Domain-Driven Design Module Structure
@@ -95,9 +95,10 @@ feature/
 ### Testing Patterns
 
 - **Backend integration tests** use `MongoMemoryReplSet` (real MongoDB with transaction support). `createAasTestContext()` in `aas/presentation/aas.test.context.ts` bootstraps the full module stack.
-- **MongoDB connection in tests**: A single `MongoMemoryReplSet` is started in Jest global setup (`apps/main/test/global-setup.ts`) and shared via `process.env.OPEN_DPP_MONGODB_URI`. **NEVER** create connections directly with `mongoose.connect()` or `mongoose.createConnection()` in test files. Always use a NestJS `TestingModule` with `MongooseModule.forRootAsync` and `generateMongoConfig` — this gives each test suite an isolated database (random UUID name) and proper connection lifecycle via `module.close()`. See `apps/main/src/items/infrastructure/items.service.spec.ts` for the reference pattern.
+- **MongoDB connection in tests**: A single `MongoMemoryReplSet` is started in the Vitest global setup (`apps/main/test/global-setup.ts`), provided to the workers and written to `process.env.OPEN_DPP_MONGODB_URI` by `apps/main/test/setup-file.ts`. **NEVER** create connections directly with `mongoose.connect()` or `mongoose.createConnection()` in test files. Always use a NestJS `TestingModule` with `MongooseModule.forRootAsync` and `generateMongoConfig` — this gives each test suite an isolated database (random UUID name) and proper connection lifecycle via `module.close()`. See `apps/main/src/items/infrastructure/items.service.spec.ts` for the reference pattern.
 - **Test factories**: Fishery factories in `packages/testing/src/fixtures/` generate valid plain objects matching Zod schemas.
-- **Package imports in tests**: Jest resolves `@open-dpp/*` via `moduleNameMapper` to `packages/*/src`.
+- **Package imports in tests**: Vitest resolves `@open-dpp/*` via `resolve.alias` (in `vitest.shared.ts`) to `packages/*/src`.
+- **Test APIs are imported explicitly** from `vitest` (`describe`, `it`, `expect`, `vi`, …); there are no globals outside `apps/client`. `vi.mock` is hoisted above the imports, so its factory may only reference what `vi.hoisted` declares.
 - **`ignoreIds()`**: Helper in `apps/main/test/utils.for.test.ts` replaces all `id` fields with `expect.any(String)` for assertions on objects with generated UUIDs.
 
 ### Auth & Multi-tenancy

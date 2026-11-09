@@ -1,13 +1,4 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -27,8 +18,8 @@ describe("MigrationRunnerService", () => {
   let module: TestingModule;
   let repository: AppliedMigrationRepository;
   let appliedMigrationModel: Model<AppliedMigrationDoc>;
-  let errorSpy: ReturnType<typeof jest.spyOn>;
-  let warnSpy: ReturnType<typeof jest.spyOn>;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
   const migrations: Migration[] = [];
   const executed: string[] = [];
 
@@ -69,8 +60,8 @@ describe("MigrationRunnerService", () => {
     await appliedMigrationModel.deleteMany({});
     migrations.length = 0;
     executed.length = 0;
-    errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
-    warnSpy = jest.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
+    errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    warnSpy = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -119,7 +110,7 @@ describe("MigrationRunnerService", () => {
 
   it("stops at a failing migration, rethrows and retries it on the next run", async () => {
     const failure = new Error("boom");
-    const failing = jest.fn<() => Promise<void>>().mockRejectedValueOnce(failure);
+    const failing = vi.fn<() => Promise<void>>().mockRejectedValueOnce(failure);
     migrations.push(
       migration("20260101000000-first"),
       migration("20260102000000-failing", failing),

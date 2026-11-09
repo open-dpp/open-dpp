@@ -1,5 +1,5 @@
 import { inspect } from "node:util";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { Logger } from "@nestjs/common";
 
 /** A question that must never show up in a log line. */
@@ -20,7 +20,7 @@ export interface CapturedLogs {
  */
 export function captureLogs(): CapturedLogs {
   const spies = LOG_METHODS.map((method) =>
-    jest.spyOn(Logger.prototype, method).mockImplementation(() => undefined),
+    vi.spyOn(Logger.prototype, method).mockImplementation(() => undefined),
   );
   return {
     text: () =>
