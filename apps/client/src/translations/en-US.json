@@ -1242,6 +1242,7 @@
       "png": "Download PNG"
     },
     "loadError": "The data carrier could not be loaded.",
-    "downloadError": "The data carrier could not be downloaded."
+    "downloadError": "The data carrier could not be downloaded.",
+    "copyError": "The link could not be copied to the clipboard."
   }
 }

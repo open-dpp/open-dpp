@@ -1242,6 +1242,7 @@
       "png": "PNG herunterladen"
     },
     "loadError": "Der Datenträger konnte nicht geladen werden.",
-    "downloadError": "Der Datenträger konnte nicht heruntergeladen werden."
+    "downloadError": "Der Datenträger konnte nicht heruntergeladen werden.",
+    "copyError": "Der Link konnte nicht in die Zwischenablage kopiert werden."
   }
 }

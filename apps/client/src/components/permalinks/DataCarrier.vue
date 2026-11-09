@@ -6,7 +6,6 @@ import {
   PermalinkKind,
   type PermalinkKindType,
 } from "@open-dpp/dto";
-import { useClipboard } from "@vueuse/core";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client";
@@ -27,7 +26,6 @@ const props = withDefaults(
 const { t } = useI18n();
 const notificationStore = useNotificationStore();
 const { logErrorWithNotification } = useErrorHandlingStore();
-const { copy } = useClipboard();
 
 const imageUrl = ref<string | null>(null);
 const loadFailed = ref(false);
@@ -108,8 +106,13 @@ async function onDownload(format: CarrierExportFormatType) {
 
 async function onCopy() {
   if (!url.value) return;
-  await copy(url.value);
-  notificationStore.addSuccessNotification(t("common.clipboardSuccess"));
+  try {
+    // Throws when the Clipboard API is missing and rejects when the write is denied
+    await navigator.clipboard.writeText(url.value);
+    notificationStore.addSuccessNotification(t("common.clipboardSuccess"));
+  } catch (error) {
+    logErrorWithNotification(t("dataCarrier.copyError"), error);
+  }
 }
 </script>
 

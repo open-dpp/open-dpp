@@ -3,13 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 
-const { getCarrierExport, downloadBlob, logErrorWithNotification, addSuccessNotification, copy } =
+const { getCarrierExport, downloadBlob, logErrorWithNotification, addSuccessNotification } =
   vi.hoisted(() => ({
     getCarrierExport: vi.fn(),
     downloadBlob: vi.fn(),
     logErrorWithNotification: vi.fn(),
     addSuccessNotification: vi.fn(),
-    copy: vi.fn(),
   }));
 
 vi.mock("../../lib/api-client", () => ({
@@ -22,7 +21,6 @@ vi.mock("../../stores/error.handling", () => ({
 vi.mock("../../stores/notification", () => ({
   useNotificationStore: () => ({ addSuccessNotification }),
 }));
-vi.mock("@vueuse/core", () => ({ useClipboard: () => ({ copy }) }));
 
 // PrimeVue's Button is auto-imported in the app but not under vitest
 const ButtonStub = defineComponent({
@@ -53,6 +51,7 @@ const i18n = createI18n({
         download: { svg: "Download SVG", png: "Download PNG" },
         loadError: "The data carrier could not be loaded.",
         downloadError: "The data carrier could not be downloaded.",
+        copyError: "The link could not be copied.",
       },
     },
   },
@@ -76,6 +75,14 @@ function mountDataCarrier(props: Record<string, unknown> = {}) {
 describe("DataCarrier", () => {
   const createObjectURL = vi.fn();
   const revokeObjectURL = vi.fn();
+  const writeText = vi.fn();
+
+  function setClipboard(clipboard: { writeText: typeof writeText } | undefined) {
+    Object.defineProperty(globalThis.navigator, "clipboard", {
+      value: clipboard,
+      configurable: true,
+    });
+  }
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -86,6 +93,8 @@ describe("DataCarrier", () => {
     getCarrierExport.mockImplementation(async (_id: string, params: { format: string }) => ({
       data: new Blob([params.format === "svg" ? "<svg/>" : "png"]),
     }));
+    writeText.mockResolvedValue(undefined);
+    setClipboard({ writeText });
   });
 
   it("shows the server-rendered SVG of the permalink", async () => {
@@ -211,8 +220,37 @@ describe("DataCarrier", () => {
     await wrapper.get("[data-testid='permalink-qr-copy-btn']").trigger("click");
     await flushPromises();
 
-    expect(copy).toHaveBeenCalledWith(openDppPermalink.publicUrl);
+    expect(writeText).toHaveBeenCalledWith(openDppPermalink.publicUrl);
     expect(addSuccessNotification).toHaveBeenCalledWith("Copied");
+    expect(logErrorWithNotification).not.toHaveBeenCalled();
+  });
+
+  it("reports an error instead of success when the clipboard is unavailable", async () => {
+    setClipboard(undefined);
+    const wrapper = mountDataCarrier();
+    await flushPromises();
+
+    await wrapper.get("[data-testid='permalink-qr-copy-btn']").trigger("click");
+    await flushPromises();
+
+    expect(addSuccessNotification).not.toHaveBeenCalled();
+    expect(logErrorWithNotification).toHaveBeenCalledWith(
+      "The link could not be copied.",
+      expect.any(Error),
+    );
+  });
+
+  it("reports an error instead of success when the clipboard write is rejected", async () => {
+    const error = new DOMException("Write permission denied", "NotAllowedError");
+    writeText.mockRejectedValue(error);
+    const wrapper = mountDataCarrier();
+    await flushPromises();
+
+    await wrapper.get("[data-testid='permalink-qr-copy-btn']").trigger("click");
+    await flushPromises();
+
+    expect(addSuccessNotification).not.toHaveBeenCalled();
+    expect(logErrorWithNotification).toHaveBeenCalledWith("The link could not be copied.", error);
   });
 
   it("shows the GS1 element string next to a GS1 Digital Link", async () => {
