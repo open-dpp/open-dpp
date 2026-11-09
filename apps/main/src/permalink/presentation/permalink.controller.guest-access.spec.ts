@@ -1,7 +1,7 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { VersioningType } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -111,7 +111,7 @@ describe("PermalinkController — who sees what", () => {
       providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
     })
       .overrideProvider(EmailService)
-      .useValue({ send: jest.fn() })
+      .useValue({ send: vi.fn() })
       .compile();
 
     betterAuthHelper.init(moduleRef.get(UsersService), moduleRef.get<Auth>(AUTH));

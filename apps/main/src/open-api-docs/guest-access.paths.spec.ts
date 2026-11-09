@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { buildOpenApiDocumentation } from "./index";
 
 describe("guestAccessPaths", () => {
@@ -27,5 +28,17 @@ describe("guestAccessPaths", () => {
     expect(hasOrgHeader("/guest-accesses/{id}/role", "patch")).toBe(true);
     expect(hasOrgHeader("/guest-accesses/{id}/invitation", "get")).toBe(false);
     expect(hasOrgHeader("/guest-accesses/{id}/accept", "post")).toBe(false);
+  });
+
+  it("documents the status codes the controller answers with", () => {
+    const successCodes = (path: string, method: "post" | "patch") =>
+      Object.keys(document.paths?.[path]?.[method]?.responses ?? {}).filter((code) =>
+        code.startsWith("2"),
+      );
+
+    expect(successCodes("/guest-accesses", "post")).toEqual(["201"]);
+    expect(successCodes("/guest-accesses/{id}/role", "patch")).toEqual(["200"]);
+    expect(successCodes("/guest-accesses/{id}/revoke", "post")).toEqual(["200"]);
+    expect(successCodes("/guest-accesses/{id}/accept", "post")).toEqual(["200"]);
   });
 });

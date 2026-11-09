@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post } from "@nestjs/common";
 import {
   type CreateGuestAccessDto,
   CreateGuestAccessDtoSchema,
@@ -68,6 +68,7 @@ export class GuestAccessController {
 
   @MemberHasRole([MemberRole.OWNER])
   @Post(":id/revoke")
+  @HttpCode(HttpStatus.OK)
   async revoke(
     @Param("id") id: string,
     @OrganizationId() organizationId: string,
@@ -95,6 +96,7 @@ export class GuestAccessController {
   // Called by the invited person, who does not belong to the organization and sends no
   // organization header. The service checks that the account's verified email matches.
   @Post(":id/accept")
+  @HttpCode(HttpStatus.OK)
   async accept(
     @Param("id") id: string,
     @UserIdDecorator() userId: string,

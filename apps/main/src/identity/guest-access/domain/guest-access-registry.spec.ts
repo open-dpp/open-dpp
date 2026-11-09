@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { ValueError } from "@open-dpp/exception";
 import { DirectGuestAccess } from "./direct-guest-access";
 import { guestAccessFromPlain } from "./guest-access-registry";

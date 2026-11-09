@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { User } from "../../../users/domain/user";
 import { DirectGuestAccess } from "../../domain/direct-guest-access";
 import { GuestRole } from "../../domain/guest-role.enum";

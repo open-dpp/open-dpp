@@ -14,12 +14,13 @@ const tag = "guest-accesses";
 const organizationIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };
 const security: Record<string, string[]>[] = [{ sessionAuth: [] }, { apiKeyAuth: [] }];
 
-const guestAccessResponses = {
-  [HTTPCode.OK]: {
-    content: {
-      [ContentType.JSON]: { schema: GuestAccessResponseDtoSchema },
-    },
+const guestAccessBody = {
+  content: {
+    [ContentType.JSON]: { schema: GuestAccessResponseDtoSchema },
   },
+};
+
+const ownerErrorResponses = {
   [HTTPCode.FORBIDDEN]: { description: "The caller is not an owner of the organization." },
   [HTTPCode.NOT_FOUND]: { description: "The guest access does not exist." },
 };
@@ -42,11 +43,7 @@ export const guestAccessPaths = {
         },
       },
       responses: {
-        [HTTPCode.CREATED]: {
-          content: {
-            [ContentType.JSON]: { schema: GuestAccessResponseDtoSchema },
-          },
-        },
+        [HTTPCode.CREATED]: guestAccessBody,
         [HTTPCode.BAD_REQUEST]: { description: "The body is invalid." },
         [HTTPCode.FORBIDDEN]: { description: "The caller is not an owner of the organization." },
       },
@@ -83,7 +80,8 @@ export const guestAccessPaths = {
         },
       },
       responses: {
-        ...guestAccessResponses,
+        [HTTPCode.OK]: guestAccessBody,
+        ...ownerErrorResponses,
         [HTTPCode.BAD_REQUEST]: { description: "The body is invalid or the access is revoked." },
       },
       security: security,
@@ -96,7 +94,10 @@ export const guestAccessPaths = {
       description:
         "Owner only. The guest loses the access with the next request and is notified by email.",
       parameters: [organizationIdHeader, IdParamSchema],
-      responses: guestAccessResponses,
+      responses: {
+        [HTTPCode.OK]: guestAccessBody,
+        ...ownerErrorResponses,
+      },
       security,
     },
   },
@@ -131,11 +132,7 @@ export const guestAccessPaths = {
         "organization header.",
       parameters: [IdParamSchema],
       responses: {
-        [HTTPCode.OK]: {
-          content: {
-            [ContentType.JSON]: { schema: GuestAccessResponseDtoSchema },
-          },
-        },
+        [HTTPCode.OK]: guestAccessBody,
         [HTTPCode.BAD_REQUEST]: { description: "The invitation is revoked or already accepted." },
         [HTTPCode.FORBIDDEN]: {
           description: "The account is not the invited one or its email is not verified.",

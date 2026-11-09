@@ -64,15 +64,12 @@ export const guestAccessHandlers = [
     if (!hasOrganizationHeader(request)) {
       return new HttpResponse(null, { status: 403 });
     }
-    return HttpResponse.json(
-      {
-        ...pendingGuestAccess,
-        id: params.id,
-        status: "Revoked",
-        revokedAt: "2026-10-27T10:00:00.000Z",
-      },
-      { status: 201 },
-    );
+    return HttpResponse.json({
+      ...pendingGuestAccess,
+      id: params.id,
+      status: "Revoked",
+      revokedAt: "2026-10-27T10:00:00.000Z",
+    });
   }),
   // The invited person is not a member and sends no organization header.
   http.get(`${baseURL}/guest-accesses/:id/invitation`, ({ params }) => {
@@ -85,15 +82,12 @@ export const guestAccessHandlers = [
     });
   }),
   http.post(`${baseURL}/guest-accesses/:id/accept`, ({ params }) => {
-    return HttpResponse.json(
-      {
-        ...pendingGuestAccess,
-        id: params.id,
-        status: "Accepted",
-        acceptedByUserId: "user-1",
-        acceptedAt: "2026-10-27T10:00:00.000Z",
-      },
-      { status: 201 },
-    );
+    return HttpResponse.json({
+      ...pendingGuestAccess,
+      id: params.id,
+      status: "Accepted",
+      acceptedByUserId: "user-1",
+      acceptedAt: "2026-10-27T10:00:00.000Z",
+    });
   }),
 ];

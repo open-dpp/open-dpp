@@ -1,7 +1,7 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -37,7 +37,7 @@ describe("GuestAccessController", () => {
   let moduleRef: TestingModule;
   let membersRepository: MembersRepository;
   const betterAuthHelper = new BetterAuthHelper();
-  const sendMail = jest.fn<(mail: BaseEmail) => Promise<void>>();
+  const sendMail = vi.fn<(mail: BaseEmail) => Promise<void>>();
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -222,7 +222,7 @@ describe("GuestAccessController", () => {
 
     const { user, accepted } = await createAcceptedGuest(owner);
 
-    expect(accepted.status).toEqual(201);
+    expect(accepted.status).toEqual(200);
     expect(accepted.body).toEqual(
       expect.objectContaining({ status: "Accepted", acceptedByUserId: user.id }),
     );
@@ -277,7 +277,7 @@ describe("GuestAccessController", () => {
       .post(`/guest-accesses/${id}/revoke`)
       .set("Cookie", owner.userCookie)
       .set(ORGANIZATION_ID_HEADER, owner.org.id);
-    expect(revoked.status).toEqual(201);
+    expect(revoked.status).toEqual(200);
     expect(revoked.body).toEqual(expect.objectContaining({ status: "Revoked" }));
     expect(revoked.body.revokedAt).toEqual(expect.any(String));
   });

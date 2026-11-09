@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { ResendVerificationEmailDtoSchema } from "./resend-verification-email.dto";
 
 describe("ResendVerificationEmailDtoSchema", () => {

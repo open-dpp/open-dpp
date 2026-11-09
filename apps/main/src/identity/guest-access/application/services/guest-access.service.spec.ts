@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
 import { ForbiddenException, Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -34,7 +35,7 @@ describe("GuestAccessService", () => {
   let sentMails: BaseEmail[];
   let languages: Map<string, DisplayLanguageType>;
   let accountEmails: Set<string>;
-  let sendMail: jest.Mock<(mail: BaseEmail) => Promise<void>>;
+  let sendMail: Mock<(mail: BaseEmail) => Promise<void>>;
 
   const organizationId = "org-1";
   const ownerId = "owner-1";
@@ -71,14 +72,14 @@ describe("GuestAccessService", () => {
   }
 
   beforeEach(async () => {
-    jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
     owners = new Set([ownerId]);
     members = [];
     memberOfOrganization = new Set();
     sentMails = [];
     languages = new Map();
     accountEmails = new Set();
-    sendMail = jest.fn(async (mail: BaseEmail) => {
+    sendMail = vi.fn(async (mail: BaseEmail) => {
       sentMails.push(mail);
     });
 
@@ -130,7 +131,7 @@ describe("GuestAccessService", () => {
   });
 
   afterEach(async () => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     await module.close();
   });
 
