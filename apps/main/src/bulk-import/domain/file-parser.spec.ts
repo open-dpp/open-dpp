@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import type { BulkImportRowDto } from "@open-dpp/dto";
 import { FileParser } from "./file-parser";
 

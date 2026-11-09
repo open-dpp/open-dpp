@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import {
   migrateLinksInValueRepresentation,

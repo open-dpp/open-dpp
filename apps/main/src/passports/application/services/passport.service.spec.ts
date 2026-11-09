@@ -47,7 +47,7 @@ import { ActivityRepository } from "../../../activity-history/infrastructure/act
 import { ActivityTypes } from "../../../activity-history/domain/activities/activity-types";
 import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
 import { EmailService } from "../../../email/email.service";
-import { jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Template } from "../../../templates/domain/template";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
@@ -97,7 +97,7 @@ describe("passportService", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
     await module.init();

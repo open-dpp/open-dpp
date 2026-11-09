@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { DataTypeDef, KeyTypes, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
@@ -110,7 +110,7 @@ describe("annotatedRelationshipElement", () => {
       submodelElement0,
       submodelElement1,
     ]);
-    const onDelete = jest.fn();
+    const onDelete = vi.fn();
     annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, {
       ability,
       onDelete,

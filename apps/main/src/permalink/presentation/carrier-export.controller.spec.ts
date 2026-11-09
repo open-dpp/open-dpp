@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { LatestApiVersionWithPrefixDto, PermalinkKind } from "@open-dpp/dto";
 import sharp from "sharp";
 import request from "supertest";

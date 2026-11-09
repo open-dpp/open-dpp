@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HttpService } from "@nestjs/axios";
 import { Logger } from "@nestjs/common";
 import { AxiosResponse } from "axios";
@@ -23,11 +23,11 @@ describe("VirusScanFileValidator", () => {
     OPEN_DPP_CLAMAV_URL: process.env.OPEN_DPP_CLAMAV_URL,
     NODE_ENV: process.env.NODE_ENV,
   };
-  let post: jest.SpiedFunction<HttpService["post"]>;
+  let post: MockInstance<HttpService["post"]>;
   let validator: VirusScanFileValidator;
 
   beforeEach(() => {
-    post = jest.spyOn(HttpService.prototype, "post");
+    post = vi.spyOn(HttpService.prototype, "post");
     validator = new VirusScanFileValidator({ storageType: "memory" });
   });
 
@@ -60,7 +60,7 @@ describe("VirusScanFileValidator", () => {
         Object.assign(new Error("getaddrinfo ENOTFOUND"), { syscall: "getaddrinfo" }),
       ),
     );
-    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
 
     await expect(validator.isValid(file)).resolves.toBe(false);
     expect(errorSpy).toHaveBeenCalledWith("Error during virus scan", expect.any(Error));

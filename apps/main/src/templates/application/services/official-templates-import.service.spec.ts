@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { AasSerializationService } from "../../../aas/infrastructure/serialization/aas-serialization.service";
 import { OfficialTemplateRepository } from "../../infrastructure/official-template.repository";
@@ -9,21 +9,21 @@ describe("OfficialTemplatesImportService", () => {
   let service: OfficialTemplatesImportService;
 
   const mockSource = {
-    listTemplateFileNames: jest.fn<OfficialTemplateRepository["listTemplateFileNames"]>(),
-    fetchTemplateFile: jest.fn<OfficialTemplateRepository["fetchTemplateFile"]>(),
+    listTemplateFileNames: vi.fn<OfficialTemplateRepository["listTemplateFileNames"]>(),
+    fetchTemplateFile: vi.fn<OfficialTemplateRepository["fetchTemplateFile"]>(),
   };
 
   const mockAasSerializationService = {
-    importTemplate: jest.fn<AasSerializationService["importTemplate"]>(),
+    importTemplate: vi.fn<AasSerializationService["importTemplate"]>(),
   };
 
   const mockTemplateRepository = {
-    save: jest.fn(),
+    save: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    vi.clearAllMocks();
+    vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
     service = new OfficialTemplatesImportService(
       mockSource as unknown as OfficialTemplateRepository,
       mockAasSerializationService as unknown as AasSerializationService,

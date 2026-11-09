@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { uniqueProductIdentifierPlainFactory } from "@open-dpp/testing";
 import { UniqueProductIdentifier } from "./unique.product.identifier";
 

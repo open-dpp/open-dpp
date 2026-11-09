@@ -1,3 +1,4 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { OpenDppClient } from "../../src";
 import { activeOrganization } from "../dpp/handlers/organization";

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -39,11 +39,11 @@ describe("aiConfigurationService", () => {
     service = module.get<AiConfigurationService>(AiConfigurationService);
   });
   beforeEach(() => {
-    jest.spyOn(Date, "now").mockImplementation(() => mockNow);
+    vi.spyOn(Date, "now").mockImplementation(() => mockNow);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("fails if requested configuration could not be found", async () => {

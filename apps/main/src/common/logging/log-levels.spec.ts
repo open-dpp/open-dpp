@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { logLevelsUpTo } from "./log-levels";
 
 describe("logLevelsUpTo", () => {

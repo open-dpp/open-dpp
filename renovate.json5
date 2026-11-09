@@ -43,5 +43,12 @@
       groupName: "better-auth",
       matchPackageNames: ["better-auth", "@better-auth/**"],
     },
+    {
+      // Node 26 LTS is the baseline (Dockerfile, CI `NODE_VERSION`, .node-version,
+      // `engines`). The runtime and its typings move to the next major together,
+      // by hand, as one deliberate change, not as a scheduled Renovate PR.
+      matchPackageNames: ["node", "@types/node"],
+      allowedVersions: "<27",
+    },
   ],
 }

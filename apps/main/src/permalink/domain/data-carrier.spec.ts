@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { CarrierErrorCorrectionLevel } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { DataCarrier, QUIET_ZONE_MODULES } from "./data-carrier";
