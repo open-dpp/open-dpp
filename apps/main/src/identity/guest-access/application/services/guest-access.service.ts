@@ -15,7 +15,10 @@ import { DirectGuestAccess } from "../../domain/direct-guest-access";
 import { GuestAccess } from "../../domain/guest-access";
 import { GuestAccessStatus } from "../../domain/guest-access-kind.enum";
 import { GuestRole, GuestRoleType } from "../../domain/guest-role.enum";
-import { GuestAccessRepository } from "../../infrastructure/adapters/guest-access.repository";
+import {
+  GUEST_ACCESS_ALREADY_EXISTS,
+  GuestAccessRepository,
+} from "../../infrastructure/adapters/guest-access.repository";
 
 const GUEST_ROLE_NAME_BY_LANGUAGE: Record<DisplayLanguageType, Record<GuestRoleType, string>> = {
   en: {
@@ -74,7 +77,7 @@ export class GuestAccessService {
       revoked: false,
     });
     if (existing.length > 0) {
-      throw new ValueError("A guest access for this email already exists");
+      throw new ValueError(GUEST_ACCESS_ALREADY_EXISTS);
     }
 
     const saved = await this.guestAccessRepository.save(guestAccess);

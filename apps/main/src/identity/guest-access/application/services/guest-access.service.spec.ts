@@ -124,10 +124,10 @@ describe("GuestAccessService", () => {
 
     service = module.get(GuestAccessService);
     repository = module.get(GuestAccessRepository);
-    await module
-      .get<Connection>(getConnectionToken())
-      .collection(GUEST_ACCESS_COLLECTION)
-      .deleteMany({});
+    const connection = module.get<Connection>(getConnectionToken());
+    // the unique index decides when invitations race
+    await connection.model(GuestAccessSchemaClass.name).syncIndexes();
+    await connection.collection(GUEST_ACCESS_COLLECTION).deleteMany({});
   });
 
   afterEach(async () => {
@@ -190,6 +190,23 @@ describe("GuestAccessService", () => {
         email: "repairer@example.com",
         returnUrl: expect.stringMatching(new RegExp(`/accept-guest-access/${access.id}$`)),
       });
+    });
+
+    it("lets only one of two concurrent invitations for the same email succeed", async () => {
+      const invite = () =>
+        service.invite({
+          organizationId,
+          actingUserId: ownerId,
+          email: "repairer@example.com",
+          guestRole: GuestRole.REPAIRER,
+        });
+
+      const results = await Promise.allSettled([invite(), invite()]);
+
+      expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      expect(results.find((r) => r.status === "rejected")?.reason).toBeInstanceOf(ValueError);
+      const accesses = await service.list(organizationId, ownerId);
+      expect(accesses).toHaveLength(1);
     });
 
     it("does not tell the owner whether the address has an account", async () => {

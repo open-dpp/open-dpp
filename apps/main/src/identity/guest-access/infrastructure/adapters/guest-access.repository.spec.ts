@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { User } from "../../../users/domain/user";
@@ -13,7 +13,7 @@ import {
   GuestAccess as GuestAccessSchemaClass,
   GuestAccessSchema,
 } from "../schemas/guest-access.schema";
-import { GuestAccessRepository } from "./guest-access.repository";
+import { GUEST_ACCESS_ALREADY_EXISTS, GuestAccessRepository } from "./guest-access.repository";
 
 describe("GuestAccessRepository", () => {
   let module: TestingModule;
@@ -71,11 +71,64 @@ describe("GuestAccessRepository", () => {
 
     expect(indexes.map((i) => i.key)).toEqual([
       { _id: 1 },
-      { organizationId: 1, email: 1 },
+      { organizationId: 1, email: 1, revokedAt: 1 },
       { acceptedByUserId: 1, organizationId: 1 },
     ]);
+    const uniqueIndex = indexes.find((i) => "email" in i.key);
+    expect(uniqueIndex?.unique).toBe(true);
+    expect(uniqueIndex?.partialFilterExpression).toEqual({ email: { $exists: true } });
     const userIndex = indexes.find((i) => "acceptedByUserId" in i.key);
     expect(userIndex?.partialFilterExpression).toEqual({ acceptedByUserId: { $exists: true } });
+  });
+
+  describe("one live access per organization and email", () => {
+    beforeEach(async () => {
+      await connection.model(GuestAccessSchemaClass.name).syncIndexes();
+    });
+
+    it("rejects a second live access, also when two are saved at the same time", async () => {
+      const results = await Promise.allSettled([
+        repository.save(createAccess()),
+        repository.save(createAccess()),
+      ]);
+
+      expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      const rejected = results.find((r) => r.status === "rejected");
+      expect(rejected).toMatchObject({ reason: expect.any(ValueError) });
+      expect(rejected).toMatchObject({ reason: { message: GUEST_ACCESS_ALREADY_EXISTS } });
+      expect(await repository.findAllByOrganizationId("org-1")).toHaveLength(1);
+    });
+
+    it("allows the same email in another organization", async () => {
+      await repository.save(createAccess({ organizationId: "org-1" }));
+
+      await expect(
+        repository.save(createAccess({ organizationId: "org-2" })),
+      ).resolves.toBeDefined();
+    });
+
+    it("allows to revoke and invite the same email again, any number of times", async () => {
+      for (let round = 1; round <= 3; round++) {
+        const access = createAccess();
+        await repository.save(access);
+        access.revoke(new Date(`2026-10-0${round}T10:00:00.000Z`));
+        await repository.save(access);
+      }
+      await repository.save(createAccess());
+
+      const all = await repository.findAllByOrganizationId("org-1");
+      expect(all).toHaveLength(4);
+      expect(await repository.findAllByOrganizationId("org-1", { revoked: false })).toHaveLength(1);
+    });
+
+    it("rejects a second live access for an email whose first access was only changed", async () => {
+      const first = createAccess();
+      await repository.save(first);
+      first.changeGuestRole(GuestRole.RECYCLER);
+      await repository.save(first);
+
+      await expect(repository.save(createAccess())).rejects.toBeInstanceOf(ValueError);
+    });
   });
 
   it("saves a pending access and finds it by id", async () => {

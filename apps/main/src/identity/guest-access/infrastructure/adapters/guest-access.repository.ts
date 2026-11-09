@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { Model } from "mongoose";
 import { GuestAccess } from "../../domain/guest-access";
 import { GuestAccessMapper, GuestAccessPersistence } from "../mappers/guest-access.mapper";
@@ -9,6 +9,19 @@ import {
   GuestAccess as GuestAccessSchemaClass,
   GuestAccessSchemaVersion,
 } from "../schemas/guest-access.schema";
+
+export const GUEST_ACCESS_ALREADY_EXISTS = "A guest access for this email already exists";
+
+const MONGO_DUPLICATE_KEY_ERROR_CODE = 11000;
+
+function isDuplicateKeyError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === MONGO_DUPLICATE_KEY_ERROR_CODE
+  );
+}
 
 export interface GuestAccessFilter {
   /** Only accesses accepted by this user. */
@@ -33,7 +46,16 @@ export class GuestAccessRepository {
       new this.model({ _id: guestAccess.id });
     // overwrite drops fields that are no longer set, so the document always mirrors the entity
     document.overwrite({ ...persistence, _schemaVersion: GuestAccessSchemaVersion.v1_0_0 });
-    const saved = await document.save();
+    let saved: GuestAccessDocument;
+    try {
+      saved = await document.save();
+    } catch (error) {
+      // The unique index decides when invitations race: only one live access per organization and email
+      if (isDuplicateKeyError(error)) {
+        throw new ValueError(GUEST_ACCESS_ALREADY_EXISTS);
+      }
+      throw error;
+    }
     return GuestAccessMapper.toDomain(saved.toObject<GuestAccessPersistence>());
   }
 

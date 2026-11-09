@@ -72,7 +72,14 @@ export const GuestAccessSchema = SchemaFactory.createForClass(GuestAccess);
 
 // Owner's guest list and the duplicate-invitation check. The leading organizationId also serves
 // queries by organization alone.
-GuestAccessSchema.index({ organizationId: 1, email: 1 });
+// Unique, so that at most one live access exists per organization and email even if two invitations
+// race: a live access has no revokedAt, which is indexed as null, while every revoked access has
+// its own timestamp. That is why revokedAt is part of the key. Accesses without an email (other
+// kinds) are left out.
+GuestAccessSchema.index(
+  { organizationId: 1, email: 1, revokedAt: 1 },
+  { unique: true, partialFilterExpression: { email: { $exists: true } } },
+);
 // Authorization on every permalink request: the accesses a user has accepted in an organization.
 // Pending invitations have no acceptedByUserId and stay out of this index.
 GuestAccessSchema.index(
