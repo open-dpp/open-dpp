@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { EnvModule, EnvService } from "@open-dpp/env";

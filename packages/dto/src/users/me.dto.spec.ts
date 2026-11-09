@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Language } from "../aas/enums/language-enum";
 import { MeDtoSchema } from "./me.dto";
 

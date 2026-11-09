@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { StatusService } from "./status.service";
 

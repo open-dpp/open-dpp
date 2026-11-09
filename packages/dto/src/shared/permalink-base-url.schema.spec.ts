@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { baseUrlOrigin, PermalinkBaseUrlSchema } from "./permalink-base-url.schema";
 import { LatestApiVersionWithPrefixDto } from "../api-version.dto";
 

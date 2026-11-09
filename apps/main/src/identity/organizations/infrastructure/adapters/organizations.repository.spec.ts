@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ObjectId } from "mongodb";
@@ -15,16 +15,16 @@ describe("OrganizationsRepository", () => {
   beforeEach(async () => {
     mockAuth = {
       api: {
-        createOrganization: jest.fn(),
-        updateOrganization: jest.fn(),
-        listOrganizations: jest.fn(),
+        createOrganization: vi.fn(),
+        updateOrganization: vi.fn(),
+        listOrganizations: vi.fn(),
       },
     };
 
     mockOrganizationModel = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-      findById: jest.fn(),
+      find: vi.fn(),
+      findOne: vi.fn(),
+      findById: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

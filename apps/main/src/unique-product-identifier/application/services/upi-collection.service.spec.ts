@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { type Mock, describe, expect, it, vi } from "vitest";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import { ValueError } from "@open-dpp/exception";
 import { uniqueProductIdentifierUpdateRequestPlainFactory } from "@open-dpp/testing";
@@ -18,9 +18,9 @@ function makeDraftPassport(id: string) {
   return {
     id,
     organizationId: randomUUID(),
-    isDraft: jest.fn(() => true),
-    isPublished: jest.fn(() => false),
-    isArchived: jest.fn(() => false),
+    isDraft: vi.fn(() => true),
+    isPublished: vi.fn(() => false),
+    isArchived: vi.fn(() => false),
   };
 }
 
@@ -28,9 +28,9 @@ function makePublishedPassport(id: string) {
   return {
     id,
     organizationId: randomUUID(),
-    isDraft: jest.fn(() => false),
-    isPublished: jest.fn(() => true),
-    isArchived: jest.fn(() => false),
+    isDraft: vi.fn(() => false),
+    isPublished: vi.fn(() => true),
+    isArchived: vi.fn(() => false),
   };
 }
 
@@ -38,58 +38,58 @@ function makeArchivedPassport(id: string) {
   return {
     id,
     organizationId: randomUUID(),
-    isDraft: jest.fn(() => false),
-    isPublished: jest.fn(() => false),
-    isArchived: jest.fn(() => true),
+    isDraft: vi.fn(() => false),
+    isPublished: vi.fn(() => false),
+    isArchived: vi.fn(() => true),
   };
 }
 
 function makeService(overrides?: {
   upiRepo?: Partial<{
-    save: jest.Mock;
-    findOneOrFail: jest.Mock;
-    deleteById: jest.Mock;
-    findAllByOrganizationId: jest.Mock;
-    findAllByReferencedIdPaginated: jest.Mock;
+    save: Mock;
+    findOneOrFail: Mock;
+    deleteById: Mock;
+    findAllByOrganizationId: Mock;
+    findAllByReferencedIdPaginated: Mock;
   }>;
   passportRepo?: Partial<{
-    findOne: jest.Mock;
-    findByIds: jest.Mock;
+    findOne: Mock;
+    findByIds: Mock;
   }>;
   baseUrlResolver?: Partial<{
-    getResolverBase: jest.Mock;
+    getResolverBase: Mock;
   }>;
   permalinkApplicationService?: Partial<{
-    getPermalinkSummariesByUpiIds: jest.Mock;
-    deleteGs1LinkForUpi: jest.Mock;
+    getPermalinkSummariesByUpiIds: Mock;
+    deleteGs1LinkForUpi: Mock;
   }>;
 }) {
   const upiRepo = {
-    save: jest.fn(async (upi: UniqueProductIdentifier) => upi),
-    findOneOrFail: jest.fn(async () => {
+    save: vi.fn(async (upi: UniqueProductIdentifier) => upi),
+    findOneOrFail: vi.fn(async () => {
       throw new Error("findOneOrFail not configured");
     }),
-    deleteById: jest.fn(async () => undefined),
-    findAllByOrganizationId: jest.fn(async () =>
+    deleteById: vi.fn(async () => undefined),
+    findAllByOrganizationId: vi.fn(async () =>
       PagingResult.create({ pagination: Pagination.create({ limit: 100 }), items: [] }),
     ),
-    findAllByReferencedIdPaginated: jest.fn(async () =>
+    findAllByReferencedIdPaginated: vi.fn(async () =>
       PagingResult.create({ pagination: Pagination.create({ limit: 100 }), items: [] }),
     ),
     ...overrides?.upiRepo,
   };
   const passportRepo = {
-    findOne: jest.fn(async () => undefined),
-    findByIds: jest.fn(async () => new Map()),
+    findOne: vi.fn(async () => undefined),
+    findByIds: vi.fn(async () => new Map()),
     ...overrides?.passportRepo,
   };
   const baseUrlResolver = {
-    getResolverBase: jest.fn(async () => RESOLVER_BASE),
+    getResolverBase: vi.fn(async () => RESOLVER_BASE),
     ...overrides?.baseUrlResolver,
   };
   const permalinkApplicationService = {
-    getPermalinkSummariesByUpiIds: jest.fn(async () => new Map()),
-    deleteGs1LinkForUpi: jest.fn(async () => undefined),
+    getPermalinkSummariesByUpiIds: vi.fn(async () => new Map()),
+    deleteGs1LinkForUpi: vi.fn(async () => undefined),
     ...overrides?.permalinkApplicationService,
   };
   const service = new UpiCollectionService(
@@ -109,7 +109,7 @@ describe("UpiCollectionService.create", () => {
 
     const { service, upiRepo } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -138,7 +138,7 @@ describe("UpiCollectionService.create", () => {
 
     const { service } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -164,7 +164,7 @@ describe("UpiCollectionService.create", () => {
 
     const { service, upiRepo } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => publishedPassport),
+        findOne: vi.fn(async () => publishedPassport),
       },
     });
 
@@ -185,7 +185,7 @@ describe("UpiCollectionService.create", () => {
 
     const { service, upiRepo } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => archivedPassport),
+        findOne: vi.fn(async () => archivedPassport),
       },
     });
 
@@ -199,7 +199,7 @@ describe("UpiCollectionService.create", () => {
   it("(c) passport not found → NotFoundException, no save", async () => {
     const { service, upiRepo } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => undefined),
+        findOne: vi.fn(async () => undefined),
       },
     });
 
@@ -221,10 +221,10 @@ describe("UpiCollectionService.create", () => {
 
     const { service } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
       upiRepo: {
-        save: jest.fn(async () => {
+        save: vi.fn(async () => {
           throw dupKeyError;
         }),
       },
@@ -243,7 +243,7 @@ describe("UpiCollectionService.create", () => {
 
     const { service, upiRepo } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -265,7 +265,7 @@ describe("UpiCollectionService.create", () => {
 
     const { service, baseUrlResolver } = makeService({
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -282,7 +282,7 @@ describe("UpiCollectionService.createInternal", () => {
     const draftPassport = makeDraftPassport(referenceId);
 
     const { service, upiRepo } = makeService({
-      passportRepo: { findOne: jest.fn(async () => draftPassport) },
+      passportRepo: { findOne: vi.fn(async () => draftPassport) },
     });
 
     const result = await service.createInternal({ referenceId, organizationId });
@@ -300,7 +300,7 @@ describe("UpiCollectionService.createInternal", () => {
     const referenceId = randomUUID();
     const publishedPassport = makePublishedPassport(referenceId);
     const { service, upiRepo } = makeService({
-      passportRepo: { findOne: jest.fn(async () => publishedPassport) },
+      passportRepo: { findOne: vi.fn(async () => publishedPassport) },
     });
 
     const result = await service.createInternal({ referenceId, organizationId: randomUUID() });
@@ -314,7 +314,7 @@ describe("UpiCollectionService.createInternal", () => {
     const referenceId = randomUUID();
     const archivedPassport = makeArchivedPassport(referenceId);
     const { service, upiRepo } = makeService({
-      passportRepo: { findOne: jest.fn(async () => archivedPassport) },
+      passportRepo: { findOne: vi.fn(async () => archivedPassport) },
     });
 
     await expect(
@@ -325,7 +325,7 @@ describe("UpiCollectionService.createInternal", () => {
 
   it("(c) passport not found → NotFoundException, no save", async () => {
     const { service, upiRepo } = makeService({
-      passportRepo: { findOne: jest.fn(async () => undefined) },
+      passportRepo: { findOne: vi.fn(async () => undefined) },
     });
 
     await expect(
@@ -364,11 +364,11 @@ describe("UpiCollectionService.update", () => {
 
     const { service, upiRepo, passportRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        save: jest.fn(async (upi: UniqueProductIdentifier) => upi),
+        findOneOrFail: vi.fn(async () => existingUpi),
+        save: vi.fn(async (upi: UniqueProductIdentifier) => upi),
       },
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -396,11 +396,11 @@ describe("UpiCollectionService.update", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        save: jest.fn(async (upi: UniqueProductIdentifier) => upi),
+        findOneOrFail: vi.fn(async () => existingUpi),
+        save: vi.fn(async (upi: UniqueProductIdentifier) => upi),
       },
       passportRepo: {
-        findOne: jest.fn(async () => publishedPassport),
+        findOne: vi.fn(async () => publishedPassport),
       },
     });
 
@@ -417,13 +417,13 @@ describe("UpiCollectionService.update", () => {
 
     const { service } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        save: jest.fn(async () => {
+        findOneOrFail: vi.fn(async () => existingUpi),
+        save: vi.fn(async () => {
           throw dupKeyError;
         }),
       },
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -437,11 +437,11 @@ describe("UpiCollectionService.update", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => systemUpi),
-        save: jest.fn(async (upi: UniqueProductIdentifier) => upi),
+        findOneOrFail: vi.fn(async () => systemUpi),
+        save: vi.fn(async (upi: UniqueProductIdentifier) => upi),
       },
       passportRepo: {
-        findOne: jest.fn(async () => makeDraftPassport(referenceId)),
+        findOne: vi.fn(async () => makeDraftPassport(referenceId)),
       },
     });
 
@@ -457,7 +457,7 @@ describe("UpiCollectionService.update", () => {
 
     const { service } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => {
+        findOneOrFail: vi.fn(async () => {
           throw notFoundError;
         }),
       },
@@ -496,11 +496,11 @@ describe("UpiCollectionService.delete", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => existingUpi),
+        deleteById: vi.fn(async () => undefined),
       },
       passportRepo: {
-        findOne: jest.fn(async () => draftPassport),
+        findOne: vi.fn(async () => draftPassport),
       },
     });
 
@@ -516,11 +516,11 @@ describe("UpiCollectionService.delete", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => existingUpi),
+        deleteById: vi.fn(async () => undefined),
       },
       passportRepo: {
-        findOne: jest.fn(async () => publishedPassport),
+        findOne: vi.fn(async () => publishedPassport),
       },
     });
 
@@ -539,11 +539,11 @@ describe("UpiCollectionService.delete", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => systemRow),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => systemRow),
+        deleteById: vi.fn(async () => undefined),
       },
       passportRepo: {
-        findOne: jest.fn(async () => makeDraftPassport(referenceId)),
+        findOne: vi.fn(async () => makeDraftPassport(referenceId)),
       },
     });
 
@@ -557,11 +557,11 @@ describe("UpiCollectionService.delete", () => {
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => internalUpi),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => internalUpi),
+        deleteById: vi.fn(async () => undefined),
       },
       passportRepo: {
-        findOne: jest.fn(async () => makeDraftPassport(referenceId)),
+        findOne: vi.fn(async () => makeDraftPassport(referenceId)),
       },
     });
 
@@ -577,7 +577,7 @@ describe("UpiCollectionService.delete", () => {
 
     const { service } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => {
+        findOneOrFail: vi.fn(async () => {
           throw notFoundError;
         }),
       },
@@ -588,14 +588,14 @@ describe("UpiCollectionService.delete", () => {
 
   it("(i) deleting a GS1 UPI cascades its gs1-link permalink before the row delete", async () => {
     const existingUpi = makeGs1Upi();
-    const deleteGs1LinkForUpi = jest.fn(async () => undefined);
+    const deleteGs1LinkForUpi = vi.fn(async () => undefined);
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => existingUpi),
+        deleteById: vi.fn(async () => undefined),
       },
-      passportRepo: { findOne: jest.fn(async () => makeDraftPassport(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makeDraftPassport(referenceId)) },
       permalinkApplicationService: { deleteGs1LinkForUpi },
     });
 
@@ -607,16 +607,16 @@ describe("UpiCollectionService.delete", () => {
 
   it("(j) a published (frozen) gs1-link permalink blocks the UPI delete", async () => {
     const existingUpi = makeGs1Upi();
-    const deleteGs1LinkForUpi = jest.fn(async () => {
+    const deleteGs1LinkForUpi = vi.fn(async () => {
       throw new ConflictException("published permalink");
     });
 
     const { service, upiRepo } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => existingUpi),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => existingUpi),
+        deleteById: vi.fn(async () => undefined),
       },
-      passportRepo: { findOne: jest.fn(async () => makeDraftPassport(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makeDraftPassport(referenceId)) },
       permalinkApplicationService: { deleteGs1LinkForUpi },
     });
 
@@ -626,14 +626,14 @@ describe("UpiCollectionService.delete", () => {
 
   it("(k) deleting an internal UPI does not touch the permalink service", async () => {
     const internalUpi = makeSystemUpi();
-    const deleteGs1LinkForUpi = jest.fn(async () => undefined);
+    const deleteGs1LinkForUpi = vi.fn(async () => undefined);
 
     const { service } = makeService({
       upiRepo: {
-        findOneOrFail: jest.fn(async () => internalUpi),
-        deleteById: jest.fn(async () => undefined),
+        findOneOrFail: vi.fn(async () => internalUpi),
+        deleteById: vi.fn(async () => undefined),
       },
-      passportRepo: { findOne: jest.fn(async () => makeDraftPassport(referenceId)) },
+      passportRepo: { findOne: vi.fn(async () => makeDraftPassport(referenceId)) },
       permalinkApplicationService: { deleteGs1LinkForUpi },
     });
 

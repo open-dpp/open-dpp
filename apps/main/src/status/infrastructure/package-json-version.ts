@@ -32,7 +32,7 @@ export function findPackageVersion(startDir: string): string | undefined {
 
 /**
  * Where to start looking, most precise first. `__dirname` covers the CommonJS
- * build, but is undefined when Jest loads this module as ESM, so the entrypoint
+ * build, but is undefined once this module is loaded as ESM, so the entrypoint
  * and the working directory serve as fallbacks.
  */
 function startDirectories(): string[] {

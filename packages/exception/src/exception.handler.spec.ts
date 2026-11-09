@@ -1,3 +1,4 @@
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArgumentsHost } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import { HttpStatus } from "@nestjs/common";
@@ -15,24 +16,24 @@ describe("exceptionFilter", () => {
   let forbidenErrorFilter: ForbiddenExceptionFilter;
   let valueErrorFilter: ValueErrorFilter;
 
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: Mock;
+  let mockStatus: Mock;
   let mockResponse: any;
   let mockRequest: any;
   let mockArgumentsHost: ArgumentsHost;
 
   beforeEach(async () => {
     // Set up mock response and request
-    mockJson = jest.fn().mockReturnThis();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+    mockJson = vi.fn().mockReturnThis();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
     mockResponse = { status: mockStatus };
     mockRequest = { url: "/test-url" };
 
     // Set up mock ArgumentsHost
     mockArgumentsHost = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getResponse: jest.fn().mockReturnValue(mockResponse),
-        getRequest: jest.fn().mockReturnValue(mockRequest),
+      switchToHttp: vi.fn().mockReturnValue({
+        getResponse: vi.fn().mockReturnValue(mockResponse),
+        getRequest: vi.fn().mockReturnValue(mockRequest),
       }),
     } as unknown as ArgumentsHost;
 
@@ -48,11 +49,11 @@ describe("exceptionFilter", () => {
     forbidenErrorFilter = module.get<ForbiddenExceptionFilter>(ForbiddenExceptionFilter);
 
     // Mock Date.toISOString for consistent testing
-    jest.spyOn(Date.prototype, "toISOString").mockReturnValue("2025-03-26T12:00:00.000Z");
+    vi.spyOn(Date.prototype, "toISOString").mockReturnValue("2025-03-26T12:00:00.000Z");
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", () => {

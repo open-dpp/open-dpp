@@ -1,4 +1,4 @@
-import { expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { ValueError } from "@open-dpp/exception";
 import { GuestRole } from "../../../identity/guest-access/domain/guest-role.enum";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";

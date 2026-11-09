@@ -10,5 +10,6 @@
     "declarationMap": true,
     "outDir": "dist",
     "verbatimModuleSyntax": false
-  }
+  },
+  "include": ["src"]
 }

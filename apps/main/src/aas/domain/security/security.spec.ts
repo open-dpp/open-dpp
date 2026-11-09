@@ -1,4 +1,4 @@
-import { beforeAll, expect, it } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { GuestRole } from "../../../identity/guest-access/domain/guest-role.enum";

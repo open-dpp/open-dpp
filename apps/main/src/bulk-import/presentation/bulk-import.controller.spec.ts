@@ -1,7 +1,7 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -61,7 +61,7 @@ describe("BulkImport controllers", () => {
       providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
     })
       .overrideProvider(EmailService)
-      .useValue({ send: jest.fn() })
+      .useValue({ send: vi.fn() })
       .compile();
 
     betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));

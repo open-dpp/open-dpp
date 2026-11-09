@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { AssetKind, PermissionKind, Permissions, PermissionType } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";

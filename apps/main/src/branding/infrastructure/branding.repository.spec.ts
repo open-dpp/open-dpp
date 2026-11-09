@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { jest } from "@jest/globals";
+import { type Mocked, afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -14,8 +14,8 @@ describe("brandingRepository", () => {
   let brandingRepository: BrandingRepository;
   let organizationService: OrganizationsService;
   const organizationServiceMock = {
-    getOrganization: jest.fn(),
-  } as unknown as jest.Mocked<OrganizationsService>;
+    getOrganization: vi.fn(),
+  } as unknown as Mocked<OrganizationsService>;
 
   let module: TestingModule;
   beforeAll(async () => {
@@ -50,7 +50,7 @@ describe("brandingRepository", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -63,7 +63,7 @@ describe("brandingRepository", () => {
       organizationId: orgId,
       logo: "my-logo",
     });
-    jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+    vi.spyOn(organizationService, "getOrganization").mockResolvedValue(
       Organization.create({
         name: "acme",
       }),
@@ -78,7 +78,7 @@ describe("brandingRepository", () => {
     const orgId = randomUUID();
     const logo = "logo-from-organization";
 
-    jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+    vi.spyOn(organizationService, "getOrganization").mockResolvedValue(
       Organization.create({
         name: "acme",
         logo,
@@ -95,7 +95,7 @@ describe("brandingRepository", () => {
     const orgId = randomUUID();
     const logo = "logo-from-organization";
 
-    jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+    vi.spyOn(organizationService, "getOrganization").mockResolvedValue(
       Organization.create({
         name: "acme",
         logo,
@@ -122,9 +122,9 @@ describe("brandingRepository", () => {
   describe("findOneByOrganizationIdOrNull", () => {
     it("returns null when the organization is not found (tolerates the throw)", async () => {
       const orgId = randomUUID();
-      jest
-        .spyOn(organizationService, "getOrganization")
-        .mockResolvedValue(null as unknown as Organization);
+      vi.spyOn(organizationService, "getOrganization").mockResolvedValue(
+        null as unknown as Organization,
+      );
 
       const result = await brandingRepository.findOneByOrganizationIdOrNull(orgId);
 
@@ -134,7 +134,7 @@ describe("brandingRepository", () => {
 
     it("returns the branding when it resolves", async () => {
       const orgId = randomUUID();
-      jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+      vi.spyOn(organizationService, "getOrganization").mockResolvedValue(
         Organization.create({
           name: "acme",
         }),

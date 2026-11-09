@@ -1,36 +1,39 @@
 import type { MediaService } from "./media.service";
 import { Buffer } from "node:buffer";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { Media } from "../domain/media";
 import { MediaDoc } from "./media.schema";
 
-// Mocks setup
-const mockS3Client = {
-  bucketExists: jest.fn<any>(),
-  putObject: jest.fn<any>(),
-  getObject: jest.fn<any>(),
-  removeObject: jest.fn<any>(),
-};
-
-const mockS3ClientConstructor = jest.fn(() => mockS3Client);
-
-jest.unstable_mockModule("minio", () => ({
-  Client: mockS3ClientConstructor,
+// `vi.mock` is hoisted above the imports, so its factories may only use what `vi.hoisted` declares.
+const { mockS3Client, mockFileTypeFromBuffer } = vi.hoisted(() => ({
+  mockS3Client: {
+    bucketExists: vi.fn<any>(),
+    putObject: vi.fn<any>(),
+    getObject: vi.fn<any>(),
+    removeObject: vi.fn<any>(),
+  },
+  mockFileTypeFromBuffer: vi.fn<any>(),
 }));
 
-jest.unstable_mockModule("sharp", () => ({
-  default: jest.fn(() => ({
-    webp: jest.fn(() => ({
-      toBuffer: jest.fn<any>().mockResolvedValue(Buffer.from("processed-image")),
+vi.mock("minio", () => ({
+  // `new Client(...)` needs a constructible implementation, not an arrow function.
+  Client: vi.fn(function () {
+    return mockS3Client;
+  }),
+}));
+
+vi.mock("sharp", () => ({
+  default: vi.fn(() => ({
+    webp: vi.fn(() => ({
+      toBuffer: vi.fn<any>().mockResolvedValue(Buffer.from("processed-image")),
     })),
   })),
 }));
 
-const mockFileTypeFromBuffer = jest.fn<any>();
-jest.unstable_mockModule("./file-type-util", () => ({
+vi.mock("./file-type-util", () => ({
   fileTypeFromBuffer: mockFileTypeFromBuffer,
 }));
 
@@ -39,7 +42,7 @@ describe("MediaService", () => {
   let MediaServiceClass: typeof MediaService;
 
   const mockConfigService = {
-    get: jest.fn((key: string) => {
+    get: vi.fn((key: string) => {
       const config: Record<string, any> = {
         OPEN_DPP_S3_ENDPOINT: "localhost",
         OPEN_DPP_S3_PORT: 9000,
@@ -54,15 +57,15 @@ describe("MediaService", () => {
   };
 
   const mockMediaModel = {
-    find: jest.fn<any>(),
-    deleteMany: jest.fn<any>(),
-    findOneAndUpdate: jest.fn<any>(),
-    findById: jest.fn<any>(),
-    deleteOne: jest.fn<any>(),
+    find: vi.fn<any>(),
+    deleteMany: vi.fn<any>(),
+    findOneAndUpdate: vi.fn<any>(),
+    findById: vi.fn<any>(),
+    deleteOne: vi.fn<any>(),
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     if (!MediaServiceClass) {
       const module = await import("./media.service");

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import type { TrustedClientEnv } from "@open-dpp/env";
@@ -31,8 +31,8 @@ describe("SessionsService", () => {
         {
           provide: EnvService,
           useValue: {
-            get: jest.fn((key: string) => (key === "OPEN_DPP_URL" ? OPEN_DPP_URL : undefined)),
-            getTrustedClient: jest.fn(() => trustedClient),
+            get: vi.fn((key: string) => (key === "OPEN_DPP_URL" ? OPEN_DPP_URL : undefined)),
+            getTrustedClient: vi.fn(() => trustedClient),
           },
         },
       ],
@@ -43,9 +43,9 @@ describe("SessionsService", () => {
   beforeEach(async () => {
     mockAuth = {
       api: {
-        getSession: jest.fn(),
-        verifyApiKey: jest.fn(),
-        getJwks: jest.fn(),
+        getSession: vi.fn(),
+        verifyApiKey: vi.fn(),
+        getJwks: vi.fn(),
       },
     };
     service = await createService();

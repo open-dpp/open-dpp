@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { Gs1DataAttributeAi, Gs1KeyAi, Gs1QualifierAi } from "./gs1-ai-constants";
 import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
 

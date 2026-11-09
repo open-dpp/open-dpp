@@ -1,10 +1,11 @@
+import { describe, expect, it, vi } from "vitest";
 import { UsersNamespace } from "./users.namespace";
 
 function makeNamespace() {
-  const get = jest.fn().mockResolvedValue({ data: {} });
-  const post = jest.fn().mockResolvedValue({ data: {} });
-  const patch = jest.fn().mockResolvedValue({ data: {} });
-  const axiosDelete = jest.fn().mockResolvedValue({ data: undefined });
+  const get = vi.fn().mockResolvedValue({ data: {} });
+  const post = vi.fn().mockResolvedValue({ data: {} });
+  const patch = vi.fn().mockResolvedValue({ data: {} });
+  const axiosDelete = vi.fn().mockResolvedValue({ data: undefined });
   const axios = { get, post, patch, delete: axiosDelete } as any;
   return { ns: new UsersNamespace(axios), axios };
 }

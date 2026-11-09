@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { Member } from "../../identity/organizations/domain/member";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
@@ -32,8 +32,8 @@ describe("chatSubject", () => {
 
 describe("createPassportTool", () => {
   it("exports the bound passport for the bound subject, ignoring model input", async () => {
-    const toExportPlain = jest.fn((_subject: SubjectAttributes) => ({ id: "passport-1" }));
-    const getExpandedProductPassport = jest.fn(async (_passportId: string) => ({ toExportPlain }));
+    const toExportPlain = vi.fn((_subject: SubjectAttributes) => ({ id: "passport-1" }));
+    const getExpandedProductPassport = vi.fn(async (_passportId: string) => ({ toExportPlain }));
     const passportService = { getExpandedProductPassport } as unknown as PassportService;
     const subject = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 

@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { canonicaliseBaseUrl } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { Branding } from "../../../branding/domain/branding";
@@ -15,9 +15,9 @@ const brandingWithBase = (permalinkBaseUrl: string | null): Branding =>
   ({ permalinkBaseUrl }) as unknown as Branding;
 
 describe("BaseUrlResolver", () => {
-  const findOneByOrganizationIdOrNull = jest.fn();
-  const getSettings = jest.fn();
-  const get = jest.fn();
+  const findOneByOrganizationIdOrNull = vi.fn();
+  const getSettings = vi.fn();
+  const get = vi.fn();
 
   const setInstanceSetting = (value: string | null) =>
     getSettings.mockResolvedValue({ permalinkBaseUrl: { value } } as never);
@@ -30,7 +30,7 @@ describe("BaseUrlResolver", () => {
     );
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     get.mockReturnValue(INSTANCE_ROOT);
     setInstanceSetting(null);
     findOneByOrganizationIdOrNull.mockResolvedValue(null as never);
