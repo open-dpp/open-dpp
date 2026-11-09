@@ -341,6 +341,37 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(persisted.publishedUrl).toBeNull();
   });
 
+  it("resolvePublicUrlWithFreeze returns the first frozen URL to a racing request that computed another", async () => {
+    const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
+    // both requests loaded the permalink while it was still unfrozen
+    const { permalink: loadedUnfrozen } = await seedConfigWithPermalink(passport, "racing");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const branding = await service.loadBranding(passport.organizationId);
+
+    const first = await service.resolvePublicUrlWithFreeze(
+      loadedUnfrozen,
+      passport,
+      branding,
+      "https://first.example.com/p",
+    );
+    const second = await service.resolvePublicUrlWithFreeze(
+      loadedUnfrozen,
+      passport,
+      branding,
+      "https://second.example.com/p",
+    );
+
+    expect(first.publicUrl).toBe("https://first.example.com/p/racing");
+    expect(second.publicUrl).toBe("https://first.example.com/p/racing");
+    expect(second.permalink.publishedUrl).toBe("https://first.example.com/p/racing");
+    const persisted = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findOneOrFail(loadedUnfrozen.id);
+    expect(persisted.publishedUrl).toBe("https://first.example.com/p/racing");
+  });
+
   it("resolvePublicUrlWithFreeze computes the live GS1 Digital Link URL for an unfrozen gs1-link (unpublished passport)", async () => {
     const organizationId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({

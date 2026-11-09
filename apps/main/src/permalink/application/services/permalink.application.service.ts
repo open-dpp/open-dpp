@@ -193,7 +193,8 @@ export class PermalinkApplicationService {
     }
     const publicUrl = await this.computeFreezeUrl(permalink, branding, fallbackEnvUrl);
     const frozen = permalink.withPublishedUrl(publicUrl);
-    return await this.permalinkRepository.save(frozen, options);
+    // a racing freeze may have won since `permalink` was loaded; this returns the persisted winner
+    return await this.permalinkRepository.saveFrozen(frozen, options);
   }
 
   private async computeFreezeUrl(
