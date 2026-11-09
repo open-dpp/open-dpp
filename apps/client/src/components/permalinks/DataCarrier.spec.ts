@@ -124,6 +124,18 @@ describe("DataCarrier", () => {
     );
   });
 
+  it("stops showing the old SVG while the new permalink's SVG loads", async () => {
+    const wrapper = mountDataCarrier();
+    await flushPromises();
+
+    getCarrierExport.mockImplementationOnce(() => new Promise(() => {}));
+    const other = { ...openDppPermalink, id: "22222222-2222-4222-8222-222222222222" };
+    await wrapper.setProps({ permalink: other });
+
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:carrier-1");
+    expect(wrapper.find("[data-testid='data-carrier-image']").exists()).toBe(false);
+  });
+
   it("ignores a response that arrives after the permalink changed", async () => {
     let resolveFirst!: (value: { data: Blob }) => void;
     getCarrierExport.mockImplementationOnce(

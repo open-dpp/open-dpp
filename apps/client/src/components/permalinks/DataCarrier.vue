@@ -60,6 +60,8 @@ function releaseImage() {
 
 async function loadImage(permalinkId: string) {
   const load = ++latestLoad;
+  // The old carrier encodes the old URL; never show it next to the new one
+  releaseImage();
   loadFailed.value = false;
   try {
     const response = await apiClient.dpp.permalinks.getCarrierExport(permalinkId, {
