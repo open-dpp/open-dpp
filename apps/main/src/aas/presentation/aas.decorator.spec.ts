@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { IdShortPath } from "../domain/common/id-short-path";
 import { IdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema } from "./aas.decorators";

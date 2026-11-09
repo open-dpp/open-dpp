@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { BOOLEAN_INSTANCE_SETTING_KEYS, InstanceSettingsDtoSchema } from "./instance-settings.dto";
 
 describe("BOOLEAN_INSTANCE_SETTING_KEYS", () => {

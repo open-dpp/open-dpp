@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
@@ -22,8 +22,8 @@ describe("InstanceSettingsService", () => {
 
   beforeEach(async () => {
     mockRepository = {
-      findOne: jest.fn<() => Promise<InstanceSettings | null>>(),
-      save: jest
+      findOne: vi.fn<() => Promise<InstanceSettings | null>>(),
+      save: vi
         .fn<(s: InstanceSettings) => Promise<InstanceSettings>>()
         .mockImplementation(async (s: InstanceSettings) => s),
     };
@@ -31,7 +31,7 @@ describe("InstanceSettingsService", () => {
     // a real EnvService over a mocked ConfigService, so derived checks like
     // isMailConfigured() run their production logic
     mockConfigService = {
-      get: jest.fn<(key: string) => any>().mockReturnValue(undefined),
+      get: vi.fn<(key: string) => any>().mockReturnValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -55,7 +55,7 @@ describe("InstanceSettingsService", () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe("mailEnabled precedence", () => {
@@ -178,15 +178,15 @@ describe("InstanceSettingsService", () => {
     });
 
     it("reloads after the 60 s TTL", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
 
       await service.getSettings();
-      jest.advanceTimersByTime(59_000);
+      vi.advanceTimersByTime(59_000);
       await service.getSettings();
       expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
 
-      jest.advanceTimersByTime(2_000);
+      vi.advanceTimersByTime(2_000);
       await service.getSettings();
       expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
     });

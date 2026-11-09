@@ -1,7 +1,15 @@
 import type http from "node:http";
 import type { AddressInfo } from "node:net";
+import process from "node:process";
 import { Server as TlsServer } from "node:tls";
 import { Test } from "supertest";
+import { inject } from "vitest";
+
+/**
+ * Points this spec file at the replica set `test/global-setup.ts` started. Env is read when
+ * the application modules are imported, which happens after this file ran.
+ */
+process.env.OPEN_DPP_MONGODB_URI = inject("mongoUri");
 
 /**
  * Routes every supertest request through the IPv6 loopback.
@@ -22,7 +30,7 @@ type ListeningTest = Test & { _server?: http.Server };
 
 if (typeof Test.prototype.serverAddress !== "function") {
   throw new Error(
-    "supertest no longer exposes Test.prototype.serverAddress; revisit test/setup-after-env.ts",
+    "supertest no longer exposes Test.prototype.serverAddress; revisit test/setup-file.ts",
   );
 }
 

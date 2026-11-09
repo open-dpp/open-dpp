@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { UserRole } from "../../identity/users/domain/user-role.enum";

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { UpdateGs1UniqueProductIdentifierRequestSchema } from "@open-dpp/dto";
 import { uniqueProductIdentifierUpdateRequestPlainFactory } from "./unique-product-identifier-update-request.factory";
 

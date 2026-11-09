@@ -1,5 +1,5 @@
 import type { TestingModule } from "@nestjs/testing";
-import { expect, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
@@ -54,7 +54,7 @@ describe("dppEventsController", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 

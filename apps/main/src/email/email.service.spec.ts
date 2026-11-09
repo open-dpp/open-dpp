@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
 import {
+  type MockInstance,
+  type Mock,
   afterAll,
   afterEach,
   beforeAll,
@@ -7,8 +9,8 @@ import {
   describe,
   expect,
   it,
-  jest,
-} from "@jest/globals";
+  vi,
+} from "vitest";
 import { ConsoleLogger, Logger, type LogLevel } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import { EnvService } from "@open-dpp/env";
@@ -30,14 +32,14 @@ interface CapturedMail {
 // directory where the templates actually live (Jest runs with apps/main as cwd).
 const moduleDir = resolve(process.cwd(), "src/email");
 
-type SendMail = jest.Mock<(options: { html: string }) => Promise<void>>;
+type SendMail = Mock<(options: { html: string }) => Promise<void>>;
 
 const envWith = (values: Record<string, unknown>) =>
   new EnvService({ get: (key: string) => values[key] } as unknown as ConfigService);
 
 const settingsWith = (mailEnabled: boolean) =>
   ({
-    getSettings: jest.fn(async () => ({ mailEnabled: { value: mailEnabled } })),
+    getSettings: vi.fn(async () => ({ mailEnabled: { value: mailEnabled } })),
   }) as unknown as InstanceSettingsService;
 
 const SMTP_ENV = {
@@ -48,7 +50,7 @@ const SMTP_ENV = {
 
 /** A fake SMTP transporter, plus its sendMail mock to assert on. */
 function smtpStub(): { transporter: Transporter; sendMail: SendMail } {
-  const sendMail = jest
+  const sendMail = vi
     .fn<(options: { html: string }) => Promise<void>>()
     .mockResolvedValue(undefined);
   return { transporter: { sendMail } as unknown as Transporter, sendMail };
@@ -69,7 +71,7 @@ const verifyMail = () =>
   );
 
 describe("EmailService when mail is disabled", () => {
-  let warn: jest.SpiedFunction<ConsoleLogger["warn"]>;
+  let warn: MockInstance<ConsoleLogger["warn"]>;
 
   beforeAll(() => {
     (globalThis as Record<string, unknown>).__dirname = moduleDir;
@@ -80,11 +82,11 @@ describe("EmailService when mail is disabled", () => {
   });
 
   beforeEach(() => {
-    warn = jest.spyOn(ConsoleLogger.prototype, "warn").mockImplementation(() => undefined);
+    warn = vi.spyOn(ConsoleLogger.prototype, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("logs type, recipient, subject and link instead of sending when no host is set", async () => {
@@ -171,7 +173,7 @@ describe("EmailService when mail is disabled", () => {
 // The real logger on purpose: the level filter runs inside ConsoleLogger.warn(), so
 // a spec that mocks warn() cannot see a line being dropped.
 describe("EmailService when the log level hides warnings", () => {
-  let stdout: jest.SpiedFunction<typeof process.stdout.write>;
+  let stdout: MockInstance<typeof process.stdout.write>;
 
   const printed = () => stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
 
@@ -188,11 +190,11 @@ describe("EmailService when the log level hides warnings", () => {
   });
 
   beforeEach(() => {
-    stdout = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stdout = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     Logger.overrideLogger(new ConsoleLogger());
   });
 
@@ -278,7 +280,7 @@ describe("EmailService template localization", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("renders the German template when language is 'de' and the -de variant exists", async () => {

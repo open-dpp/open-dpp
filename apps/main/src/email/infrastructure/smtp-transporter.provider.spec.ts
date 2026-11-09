@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import { EnvService } from "@open-dpp/env";
@@ -8,16 +8,16 @@ const envWith = (values: Record<string, unknown>) =>
   new EnvService({ get: (key: string) => values[key] } as unknown as ConfigService);
 
 describe("createSmtpTransporter", () => {
-  let warn: jest.SpiedFunction<Logger["warn"]>;
-  let log: jest.SpiedFunction<Logger["log"]>;
+  let warn: MockInstance<Logger["warn"]>;
+  let log: MockInstance<Logger["log"]>;
 
   beforeEach(() => {
-    warn = jest.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
-    log = jest.spyOn(Logger.prototype, "log").mockImplementation(() => undefined);
+    warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
+    log = vi.spyOn(Logger.prototype, "log").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("returns no transporter without an SMTP host and warns that links go to the log", () => {

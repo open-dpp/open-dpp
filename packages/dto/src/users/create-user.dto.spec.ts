@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { CreateUserDtoSchema } from "./create-user.dto";
 
 const validInput = {

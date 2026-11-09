@@ -1,7 +1,8 @@
+import { describe, expect, it, vi } from "vitest";
 import { OAuthProviderNamespace } from "./oauth-provider.namespace";
 
 function makeNamespace() {
-  const post = jest.fn().mockResolvedValue({ data: { url: "https://landing.example.com/cb" } });
+  const post = vi.fn().mockResolvedValue({ data: { url: "https://landing.example.com/cb" } });
   const axios = { post } as any;
   return { ns: new OAuthProviderNamespace(axios), axios };
 }

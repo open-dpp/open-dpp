@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ConfigService } from "@nestjs/config";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -71,7 +71,7 @@ describe("InstanceSettingsService across replicas", () => {
     const resumed = new Promise<void>((resolve) => (resumeSave = resolve));
     let markReachedSave!: () => void;
     const reachedSave = new Promise<void>((resolve) => (markReachedSave = resolve));
-    jest.spyOn(paused, "save").mockImplementationOnce(async (...args) => {
+    vi.spyOn(paused, "save").mockImplementationOnce(async (...args) => {
       markReachedSave();
       await resumed;
       return originalSave(...args);

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { EuRegistryProductGroup, RegistryExportFile } from "./registry-export-file";
 import { RegistryExportItem } from "./registry-export-item";
 

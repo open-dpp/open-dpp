@@ -1,5 +1,5 @@
 import type { ValueResponseDto } from "./value-response.dto";
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { ValueSchema } from "./value-response.dto";
 
 describe("valueResponseDto", () => {

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken } from "@nestjs/mongoose";
 import { NotFoundException } from "@nestjs/common";
 import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
@@ -312,7 +312,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const passport = await seedPublishedPassport();
     const { permalink } = await seedConfigWithPermalink(passport, "branding-down");
     const brandingRepo = ctx.getModuleRef().get(BrandingRepository);
-    const spy = jest
+    const spy = vi
       .spyOn(brandingRepo, "findOneByOrganizationId")
       .mockRejectedValue(new Error("branding db unavailable"));
     const service = ctx.getModuleRef().get(PermalinkApplicationService);

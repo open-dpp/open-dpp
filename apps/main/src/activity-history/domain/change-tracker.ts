@@ -17,7 +17,7 @@ export function withTrackingHelper<T extends ITrackable>(
 export class ChangeTracker {
   private _changes: Array<IChangeEvent> = [];
   private trackingEnabled = false;
-  readonly #onStopCallback?: () => void; // Ignore function in jest equal check by prefix it with #
+  readonly #onStopCallback?: () => void; // Private (#) so toEqual checks ignore the callback
   private constructor(onStopCallback?: () => void) {
     this.#onStopCallback = onStopCallback;
   }

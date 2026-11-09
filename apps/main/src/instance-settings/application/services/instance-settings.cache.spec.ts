@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { InstanceSettings } from "../../domain/instance-settings";
 import { InstanceSettingsCache } from "./instance-settings.cache";
 
@@ -6,11 +6,11 @@ const TTL_MS = 60_000;
 
 describe("InstanceSettingsCache", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("is empty until settings are put in", () => {
@@ -22,7 +22,7 @@ describe("InstanceSettingsCache", () => {
     const settings = InstanceSettings.create();
 
     cache.set(settings);
-    jest.advanceTimersByTime(TTL_MS - 1);
+    vi.advanceTimersByTime(TTL_MS - 1);
 
     expect(cache.get()).toBe(settings);
   });
@@ -31,7 +31,7 @@ describe("InstanceSettingsCache", () => {
     const cache = new InstanceSettingsCache(TTL_MS);
     cache.set(InstanceSettings.create());
 
-    jest.advanceTimersByTime(TTL_MS);
+    vi.advanceTimersByTime(TTL_MS);
 
     expect(cache.get()).toBeUndefined();
   });
@@ -41,9 +41,9 @@ describe("InstanceSettingsCache", () => {
     const replacement = InstanceSettings.create({ signupEnabled: { value: false } });
     cache.set(InstanceSettings.create());
 
-    jest.advanceTimersByTime(TTL_MS - 1);
+    vi.advanceTimersByTime(TTL_MS - 1);
     cache.set(replacement);
-    jest.advanceTimersByTime(TTL_MS - 1);
+    vi.advanceTimersByTime(TTL_MS - 1);
 
     expect(cache.get()).toBe(replacement);
   });

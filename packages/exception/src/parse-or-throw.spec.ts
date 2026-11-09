@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ValueError } from "./domain.errors";
 import { parseOrThrow } from "./parse-or-throw";
 

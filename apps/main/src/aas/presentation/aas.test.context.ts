@@ -1,7 +1,7 @@
 import { INestApplication, VersioningType } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, expect, vi } from "vitest";
 import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadata.interface";
 import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -164,7 +164,7 @@ export function createAasTestContext<T>(
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 

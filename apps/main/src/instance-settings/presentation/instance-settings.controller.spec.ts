@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 import { EnvService } from "@open-dpp/env";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { InstanceSettingsService } from "../application/services/instance-settings.service";
@@ -8,7 +8,7 @@ import { InstanceSettingsController } from "./instance-settings.controller";
 describe("InstanceSettingsController", () => {
   const settings = InstanceSettings.create().withEnvOverrides({ mailEnabled: false });
   const controller = new InstanceSettingsController(
-    { getSettings: jest.fn(async () => settings) } as unknown as InstanceSettingsService,
+    { getSettings: vi.fn(async () => settings) } as unknown as InstanceSettingsService,
     { get: () => "https://dpp.example.com" } as unknown as EnvService,
   );
 

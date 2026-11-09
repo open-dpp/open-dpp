@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { BadRequestException, ExecutionContext, ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
@@ -14,13 +14,13 @@ describe("PolicyGuard", () => {
 
   beforeEach(() => {
     reflector = {
-      getAllAndOverride: jest.fn(),
+      getAllAndOverride: vi.fn(),
     } as any;
     policyService = {
-      enforce: jest.fn(),
+      enforce: vi.fn(),
     } as any;
     membersService = {
-      isMemberOfOrganization: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+      isMemberOfOrganization: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
     } as any;
 
     guard = new PolicyGuard(reflector, policyService, membersService);
@@ -36,7 +36,7 @@ describe("PolicyGuard", () => {
       session: { userId: "user-1" },
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
+    (reflector.getAllAndOverride as Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
 
     await guard.canActivate(context);
 
@@ -49,7 +49,7 @@ describe("PolicyGuard", () => {
       headers: {},
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([]);
+    (reflector.getAllAndOverride as Mock).mockReturnValue([]);
 
     const result = await guard.canActivate(context);
 
@@ -63,7 +63,7 @@ describe("PolicyGuard", () => {
       session: { userId: "user-1" },
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
+    (reflector.getAllAndOverride as Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
 
     await expect(guard.canActivate(context)).rejects.toThrow(BadRequestException);
   });
@@ -73,7 +73,7 @@ describe("PolicyGuard", () => {
       headers: { "x-open-dpp-organization-id": "org-1" },
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
+    (reflector.getAllAndOverride as Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
@@ -84,7 +84,7 @@ describe("PolicyGuard", () => {
       session: {},
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
+    (reflector.getAllAndOverride as Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
     expect(membersService.isMemberOfOrganization).not.toHaveBeenCalled();
@@ -96,8 +96,8 @@ describe("PolicyGuard", () => {
       session: { userId: "user-1" },
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
-    (membersService.isMemberOfOrganization as jest.Mock).mockResolvedValue(false as never);
+    (reflector.getAllAndOverride as Mock).mockReturnValue([PolicyKeyList.AI_TOKEN_QUOTA]);
+    (membersService.isMemberOfOrganization as Mock).mockResolvedValue(false as never);
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
     expect(policyService.enforce).not.toHaveBeenCalled();

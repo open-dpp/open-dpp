@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -42,7 +42,7 @@ describe("recordLastLogin", () => {
 
   beforeEach(async () => {
     await db.collection(USER_COLLECTION).deleteMany({});
-    logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as Logger;
+    logger = { log: vi.fn(), warn: vi.fn(), error: vi.fn() } as unknown as Logger;
   });
 
   const seedUser = async (overrides: Partial<Record<string, unknown>> = {}) => {
