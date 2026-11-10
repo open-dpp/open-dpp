@@ -98,15 +98,15 @@ describe("PermalinkRepository", () => {
     expect(found.publishedUrl).toBe("https://passports.example.com/p/acme-widget");
   });
 
-  describe("saveFrozen", () => {
+  describe("save of a frozen permalink", () => {
     it("keeps the first frozen URL and returns it to a later freeze of a stale copy", async () => {
       const permalink = Permalink.create({ passportId: randomUUID() });
       await repository.save(permalink);
 
-      const first = await repository.saveFrozen(
+      const first = await repository.save(
         permalink.withPublishedUrl("https://first.example.com/p/widget"),
       );
-      const second = await repository.saveFrozen(
+      const second = await repository.save(
         permalink.withPublishedUrl("https://second.example.com/p/widget"),
       );
 
@@ -123,7 +123,7 @@ describe("PermalinkRepository", () => {
       const urls = Array.from({ length: 5 }, (_, i) => `https://brand-${i}.example.com/p/widget`);
 
       const results = await Promise.all(
-        urls.map((url) => repository.saveFrozen(permalink.withPublishedUrl(url))),
+        urls.map((url) => repository.save(permalink.withPublishedUrl(url))),
       );
 
       const persisted = await repository.findOneOrFail(permalink.id);
@@ -138,12 +138,28 @@ describe("PermalinkRepository", () => {
         "https://first.example.com/p/new",
       );
 
-      const saved = await repository.saveFrozen(frozen);
+      const saved = await repository.save(frozen);
 
       expect(saved.publishedUrl).toBe("https://first.example.com/p/new");
       expect((await repository.findOneOrFail(frozen.id)).publishedUrl).toBe(
         "https://first.example.com/p/new",
       );
+    });
+
+    it("writes a permalink that is frozen to the URL already stored", async () => {
+      const frozen = await repository.save(
+        Permalink.create({ passportId: randomUUID() }).withPublishedUrl(
+          "https://first.example.com/p/widget",
+        ),
+      );
+      const organizationId = randomUUID();
+
+      const saved = await repository.save(
+        Permalink.fromPlain({ ...frozen.toPlain(), organizationId }),
+      );
+
+      expect(saved.organizationId).toBe(organizationId);
+      expect((await repository.findOneOrFail(frozen.id)).organizationId).toBe(organizationId);
     });
   });
 

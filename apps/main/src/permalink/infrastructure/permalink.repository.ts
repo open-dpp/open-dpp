@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DigitalProductDocumentTypes, LEGACY_PERMALINK_KIND, PermalinkKind } from "@open-dpp/dto";
-import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { isDuplicateKeyErrorOnField } from "../../lib/mongo-errors";
@@ -156,7 +156,15 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return this.fromPlain(migrated);
   }
 
+  /**
+   * Persists a permalink. A frozen one is written atomically, and only while the stored one has no
+   * publishedUrl or the same one, so racing freezes cannot overwrite each other: the first URL wins,
+   * and every caller gets the persisted permalink back, never the URL it lost with.
+   */
   async save(permalink: Permalink, options?: DbSessionOptions): Promise<Permalink> {
+    if (permalink.publishedUrl !== null) {
+      return await this.saveFrozen(permalink, options);
+    }
     return await save(
       permalink,
       this.permalinkDoc,
@@ -167,19 +175,11 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     );
   }
 
-  /**
-   * Persists a frozen permalink only while the stored one has no publishedUrl yet, in one atomic
-   * write, so racing freezes cannot overwrite each other: the first URL wins, and every caller gets
-   * the persisted permalink back, never the URL it lost with.
-   */
-  async saveFrozen(frozen: Permalink, options?: DbSessionOptions): Promise<Permalink> {
-    if (frozen.publishedUrl === null) {
-      throw new ValueError(`Permalink ${frozen.id} has no publishedUrl to freeze`);
-    }
+  private async saveFrozen(frozen: Permalink, options?: DbSessionOptions): Promise<Permalink> {
     const { id, ...plain } = frozen.toPlain();
     try {
       const doc = await this.permalinkDoc.findOneAndUpdate(
-        { _id: { $eq: id }, publishedUrl: null },
+        { _id: { $eq: id }, publishedUrl: { $in: [null, frozen.publishedUrl] } },
         { $set: { ...plain, _schemaVersion: PermalinkDocVersion.v1_3_0 } },
         { new: true, upsert: true, runValidators: true, session: options?.session ?? null },
       );
@@ -188,7 +188,7 @@ export class PermalinkRepository implements OnApplicationBootstrap {
       }
       return await convertToDomain(doc, this.fromPlain.bind(this));
     } catch (error) {
-      // the document is already frozen, so the upsert's insert collides with it
+      // the document is already frozen to another URL, so the upsert's insert collides with it
       if (!isDuplicateKeyErrorOnField(error, "_id")) {
         throw error;
       }
