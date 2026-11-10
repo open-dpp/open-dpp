@@ -63,6 +63,7 @@ export * from "./aas/submodel-base/submodel-element-modification-schema";
 export * from "./aas/submodel-base/submodel-element-schema";
 export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
+export * from "./media/media-upload.dto";
 export * from "./unique-product-identifiers/unique-product-identifier-type";
 export * from "./unique-product-identifiers/gs1/gs1-ai-constants";
 export * from "./unique-product-identifiers/gs1/gs1-ai-description";
