@@ -1,5 +1,14 @@
 # @open-dpp/main
 
+## 6.3.6
+
+### Patch Changes
+
+- [#1140](https://github.com/open-dpp/open-dpp/pull/1140) [`1092700`](https://github.com/open-dpp/open-dpp/commit/1092700256473751b4950e42f0e999e156eecb68) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the backend to NestJS 12. Two things operators may notice:
+
+  - With `OPEN_DPP_LOG_FORMAT=json`, a log call that passes an object or an error now writes one record instead of two: the object goes into a `params` field, the error into an `error` field with `name`, `message` and `stack`.
+  - A non-`GET` request to an unknown path outside `/api` (for example `POST /does-not-exist`) now gets the Express HTML 404 page instead of a JSON 404 body. Responses under `/api` and `GET` requests are unchanged.
+
 ## 6.3.5
 
 ### Patch Changes
