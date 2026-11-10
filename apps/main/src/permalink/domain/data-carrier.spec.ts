@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { CarrierErrorCorrectionLevel } from "@open-dpp/dto";
+import { CarrierErrorCorrectionLevel, CarrierExportFormat } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import sharp from "sharp";
+import { decodeDataCarrier } from "../../../test/decode-data-carrier";
+import { pixelsPerModule, renderCarrierSvg } from "./carrier-export.renderer";
 import { DataCarrier, QUIET_ZONE_MODULES } from "./data-carrier";
 
 const url = "https://cloud.open-dpp.de/p/3f2c9a54-6b1e-4d7a-9c1f-2a8e5b7d4c10";
+const svgSettings = { format: CarrierExportFormat.SVG, moduleSize: 0.495, dpi: 300 };
+const pngSettings = { format: CarrierExportFormat.PNG, moduleSize: 0.495, dpi: 600 };
 
 function rowOf(carrier: DataCarrier, row: number): boolean[] {
   return Array.from({ length: carrier.size }, (_, column) => carrier.isDark(column, row));
@@ -66,5 +71,45 @@ describe("DataCarrier", () => {
     const tooLong = `https://example.com/${"x".repeat(3000)}`;
 
     expect(() => DataCarrier.encode(tooLong, CarrierErrorCorrectionLevel.H)).toThrow(ValueError);
+  });
+});
+
+describe("DataCarrier.render", () => {
+  const carrier = DataCarrier.encode(url, CarrierErrorCorrectionLevel.M);
+
+  it("renders an SVG at the module size", async () => {
+    const svg = await carrier.render(svgSettings);
+
+    expect(svg.toString("utf8")).toBe(renderCarrierSvg(carrier, svgSettings.moduleSize));
+    await expect(decodeDataCarrier(svg)).resolves.toBe(url);
+  });
+
+  it("renders a PNG at the module size and DPI", async () => {
+    const png = await carrier.render(pngSettings);
+    const metadata = await sharp(png).metadata();
+
+    expect(metadata.format).toBe("png");
+    expect(metadata.density).toBe(pngSettings.dpi);
+    expect(metadata.width).toBe(
+      carrier.size * pixelsPerModule(pngSettings.moduleSize, pngSettings.dpi),
+    );
+    await expect(decodeDataCarrier(png)).resolves.toBe(url);
+  });
+});
+
+describe("DataCarrier.export", () => {
+  const carrier = DataCarrier.encode(url, CarrierErrorCorrectionLevel.M);
+
+  it.each([
+    [svgSettings, "image/svg+xml", "data-carrier-lot-42.svg"],
+    [pngSettings, "image/png", "data-carrier-lot-42.png"],
+  ])("exports %o as a named file", async (settings, contentType, fileName) => {
+    const carrierExport = await carrier.export(settings, "lot-42");
+
+    expect(carrierExport).toEqual({
+      content: await carrier.render(settings),
+      contentType,
+      fileName,
+    });
   });
 });

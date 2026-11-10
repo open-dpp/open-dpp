@@ -8,7 +8,7 @@ import {
   pngQuietZone,
   svgQuietZone,
 } from "../../../test/decode-data-carrier";
-import { DataCarrier, QUIET_ZONE_MODULES } from "../domain/data-carrier";
+import { DataCarrier, QUIET_ZONE_MODULES } from "./data-carrier";
 import {
   MAX_PNG_EDGE_PX,
   pixelsPerModule,

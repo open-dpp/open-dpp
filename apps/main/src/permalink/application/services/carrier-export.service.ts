@@ -1,24 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import {
-  CARRIER_EXPORT_CONTENT_TYPES,
-  CarrierExportFormat,
-  type CarrierExportFormatType,
-  type CarrierExportQuery,
-} from "@open-dpp/dto";
+import type { CarrierExportQuery } from "@open-dpp/dto";
 import { ForbiddenError, NotFoundError } from "@open-dpp/exception";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
-import { DataCarrier } from "../../domain/data-carrier";
-import { Permalink } from "../../domain/permalink";
-import { renderCarrierPng, renderCarrierSvg } from "../../infrastructure/carrier-export.renderer";
+import { type CarrierExport, DataCarrier } from "../../domain/data-carrier";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 import { BaseUrlResolver } from "./base-url-resolver.service";
 import { PermalinkApplicationService } from "./permalink.application.service";
-
-export interface CarrierExport {
-  content: Buffer;
-  contentType: string;
-  fileName: string;
-}
 
 @Injectable()
 export class CarrierExportService {
@@ -60,21 +47,6 @@ export class CarrierExportService {
       await this.permalinkApplicationService.getPermalinkBaseUrl(),
     );
     const carrier = DataCarrier.encode(publicUrl, settings.errorCorrection);
-    return {
-      content: await this.render(carrier, settings),
-      contentType: CARRIER_EXPORT_CONTENT_TYPES[settings.format],
-      fileName: carrierExportFileName(permalink, settings.format),
-    };
+    return await carrier.export(settings, permalink.slug ?? permalink.id);
   }
-
-  private async render(carrier: DataCarrier, settings: CarrierExportQuery): Promise<Buffer> {
-    if (settings.format === CarrierExportFormat.PNG) {
-      return await renderCarrierPng(carrier, settings.moduleSize, settings.dpi);
-    }
-    return Buffer.from(renderCarrierSvg(carrier, settings.moduleSize), "utf8");
-  }
-}
-
-function carrierExportFileName(permalink: Permalink, format: CarrierExportFormatType): string {
-  return `data-carrier-${permalink.slug ?? permalink.id}.${format}`;
 }

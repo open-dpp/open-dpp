@@ -44,7 +44,7 @@ import { UniqueProductIdentifierModule } from "../../unique-product-identifier/u
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
 import { QUIET_ZONE_MODULES } from "../domain/data-carrier";
 import { Permalink } from "../domain/permalink";
-import { pixelsPerModule } from "../infrastructure/carrier-export.renderer";
+import { pixelsPerModule } from "../domain/carrier-export.renderer";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schema";
 import { PermalinkModule } from "../permalink.module";

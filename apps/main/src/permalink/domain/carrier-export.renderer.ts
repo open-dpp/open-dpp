@@ -1,6 +1,6 @@
 import { ValueError } from "@open-dpp/exception";
 import sharp from "sharp";
-import { DataCarrier } from "../domain/data-carrier";
+import type { DataCarrier } from "./data-carrier";
 
 const MM_PER_INCH = 25.4;
 const LIGHT = 0xff;
