@@ -3,8 +3,7 @@ import { Throttle } from "@nestjs/throttler";
 import { AllApiVersions, type CarrierExportQuery, CarrierExportQuerySchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { UserOrIpThrottlerGuard } from "../../common/throttler/user-or-ip.throttler-guard";
-import type { Session } from "../../identity/auth/domain/session";
-import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import { CarrierExportService } from "../application/services/carrier-export.service";
 
 /** Exports per user and minute; each one renders an image of up to 6000 px per side. */
@@ -21,13 +20,9 @@ export class CarrierExportController {
   async getCarrierExport(
     @Param("id") id: string,
     @Query(new ZodValidationPipe(CarrierExportQuerySchema)) settings: CarrierExportQuery,
-    @AuthSession() session: Session,
+    @UserIdDecorator() userId: string,
   ): Promise<StreamableFile> {
-    const carrierExport = await this.carrierExportService.exportForMember(
-      id,
-      session.userId,
-      settings,
-    );
+    const carrierExport = await this.carrierExportService.exportForMember(id, userId, settings);
     return new StreamableFile(carrierExport.content, {
       type: carrierExport.contentType,
       disposition: `attachment; filename="${carrierExport.fileName}"`,
