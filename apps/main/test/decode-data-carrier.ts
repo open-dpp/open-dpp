@@ -16,7 +16,7 @@ export async function decodeDataCarrier(
   return jsQR(pixels, info.width, info.height)?.data ?? null;
 }
 
-/** Dark-module runs of a Carrier Export SVG path, as written by `renderCarrierSvg`. */
+/** Dark-module runs of a Carrier Export SVG path, as written by `DataCarrier.render`. */
 export function darkModuleRuns(svg: string): { column: number; row: number; length: number }[] {
   const path = /<path[^>]* d="([^"]*)"/.exec(svg)?.[1] ?? "";
   return [...path.matchAll(/M(\d+) (\d+)h(\d+)/g)].map(([, column, row, length]) => ({
