@@ -5,10 +5,8 @@ export const CarrierExportFormat = {
   PNG: "png",
 } as const;
 
-export type CarrierExportFormatType =
-  (typeof CarrierExportFormat)[keyof typeof CarrierExportFormat];
-
-export const CarrierExportFormatSchema = z.enum([CarrierExportFormat.SVG, CarrierExportFormat.PNG]);
+export const CarrierExportFormatSchema = z.enum(CarrierExportFormat);
+export type CarrierExportFormatType = z.infer<typeof CarrierExportFormatSchema>;
 
 /** The media type a Carrier Export is served and saved as, per format. */
 export const CARRIER_EXPORT_CONTENT_TYPES: Readonly<Record<CarrierExportFormatType, string>> = {
@@ -24,15 +22,8 @@ export const CarrierErrorCorrectionLevel = {
   H: "H",
 } as const;
 
-export type CarrierErrorCorrectionLevelType =
-  (typeof CarrierErrorCorrectionLevel)[keyof typeof CarrierErrorCorrectionLevel];
-
-export const CarrierErrorCorrectionLevelSchema = z.enum([
-  CarrierErrorCorrectionLevel.L,
-  CarrierErrorCorrectionLevel.M,
-  CarrierErrorCorrectionLevel.Q,
-  CarrierErrorCorrectionLevel.H,
-]);
+export const CarrierErrorCorrectionLevelSchema = z.enum(CarrierErrorCorrectionLevel);
+export type CarrierErrorCorrectionLevelType = z.infer<typeof CarrierErrorCorrectionLevelSchema>;
 
 /**
  * Module size (X-dimension) in mm: the smallest and largest QR X-dimension in the GS1 symbol
