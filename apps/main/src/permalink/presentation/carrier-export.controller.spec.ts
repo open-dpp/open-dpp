@@ -311,7 +311,7 @@ describe("CarrierExportController", () => {
     expect(response.headers["content-type"]).toMatch(/^image\/svg\+xml/);
   });
 
-  it("returns 404 to a member of another organization", async () => {
+  it("returns 403 to a member of another organization", async () => {
     const { permalink } = await memberWithPermalink();
     const outsider = await auth().createOrganizationAndUserWithCookie();
 
@@ -320,7 +320,7 @@ describe("CarrierExportController", () => {
       organizationId: outsider.org.id,
     });
 
-    expect(response.status).toEqual(404);
+    expect(response.status).toEqual(403);
   });
 
   it("returns 404 for an unknown permalink", async () => {
