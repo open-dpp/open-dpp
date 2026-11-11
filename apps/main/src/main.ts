@@ -135,6 +135,8 @@ async function bootstrap() {
     credentials: true,
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    // lets the client name a downloaded file after the server's suggestion
+    exposedHeaders: ["Content-Disposition"],
   });
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),

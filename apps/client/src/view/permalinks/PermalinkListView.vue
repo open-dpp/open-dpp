@@ -16,7 +16,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useRoute, useRouter } from "vue-router";
 import PermalinkCreateDialog from "../../components/permalinks/PermalinkCreateDialog.vue";
 import PermalinkEditDialog from "../../components/permalinks/PermalinkEditDialog.vue";
-import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
+import DataCarrier from "../../components/permalinks/DataCarrier.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
 import { useDigitalProductDocument } from "../../composables/digital-product-document";
 import { usePagination } from "../../composables/pagination";
@@ -317,7 +317,7 @@ onMounted(async () => {
     />
 
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
-      <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
+      <DataCarrier v-if="qrPermalink" :permalink="qrPermalink" />
     </Dialog>
   </ContentViewWrapper>
 </template>
