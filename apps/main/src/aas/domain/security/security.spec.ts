@@ -1042,10 +1042,16 @@ describe("security", () => {
     });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
-    it("gives every guest role and the public Read only on a new submodel", () => {
+    it("stores no rule for guest roles on a new submodel, they read what the public reads", () => {
       const security = Security.create({});
 
       security.addDefaultPolicyForSubmodelIfNoExists({ idShort: "section1" });
+
+      const stored = security.localAccessControl.accessPermissionRules;
+      expect(stored).toHaveLength(4);
+      expect(stored.some((rule) => rule.targetSubjectAttributes.guestRole !== undefined)).toBe(
+        false,
+      );
 
       for (const guestRole of Object.values(GuestRole)) {
         const ability = security.defineAbilityForSubject(
