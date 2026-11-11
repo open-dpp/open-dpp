@@ -8,7 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
-import { prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
+import { callbackUrlOf, prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
 import { continueOAuthSignup, readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
@@ -45,7 +45,7 @@ const showErrors = computed(() => {
 });
 
 // undefined without a redirect, or if it leads to another site
-const redirectTarget = computed(() => sameOriginRedirectOf(route.query, window.location.origin));
+const redirectTarget = computed(() => sameOriginRedirectOf(route.query));
 const redirectUri = computed(() => redirectTarget.value ?? "/");
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-up. */
@@ -86,7 +86,7 @@ const signup = handleSubmit(async (values) => {
         lastName: values.lastName,
         name: `${values.firstName} ${values.lastName}`,
         preferredLanguage: convertLocaleToLanguage(locale.value as string),
-        callbackURL: redirectUri.value,
+        callbackURL: callbackUrlOf(redirectUri.value),
       }),
     );
 

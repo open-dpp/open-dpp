@@ -20,7 +20,7 @@ onMounted(async () => {
         userStore.reset();
         organizationsStore.reset();
         // e.g. back to the product page the user signed out from, never to another site
-        await router.push(sameOriginRedirectOf(route.query, window.location.origin) ?? "/signin");
+        await router.push(sameOriginRedirectOf(route.query) ?? "/signin");
       },
     },
   });

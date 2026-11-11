@@ -11,9 +11,7 @@ export function useGuestProfile() {
   const router = useRouter();
 
   // The query comes from a link, so it only counts if it stays on this site
-  const backTarget = computed<string | undefined>(() =>
-    sameOriginRedirectOf(route.query, window.location.origin),
-  );
+  const backTarget = computed<string | undefined>(() => sameOriginRedirectOf(route.query));
 
   function goBack() {
     if (backTarget.value) {

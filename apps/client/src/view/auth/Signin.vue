@@ -8,7 +8,7 @@ import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
-import { prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
+import { callbackUrlOf, prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
 import { readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
@@ -57,9 +57,7 @@ onMounted(async () => {
   }
 });
 
-const redirectUri = computed(
-  () => sameOriginRedirectOf(route.query, window.location.origin) ?? "/",
-);
+const redirectUri = computed(() => sameOriginRedirectOf(route.query) ?? "/");
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-in. */
 const oauthContinuation = readOAuthContinuation(window.location.search);
@@ -71,7 +69,7 @@ const signin = handleSubmit(async (values) => {
       oauthContinuation.withOAuthQuery({
         email: values.email,
         password: values.password,
-        callbackURL: redirectUri.value,
+        callbackURL: callbackUrlOf(redirectUri.value),
         rememberMe: rememberMe.value,
       }),
     );

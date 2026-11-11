@@ -25,7 +25,10 @@ export function prefilledEmailOf(query: LocationQuery): string | undefined {
  * query is missing or leads to another site. The query comes from a link and is untrusted, so it is
  * never followed without this check.
  */
-export function sameOriginRedirectOf(query: LocationQuery, origin: string): string | undefined {
+export function sameOriginRedirectOf(
+  query: LocationQuery,
+  origin = window.location.origin,
+): string | undefined {
   if (!hasRedirect(query)) {
     return undefined;
   }
@@ -42,4 +45,13 @@ export function sameOriginRedirectOf(query: LocationQuery, origin: string): stri
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The absolute address Better Auth gets as `callbackURL`. It validates the value against the
+ * trusted origins and rejects a relative path with a hash. The path comes from
+ * `sameOriginRedirectOf`, so its origin has already been checked.
+ */
+export function callbackUrlOf(path: string, origin = window.location.origin): string {
+  return new URL(path, origin).href;
 }

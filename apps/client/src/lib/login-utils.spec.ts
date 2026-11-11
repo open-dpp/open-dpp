@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { prefilledEmailOf, sameOriginRedirectOf } from "./login-utils.ts";
+import { callbackUrlOf, prefilledEmailOf, sameOriginRedirectOf } from "./login-utils.ts";
 
 describe("login utils", () => {
   describe("prefilledEmailOf", () => {
@@ -51,6 +51,20 @@ describe("login utils", () => {
       expect(sameOriginRedirectOf({ redirect: "" }, origin)).toBeUndefined();
       expect(sameOriginRedirectOf({ redirect: ["a", "b"] }, origin)).toBeUndefined();
       expect(sameOriginRedirectOf({ redirect: "http://[" }, origin)).toBeUndefined();
+    });
+  });
+
+  describe("callbackUrlOf", () => {
+    const origin = "https://app.open-dpp.test";
+
+    it("makes a path absolute and keeps the query and the hash", () => {
+      expect(callbackUrlOf("/p/my-product?x=1#top", origin)).toEqual(
+        `${origin}/p/my-product?x=1#top`,
+      );
+    });
+
+    it("makes the root absolute", () => {
+      expect(callbackUrlOf("/", origin)).toEqual(`${origin}/`);
     });
   });
 });
