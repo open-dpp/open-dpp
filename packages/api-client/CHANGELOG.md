@@ -1,5 +1,11 @@
 # @open-dpp/api-client
 
+## 6.4.0
+
+### Minor Changes
+
+- [#1130](https://github.com/open-dpp/open-dpp/pull/1130) [`6e81265`](https://github.com/open-dpp/open-dpp/commit/6e81265cb02deaef5f3279b971e8e57a80f2095e) Thanks [@florianBieck](https://github.com/florianBieck)! - Members can download the Carrier Export of a permalink as SVG (sized in mm) or PNG (at a chosen DPI) from `GET /permalinks/:id/carrier`, with a four-module quiet zone, a module size and an error-correction level. The api-client gains `permalinks.getCarrierExport`, and the back office shows and downloads the server-rendered Data Carrier instead of drawing its own.
+
 ## 6.3.6
 
 ## 6.3.5
