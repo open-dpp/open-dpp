@@ -6,17 +6,21 @@ import apiClient from "../../lib/api-client.ts";
 import type { PolicyUtilizationDtoType } from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import PolicyRule from "../../components/policy/PolicyRule.vue";
-import { useInstanceSettings } from "../../composables/instance.settings.ts";
+import { storeToRefs } from "pinia";
+import { useInstanceSettingsStore } from "../../stores/instance-settings.ts";
 import { useIndexStore } from "../../stores/index.ts";
 
 const policyUtilization = ref<PolicyUtilizationDtoType | undefined>(undefined);
 const indexStore = useIndexStore();
-const { usageManagementUrl, fetchInstanceSettings } = useInstanceSettings();
+const instanceSettingsStore = useInstanceSettingsStore();
+const { usageManagementUrl } = storeToRefs(instanceSettingsStore);
 
 const { t } = useI18n();
 
 onMounted(async () => {
-  void fetchInstanceSettings();
+  void instanceSettingsStore.fetchPublicSettings({
+    errorMessage: t("organizations.admin.instanceSettings.errorLoading"),
+  });
   if (!indexStore.selectedOrganization) {
     return;
   }
