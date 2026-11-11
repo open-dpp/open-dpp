@@ -54,9 +54,26 @@ export class Security implements ITrackable {
     };
   }
 
+  /**
+   * The rules which decide what the subject may do, in order of priority. Admins, owners, members
+   * and guests also get the rule of the public after their own: whoever the public may read, they
+   * may read too, unless their own rule says otherwise for that very object. `AasAbility` takes the
+   * first entry it finds for an object, so an own entry beats the public one on the same path, and
+   * a public entry for a child beats an own entry for its parent.
+   *
+   * This is for reading only. Changing policies looks at the stored rules of a subject, never at
+   * this list, otherwise editing a guest role would edit the rule of the public.
+   */
   findPoliciesBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
-    const rule = this.localAccessControl.findRuleOfSubject(subject);
-    return rule ? [rule] : [];
+    const own = this.localAccessControl.findRuleOfSubject(subject);
+    const fallsBackToPublic =
+      subject.userRole === UserRole.ADMIN || !!subject.memberRole || !!subject.guestRole;
+    const publicRule = fallsBackToPublic
+      ? this.localAccessControl.findRuleOfSubject(
+          SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+        )
+      : undefined;
+    return [own, publicRule].filter((rule) => !!rule);
   }
 
   private hasPoliciesForObject(object: IdShortPath): boolean {

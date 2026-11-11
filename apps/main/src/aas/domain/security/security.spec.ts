@@ -1115,4 +1115,162 @@ describe("security", () => {
       expect(() => security.deletePoliciesByObjectPath(path)).toThrow(policyManagementError);
     });
   });
+
+  describe("fallback to the rules of the public", () => {
+    const section = IdShortPath.create({ path: "section1" });
+    const secret = IdShortPath.create({ path: "section1.secret" });
+    const other = IdShortPath.create({ path: "section2" });
+    const read = Permission.create({
+      permission: Permissions.Read,
+      kindOfPermission: PermissionKind.Allow,
+    });
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const owner = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.OWNER,
+    });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const repairer = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      guestRole: GuestRole.REPAIRER,
+    });
+    const signedInUser = SubjectAttributes.create({ userRole: UserRole.USER });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
+    function canRead(security: Security, subject: SubjectAttributes, path: IdShortPath) {
+      return security.defineAbilityForSubject(subject).can(Permissions.Read, path);
+    }
+
+    function securityWithPublicRead(...paths: IdShortPath[]) {
+      const security = Security.create({});
+      for (const path of paths) {
+        security.addPolicy(anonymous, path, [read]);
+      }
+      return security;
+    }
+
+    it("lets admins, owners, members and guests read what the public reads", () => {
+      const security = securityWithPublicRead(section);
+
+      for (const subject of [admin, owner, member, repairer]) {
+        expect(canRead(security, subject, section)).toBe(true);
+      }
+    });
+
+    it("lets them read nothing the public cannot read", () => {
+      const security = securityWithPublicRead(section);
+
+      for (const subject of [admin, owner, member, repairer]) {
+        expect(canRead(security, subject, other)).toBe(false);
+      }
+    });
+
+    it("lets a guest read what the public reads on an object without a guest rule", () => {
+      const security = securityWithPublicRead(section, other);
+      security.addPolicy(repairer, section, [read]);
+
+      expect(canRead(security, repairer, other)).toBe(true);
+    });
+
+    it("lets an own entry without Read beat the public Read on the same object", () => {
+      const security = securityWithPublicRead(section);
+      security.addPolicy(member, section, []);
+      security.addPolicy(repairer, section, []);
+
+      expect(canRead(security, member, section)).toBe(false);
+      expect(canRead(security, repairer, section)).toBe(false);
+      expect(canRead(security, anonymous, section)).toBe(true);
+    });
+
+    it("lets an own Read keep the access when the public rule is gone", () => {
+      const security = Security.create({});
+      security.addPolicy(repairer, section, [read]);
+
+      expect(canRead(security, repairer, section)).toBe(true);
+      expect(canRead(security, anonymous, section)).toBe(false);
+    });
+
+    it("does not hide a child the public reads behind an own entry of its parent", () => {
+      const security = securityWithPublicRead(secret);
+      security.addPolicy(member, section, []);
+
+      expect(canRead(security, member, section)).toBe(false);
+      expect(canRead(security, member, secret)).toBe(true);
+    });
+
+    it("hides a child from a subject whose own entry is on the child", () => {
+      const security = securityWithPublicRead(secret);
+      security.addPolicy(member, secret, []);
+
+      expect(canRead(security, member, secret)).toBe(false);
+    });
+
+    it("returns the own rule first and the public rule after it", () => {
+      const security = securityWithPublicRead(section);
+      security.addPolicy(member, section, [read]);
+
+      const rules = security.findPoliciesBySubject(member);
+
+      expect(rules).toHaveLength(2);
+      expect(rules[0].targetSubjectAttributes.isEqual(member)).toBe(true);
+      expect(rules[1].targetSubjectAttributes.isEqual(anonymous)).toBe(true);
+    });
+
+    it("returns the public rule alone for a subject without a rule of its own", () => {
+      const security = securityWithPublicRead(section);
+
+      const rules = security.findPoliciesBySubject(repairer);
+
+      expect(rules).toHaveLength(1);
+      expect(rules[0].targetSubjectAttributes.isEqual(anonymous)).toBe(true);
+    });
+
+    it("returns the rule of the public only once for the public", () => {
+      const security = securityWithPublicRead(section);
+
+      expect(security.findPoliciesBySubject(anonymous)).toHaveLength(1);
+    });
+
+    it("leaves a signed in user without an organization alone", () => {
+      const security = securityWithPublicRead(section);
+
+      expect(security.findPoliciesBySubject(signedInUser)).toEqual([]);
+    });
+
+    it("has no rules for a subject when the public has none either", () => {
+      expect(Security.create({}).findPoliciesBySubject(repairer)).toEqual([]);
+    });
+
+    it("does not modify the rule of the public when a guest role has no stored rule", () => {
+      const security = securityWithPublicRead(section);
+
+      expect(() => security.modifyPolicy(repairer, section, [read])).toThrow(ForbiddenError);
+      expect(security.hasPolicy(repairer, section, [read])).toBe(false);
+      expect(security.hasPolicy(anonymous, section, [read])).toBe(true);
+    });
+
+    it("adds a rule for a guest role without a stored rule and leaves the public rule alone", () => {
+      const security = securityWithPublicRead(section);
+
+      security.applyModifiedRules([
+        AccessPermissionRule.create({
+          targetSubjectAttributes: repairer,
+          permissionsPerObject: [
+            PermissionPerObject.create({ object: createAasObject(section), permissions: [read] }),
+          ],
+        }),
+      ]);
+
+      const rules = security.localAccessControl.accessPermissionRules;
+      expect(rules).toHaveLength(2);
+      expect(security.hasPolicy(repairer, section, [read])).toBe(true);
+      expect(security.hasPolicy(anonymous, section, [read])).toBe(true);
+      expect(
+        security.localAccessControl.findRuleOfSubject(anonymous)?.permissionsPerObject,
+      ).toHaveLength(1);
+    });
+  });
 });

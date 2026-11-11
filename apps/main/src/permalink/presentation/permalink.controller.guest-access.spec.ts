@@ -134,8 +134,8 @@ describe("PermalinkController — who sees what", () => {
     await app.init();
 
     // One shell with two submodels: the first is readable for repairers only, the second for the
-    // public only. Members see both. Guests do not fall back to the public rules, so a repairer
-    // sees the first one and not the second.
+    // public only. Members see both. A repairer has a rule for the first one and falls back to the
+    // public rule for the second, so a repairer sees both.
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     forRepairers = Submodel.fromPlain(
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
@@ -228,12 +228,14 @@ describe("PermalinkController — who sees what", () => {
     return response.body.result.map((s: { id: string }) => s.id) as string[];
   }
 
-  it("shows an accepted guest the fields of the guest role, and not the public ones without a guest rule", async () => {
+  it("shows an accepted guest the fields of the guest role and, as a fallback, the public ones", async () => {
     const organization = await createOwner();
     const permalink = await createPassport(organization.org.id);
     const guest = await createGuest(organization);
 
-    expect(await submodelIdsSeenBy(permalink.id, guest.userCookie)).toEqual([forRepairers.id]);
+    expect((await submodelIdsSeenBy(permalink.id, guest.userCookie)).sort()).toEqual(
+      [forRepairers.id, forPublic.id].sort(),
+    );
   });
 
   it("shows anonymous visitors and signed in strangers only the public fields", async () => {
@@ -301,7 +303,9 @@ describe("PermalinkController — who sees what", () => {
     const organization = await createOwner();
     const permalink = await createPassport(organization.org.id);
     const guest = await createGuest(organization);
-    expect(await submodelIdsSeenBy(permalink.id, guest.userCookie)).toEqual([forRepairers.id]);
+    expect((await submodelIdsSeenBy(permalink.id, guest.userCookie)).sort()).toEqual(
+      [forRepairers.id, forPublic.id].sort(),
+    );
 
     await guestAccessService.revoke({
       organizationId: organization.org.id,
