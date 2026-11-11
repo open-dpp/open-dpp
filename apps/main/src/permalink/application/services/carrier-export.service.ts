@@ -40,12 +40,13 @@ export class CarrierExportService {
       );
     }
     // the same URL the back-office reads show, frozen once the passport is published
-    const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
-      permalink,
-      passport,
-      await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId),
-      await this.permalinkApplicationService.getPermalinkBaseUrl(),
-    );
+    const { publicUrl } =
+      await this.permalinkApplicationService.resolvePublicUrlAndFreezeIfPublished(
+        permalink,
+        passport,
+        await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId),
+        await this.permalinkApplicationService.getPermalinkBaseUrl(),
+      );
     const carrier = DataCarrier.encode(publicUrl, settings.errorCorrection);
     return await carrier.export(settings, permalink.slug ?? permalink.id);
   }
