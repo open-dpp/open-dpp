@@ -240,7 +240,7 @@ test.describe("guest access", () => {
     const visitorPage = await visitor.newPage();
     const product = new ProductPage(visitorPage, permalinkId);
     await product.goto();
-    await product.signInAsProfessional();
+    await product.signIn();
 
     const signin = new SigninPage(visitorPage);
     await signin.waitForPage();
@@ -248,12 +248,12 @@ test.describe("guest access", () => {
 
     await product.waitForPage();
     // Signed in, the entry for professionals is gone
-    await expect(product.professionalSignIn()).toHaveCount(0);
+    await expect(product.signInEntry()).toHaveCount(0);
 
     // Signing out leads back to the page, now as a visitor again
     await product.signOut();
     await product.waitForPage();
-    await expect(product.professionalSignIn().first()).toBeVisible();
+    await expect(product.signInEntry().first()).toBeVisible();
     await expect(product.signOutEntry()).toHaveCount(0);
     await visitor.close();
   });

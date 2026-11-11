@@ -16,12 +16,12 @@ export class ProductPage {
     await this.page.goto(this.url());
   }
 
-  professionalSignIn(): Locator {
-    return this.page.getByText(/Als Fachperson anmelden|Sign in as professional/i);
+  signInEntry(): Locator {
+    return this.page.getByText(/^(Anmelden|Sign in)$/i);
   }
 
-  async signInAsProfessional() {
-    await this.professionalSignIn().first().click();
+  async signIn() {
+    await this.signInEntry().first().click();
   }
 
   profileEntry(): Locator {

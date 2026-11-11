@@ -63,13 +63,13 @@ describe("usePresentationMenu", () => {
   });
 
   describe("menuItems", () => {
-    it("includes toPass, chatWithAI and signInAsProfessional items when not signed in", () => {
+    it("includes toPass, chatWithAI and signIn items when not signed in", () => {
       const { menuItems } = usePresentationMenu();
 
       expect(menuItems.value).toHaveLength(3);
       expect(menuItems.value[2]).toEqual(
         expect.objectContaining({
-          label: "presentation.signInAsProfessional",
+          label: "auth.signin.button",
           icon: "pi pi-sign-in",
         }),
       );
@@ -173,7 +173,7 @@ describe("usePresentationMenu", () => {
       expect(mocks.routerPush).toHaveBeenCalledWith("/p/my-product/chat");
     });
 
-    it("signInAsProfessional command signs in and returns to the current product page", () => {
+    it("signIn command signs in and returns to the current product page", () => {
       const { menuItems } = usePresentationMenu();
 
       menuItems.value[2]!.command();

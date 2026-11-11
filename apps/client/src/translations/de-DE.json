@@ -476,7 +476,7 @@
       "organization": "Organisation",
       "readOnly": "Als Gast kannst du ausgewählte Daten von Produktpässen nur lesen. Du kannst sonst nichts aus der Organisation sehen oder ändern.",
       "accept": "Zugriff annehmen",
-      "accepted": "Du hast jetzt Zugriff. Öffne die Produktseite erneut, zum Beispiel über den QR-Code, um die Daten zu sehen, die du sehen darfst.",
+      "accepted": "Du hast jetzt Zugriff. Scanne den QR-Code eines Produkts der Organisation, zu der du als Gast hinzugefügt wurdest. Wenn du angemeldet bist, kannst du nun die Daten sehen, die für deine Rolle freigegeben wurden.",
       "revoked": "Diese Einladung ist nicht mehr gültig.",
       "unavailable": "Diese Einladung ist für dein Konto nicht verfügbar. Melde dich mit der E-Mail-Adresse an, an die die Einladung gesendet wurde, und stelle sicher, dass die Adresse bestätigt ist.",
       "verifyEmail": "Bitte bestätige zuerst deine E-Mail-Adresse. Wir haben einen Bestätigungslink an {email} gesendet. Klicke darauf, danach kommst du zu dieser Seite zurück und kannst den Zugriff annehmen.",
@@ -1050,7 +1050,6 @@
     "openPresentationChat": "KI-Chat öffnen"
   },
   "presentation": {
-    "signInAsProfessional": "Als Fachperson anmelden",
     "productDetails": "Produktdetails",
     "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
     "additionalSections": "Weiterführende Abschnitte",

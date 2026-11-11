@@ -32,7 +32,7 @@ export function usePresentationMenu() {
   }
 
   // Guests and members sign in on the page they came from and return to it
-  function signInAsProfessional() {
+  function signIn() {
     router.push({
       name: "Signin",
       query: { redirect: encodeURIComponent(window.location.origin + route.fullPath) },
@@ -118,10 +118,10 @@ export function usePresentationMenu() {
     return [
       ...items,
       {
-        label: t("presentation.signInAsProfessional"),
+        label: t("auth.signin.button"),
         icon: "pi pi-sign-in",
         command: () => {
-          signInAsProfessional();
+          signIn();
         },
       },
     ];
