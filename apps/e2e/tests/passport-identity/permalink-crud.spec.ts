@@ -1,170 +1,134 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { v4 as uuid4 } from "uuid";
-import {
-  acceptDeleteConfirm,
-  createBlankPassport,
-  createGs1LinkPermalink,
-  createGs1Upi,
-  GTIN14,
-  gotoPermalinkList,
-  gotoUpiList,
-  uniqueSerial,
-} from "../helpers/passport";
+import { createBlankPassport, GTIN14, passportUrl, uniqueSerial } from "../helpers/passport";
+import { PermalinkListViewPage } from "./permalink-list-view.page";
+import { UniqueProductIdentifierListViewPage } from "./unique-product-identifier-list-view.page";
 
-function permalinkRows(page: Page) {
-  return page
-    .getByTestId("permalink-data-table")
-    .locator("tbody tr:not(.p-datatable-empty-message)");
-}
-
-async function rowPermalinkId(row: ReturnType<typeof permalinkRows>): Promise<string> {
-  const testId = await row.locator("[data-testid^='permalink-kind-']").getAttribute("data-testid");
-  expect(testId, "permalink row should expose its id through the kind cell").not.toBeNull();
-  return testId!.replace("permalink-kind-", "");
+function uniqueShortName(): string {
+  return `e2e-${uuid4().slice(0, 8)}`;
 }
 
 test("a new passport has exactly one open-dpp permalink with a QR code", async ({ page }) => {
-  const ids = await createBlankPassport(page);
-  await gotoPermalinkList(page, ids);
+  const permalinks = new PermalinkListViewPage(page, await createBlankPassport(page));
+  await permalinks.goto();
 
-  await expect(permalinkRows(page)).toHaveCount(1);
-  const row = permalinkRows(page).first();
-  const permalinkId = await rowPermalinkId(row);
-
-  const publicUrl = await page.getByTestId(`permalink-public-url-${permalinkId}`).innerText();
+  await expect(permalinks.rows).toHaveCount(1);
+  const permalink = await permalinks.firstRow();
+  const publicUrl = await permalink.publicUrl.innerText();
   expect(publicUrl).toContain("/p/");
 
-  await page.getByTestId(`permalink-show-qr-btn-${permalinkId}`).click();
-  await expect(page.getByTestId("data-carrier-url")).toHaveText(publicUrl);
-  await expect(page.getByTestId("data-carrier-copy-btn")).toBeVisible();
-
-  // the server-rendered SVG has loaded, not just its placeholder
-  const carrier = page.getByTestId("data-carrier-image");
-  await expect(carrier).toBeVisible();
-  await expect
-    .poll(() => carrier.evaluate((image: HTMLImageElement) => image.naturalWidth))
-    .toBeGreaterThan(0);
+  const dataCarrier = await permalink.openDataCarrier();
+  await expect(dataCarrier.url).toHaveText(publicUrl);
+  await expect(dataCarrier.copyButton).toBeVisible();
+  await dataCarrier.expectImageLoaded();
 });
 
 test("a bare permalink can be created without selecting an identifier", async ({ page }) => {
-  const ids = await createBlankPassport(page);
-  await gotoPermalinkList(page, ids);
-  await expect(permalinkRows(page)).toHaveCount(1);
+  const permalinks = new PermalinkListViewPage(page, await createBlankPassport(page));
+  await permalinks.goto();
+  await expect(permalinks.rows).toHaveCount(1);
 
-  await expect(page.getByTestId("permalink-create-btn")).toBeEnabled();
-  await page.getByTestId("permalink-create-btn").click();
-  await page.getByTestId("permalink-create-submit").click();
-  await expect(page.getByTestId("permalink-create-submit")).toHaveCount(0);
+  await expect(permalinks.createButton).toBeEnabled();
+  await permalinks.createBarePermalink();
 
-  await expect(permalinkRows(page)).toHaveCount(2);
-  await expect(
-    page
-      .getByTestId("permalink-data-table")
-      .getByText(/open-dpp/)
-      .first(),
-  ).toBeVisible();
+  await expect(permalinks.rows).toHaveCount(2);
+  await expect(permalinks.table.getByText(/open-dpp/).first()).toBeVisible();
 });
 
 test("a GS1 identifier can be linked once; its row swaps the CTA for the QR code", async ({
   page,
 }) => {
   const ids = await createBlankPassport(page);
-
+  const identifiers = new UniqueProductIdentifierListViewPage(page, ids);
+  const permalinks = new PermalinkListViewPage(page, ids);
   const serial = uniqueSerial();
-  await gotoUpiList(page, ids);
-  await createGs1Upi(page, { gtin: GTIN14, serial });
-  await page.getByTestId("gs1-link-prompt-skip").click();
 
-  await gotoPermalinkList(page, ids);
-  await createGs1LinkPermalink(page);
+  await identifiers.goto();
+  await identifiers.addGs1Identifier({ gtin: GTIN14, serial });
+  await identifiers.skipGs1LinkPrompt();
 
-  await expect(permalinkRows(page)).toHaveCount(2);
+  await permalinks.goto();
+  await permalinks.createGs1DigitalLink(GTIN14);
+  await expect(permalinks.rows).toHaveCount(2);
 
-  await gotoUpiList(page, ids);
-  const gs1Row = page.getByTestId("upi-data-table").locator("tbody tr").filter({ hasText: serial });
-  await expect(gs1Row.getByTestId("upi-qr-btn")).toBeVisible();
-  await expect(gs1Row.getByTestId("upi-permalink-create")).toHaveCount(0);
+  await identifiers.goto();
+  const gs1Identifier = identifiers.rowWithText(serial);
+  await expect(gs1Identifier.qrButton).toBeVisible();
+  await expect(gs1Identifier.createPermalinkButton).toHaveCount(0);
 });
 
 test("a presentation permalink accepts a custom short name", async ({ page }) => {
-  const ids = await createBlankPassport(page);
-  await gotoPermalinkList(page, ids);
+  const permalinks = new PermalinkListViewPage(page, await createBlankPassport(page));
+  await permalinks.goto();
+  const permalink = await permalinks.firstRow();
+  const shortName = uniqueShortName();
 
-  const permalinkId = await rowPermalinkId(permalinkRows(page).first());
-  const slug = `e2e-${uuid4().slice(0, 8)}`;
+  const editDialog = await permalink.edit();
+  await expect(editDialog.lockedBanner).toHaveCount(0);
+  await editDialog.saveShortName(shortName);
 
-  await page.getByTestId(`permalink-edit-btn-${permalinkId}`).click();
-  await expect(page.getByTestId("permalink-edit-slug")).toBeVisible();
-  await expect(page.getByTestId("permalink-edit-locked-banner")).toHaveCount(0);
-  await page.getByTestId("permalink-edit-slug").fill(slug);
-  await page.getByTestId("permalink-edit-save").click();
-
-  await expect(page.getByTestId(`permalink-public-url-${permalinkId}`)).toContainText(slug);
+  await expect(permalink.publicUrl).toContainText(shortName);
 });
 
 test("a short name already taken by another passport is reported on the field", async ({
   page,
 }) => {
-  const slug = `e2e-${uuid4().slice(0, 8)}`;
+  const shortName = uniqueShortName();
 
-  const first = await createBlankPassport(page);
-  await gotoPermalinkList(page, first);
-  const firstId = await rowPermalinkId(permalinkRows(page).first());
-  await page.getByTestId(`permalink-edit-btn-${firstId}`).click();
-  await page.getByTestId("permalink-edit-slug").fill(slug);
-  await page.getByTestId("permalink-edit-save").click();
-  await expect(page.getByTestId(`permalink-public-url-${firstId}`)).toContainText(slug);
+  const firstPassport = new PermalinkListViewPage(page, await createBlankPassport(page));
+  await firstPassport.goto();
+  const firstPermalink = await firstPassport.firstRow();
+  await (await firstPermalink.edit()).saveShortName(shortName);
+  await expect(firstPermalink.publicUrl).toContainText(shortName);
 
-  const second = await createBlankPassport(page);
-  await gotoPermalinkList(page, second);
-  const secondId = await rowPermalinkId(permalinkRows(page).first());
-  await page.getByTestId(`permalink-edit-btn-${secondId}`).click();
-  await page.getByTestId("permalink-edit-slug").fill(slug);
-  await page.getByTestId("permalink-edit-save").click();
+  const secondPassport = new PermalinkListViewPage(page, await createBlankPassport(page));
+  await secondPassport.goto();
+  const editDialog = await (await secondPassport.firstRow()).edit();
+  await editDialog.saveShortName(shortName);
 
-  await expect(page.getByTestId("permalink-edit-slug-error")).toBeVisible();
+  await expect(editDialog.shortNameError).toBeVisible();
 });
 
 test("every unpublished permalink can be deleted — even the passport's last one", async ({
   page,
 }) => {
   const ids = await createBlankPassport(page);
-  await gotoUpiList(page, ids);
-  await createGs1Upi(page, { gtin: GTIN14, serial: uniqueSerial() });
-  await page.getByTestId("gs1-link-prompt-skip").click();
+  const identifiers = new UniqueProductIdentifierListViewPage(page, ids);
+  await identifiers.goto();
+  await identifiers.addGs1Identifier({ gtin: GTIN14, serial: uniqueSerial() });
+  await identifiers.skipGs1LinkPrompt();
 
-  await gotoPermalinkList(page, ids);
-  const presentationId = await rowPermalinkId(permalinkRows(page).first());
+  const permalinks = new PermalinkListViewPage(page, ids);
+  await permalinks.goto();
+  const presentation = await permalinks.firstRow();
+  await permalinks.createGs1DigitalLink(GTIN14);
+  await expect(permalinks.rows).toHaveCount(2);
 
-  await createGs1LinkPermalink(page);
-  await expect(permalinkRows(page)).toHaveCount(2);
+  const gs1DigitalLink = await permalinks.rowWithText(/GS1 Digital Link/i);
+  await gs1DigitalLink.delete();
+  await expect(permalinks.rows).toHaveCount(1);
 
-  const gs1LinkRow = permalinkRows(page).filter({ hasText: /GS1 Digital Link/i });
-  const gs1LinkId = await rowPermalinkId(gs1LinkRow);
-  await page.getByTestId(`permalink-delete-btn-${gs1LinkId}`).click();
-  await acceptDeleteConfirm(page);
-  await expect(permalinkRows(page)).toHaveCount(1);
-
-  await expect(page.getByTestId(`permalink-delete-btn-${presentationId}`)).toBeEnabled();
-  await page.getByTestId(`permalink-delete-btn-${presentationId}`).click();
-  await acceptDeleteConfirm(page);
-  await expect(permalinkRows(page)).toHaveCount(0);
+  await expect(presentation.deleteButton).toBeEnabled();
+  await presentation.delete();
+  await expect(permalinks.rows).toHaveCount(0);
 });
 
 test("creating a GS1 Digital Link does not publish the passport", async ({ page }) => {
   const ids = await createBlankPassport(page);
-  await gotoUpiList(page, ids);
-  await createGs1Upi(page, { gtin: GTIN14, serial: uniqueSerial() });
-  await page.getByTestId("gs1-link-prompt-skip").click();
+  const identifiers = new UniqueProductIdentifierListViewPage(page, ids);
+  await identifiers.goto();
+  await identifiers.addGs1Identifier({ gtin: GTIN14, serial: uniqueSerial() });
+  await identifiers.skipGs1LinkPrompt();
 
-  await gotoPermalinkList(page, ids);
-  await createGs1LinkPermalink(page);
+  const permalinks = new PermalinkListViewPage(page, ids);
+  await permalinks.goto();
+  await permalinks.createGs1DigitalLink(GTIN14);
+  await expect(permalinks.frozenInfo).toHaveCount(0);
 
-  await expect(page.getByTestId("permalink-frozen-info")).toHaveCount(0);
-  await page.reload();
-  await expect(permalinkRows(page)).toHaveCount(2);
-  await expect(page.getByTestId("permalink-frozen-info")).toHaveCount(0);
+  await permalinks.reload();
+  await expect(permalinks.rows).toHaveCount(2);
+  await expect(permalinks.frozenInfo).toHaveCount(0);
 
-  await page.goto(`${page.url().replace(/\/permalinks.*$/, "")}`);
+  await page.goto(passportUrl(ids));
   await expect(page.getByText(/Entwurf|Draft/).first()).toBeVisible();
 });
