@@ -27,12 +27,16 @@ export async function createBlankPassport(page: Page): Promise<PassportIds> {
   return { orgId: match![1], passportId: match![2] };
 }
 
-export function upiListUrl({ orgId, passportId }: PassportIds): string {
-  return `${EnvConfig.OPEN_DPP_URL}/organizations/${orgId}/passports/${passportId}/unique-product-identifiers`;
+export function passportUrl({ orgId, passportId }: PassportIds): string {
+  return `${EnvConfig.OPEN_DPP_URL}/organizations/${orgId}/passports/${passportId}`;
 }
 
-export function permalinkListUrl({ orgId, passportId }: PassportIds): string {
-  return `${EnvConfig.OPEN_DPP_URL}/organizations/${orgId}/passports/${passportId}/permalinks`;
+export function upiListUrl(ids: PassportIds): string {
+  return `${passportUrl(ids)}/unique-product-identifiers`;
+}
+
+export function permalinkListUrl(ids: PassportIds): string {
+  return `${passportUrl(ids)}/permalinks`;
 }
 
 export async function gotoUpiList(page: Page, ids: PassportIds): Promise<void> {

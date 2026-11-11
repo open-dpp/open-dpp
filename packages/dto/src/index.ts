@@ -79,6 +79,7 @@ export * from "./organizations/member.dto";
 export * from "./organizations/organization.dto";
 export * from "./guest-access/guest-access.dto";
 export * from "./passports/passport.dto";
+export * from "./permalinks/carrier-export.dto";
 export * from "./permalinks/permalink.dto";
 export * from "./presentation-configurations/presentation-configuration.dto";
 export * from "./digital-product-document/digital-product-document.schemas";

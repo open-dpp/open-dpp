@@ -64,7 +64,7 @@ export class Gs1IdentityService {
     const branding = await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId);
     const fallbackEnvUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();
     const { permalink: resolved } =
-      await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
+      await this.permalinkApplicationService.resolvePublicUrlAndFreezeIfPublished(
         gs1LinkPermalink,
         passport,
         branding,

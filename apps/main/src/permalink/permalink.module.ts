@@ -19,7 +19,9 @@ import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
 import { BaseUrlResolver } from "./application/services/base-url-resolver.service";
 import { PassportSubjectResolver } from "./application/services/passport-subject-resolver.service";
+import { CarrierExportService } from "./application/services/carrier-export.service";
 import { PermalinkApplicationService } from "./application/services/permalink.application.service";
+import { CarrierExportController } from "./presentation/carrier-export.controller";
 import { PermalinkController } from "./presentation/permalink.controller";
 
 @Module({
@@ -40,18 +42,14 @@ import { PermalinkController } from "./presentation/permalink.controller";
     BrandingModule,
     PresentationConfigurationsModule,
   ],
-  controllers: [PermalinkController],
+  controllers: [PermalinkController, CarrierExportController],
   providers: [
     PermalinkRepository,
     PermalinkApplicationService,
     BaseUrlResolver,
-    PassportSubjectResolver,
+    CarrierExportService,
+    PassportSubjectResolver
   ],
-  exports: [
-    PermalinkRepository,
-    PermalinkApplicationService,
-    BaseUrlResolver,
-    PassportSubjectResolver,
-  ],
+  exports: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver, PassportSubjectResolver],
 })
 export class PermalinkModule {}

@@ -5,6 +5,7 @@ import { aasHandlers } from "./handlers/aas";
 import { aasIntegrationHandlers } from "./handlers/aas-integration";
 import { bulkImportHandlers } from "./handlers/bulk-import";
 import { passportsHandlers } from "./handlers/passports";
+import { permalinksHandlers } from "./handlers/permalinks";
 import { templatesHandlers } from "./handlers/templates";
 import { uniqueProductIdentifierHandlers } from "./handlers/unique-product-identifiers";
 import { userHandlers } from "./handlers/users";
@@ -22,6 +23,7 @@ const handlers = [
   ...digitalProductDocumentHandlers("passports"),
   ...templatesHandlers(),
   ...passportsHandlers(),
+  ...permalinksHandlers(),
   ...bulkImportHandlers(),
 ];
 

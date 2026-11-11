@@ -147,12 +147,13 @@ export class PermalinkController {
         userId: session?.userId,
       });
     const branding = await this.resolveBranding(passport.organizationId);
-    const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
-      permalink,
-      passport,
-      branding.forPin,
-      await this.permalinkApplicationService.getPermalinkBaseUrl(),
-    );
+    const { publicUrl } =
+      await this.permalinkApplicationService.resolvePublicUrlAndFreezeIfPublished(
+        permalink,
+        passport,
+        branding.forPin,
+        await this.permalinkApplicationService.getPermalinkBaseUrl(),
+      );
     return PassportPermalinkBundleDtoSchema.parse({
       passport: passport.toPlain(),
       branding: branding.display.toPlain(),
@@ -208,7 +209,7 @@ export class PermalinkController {
   ) {
     const envUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();
     const fallback = resolveFallbackBaseUrl(branding.display, envUrl);
-    const resolved = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
+    const resolved = await this.permalinkApplicationService.resolvePublicUrlAndFreezeIfPublished(
       permalink,
       passport,
       branding.forPin,
