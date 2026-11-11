@@ -8,3 +8,15 @@ export const SignupFormSchema = z.object({
 });
 
 export type SignupFormValues = z.infer<typeof SignupFormSchema>;
+
+/**
+ * The signup form; while the instance links terms or a privacy policy, the visitor must tick the
+ * consent checkbox.
+ */
+export function createSignupFormSchema(consentRequired: boolean) {
+  return SignupFormSchema.extend({
+    termsAccepted: consentRequired
+      ? z.boolean().refine((accepted) => accepted, { message: "consentRequired" })
+      : z.boolean().optional(),
+  });
+}

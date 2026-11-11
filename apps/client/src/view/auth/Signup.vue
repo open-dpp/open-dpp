@@ -3,13 +3,14 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useToast } from "primevue/usetoast";
 import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
-import { useI18n } from "vue-i18n";
+import { Translation, useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
 import { continueOAuthSignup, readOAuthContinuation } from "../../lib/oauth-continuation.ts";
-import { SignupFormSchema } from "../../lib/signup-form.ts";
+import { createSignupFormSchema } from "../../lib/signup-form.ts";
+import { useInstanceSettingsStore } from "../../stores/instance-settings.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
 
 const router = useRouter();
@@ -18,16 +19,27 @@ const { t, locale } = useI18n();
 const toast = useToast();
 
 const loading = ref<boolean>(false);
-const signupEnabled = ref<boolean>(true);
 const checkingSettings = ref<boolean>(true);
+const instanceSettingsStore = useInstanceSettingsStore();
+
+/** Which consent sentence fits the documents the instance links. */
+const consentMessageKey = computed(() => {
+  const { termsOfServiceUrl, privacyPolicyUrl } = instanceSettingsStore.legalLinks;
+  if (termsOfServiceUrl && privacyPolicyUrl) return "auth.signup.consent.termsAndPrivacy";
+  if (termsOfServiceUrl) return "auth.signup.consent.termsOnly";
+  return "auth.signup.consent.privacyOnly";
+});
 
 const { handleSubmit, errors, submitCount, defineField } = useForm({
-  validationSchema: toTypedSchema(SignupFormSchema),
+  validationSchema: computed(() =>
+    toTypedSchema(createSignupFormSchema(instanceSettingsStore.consentRequired)),
+  ),
   initialValues: {
     firstName: "",
     lastName: "",
     email: "",
     password: "",
+    termsAccepted: false,
   },
 });
 
@@ -35,6 +47,7 @@ const [firstName, firstNameAttrs] = defineField("firstName");
 const [lastName, lastNameAttrs] = defineField("lastName");
 const [email, emailAttrs] = defineField("email");
 const [password, passwordAttrs] = defineField("password");
+const [termsAccepted, termsAcceptedAttrs] = defineField("termsAccepted");
 
 const showErrors = computed(() => {
   return submitCount.value > 0;
@@ -60,15 +73,8 @@ onMounted(async () => {
       life: 5000,
     });
   }
-  try {
-    const res = await apiClient.dpp.instanceSettings.getPublic();
-    signupEnabled.value = res.data.signupEnabled;
-  } catch {
-    // If we can't fetch settings, assume signup is enabled
-    signupEnabled.value = true;
-  } finally {
-    checkingSettings.value = false;
-  }
+  await instanceSettingsStore.fetchPublicSettings();
+  checkingSettings.value = false;
 });
 
 const signup = handleSubmit(async (values) => {
@@ -83,6 +89,10 @@ const signup = handleSubmit(async (values) => {
         name: `${values.firstName} ${values.lastName}`,
         preferredLanguage: convertLocaleToLanguage(locale.value as string),
         callbackURL: redirectUri.value,
+        // the server rejects a sign-up without consent while terms or privacy are linked
+        ...(instanceSettingsStore.consentRequired
+          ? { termsAccepted: values.termsAccepted === true }
+          : {}),
       }),
     );
 
@@ -124,7 +134,7 @@ const signup = handleSubmit(async (values) => {
         </p>
       </template>
       <template #content>
-        <div v-if="!signupEnabled" class="flex flex-col gap-5">
+        <div v-if="!instanceSettingsStore.signupEnabled" class="flex flex-col gap-5">
           <Message severity="warn" :closable="false">
             {{ t("auth.signup.disabled") }}
           </Message>
@@ -247,6 +257,50 @@ const signup = handleSubmit(async (values) => {
                 variant="simple"
               >
                 {{ errors.password }}
+              </Message>
+            </div>
+
+            <div v-if="instanceSettingsStore.consentRequired">
+              <div class="flex items-start gap-2">
+                <Checkbox
+                  v-model="termsAccepted"
+                  v-bind="termsAcceptedAttrs"
+                  input-id="termsAccepted"
+                  binary
+                  :disabled="loading"
+                  :invalid="showErrors && !!errors.termsAccepted"
+                  data-cy="terms-accepted"
+                />
+                <label for="termsAccepted" class="block text-sm/6 text-gray-900 dark:text-white">
+                  <Translation :keypath="consentMessageKey" tag="span" scope="global">
+                    <template #terms>
+                      <a
+                        :href="instanceSettingsStore.legalLinks.termsOfServiceUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        >{{ t("legal.termsOfService") }}</a
+                      >
+                    </template>
+                    <template #privacy>
+                      <a
+                        :href="instanceSettingsStore.legalLinks.privacyPolicyUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        >{{ t("legal.privacyPolicy") }}</a
+                      >
+                    </template>
+                  </Translation>
+                </label>
+              </div>
+              <Message
+                v-if="showErrors && errors.termsAccepted"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ t("auth.signup.consent.required") }}
               </Message>
             </div>
 

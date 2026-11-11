@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SignupFormSchema } from "./signup-form.ts";
+import { createSignupFormSchema, SignupFormSchema } from "./signup-form.ts";
 
 describe("signupFormSchema", () => {
   const validInput = {
@@ -57,5 +57,29 @@ describe("signupFormSchema", () => {
   it("should reject missing fields", () => {
     const result = SignupFormSchema.safeParse({});
     expect(result.success).toBe(false);
+  });
+});
+
+describe("createSignupFormSchema", () => {
+  const validInput = {
+    firstName: "Jane",
+    lastName: "Doe",
+    email: "jane@example.com",
+    password: "password123",
+  };
+
+  it("requires the consent checkbox while consent is required", () => {
+    const schema = createSignupFormSchema(true);
+
+    expect(schema.safeParse({ ...validInput, termsAccepted: true }).success).toBe(true);
+    expect(schema.safeParse({ ...validInput, termsAccepted: false }).success).toBe(false);
+    expect(schema.safeParse(validInput).success).toBe(false);
+  });
+
+  it("ignores the consent checkbox while no terms or privacy policy are linked", () => {
+    const schema = createSignupFormSchema(false);
+
+    expect(schema.safeParse(validInput).success).toBe(true);
+    expect(schema.safeParse({ ...validInput, termsAccepted: false }).success).toBe(true);
   });
 });

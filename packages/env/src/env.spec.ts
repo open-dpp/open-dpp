@@ -74,31 +74,31 @@ describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
   });
 });
 
-describe("validateEnv — OPEN_DPP_USAGE_MANAGEMENT_URL", () => {
+describe.each([
+  "OPEN_DPP_USAGE_MANAGEMENT_URL",
+  "OPEN_DPP_LEGAL_PRIVACY_POLICY_URL",
+  "OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL",
+  "OPEN_DPP_LEGAL_IMPRINT_URL",
+] as const)("validateEnv — %s (optional http(s) URL)", (key) => {
   it("accepts an https URL", () => {
-    expect(
-      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "https://billing.example.com/plan" })
-        .OPEN_DPP_USAGE_MANAGEMENT_URL,
-    ).toBe("https://billing.example.com/plan");
+    expect(validateEnv({ ...baseEnv, [key]: "https://example.com/page" })[key]).toBe(
+      "https://example.com/page",
+    );
   });
 
   it("is optional (link hidden when omitted)", () => {
-    expect(validateEnv(baseEnv).OPEN_DPP_USAGE_MANAGEMENT_URL).toBeUndefined();
+    expect(validateEnv(baseEnv)[key]).toBeUndefined();
   });
 
   it("treats an empty string as omitted", () => {
-    expect(
-      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "" }).OPEN_DPP_USAGE_MANAGEMENT_URL,
-    ).toBeUndefined();
+    expect(validateEnv({ ...baseEnv, [key]: "" })[key]).toBeUndefined();
   });
 
   it("rejects a value that is not an http(s) URL", () => {
-    expect(() =>
-      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "javascript:alert(1)" }),
-    ).toThrow(/OPEN_DPP_USAGE_MANAGEMENT_URL/);
-    expect(() =>
-      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "billing.example.com" }),
-    ).toThrow(/OPEN_DPP_USAGE_MANAGEMENT_URL/);
+    expect(() => validateEnv({ ...baseEnv, [key]: "javascript:alert(1)" })).toThrow(
+      new RegExp(key),
+    );
+    expect(() => validateEnv({ ...baseEnv, [key]: "example.com" })).toThrow(new RegExp(key));
   });
 });
 

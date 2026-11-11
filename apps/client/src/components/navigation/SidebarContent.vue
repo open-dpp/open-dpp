@@ -16,6 +16,7 @@ import { ChartBarIcon, CloudIcon, LinkIcon } from "@heroicons/vue/16/solid";
 import { computed, onMounted, type FunctionalComponent } from "vue";
 import { authClient } from "../../auth-client";
 import { useStatusStore } from "../../stores/status";
+import LegalLinks from "../legal/LegalLinks.vue";
 import { useOrganizationsStore } from "../../stores/organizations";
 
 const { src } = useBranding();
@@ -192,6 +193,7 @@ const { t } = useI18n();
           <p v-if="statusStore.version" class="mt-2 text-center text-xs text-gray-500">
             v{{ statusStore.version }}
           </p>
+          <LegalLinks class="mt-2" />
         </li>
       </ul>
     </nav>

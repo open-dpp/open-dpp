@@ -933,7 +933,13 @@
       "ctaSignIn": "Sign in now",
       "error": "Sign up failed.",
       "disabled": "Signup is currently disabled. Please contact your administrator.",
-      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again."
+      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again.",
+      "consent": {
+        "termsAndPrivacy": "I accept the {terms} and have read the {privacy}.",
+        "termsOnly": "I accept the {terms}.",
+        "privacyOnly": "I have read the {privacy}.",
+        "required": "Please confirm to sign up."
+      }
     },
     "passwordResetRequest": {
       "title": "Request password reset",
@@ -1244,5 +1250,11 @@
     "loadError": "The data carrier could not be loaded.",
     "downloadError": "The data carrier could not be downloaded.",
     "copyError": "The link could not be copied to the clipboard."
+  },
+  "legal": {
+    "navigationLabel": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "imprint": "Imprint"
   }
 }

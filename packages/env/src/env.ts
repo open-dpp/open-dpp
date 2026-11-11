@@ -34,6 +34,9 @@ function isTrustProxyValue(value: string): boolean {
 const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
 
+/** An optional http(s) URL; `KEY=""` counts as unset. */
+const optionalHttpUrl = () => emptyAsUndefined(z.url({ protocol: /^https?$/ }).optional());
+
 /**
  * A debug switch of an AI SDK that prints every prompt and reply to stdout. Chat content must
  * never reach the logs, so the app refuses to start while one is set. The Mistral SDK coerces
@@ -86,7 +89,11 @@ export const envSchema = z
         }),
     ),
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
-    OPEN_DPP_USAGE_MANAGEMENT_URL: emptyAsUndefined(z.url({ protocol: /^https?$/ }).optional()),
+    OPEN_DPP_USAGE_MANAGEMENT_URL: optionalHttpUrl(),
+    // Legal documents linked in the footer; terms or privacy also require consent at sign-up
+    OPEN_DPP_LEGAL_PRIVACY_POLICY_URL: optionalHttpUrl(),
+    OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL: optionalHttpUrl(),
+    OPEN_DPP_LEGAL_IMPRINT_URL: optionalHttpUrl(),
     // MongoDB
     OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
     OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),

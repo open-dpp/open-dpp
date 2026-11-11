@@ -65,6 +65,11 @@ export class InstanceSettingsController {
     return PublicInstanceSettingsDtoSchema.parse({
       signupEnabled: settings.signupEnabled.value,
       ...settingsVisibleToRegisteredUsers,
+      legalLinks: {
+        privacyPolicyUrl: this.envService.get("OPEN_DPP_LEGAL_PRIVACY_POLICY_URL"),
+        termsOfServiceUrl: this.envService.get("OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL"),
+        imprintUrl: this.envService.get("OPEN_DPP_LEGAL_IMPRINT_URL"),
+      },
     });
   }
 }

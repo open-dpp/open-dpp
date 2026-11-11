@@ -7,24 +7,23 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
-import apiClient from "../../lib/api-client.ts";
 import { readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
 import { useStatusStore } from "../../stores/status.ts";
+import { useInstanceSettingsStore } from "../../stores/instance-settings.ts";
 
 const indexStore = useIndexStore();
 const organizationsStore = useOrganizationsStore();
 const statusStore = useStatusStore();
+const instanceSettingsStore = useInstanceSettingsStore();
 const route = useRoute();
 const { t } = useI18n();
 const toast = useToast();
 
 const rememberMe = ref<boolean>(false);
 const loading = ref<boolean>(false);
-const signupEnabled = ref<boolean>(false);
-const checkingSettings = ref<boolean>(true);
 
 const { handleSubmit, errors, submitCount, defineField, resetField } = useForm({
   validationSchema: toTypedSchema(SigninFormSchema),
@@ -43,14 +42,7 @@ const showErrors = computed(() => {
 
 onMounted(async () => {
   await statusStore.fetchStatus();
-  try {
-    const res = await apiClient.dpp.instanceSettings.getPublic();
-    signupEnabled.value = res.data.signupEnabled;
-  } catch {
-    signupEnabled.value = false;
-  } finally {
-    checkingSettings.value = false;
-  }
+  await instanceSettingsStore.fetchPublicSettings();
 });
 
 const redirectUri = computed(() => {
@@ -213,7 +205,7 @@ const signin = handleSubmit(async (values) => {
           </form>
         </div>
       </template>
-      <template v-if="!checkingSettings && signupEnabled" #footer>
+      <template v-if="instanceSettingsStore.signupEnabled" #footer>
         <p class="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
           {{ t("auth.signin.notAMember") }}
           {{ " " }}
