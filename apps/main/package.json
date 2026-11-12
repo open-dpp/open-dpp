@@ -86,7 +86,7 @@
     "@open-dpp/permission": "workspace:*",
     "@open-dpp/testing": "workspace:*",
     "@rspack/core": "^2.3.0",
-    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/archiver": "^7.0.0",
     "@types/body-parser": "^1.19.6",
@@ -106,7 +106,7 @@
     "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.2.2",
     "tsconfig-paths-webpack-plugin": "^4.2.0",
-    "typescript": "^5.9.3",
+    "typescript": "~6.0.3",
     "webpack-node-externals": "^3.0.0"
   },
   "packageManager": "pnpm@11.28.9"
