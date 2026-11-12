@@ -5,9 +5,12 @@ import { EnvService } from "@open-dpp/env";
 import Handlebars from "handlebars";
 import mjml2html from "mjml";
 import { Transporter } from "nodemailer";
+import { APP_ROOT } from "../app-root";
 import { InstanceSettingsService } from "../instance-settings/application/services/instance-settings.service";
 import { BaseEmail } from "./domain/base-email";
 import { SMTP_TRANSPORTER } from "./infrastructure/smtp-transporter.provider";
+
+const TEMPLATES_DIR = resolve(APP_ROOT, "email", "templates");
 
 @Injectable()
 export class EmailService {
@@ -31,7 +34,7 @@ export class EmailService {
   }
 
   private registerPartial(name: string, file: string) {
-    const content = readFileSync(resolve(__dirname, "templates", file), "utf-8");
+    const content = readFileSync(resolve(TEMPLATES_DIR, file), "utf-8");
     Handlebars.registerPartial(name, content);
   }
 
@@ -41,13 +44,13 @@ export class EmailService {
   }
 
   private templateExists(template: string): boolean {
-    return existsSync(resolve(__dirname, "templates", template));
+    return existsSync(resolve(TEMPLATES_DIR, template));
   }
 
   private async render(mail: BaseEmail): Promise<string> {
     const localized = mail.template.localizedName(mail.language);
     const template = this.templateExists(localized) ? localized : mail.template.name;
-    const templateContent = readFileSync(resolve(__dirname, "templates", template), "utf-8");
+    const templateContent = readFileSync(resolve(TEMPLATES_DIR, template), "utf-8");
     const compiler = Handlebars.compile(templateContent);
     const compiled = compiler({ ...mail.template.properties, logoUrl: this.logoUrl });
     return this.compileMjml(compiled);

@@ -4,7 +4,14 @@ import { DigitalProductDocumentTypes, LEGACY_PERMALINK_KIND, PermalinkKind } fro
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
-import { findOne, findOneOrFail, findPageByCursor, save } from "../../lib/repositories";
+import { isDuplicateKeyErrorOnField } from "../../lib/mongo-errors";
+import {
+  convertToDomain,
+  findOne,
+  findOneOrFail,
+  findPageByCursor,
+  save,
+} from "../../lib/repositories";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { PASSPORT_COLLECTION } from "../../passports/infrastructure/passport.schema";
@@ -149,7 +156,15 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return this.fromPlain(migrated);
   }
 
+  /**
+   * Persists a permalink. A frozen one is written atomically, and only while the stored one has no
+   * publishedUrl or the same one, so racing freezes cannot overwrite each other: the first URL wins,
+   * and every caller gets the persisted permalink back, never the URL it lost with.
+   */
   async save(permalink: Permalink, options?: DbSessionOptions): Promise<Permalink> {
+    if (permalink.publishedUrl !== null) {
+      return await this.saveFrozen(permalink, options);
+    }
     return await save(
       permalink,
       this.permalinkDoc,
@@ -158,6 +173,27 @@ export class PermalinkRepository implements OnApplicationBootstrap {
       undefined,
       options,
     );
+  }
+
+  private async saveFrozen(frozen: Permalink, options?: DbSessionOptions): Promise<Permalink> {
+    const { id, ...plain } = frozen.toPlain();
+    try {
+      const doc = await this.permalinkDoc.findOneAndUpdate(
+        { _id: { $eq: id }, publishedUrl: { $in: [null, frozen.publishedUrl] } },
+        { $set: { ...plain, _schemaVersion: PermalinkDocVersion.v1_3_0 } },
+        { new: true, upsert: true, runValidators: true, session: options?.session ?? null },
+      );
+      if (!doc) {
+        throw new Error("findOneAndUpdate with upsert did not return a document");
+      }
+      return await convertToDomain(doc, this.fromPlain.bind(this));
+    } catch (error) {
+      // the document is already frozen to another URL, so the upsert's insert collides with it
+      if (!isDuplicateKeyErrorOnField(error, "_id")) {
+        throw error;
+      }
+      return await this.findOneOrFail(id);
+    }
   }
 
   async findOne(id: string): Promise<Permalink | undefined> {

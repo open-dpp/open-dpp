@@ -57,3 +57,13 @@ better-auth's internal alias of an Organization. It always equals the Organizati
 The URL a mail gives its recipient for completing a flow: verifying an address, resetting a password, revoking an Email Change Request or accepting an invitation. While mail is off, the Mail Link goes to the server log instead of the recipient's inbox, and an admin hands it over.
 _Not to be confused with_: the verification token the link carries (the secret that proves the recipient received the mail).
 _Avoid_: action token, mail URL.
+
+## Data Carrier
+
+**Data Carrier**:
+The machine-readable symbol on a product, its packaging or its accompanying documents that leads whoever scans it to a passport. It encodes exactly one Permalink's public URL, so a passport with several Permalinks has several possible Data Carriers. QR code is the symbology it is drawn in today.
+_Avoid_: QR code (names the symbology, not the thing), barcode.
+
+**Carrier Export**:
+A downloadable file of one Data Carrier, ready to print or embed: the symbol with its quiet zone at a chosen size and quality, together with any text that accompanies it.
+_Not to be confused with_: the Data Carrier itself (the symbol, in whatever form) or the code shown on screen in the back office.

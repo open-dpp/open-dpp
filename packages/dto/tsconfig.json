@@ -1,11 +1,14 @@
 {
+  // Type-check config (`check-ts`, editors): src and vitest.config.ts.
+  // Output settings live in tsconfig.build.json (the npm build): with an `outDir`
+  // here, TypeScript 6's default `rootDir` (this directory) rejects
+  // vitest.config.ts's import of the root vitest.shared.ts.
   "extends": ["@tsconfig/node-lts/tsconfig.json", "@tsconfig/node-ts/tsconfig.json"],
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "dist",
+    // The npm build is CommonJS (no "type" field) and Node require()s it: nodenext
+    // models that and emits today's dist byte for byte (`bundler` would not).
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "verbatimModuleSyntax": false
   }
 }

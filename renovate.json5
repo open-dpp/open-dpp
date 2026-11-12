@@ -50,5 +50,21 @@
       matchPackageNames: ["node", "@types/node"],
       allowedVersions: "<27",
     },
+    {
+      // TypeScript 7 is the native compiler without the JS compiler API that the
+      // Nest CLI (every builder), `nest generate`, fork-ts-checker,
+      // @rollup/plugin-typescript and vue-tsc call. Moving to 7 is its own effort,
+      // done by hand; Renovate keeps the 6.0 patches coming.
+      matchPackageNames: ["typescript"],
+      allowedVersions: "<7",
+    },
+    {
+      // A NestJS major moves core and every satellite (swagger, mongoose, config,
+      // serve-static, axios, ...) together: each satellite peers on the new core only,
+      // so split PRs can never be green on their own. One PR per Nest major.
+      groupName: "nestjs majors",
+      matchPackageNames: ["@nestjs/**"],
+      matchUpdateTypes: ["major"],
+    },
   ],
 }

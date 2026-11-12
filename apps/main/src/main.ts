@@ -2,13 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
 import type { NestExpressApplication } from "@nestjs/platform-express";
-import {
-  ConsoleLogger,
-  Logger,
-  RequestMethod,
-  ValidationPipe,
-  VersioningType,
-} from "@nestjs/common";
+import { ConsoleLogger, Logger, RequestMethod, VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -141,6 +135,8 @@ async function bootstrap() {
     credentials: true,
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    // lets the client name a downloaded file after the server's suggestion
+    exposedHeaders: ["Content-Disposition"],
   });
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
@@ -151,7 +147,6 @@ async function bootstrap() {
   applyBodySizeHandler(app);
   app.use("/media/upload-dpp-file/:upi", bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-  app.useGlobalPipes(new ValidationPipe());
   if (envService.get("OPEN_DPP_BUILD_API_DOC")) {
     const doc = buildOpenApiDocumentation();
     addSwaggerToApp(app, doc);
