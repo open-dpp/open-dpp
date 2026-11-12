@@ -1,5 +1,6 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { subjectFallsBackToPublic } from "@open-dpp/permission";
 import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
@@ -68,9 +69,7 @@ export class Security implements ITrackable {
    * otherwise editing a guest role would edit the rule of the public.
    */
   findFallbackPoliciesBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
-    const fallsBackToPublic =
-      subject.userRole === UserRole.ADMIN || !!subject.memberRole || !!subject.guestRole;
-    const publicRule = fallsBackToPublic
+    const publicRule = subjectFallsBackToPublic(subject.getRoles())
       ? this.localAccessControl.findRuleOfSubject(
           SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
         )
@@ -179,8 +178,10 @@ export class Security implements ITrackable {
 
   defineAbilityForSubject(subject: SubjectAttributes, userId?: string): AasAbility {
     return AasAbility.create({
-      rules: this.findPoliciesBySubject(subject),
-      fallbackRules: this.findFallbackPoliciesBySubject(subject),
+      rules: [
+        ...this.findPoliciesBySubject(subject),
+        ...this.findFallbackPoliciesBySubject(subject),
+      ],
       subject,
       userId,
     });

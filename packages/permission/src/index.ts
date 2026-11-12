@@ -1,3 +1,5 @@
+export { resolvePermissionEntry, subjectFallsBackToPublic } from "./permission-resolution";
+export type { PermissionEntry, ResolvedPermissionEntry } from "./permission-resolution";
 export {
   compareSubjects,
   isEqualSubjectRoles,
