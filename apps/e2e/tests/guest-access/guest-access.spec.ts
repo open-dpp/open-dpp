@@ -35,8 +35,9 @@ function ownerHeaders(ids: PassportIds) {
 }
 
 /**
- * A published passport with a single section which the public cannot read, because its public
- * rule is deleted, while the default rule of every guest role (Read) stays.
+ * A published passport with a single section which the public cannot read. Guests read what the
+ * public reads unless they have a rule of their own, so the repairer gets a Read rule first and
+ * only then the public rule is deleted.
  */
 async function createPassportWithGuestOnlySection(page: Page): Promise<{
   ids: PassportIds;
@@ -51,17 +52,55 @@ async function createPassportWithGuestOnlySection(page: Page): Promise<{
   });
   expect(created.ok(), "adding the section should succeed").toBeTruthy();
 
-  const property = (idShort: string, value: string) => ({
-    idShort,
-    value,
-    valueType: "xs:string",
+  const metadata = {
     extensions: [],
     displayName: [],
     description: [],
     supplementalSemanticIds: [],
     qualifiers: [],
     embeddedDataSpecifications: [],
+  };
+  const property = (idShort: string, value: string) => ({
+    ...metadata,
+    idShort,
+    value,
+    valueType: "xs:string",
   });
+  const shells = await page.request.get(`${ApiBase}/passports/${ids.passportId}/shells`, {
+    headers: ownerHeaders(ids),
+  });
+  expect(shells.ok(), "loading the shell should succeed").toBeTruthy();
+  const aasId = (await shells.json()).result[0].id as string;
+  const granted = await page.request.patch(
+    `${ApiBase}/passports/${ids.passportId}/shells/${encodeURIComponent(aasId)}`,
+    {
+      headers: ownerHeaders(ids),
+      data: {
+        security: {
+          localAccessControl: {
+            accessPermissionRules: [
+              {
+                targetSubjectAttributes: {
+                  subjectAttribute: [
+                    property("userRole", "user"),
+                    property("guestRole", "Repairer"),
+                  ],
+                },
+                permissionsPerObject: [
+                  {
+                    object: { ...metadata, idShort: GUEST_SECTION },
+                    permissions: [{ permission: "Read", kindOfPermission: "Allow" }],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    },
+  );
+  expect(granted.ok(), `granting Read: ${granted.status()} ${await granted.text()}`).toBeTruthy();
+
   const deleted = await page.request.delete(
     `${ApiBase}/passports/${ids.passportId}/security/policies`,
     {
