@@ -48,7 +48,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/node": "^26.6.6",
     "typescript": "^5.9.3"
