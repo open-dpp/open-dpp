@@ -1,5 +1,11 @@
 # @open-dpp/main
 
+## 6.4.1
+
+### Patch Changes
+
+- [#1141](https://github.com/open-dpp/open-dpp/pull/1141) [`a71f2bb`](https://github.com/open-dpp/open-dpp/commit/a71f2bb83caab7b471f20cbbf73ae3cd7584eacc) Thanks [@florianBieck](https://github.com/florianBieck)! - The backend now ships as a single ES module bundle (`dist/main.js`, built with Rspack) instead of one CommonJS file per source file. The container image sets `NODE_OPTIONS=--enable-source-maps`, so stack traces in the logs point to TypeScript source lines. If you override `NODE_OPTIONS` for the container, add `--enable-source-maps` to keep that.
+
 ## 6.4.0
 
 ### Minor Changes
