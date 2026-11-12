@@ -3,7 +3,11 @@ import type { PermissionEntry } from "./permission-resolution";
 import type { SubjectRoles } from "./subject-hierarchy";
 import { GuestRoleDto, MemberRoleDto, Permissions, UserRoleDto } from "@open-dpp/dto";
 import { describe, expect, it } from "vitest";
-import { resolvePermissionEntry, subjectFallsBackToPublic } from "./permission-resolution";
+import {
+  PermissionEntryOrigin,
+  resolvePermissionEntry,
+  subjectFallsBackToPublic,
+} from "./permission-resolution";
 
 const admin: SubjectRoles = { userRole: UserRoleDto.ADMIN };
 const owner: SubjectRoles = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
@@ -49,7 +53,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, member, "section1")).toEqual({
       permissions: all,
       at: "section1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -59,7 +63,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, member, "section1.field1")).toEqual({
       permissions: all,
       at: "section1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -69,7 +73,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, member, "section1.list.item")).toEqual({
       permissions: read,
       at: "section1.list",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -80,7 +84,7 @@ describe("resolvePermissionEntry", () => {
       expect(resolvePermissionEntry(entries, subject, "section1")).toEqual({
         permissions: read,
         at: "section1",
-        from: "public",
+        from: PermissionEntryOrigin.PUBLIC,
       });
     }
   });
@@ -91,7 +95,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, repairer, "section1.field1")).toEqual({
       permissions: read,
       at: "section1",
-      from: "public",
+      from: PermissionEntryOrigin.PUBLIC,
     });
   });
 
@@ -101,7 +105,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, member, "section1")).toEqual({
       permissions: [],
       at: "section1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -115,7 +119,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, member, "section1.field1")).toEqual({
       permissions: all,
       at: "section1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -125,7 +129,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, member, "section1.field1")).toEqual({
       permissions: [],
       at: "section1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -135,7 +139,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, repairer, "section1.field1")).toEqual({
       permissions: read,
       at: "section1.field1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -152,7 +156,7 @@ describe("resolvePermissionEntry", () => {
     expect(resolvePermissionEntry(entries, anonymous, "section1")).toEqual({
       permissions: read,
       at: "section1",
-      from: "own",
+      from: PermissionEntryOrigin.OWN,
     });
   });
 
@@ -175,7 +179,7 @@ describe("resolvePermissionEntry", () => {
         { userRole: UserRoleDto.ADMIN, memberRole: MemberRoleDto.OWNER },
         "section1",
       ),
-    ).toEqual({ permissions: all, at: "section1", from: "own" });
+    ).toEqual({ permissions: all, at: "section1", from: PermissionEntryOrigin.OWN });
   });
 
   it("does not change the entries it is given", () => {

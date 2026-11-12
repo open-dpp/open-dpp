@@ -11,12 +11,19 @@ export interface PermissionEntry {
   permissions: readonly PermissionType[];
 }
 
+/** Whose entry decided: an entry of the subject itself, or one of the public as a fallback. */
+export const PermissionEntryOrigin = {
+  OWN: "own",
+  PUBLIC: "public",
+} as const;
+export type PermissionEntryOriginType =
+  (typeof PermissionEntryOrigin)[keyof typeof PermissionEntryOrigin];
+
 export interface ResolvedPermissionEntry {
   permissions: PermissionType[];
   /** The object the deciding entry belongs to: the object itself or one of its parents. */
   at: string;
-  /** `own`: an entry of the subject. `public`: an entry of the public, as a fallback. */
-  from: "own" | "public";
+  from: PermissionEntryOriginType;
 }
 
 const PUBLIC: SubjectRoles = { userRole: UserRoleDto.ANONYMOUS };
@@ -69,12 +76,12 @@ export function resolvePermissionEntry(
 ): ResolvedPermissionEntry | undefined {
   const own = resolveAlongPath(entries, subject, object);
   if (own) {
-    return { ...own, from: "own" };
+    return { ...own, from: PermissionEntryOrigin.OWN };
   }
   if (subjectFallsBackToPublic(subject)) {
     const fromPublic = resolveAlongPath(entries, PUBLIC, object);
     if (fromPublic) {
-      return { ...fromPublic, from: "public" };
+      return { ...fromPublic, from: PermissionEntryOrigin.PUBLIC };
     }
   }
   return undefined;
