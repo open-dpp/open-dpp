@@ -54,7 +54,7 @@ const permissionsOfSelectedRole = computed<PermissionsPerSubject>(
     permissions.value.find((p) => isEqualSubject(p.subject, selectedRole.value)) ?? {
       subject: selectedRole.value,
       permissions: [],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     },
 );
 
@@ -87,9 +87,7 @@ async function onToggleInheritance(shouldOverride: boolean) {
   }
 }
 
-const permissionsInherited = computed(
-  () => permissionsOfSelectedRole.value.inheritsPermissionsOf !== null,
-);
+const permissionsInherited = computed(() => permissionsOfSelectedRole.value.inheritedFrom !== null);
 
 function isReadDisabledCauseOfOtherPermissionsAreActive(key: PermissionType) {
   return (

@@ -1,7 +1,13 @@
 import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasPermissionsFormProps } from "./aas-permissions-form.ts";
-import { MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
+import {
+  GuestRoleDto,
+  MemberRoleDto,
+  PermissionKind,
+  Permissions,
+  UserRoleDto,
+} from "@open-dpp/dto";
 import {
   allPermissionsPlainAllow,
   permissionObjectPlainFactory,
@@ -121,7 +127,7 @@ describe("aasPermissionsForm composable", () => {
       {
         subject: admin,
         permissions: [Permissions.Create, Permissions.Edit],
-        inheritsPermissionsOf: null,
+        inheritedFrom: null,
       },
     );
 
@@ -131,12 +137,12 @@ describe("aasPermissionsForm composable", () => {
     };
     expect(
       permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
-    ).toEqual({ subject: member, permissions: [Permissions.Create], inheritsPermissionsOf: null });
+    ).toEqual({ subject: member, permissions: [Permissions.Create], inheritedFrom: null });
 
     const anonymous = { userRole: UserRoleDto.ANONYMOUS };
     expect(
       permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, anonymous)),
-    ).toEqual({ subject: anonymous, permissions: [], inheritsPermissionsOf: null });
+    ).toEqual({ subject: anonymous, permissions: [], inheritedFrom: null });
 
     permissionsForm = mountHarness({
       getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
@@ -149,7 +155,7 @@ describe("aasPermissionsForm composable", () => {
       {
         subject: admin,
         permissions: [Permissions.Create, Permissions.Edit],
-        inheritsPermissionsOf: "section1",
+        inheritedFrom: { kind: "parent", object: "section1" },
       },
     );
 
@@ -164,7 +170,7 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({
       subject: member,
       permissions: allPermissionsPlainAllow.map((p) => p.permission),
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
   });
 
@@ -209,20 +215,20 @@ describe("aasPermissionsForm composable", () => {
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Read],
-      inheritsPermissionsOf: "section1",
+      inheritedFrom: { kind: "parent", object: "section1" },
     });
     editPermissions([Permissions.Edit], member);
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
     editPermissions([], member);
 
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
   });
 
@@ -287,14 +293,14 @@ describe("aasPermissionsForm composable", () => {
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
     editPermissions([Permissions.Read, Permissions.Delete], owner);
 
     expect(permissions.value.find((p) => isEqualSubject(p.subject, owner))).toEqual({
       subject: owner,
       permissions: [Permissions.Read, Permissions.Delete],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
 
     await savePermissions();
@@ -396,7 +402,7 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({
       subject: member,
       permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
     deletePolicyMock.mockResolvedValue({ status: HTTPCode.NO_CONTENT });
     await permissionsForm.resetToInheritedPermissions(member);
@@ -409,10 +415,72 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({
       subject: member,
       permissions: [Permissions.Read, Permissions.Create],
-      inheritsPermissionsOf: "section1",
+      inheritedFrom: { kind: "parent", object: "section1" },
     });
     mocks.asSubject.mockReturnValueOnce(owner);
     await permissionsForm.savePermissions();
     expect(modifyShellMock).not.toHaveBeenCalled();
+  });
+
+  describe("public fallback", () => {
+    const anonymous = { userRole: UserRoleDto.ANONYMOUS };
+    const repairer = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.REPAIRER };
+
+    function securityWithPublicRead(): SecurityResponseDto {
+      return securityPlainFactory.build(undefined, {
+        transient: {
+          policies: [
+            {
+              subject: anonymous,
+              object: { idShortPath: "section1" },
+              permissions: [
+                { permission: Permissions.Read, kindOfPermission: PermissionKind.Allow },
+              ],
+            },
+          ],
+        },
+      });
+    }
+
+    it("shows a role without a rule of its own the permissions of the public", () => {
+      const security = securityWithPublicRead();
+      const permissionsForm = mountHarness({
+        getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+
+      expect(
+        permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, repairer)),
+      ).toEqual({
+        subject: repairer,
+        permissions: [Permissions.Read],
+        inheritedFrom: { kind: "public" },
+      });
+      expect(
+        permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, anonymous)),
+      ).toEqual({
+        subject: anonymous,
+        permissions: [Permissions.Read],
+        inheritedFrom: null,
+      });
+    });
+
+    it("takes over the permissions of the public as a rule of the role and shows them as own", () => {
+      const security = securityWithPublicRead();
+      const permissionsForm = mountHarness({
+        getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+
+      permissionsForm.takeOverInheritedPermissions(repairer);
+
+      expect(
+        permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, repairer)),
+      ).toEqual({ subject: repairer, permissions: [Permissions.Read], inheritedFrom: null });
+    });
   });
 });

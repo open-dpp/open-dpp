@@ -5,9 +5,11 @@ import type {
   PermissionType,
 } from "@open-dpp/dto";
 import type { Ref } from "vue";
+import type { PermissionSource } from "../lib/aas-permission-resolution.ts";
 import type { Subject } from "../lib/aas-security.ts";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
+import { resolvePermissions } from "../lib/aas-permission-resolution.ts";
 import {
   isEqualSubject,
   makeRule,
@@ -20,7 +22,8 @@ import { useRoleHierarchy } from "./role-hierarchy.ts";
 export interface PermissionsPerSubject {
   subject: Subject;
   permissions: PermissionType[];
-  inheritsPermissionsOf: string | null;
+  /** Where the permissions come from if the subject has no rule of its own on the object. */
+  inheritedFrom: PermissionSource | null;
 }
 
 export interface IAasPermissionsForm {
@@ -147,49 +150,34 @@ export function useAasPermissionsForm({
     const allPermissions: {
       subject: Subject;
       permissions: PermissionType[];
-      inheritsPermissionsOf: string | null;
+      inheritedFrom: PermissionSource | null;
     }[] = [];
     const allSubjects = hierarchy.map((role) => role.key);
     for (const subject of allSubjects) {
-      const { permissions, inheritsPermissionsOf } = getPermissionsForSubject(subject);
+      const { permissions, inheritedFrom } = getPermissionsForSubject(subject);
       let filteredPermissions = permissions;
       if (ignoredPermissionOptions) {
         filteredPermissions = permissions.filter((p) => !ignoredPermissionOptions.includes(p));
       }
 
-      allPermissions.push({ subject, permissions: filteredPermissions, inheritsPermissionsOf });
+      allPermissions.push({ subject, permissions: filteredPermissions, inheritedFrom });
     }
     return allPermissions;
   }
 
-  function getPermissionsForSubject(
-    subject: Subject,
-    consideredObject: string = object,
-  ): { permissions: PermissionType[]; inheritsPermissionsOf: string | null } {
-    const inheritsPermissionsOf = consideredObject === object ? null : consideredObject;
+  // The rules on the object as edited so far, and the rules of all other objects as loaded
+  function currentRules(): AccessPermissionRuleResponseDto[] {
+    const rulesOfOtherObjects = structuredClone(toRaw(getAccessPermissionRules()))
+      .map((rule) => ({
+        ...rule,
+        permissionsPerObject: rule.permissionsPerObject.filter((p) => p.object.idShort !== object),
+      }))
+      .filter((rule) => rule.permissionsPerObject.length > 0);
+    return [...accessPermissionRulesOfObjectWhichAreNotInherited.value, ...rulesOfOtherObjects];
+  }
 
-    const rules =
-      inheritsPermissionsOf !== null
-        ? filterRulesForObject(consideredObject)
-        : accessPermissionRulesOfObjectWhichAreNotInherited.value;
-
-    for (const rule of rules) {
-      for (const permissionPerObject of rule.permissionsPerObject) {
-        if (ruleHelper(rule).hasEqualSubject(subject)) {
-          return {
-            permissions: permissionPerObject.permissions.map((p) => p.permission),
-            inheritsPermissionsOf,
-          };
-        }
-      }
-    }
-    const parentPath = consideredObject.split(".").slice(0, -1);
-
-    if (parentPath.length > 0) {
-      return getPermissionsForSubject(subject, parentPath.join("."));
-    }
-
-    return { permissions: [], inheritsPermissionsOf: null };
+  function getPermissionsForSubject(subject: Subject) {
+    return resolvePermissions({ rules: currentRules(), subject, object });
   }
 
   return {
