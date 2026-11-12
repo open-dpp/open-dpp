@@ -98,6 +98,71 @@ describe("PermalinkRepository", () => {
     expect(found.publishedUrl).toBe("https://passports.example.com/p/acme-widget");
   });
 
+  describe("save of a frozen permalink", () => {
+    it("keeps the first frozen URL and returns it to a later freeze of a stale copy", async () => {
+      const permalink = Permalink.create({ passportId: randomUUID() });
+      await repository.save(permalink);
+
+      const first = await repository.save(
+        permalink.withPublishedUrl("https://first.example.com/p/widget"),
+      );
+      const second = await repository.save(
+        permalink.withPublishedUrl("https://second.example.com/p/widget"),
+      );
+
+      expect(first.publishedUrl).toBe("https://first.example.com/p/widget");
+      expect(second.publishedUrl).toBe("https://first.example.com/p/widget");
+      expect((await repository.findOneOrFail(permalink.id)).publishedUrl).toBe(
+        "https://first.example.com/p/widget",
+      );
+    });
+
+    it("hands every concurrent freeze the one persisted URL", async () => {
+      const permalink = Permalink.create({ passportId: randomUUID() });
+      await repository.save(permalink);
+      const urls = Array.from({ length: 5 }, (_, i) => `https://brand-${i}.example.com/p/widget`);
+
+      const results = await Promise.all(
+        urls.map((url) => repository.save(permalink.withPublishedUrl(url))),
+      );
+
+      const persisted = await repository.findOneOrFail(permalink.id);
+      expect(urls).toContain(persisted.publishedUrl);
+      expect(results.map((result) => result.publishedUrl)).toEqual(
+        urls.map(() => persisted.publishedUrl),
+      );
+    });
+
+    it("inserts a frozen permalink that was never saved", async () => {
+      const frozen = Permalink.create({ passportId: randomUUID() }).withPublishedUrl(
+        "https://first.example.com/p/new",
+      );
+
+      const saved = await repository.save(frozen);
+
+      expect(saved.publishedUrl).toBe("https://first.example.com/p/new");
+      expect((await repository.findOneOrFail(frozen.id)).publishedUrl).toBe(
+        "https://first.example.com/p/new",
+      );
+    });
+
+    it("writes a permalink that is frozen to the URL already stored", async () => {
+      const frozen = await repository.save(
+        Permalink.create({ passportId: randomUUID() }).withPublishedUrl(
+          "https://first.example.com/p/widget",
+        ),
+      );
+      const organizationId = randomUUID();
+
+      const saved = await repository.save(
+        Permalink.fromPlain({ ...frozen.toPlain(), organizationId }),
+      );
+
+      expect(saved.organizationId).toBe(organizationId);
+      expect((await repository.findOneOrFail(frozen.id)).organizationId).toBe(organizationId);
+    });
+  });
+
   it("finds a permalink by slug", async () => {
     const permalink = Permalink.create({
       passportId: randomUUID(),

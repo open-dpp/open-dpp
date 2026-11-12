@@ -17,7 +17,9 @@ import { UniqueProductIdentifierModule } from "../unique-product-identifier/uniq
 import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema";
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
 import { BaseUrlResolver } from "./application/services/base-url-resolver.service";
+import { CarrierExportService } from "./application/services/carrier-export.service";
 import { PermalinkApplicationService } from "./application/services/permalink.application.service";
+import { CarrierExportController } from "./presentation/carrier-export.controller";
 import { PermalinkController } from "./presentation/permalink.controller";
 
 @Module({
@@ -37,8 +39,13 @@ import { PermalinkController } from "./presentation/permalink.controller";
     BrandingModule,
     PresentationConfigurationsModule,
   ],
-  controllers: [PermalinkController],
-  providers: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver],
+  controllers: [PermalinkController, CarrierExportController],
+  providers: [
+    PermalinkRepository,
+    PermalinkApplicationService,
+    BaseUrlResolver,
+    CarrierExportService,
+  ],
   exports: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver],
 })
 export class PermalinkModule {}
