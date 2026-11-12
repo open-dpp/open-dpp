@@ -18,18 +18,24 @@
     "dist",
     "src"
   ],
-  "main": "./dist/index.js",
+  "main": "./src/index.ts",
   "module": "./dist/index.js",
   "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "require": "./dist/index.js"
-    },
+    ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./src/index.ts",
+        "require": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "main": "./dist/index.js",
+    "types": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",

@@ -5,6 +5,7 @@
   "description": "",
   "license": "ISC",
   "author": "",
+  "type": "module",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
@@ -16,7 +17,7 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest run --inspect-brk --no-file-parallelism",
-    "check-ts": "tsc --noEmit"
+    "check-ts": "tsc --noEmit && tsc --project tsconfig.build.json --noEmit"
   },
   "dependencies": {
     "@better-auth/api-key": "^1.6.17",
@@ -37,11 +38,6 @@
     "@nestjs/swagger": "^12.0.5",
     "@nestjs/throttler": "^6.7.1",
     "@nestjs/websockets": "^12.3.2",
-    "@open-dpp/api-client": "workspace:*",
-    "@open-dpp/dto": "workspace:*",
-    "@open-dpp/env": "workspace:*",
-    "@open-dpp/exception": "workspace:*",
-    "@open-dpp/permission": "workspace:*",
     "archiver": "^7.0.1",
     "axios": "^1.20.0",
     "better-auth": "^1.6.17",
@@ -83,7 +79,13 @@
     "@nestjs/cli": "^12.0.11",
     "@nestjs/schematics": "^12.0.12",
     "@nestjs/testing": "^12.3.2",
+    "@open-dpp/api-client": "workspace:*",
+    "@open-dpp/dto": "workspace:*",
+    "@open-dpp/env": "workspace:*",
+    "@open-dpp/exception": "workspace:*",
+    "@open-dpp/permission": "workspace:*",
     "@open-dpp/testing": "workspace:*",
+    "@rspack/core": "^2.3.0",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/archiver": "^7.0.0",
@@ -99,12 +101,13 @@
     "@types/semver": "^7.8.0",
     "@types/supertest": "^6.0.3",
     "fishery": "^2.4.0",
+    "fork-ts-checker-webpack-plugin": "^9.1.0",
     "jsqr": "^1.4.0",
     "mongodb-memory-server": "^11.3.0",
-    "source-map-support": "^0.5.21",
     "supertest": "^7.2.2",
-    "ts-loader": "^9.6.2",
-    "typescript": "^5.9.3"
+    "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "typescript": "^5.9.3",
+    "webpack-node-externals": "^3.0.0"
   },
   "packageManager": "pnpm@11.28.9"
 }

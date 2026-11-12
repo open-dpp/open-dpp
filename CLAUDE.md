@@ -21,8 +21,9 @@ make dev                      # start Docker services (MongoDB, RustFS, Mailpit)
 pnpm run dev                  # start all apps
 pnpm run dev:main             # backend only
 
-# Lint
+# Lint and type-check
 pnpm run lint
+pnpm run check-ts             # tsc / vue-tsc in every workspace (CI gate)
 
 # Test (requires: make test to start test Docker services)
 pnpm run test                 # all tests
@@ -57,10 +58,11 @@ packages/testing/    # Fishery factories for test data
 
 ### Tech Stack
 
-- **Backend**: NestJS v11, Mongoose (MongoDB 7), Better Auth, LangChain + Mistral
+- **Backend**: NestJS v12, Mongoose (MongoDB 7), Better Auth, LangChain + Mistral
 - **Frontend**: Vue 3, Pinia, PrimeVue, Tailwind CSS v4, Vite 7
 - **Testing**: Vitest everywhere (backend and packages via `unplugin-swc` for decorator metadata, shared config in `vitest.shared.ts`), Cypress (component), Playwright (E2E)
 - **Validation**: Zod everywhere (DTOs, env vars, route params)
+- **Backend build**: one ESM bundle, `apps/main/dist/main.js` (Nest CLI Rspack builder, `apps/main/rspack.config.js`), with the `@open-dpp/*` packages bundled from their `src/`. Runtime file paths derive from `APP_ROOT` (`apps/main/src/app-root.ts`): `__dirname` still passes under Vitest, which injects it, but is undefined in the bundle. A third-party package imported by a bundled workspace package must also be a `dependency` of `apps/main`, or the Docker image fails at startup.
 
 ### Domain-Driven Design Module Structure
 

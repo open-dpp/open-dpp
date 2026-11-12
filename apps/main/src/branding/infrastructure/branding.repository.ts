@@ -4,6 +4,7 @@ import path from "node:path";
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
+import { APP_ROOT } from "../../app-root";
 import { OrganizationsService } from "../../identity/organizations/application/services/organizations.service";
 import { Branding } from "../domain/branding";
 import { BrandingFile } from "../domain/brandingFile";
@@ -85,14 +86,14 @@ export class BrandingRepository {
   }
 
   async getInstanceBrandingPath(): Promise<BrandingFile> {
-    let imagePath = path.resolve(__dirname, "../../../public/logo-with-text.svg");
+    let imagePath = path.resolve(APP_ROOT, "../public/logo-with-text.svg");
     let responseType = "image/svg+xml";
 
     const brandingURL = this.envService.get("OPEN_DPP_INSTANCE_BRANDING");
     if (brandingURL && brandingURL.length > 0) {
       const candidatePath = path.isAbsolute(brandingURL)
         ? brandingURL
-        : path.resolve(__dirname, "../../../", brandingURL);
+        : path.resolve(APP_ROOT, "../", brandingURL);
 
       try {
         await access(candidatePath);
