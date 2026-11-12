@@ -1199,12 +1199,27 @@ describe("security", () => {
       expect(canRead(security, anonymous, section)).toBe(false);
     });
 
-    it("does not hide a child the public reads behind an own entry of its parent", () => {
+    it("hides a child the public reads behind an own entry of its parent without Read", () => {
       const security = securityWithPublicRead(secret);
       security.addPolicy(member, section, []);
 
       expect(canRead(security, member, section)).toBe(false);
-      expect(canRead(security, member, secret)).toBe(true);
+      expect(canRead(security, member, secret)).toBe(false);
+      expect(canRead(security, anonymous, secret)).toBe(true);
+    });
+
+    it("keeps the rights of an own entry on the parent for a child the public reads", () => {
+      const all = Object.values(Permissions).map((permission) =>
+        Permission.create({ permission, kindOfPermission: PermissionKind.Allow }),
+      );
+      const security = securityWithPublicRead(section, secret);
+      security.addPolicy(member, section, all);
+
+      const ability = security.defineAbilityForSubject(member);
+      for (const permission of Object.values(Permissions)) {
+        expect(ability.can(permission, secret)).toBe(true);
+      }
+      expect(security.defineAbilityForSubject(anonymous).can(Permissions.Edit, secret)).toBe(false);
     });
 
     it("hides a child from a subject whose own entry is on the child", () => {
@@ -1214,40 +1229,45 @@ describe("security", () => {
       expect(canRead(security, member, secret)).toBe(false);
     });
 
-    it("returns the own rule first and the public rule after it", () => {
+    it("returns the stored rule of the subject and the rule of the public as the fallback", () => {
       const security = securityWithPublicRead(section);
       security.addPolicy(member, section, [read]);
 
-      const rules = security.findPoliciesBySubject(member);
+      const own = security.findPoliciesBySubject(member);
+      const fallback = security.findFallbackPoliciesBySubject(member);
 
-      expect(rules).toHaveLength(2);
-      expect(rules[0].targetSubjectAttributes.isEqual(member)).toBe(true);
-      expect(rules[1].targetSubjectAttributes.isEqual(anonymous)).toBe(true);
+      expect(own).toHaveLength(1);
+      expect(own[0].targetSubjectAttributes.isEqual(member)).toBe(true);
+      expect(fallback).toHaveLength(1);
+      expect(fallback[0].targetSubjectAttributes.isEqual(anonymous)).toBe(true);
     });
 
-    it("returns the public rule alone for a subject without a rule of its own", () => {
+    it("has only the fallback for a subject without a rule of its own", () => {
       const security = securityWithPublicRead(section);
 
-      const rules = security.findPoliciesBySubject(repairer);
-
-      expect(rules).toHaveLength(1);
-      expect(rules[0].targetSubjectAttributes.isEqual(anonymous)).toBe(true);
+      expect(security.findPoliciesBySubject(repairer)).toEqual([]);
+      const fallback = security.findFallbackPoliciesBySubject(repairer);
+      expect(fallback).toHaveLength(1);
+      expect(fallback[0].targetSubjectAttributes.isEqual(anonymous)).toBe(true);
     });
 
-    it("returns the rule of the public only once for the public", () => {
+    it("gives the public no fallback, it has its own rule", () => {
       const security = securityWithPublicRead(section);
 
       expect(security.findPoliciesBySubject(anonymous)).toHaveLength(1);
+      expect(security.findFallbackPoliciesBySubject(anonymous)).toEqual([]);
     });
 
     it("leaves a signed in user without an organization alone", () => {
       const security = securityWithPublicRead(section);
 
       expect(security.findPoliciesBySubject(signedInUser)).toEqual([]);
+      expect(security.findFallbackPoliciesBySubject(signedInUser)).toEqual([]);
     });
 
     it("has no rules for a subject when the public has none either", () => {
       expect(Security.create({}).findPoliciesBySubject(repairer)).toEqual([]);
+      expect(Security.create({}).findFallbackPoliciesBySubject(repairer)).toEqual([]);
     });
 
     it("does not modify the rule of the public when a guest role has no stored rule", () => {
