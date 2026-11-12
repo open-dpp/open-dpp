@@ -41,7 +41,7 @@
     "@typescript-eslint/parser": "^8.72.1",
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.13.0",
-    "oxfmt": "^0.45.0",
+    "oxfmt": "^0.78.0",
     "oxlint": "^1.86.0",
     "tsx": "^4.23.15",
     "turbo": "^2.11.10",
