@@ -11,6 +11,7 @@ import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { User } from "../../../users/domain/user";
 import { DirectGuestAccess } from "../../domain/direct-guest-access";
+import { GuestAccess } from "../../domain/guest-access";
 import { GuestAccessStatus } from "../../domain/guest-access-kind.enum";
 import { GuestRole } from "../../domain/guest-role.enum";
 import { GuestAccessMapper } from "../mappers/guest-access.mapper";
@@ -24,6 +25,13 @@ import {
   GUEST_ACCESS_CHANGED_MESSAGE,
   GuestAccessRepository,
 } from "./guest-access.repository";
+
+// The repository returns every kind of access. These tests only deal with direct accesses, which
+// have the methods to accept and to change the role.
+function asDirect(guestAccess: GuestAccess): DirectGuestAccess {
+  expect(guestAccess).toBeInstanceOf(DirectGuestAccess);
+  return guestAccess as DirectGuestAccess;
+}
 
 describe("GuestAccessRepository", () => {
   let module: TestingModule;
@@ -119,7 +127,7 @@ describe("GuestAccessRepository", () => {
 
     it("allows to revoke and invite the same email again, any number of times", async () => {
       for (let round = 1; round <= 3; round++) {
-        const access = await repository.save(createAccess());
+        const access = asDirect(await repository.save(createAccess()));
         access.revoke(new Date(`2026-10-0${round}T10:00:00.000Z`));
         await repository.save(access);
       }
@@ -131,7 +139,7 @@ describe("GuestAccessRepository", () => {
     });
 
     it("rejects a second live access for an email whose first access was only changed", async () => {
-      const first = await repository.save(createAccess());
+      const first = asDirect(await repository.save(createAccess()));
       first.changeGuestRole(GuestRole.RECYCLER);
       await repository.save(first);
 
@@ -169,7 +177,7 @@ describe("GuestAccessRepository", () => {
   });
 
   it("persists acceptance, a role change and revocation on update", async () => {
-    const access = await repository.save(createAccess());
+    const access = asDirect(await repository.save(createAccess()));
 
     const user = createUser();
     access.accept(user, new Date("2026-10-16T10:00:00.000Z"));
@@ -189,9 +197,9 @@ describe("GuestAccessRepository", () => {
 
   describe("concurrent changes", () => {
     it("counts the saves of an access", async () => {
-      const inserted = await repository.save(createAccess());
+      const inserted = asDirect(await repository.save(createAccess()));
       inserted.changeGuestRole(GuestRole.SUPPLIER);
-      const replaced = await repository.save(inserted);
+      const replaced = asDirect(await repository.save(inserted));
       replaced.changeGuestRole(GuestRole.RECYCLER);
       const replacedAgain = await repository.save(replaced);
 
@@ -200,9 +208,9 @@ describe("GuestAccessRepository", () => {
     });
 
     it("does not bring back an access which was revoked after it was read", async () => {
-      const saved = await repository.save(createAccess());
-      const readByGuest = await repository.findOneByIdOrFail(saved.id);
-      const readByOwner = await repository.findOneByIdOrFail(saved.id);
+      const saved = asDirect(await repository.save(createAccess()));
+      const readByGuest = asDirect(await repository.findOneByIdOrFail(saved.id));
+      const readByOwner = asDirect(await repository.findOneByIdOrFail(saved.id));
       readByOwner.revoke(new Date("2026-10-17T10:00:00.000Z"));
       await repository.save(readByOwner);
 
@@ -220,9 +228,9 @@ describe("GuestAccessRepository", () => {
     });
 
     it("does not undo a role change with a late acceptance", async () => {
-      const saved = await repository.save(createAccess());
-      const readByGuest = await repository.findOneByIdOrFail(saved.id);
-      const readByOwner = await repository.findOneByIdOrFail(saved.id);
+      const saved = asDirect(await repository.save(createAccess()));
+      const readByGuest = asDirect(await repository.findOneByIdOrFail(saved.id));
+      const readByOwner = asDirect(await repository.findOneByIdOrFail(saved.id));
       readByOwner.changeGuestRole(GuestRole.SUPPLIER);
       await repository.save(readByOwner);
 
@@ -235,9 +243,9 @@ describe("GuestAccessRepository", () => {
     });
 
     it("lets only one of two saves of the same revision win", async () => {
-      const saved = await repository.save(createAccess());
-      const first = await repository.findOneByIdOrFail(saved.id);
-      const second = await repository.findOneByIdOrFail(saved.id);
+      const saved = asDirect(await repository.save(createAccess()));
+      const first = asDirect(await repository.findOneByIdOrFail(saved.id));
+      const second = asDirect(await repository.findOneByIdOrFail(saved.id));
       first.changeGuestRole(GuestRole.SUPPLIER);
       second.changeGuestRole(GuestRole.RECYCLER);
 
@@ -250,7 +258,7 @@ describe("GuestAccessRepository", () => {
     });
 
     it("rejects a save of an access which is no longer stored", async () => {
-      const saved = await repository.save(createAccess());
+      const saved = asDirect(await repository.save(createAccess()));
       await connection.collection(GUEST_ACCESS_COLLECTION).deleteMany({});
       saved.changeGuestRole(GuestRole.SUPPLIER);
 
