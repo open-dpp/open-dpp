@@ -1,5 +1,11 @@
 # @open-dpp/client
 
+## 6.4.4
+
+### Patch Changes
+
+- [#1164](https://github.com/open-dpp/open-dpp/pull/1164) [`33b32c2`](https://github.com/open-dpp/open-dpp/commit/33b32c213d84c6192c4ca69cd83226aaaad0cf8d) Thanks [@Hentra](https://github.com/Hentra)! - Remove legacy logo
+
 ## 6.4.3
 
 ## 6.4.2
