@@ -166,7 +166,7 @@ This writes a `.changeset/*.md` file with no packages in it. The CI job accepts 
 The CI job skips two kinds of pull request that do not carry a changeset written by a contributor:
 
 - The `chore: version packages` PR from the `changeset-release/main` branch, which consumes changesets instead of adding them.
-- Pull requests opened by `renovate[bot]`, or labelled `dependencies`. The Renovate exemption keys on the PR author, so it still holds after someone else pushes to the PR. A bot commits a changeset to Renovate PRs that change the runtime dependencies of a published package (or, for PRs labelled `security`, of any released package). See [RELEASING.md](./RELEASING.md#renovate-dependency-updates).
+- Pull requests opened by `renovate[bot]`, or labelled `dependencies`. The Renovate exemption keys on the PR author, so it still holds after someone else pushes to the PR. A bot commits a changeset to Renovate PRs that change the dependencies of a released package, dev dependencies included. See [RELEASING.md](./RELEASING.md#renovate-dependency-updates).
 
 ## Releasing
 
