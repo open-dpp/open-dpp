@@ -1,8 +1,9 @@
-import { jest } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import { Auth } from "better-auth";
@@ -40,6 +41,7 @@ describe("aiConfigurationController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
@@ -68,7 +70,7 @@ describe("aiConfigurationController", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 
@@ -86,7 +88,7 @@ describe("aiConfigurationController", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it(`/PUT create configuration`, async () => {
@@ -153,7 +155,7 @@ describe("aiConfigurationController", () => {
 
   it(`/GET find configuration`, async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
+    vi.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     const aiConfiguration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({ ownedByOrganizationId: org.id }),
     );

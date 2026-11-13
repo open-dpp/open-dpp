@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      NODE_VERSION: 24
+      NODE_VERSION: 26
       # Common. OPEN_DPP_URL must be a bare origin (validated in packages/env)
       # AND must match the URL Playwright hits: better-auth uses it as baseURL
       # and as its only trusted origin.
@@ -106,7 +106,6 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter e2e exec playwright install --with-deps chromium
 
-      # Also builds packages/env, whose schema the Playwright process parses.
       - name: Build project
         run: pnpm build
 

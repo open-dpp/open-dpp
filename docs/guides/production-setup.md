@@ -80,6 +80,15 @@ rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongodb:27017" }] });
 
 This step is required only once. On subsequent restarts the replica set configuration is persisted in the data volume.
 
+### Database migrations
+
+After an upgrade, open-dpp applies pending data migrations on startup, before it accepts requests. Applied migrations are recorded in the `migrations` collection, so each one runs only once per database.
+
+- **Back up the database before upgrading.** Migrations are forward-only.
+- **Start a single instance for the upgrade.** Migrations are not yet coordinated between instances. Scale out once the new version is running.
+- **Allow for a slower first start.** Depending on the size of your data, migrations can take a while. Make sure container health checks do not restart the instance in the meantime.
+- **A failed migration stops startup.** The error is in the log and the migration is retried on the next start. Later migrations do not run until it succeeds.
+
 ## SMTP
 
 open-dpp sends transactional email for account management and notifications. Configure your SMTP server using the following variables:

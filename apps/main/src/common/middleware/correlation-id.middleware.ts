@@ -1,38 +1,21 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
-// The middleware is base on Express out of the box, don't
-// be alerted with a 'express' import, it's part of Nest
-import { NextFunction, Request, Response } from "express";
-// Here is the only dependency that we'll use
+import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { CorrelationIdService } from "./correlation-id.service";
+import { z } from "zod";
+
 export const CORRELATION_ID_HEADER = "x-correlation-id";
-@Injectable()
-export class CorrelationIdMiddleware implements NestMiddleware {
-  constructor(
-    // You'll need here the service created Earlier
-    private correlationIdService: CorrelationIdService,
-  ) {}
+export const MAX_CORRELATION_ID_LENGTH = 128;
 
-  use(req: Request, res: Response, next: NextFunction): void {
-    // We check if we already have a correlation ID set for this request
-    const currentCorrelationId = this.correlationIdService.getCorrelationId();
+// Caller-supplied ids land in every log line and are echoed back, so only plain tokens such as
+// UUIDs or W3C trace ids are reused; anything else is replaced instead of failing the request.
+const CorrelationIdSchema = z
+  .string()
+  .max(MAX_CORRELATION_ID_LENGTH)
+  .regex(/^[\w.:-]+$/);
 
-    // If we don't have the correlation ID already set
-    if (!currentCorrelationId) {
-      // it means we need to create a new one.
-      // two options :
-      // - Either the caller already provide a correlation ID and we use this one
-      // - Either you generate a new correlation ID
-
-      const providedCorrelationId = req.headers[CORRELATION_ID_HEADER] as string;
-      this.correlationIdService.setCorrelationId(providedCorrelationId ?? uuidv4());
-    }
-
-    // Setting the correlation ID in both request and response if not present
-    req.headers[CORRELATION_ID_HEADER] = this.correlationIdService.getCorrelationId();
-    res.setHeader(CORRELATION_ID_HEADER, this.correlationIdService.getCorrelationId());
-
-    // Continuing the request lifecycle
-    next();
-  }
+export function correlationIdMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const supplied = CorrelationIdSchema.safeParse(req.headers[CORRELATION_ID_HEADER]);
+  const correlationId = supplied.success ? supplied.data : uuidv4();
+  req.headers[CORRELATION_ID_HEADER] = correlationId;
+  res.setHeader(CORRELATION_ID_HEADER, correlationId);
+  next();
 }

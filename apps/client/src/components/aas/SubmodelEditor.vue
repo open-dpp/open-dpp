@@ -45,7 +45,11 @@ const { can } = useAasAbility({
 });
 
 const disableEdit = computed(() => {
-  return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+  return (
+    props.isArchived ||
+    props.isEditingRestrictedToData ||
+    !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "")
+  );
 });
 
 defineExpose<{

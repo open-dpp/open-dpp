@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { Reference } from "./reference";
 import { Key } from "./key";

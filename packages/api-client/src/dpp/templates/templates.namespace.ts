@@ -3,6 +3,8 @@ import type {
   DigitalProductDocumentStatusModificationDto,
   GetAllActivitiesParamsDto,
   GetAllParamsDto,
+  ImportOfficialTemplatesResultDto,
+  RestrictPassportEditingDto,
   TemplateCreateDto,
   TemplateDto,
   TemplatePaginationDto,
@@ -58,6 +60,12 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
     return await this.axiosInstance.post<TemplateDto>(`${this.templatesEndpoint}/import`, data);
   }
 
+  public async importOfficial(): Promise<AxiosResponse<ImportOfficialTemplatesResultDto>> {
+    return await this.axiosInstance.post<ImportOfficialTemplatesResultDto>(
+      `${this.templatesEndpoint}/import-official`,
+    );
+  }
+
   public async deleteById(id: string) {
     return await this.axiosInstance.delete(`${this.templatesEndpoint}/${id}`);
   }
@@ -68,6 +76,16 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   ): Promise<AxiosResponse<TemplateDto>> {
     return await this.axiosInstance.put<TemplateDto>(
       `${this.templatesEndpoint}/${id}/status`,
+      data,
+    );
+  }
+
+  public async setPassportEditingMode(
+    id: string,
+    data: RestrictPassportEditingDto,
+  ): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.put<TemplateDto>(
+      `${this.templatesEndpoint}/${id}/passport-editing-mode`,
       data,
     );
   }

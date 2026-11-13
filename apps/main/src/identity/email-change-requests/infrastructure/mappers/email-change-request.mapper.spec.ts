@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { EmailChangeRequest } from "../../domain/email-change-request";
 import { EmailChangeRequestMapper } from "./email-change-request.mapper";
 

@@ -1,8 +1,10 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import {
   DigitalProductDocumentStatusDto,
   InvitationStatusDto,
   MeDtoSchema,
+  PassportEditingModeDto,
   SubmodelElementSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -35,7 +37,7 @@ import {
   bulkImportRun1Interrupted,
   bulkImportRunItem1,
 } from "./handlers/bulk-import";
-import { passport1, passport2 } from "./handlers/passports";
+import { passport1, passport2, passportFilterParams } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
@@ -174,6 +176,13 @@ describe("apiClient", () => {
         DigitalProductDocumentStatusDto.Published,
       );
     });
+
+    it("should set passport editing mode of template", async () => {
+      const response = await sdk.dpp.templates.setPassportEditingMode(template1.id, {
+        mode: "DataOnly",
+      });
+      expect(response.data.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
+    });
   });
 
   describe("passports", () => {
@@ -185,6 +194,14 @@ describe("apiClient", () => {
       const response = await sdk.dpp.passports.getAll({
         pagination: paginationParams,
         filter: filterParams,
+      });
+      expect(response.data.result).toEqual([passport1, passport2]);
+    });
+
+    it("should get all passports with template and period filters", async () => {
+      const response = await sdk.dpp.passports.getAll({
+        pagination: paginationParams,
+        filter: { ...filterParams, ...passportFilterParams },
       });
       expect(response.data.result).toEqual([passport1, passport2]);
     });
@@ -202,6 +219,15 @@ describe("apiClient", () => {
       expect(response.data).toEqual(passport1);
     });
 
+    it("should export passports to registry as zip", async () => {
+      const response = await sdk.dpp.passports.exportToRegistry(passportFilterParams);
+      expect(response.status).toEqual(200);
+      expect(response.headers["content-type"]).toEqual("application/zip");
+      expect(response.headers["content-disposition"]).toEqual(
+        'attachment; filename="eu-registry-export.zip"',
+      );
+    });
+
     it("should delete passport", async () => {
       const response = await sdk.dpp.passports.deleteById(passport1.id);
       expect(response.status).toEqual(204);
@@ -214,6 +240,13 @@ describe("apiClient", () => {
       expect(response.data.lastStatusChange.currentStatus).toEqual(
         DigitalProductDocumentStatusDto.Published,
       );
+    });
+
+    it("should set editing mode of passport", async () => {
+      const response = await sdk.dpp.passports.setEditingMode(passport1.id, {
+        mode: "Full",
+      });
+      expect(response.data.editingMode).toEqual(PassportEditingModeDto.Full);
     });
   });
 
@@ -559,6 +592,20 @@ describe("apiClient", () => {
         submodelCarbonFootprintElement0.idShort,
         { PCFCalculationMethod: "GHG" },
       );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
+
+    it("should modify value of submodel element with a bare scalar payload (not wrapped in an object)", async () => {
+      // Regression test: a raw string payload (e.g. a Property's value) must still be
+      // sent as valid, correctly quoted JSON — axios does not JSON.stringify a bare
+      // scalar body unless the request explicitly declares a JSON content-type.
+      const response = await sdk.dpp[appIdentifiable].aas.modifyValueOfSubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        "a bare scalar value",
+      );
+      expect(response.status).toEqual(200);
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
     });
   });

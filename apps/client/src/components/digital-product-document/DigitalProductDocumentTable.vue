@@ -1,20 +1,12 @@
 <script lang="ts" setup>
-import {
-  type DigitalProductDocumentDto,
-  type DigitalProductDocumentStatusDtoType,
-} from "@open-dpp/dto";
+import { type DigitalProductDocumentDto } from "@open-dpp/dto";
 import type { Page } from "../../composables/pagination.ts";
 import dayjs from "dayjs";
-import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../../composables/aas-utils.ts";
-
-import { convertLocaleToLanguage } from "../../translations/util.ts";
 import TablePagination from "../pagination/TablePagination.vue";
-import DigitalProductDocumentStatusSelect from "./DigitalProductDocumentStatusSelect.vue";
 
 const props = defineProps<{
   title: string;
@@ -27,8 +19,6 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-
-const selectedStatus = defineModel<DigitalProductDocumentStatusDtoType>("selectedStatus");
 
 const emits = defineEmits<{
   (e: "create"): Promise<void>;
@@ -57,16 +47,16 @@ async function goToItem(item: DigitalProductDocumentDto) {
     :rows-per-page-options="[10]"
   >
     <template #header>
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="text-xl font-bold">{{ `${props.title} ${t("status.withStatus")}` }} </span>
-          <DigitalProductDocumentStatusSelect v-model="selectedStatus" />
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xl font-bold">{{ props.title }}</span>
+          <div class="flex items-center gap-2">
+            <slot name="headerActions">
+              <Button :label="t('common.add')" @click="emits('create')" />
+            </slot>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <slot name="headerActions">
-            <Button :label="t('common.add')" @click="emits('create')" />
-          </slot>
-        </div>
+        <slot name="filters" />
       </div>
     </template>
     <Column field="environment" header="Name">

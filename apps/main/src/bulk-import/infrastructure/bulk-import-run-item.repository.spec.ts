@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -70,7 +70,8 @@ describe("bulkImportRunItemRepository", () => {
     });
     await repository.createMany([item]);
 
-    item.markCreated(randomUUID());
+    item.assignPassport(randomUUID());
+    item.markCreated();
     await repository.save(item);
 
     const found = await repository.findOneOrFail(item.id);

@@ -45,6 +45,7 @@ import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelEle
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 import SubmodelElementListCreateEditor from "../components/aas/SubmodelElementListCreateEditor.vue";
 import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
+import { SCALAR_LEAF_MODEL_TYPES } from "../lib/submodel-element.ts";
 
 export type AssetAdministrationShellEditorProps = AssetAdministrationShellResponseDto;
 
@@ -142,6 +143,11 @@ export type OpenDrawerCallback<K extends EditorType, M extends EditorModeType> =
 interface AasDrawerProps {
   onHideDrawer: () => void;
   isArchived?: MaybeRefOrGetter<boolean>;
+  /** Passport-only: true when editing is restricted to leaf data values. Unlike
+   * `isArchived`, this only hides the Save button for editors with no leaf value of
+   * their own (container/shell/column types) — a Property/File editor's Save stays
+   * available since the value field remains editable while restricted. */
+  isEditingRestrictedToData?: MaybeRefOrGetter<boolean>;
   can: (action: PermissionType, object: string) => boolean;
 }
 
@@ -159,7 +165,12 @@ export interface IAasDrawer {
   saveButtonIsVisible: Ref<boolean>;
 }
 
-export function useAasDrawer({ onHideDrawer, can, isArchived }: AasDrawerProps): IAasDrawer {
+export function useAasDrawer({
+  onHideDrawer,
+  can,
+  isArchived,
+  isEditingRestrictedToData,
+}: AasDrawerProps): IAasDrawer {
   const drawerHeader = ref<string>("");
   const drawerVisible = ref(false);
   const activeEditor = ref<EditorType | null>(null);
@@ -186,6 +197,14 @@ export function useAasDrawer({ onHideDrawer, can, isArchived }: AasDrawerProps):
     drawerVisible.value = true;
 
     if (toValue(isArchived)) {
+      saveButtonIsVisible.value = false;
+    } else if (
+      toValue(isEditingRestrictedToData) &&
+      !SCALAR_LEAF_MODEL_TYPES.includes(activeEditor.value)
+    ) {
+      // Restricted-to-data has no leaf value to save for container/shell/column
+      // editors, same as archived — but a Property/File editor's value stays
+      // editable, so its Save button must not be hidden here.
       saveButtonIsVisible.value = false;
     } else if (
       activeEditor.value === AasKeyTypes.AssetAdministrationShell ||

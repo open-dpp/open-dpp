@@ -1,10 +1,12 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Session } from "../../../auth/domain/session";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
+import { ORGANIZATION_CREATED_EVENT } from "../../domain/events/organization-created.event";
 import { Organization } from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
@@ -21,31 +23,35 @@ describe("OrganizationsService", () => {
 
   const mockOrganizationsRepository = {
     create:
-      jest.fn<
+      vi.fn<
         (organization: Organization, headers: BetterAuthHeaders) => Promise<Organization | null>
       >(),
-    findOneById: jest.fn(),
-    findManyByIds: jest.fn<(ids: string[]) => Promise<Organization[]>>(),
-    update: jest.fn(),
+    findOneById: vi.fn(),
+    findManyByIds: vi.fn<(ids: string[]) => Promise<Organization[]>>(),
+    update: vi.fn(),
   };
 
   const mockMembersRepository = {
-    findOneByUserIdAndOrganizationId: jest.fn(),
-    findByUserId: jest.fn<(userId: string) => Promise<Member[]>>(),
+    findOneByUserIdAndOrganizationId: vi.fn(),
+    findByUserId: vi.fn<(userId: string) => Promise<Member[]>>(),
   };
 
   const mockUsersRepository = {
-    findOneById: jest.fn(),
+    findOneById: vi.fn(),
   };
 
   const mockInstanceSettingsService = {
-    getSettings: jest.fn<() => Promise<InstanceSettings>>(),
+    getSettings: vi.fn<() => Promise<InstanceSettings>>(),
   };
 
   const mockInvitationsRepository = {};
 
   const mockPolicyService = {
-    ensureDefaultPolicies: jest.fn<(organizationId: string) => Promise<void>>(),
+    ensureDefaultPolicies: vi.fn<(organizationId: string) => Promise<void>>(),
+  };
+
+  const mockEventEmitter = {
+    emit: vi.fn<EventEmitter2["emit"]>(),
   };
 
   beforeEach(async () => {
@@ -76,10 +82,18 @@ describe("OrganizationsService", () => {
           provide: PolicyManagementService,
           useValue: mockPolicyService,
         },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
+        },
       ],
     }).compile();
 
     service = module.get<OrganizationsService>(OrganizationsService);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe("getMemberOrganizations", () => {
@@ -161,5 +175,28 @@ describe("OrganizationsService", () => {
     );
 
     expect(mockPolicyService.ensureDefaultPolicies).toHaveBeenCalledWith(created.id);
+  });
+
+  it("should emit an organization-created event for a newly created organization", async () => {
+    mockInstanceSettingsService.getSettings.mockResolvedValue(
+      InstanceSettings.create({ organizationCreationEnabled: { value: true } }),
+    );
+    const created = Organization.create({
+      name: "Test Organization",
+      metadata: {},
+    });
+    mockOrganizationsRepository.create.mockResolvedValue(created);
+
+    await service.createOrganization(
+      { name: created.name, metadata: {} },
+      { userId: "user1" } as Session,
+      {},
+      UserRole.USER,
+    );
+
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      ORGANIZATION_CREATED_EVENT,
+      expect.objectContaining({ organizationId: created.id }),
+    );
   });
 });

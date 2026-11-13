@@ -1,7 +1,7 @@
 import { ApiVersionsDto, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { SubmodelRequest } from "./submodel.request";
 import { randomUUID } from "node:crypto";
-import { beforeAll } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "vitest";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 
 describe("SubmodelRequest", () => {
@@ -37,7 +37,7 @@ describe("SubmodelRequest", () => {
       });
 
       const result = request.toDomain();
-      const prop = result.submodelElements[0].toPlain();
+      const prop = result.getSubmodelElements()[0].toPlain();
       expect(prop.modelType).toBe(KeyTypes.Property);
       expect(prop.value).toEqual("https://example.com");
     });
@@ -51,7 +51,7 @@ describe("SubmodelRequest", () => {
       });
 
       const result = request.toDomain();
-      const prop = result.submodelElements[0].toPlain();
+      const prop = result.getSubmodelElements()[0].toPlain();
       expect(prop.modelType).toBe(KeyTypes.Property);
       expect(prop.value).toEqual("https://example.com");
     });

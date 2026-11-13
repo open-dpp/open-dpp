@@ -1,6 +1,6 @@
 // Must stay the first import: it enables the OAuth Provider before the auth module validates env.
 import "./trusted-client.test-env";
-import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import type { Connection } from "mongoose";
@@ -10,6 +10,7 @@ import { UsersService } from "../../../users/application/services/users.service"
 import { AUTH } from "../../auth.provider";
 import { createAuthTestContext, collectionNames } from "./auth.test.context";
 import { AUTH_BASE_PATH } from "../../auth-base-path";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 // The issuer is the better-auth mount on the instance origin; v2 is the latest API version.
 const ISSUER = "http://localhost:3000/api/v2/auth";
@@ -50,7 +51,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
-    const testApp = await createAuthTestContext();
+    const testApp = await createAuthTestContext({ imports: [EventEmitterModule.forRoot()] });
     app = testApp.app;
     connection = testApp.connection;
     betterAuthHelper.init(

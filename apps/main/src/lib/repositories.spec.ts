@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -77,7 +77,7 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
     expect(found).toBeUndefined();
   });
 
-  it.each([
+  it.each<[Record<string, unknown>, string]>([
     [{ $gt: "" }, "$gt empty"],
     [{ $ne: null }, "$ne null"],
     [{ $regex: ".*" }, "$regex .*"],

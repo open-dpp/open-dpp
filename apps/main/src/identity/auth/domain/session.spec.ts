@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { AuthMethod, Session } from "./session";
 
 describe("session", () => {

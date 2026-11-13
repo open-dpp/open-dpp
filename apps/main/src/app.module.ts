@@ -1,7 +1,8 @@
 import { join } from "node:path";
 import { HttpModule } from "@nestjs/axios";
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -10,9 +11,9 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
+import { APP_ROOT } from "./app-root";
 import { BrandingModule } from "./branding/branding.module";
 import { BulkImportModule } from "./bulk-import/bulk-import.module";
-import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
@@ -22,8 +23,8 @@ import { OrganizationsModule } from "./identity/organizations/organizations.modu
 import { ApiKeysModule } from "./identity/api-keys/api-keys.module";
 import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
-import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
+import { MigrationsModule } from "./migrations/migrations.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PermalinkModule } from "./permalink/permalink.module";
 import { PolicyModule } from "./policy/policy.module";
@@ -33,12 +34,11 @@ import { StatusModule } from "./status/status.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
-import { CorrelationIdService } from "./common/middleware/correlation-id.service";
-import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 
 @Module({
   imports: [
     EnvModule.forRoot(),
+    EventEmitterModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [EnvModule],
       useFactory: (configService: EnvService) => ({
@@ -59,14 +59,13 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     HttpModule,
     TraceabilityEventsModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, "client", "dist"),
+      rootPath: join(APP_ROOT, "client", "dist"),
       exclude: ["/api", "/api/{*test}"],
       serveStaticOptions: {
         fallthrough: true,
       },
     }),
     MediaModule,
-    McpServerModule,
     AiConfigurationModule,
     AiModule,
     AnalyticsModule,
@@ -77,10 +76,10 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     PresentationConfigurationsModule,
     PermalinkModule,
     StatusModule,
+    MigrationsModule,
   ],
   controllers: [],
   providers: [
-    CorrelationIdService,
     ChatGateway,
     {
       provide: APP_GUARD,
@@ -92,9 +91,4 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
-    consumer.apply(LoggerMiddleware).forRoutes("*");
-  }
-}
+export class AppModule {}

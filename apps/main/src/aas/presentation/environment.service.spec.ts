@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
-import { expect, jest } from "@jest/globals";
+import { type Mocked, afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import {
@@ -17,6 +17,7 @@ import {
   SubmodelJsonSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError } from "@open-dpp/exception";
 import {
@@ -96,12 +97,12 @@ import { MoveSubmodelBaseObserver } from "./event-bus/move-submodel-base-observe
 import { DeleteSubmodelBaseObserver } from "./event-bus/delete-submodel-base-observer";
 import { EmailService } from "../../email/email.service";
 
-const moveObserver: jest.Mocked<MoveSubmodelBaseObserver> = {
-  onMove: jest.fn<MoveSubmodelBaseObserver["onMove"]>(),
+const moveObserver: Mocked<MoveSubmodelBaseObserver> = {
+  onMove: vi.fn<MoveSubmodelBaseObserver["onMove"]>(),
 };
 
-const deleteObserver: jest.Mocked<DeleteSubmodelBaseObserver> = {
-  onDelete: jest.fn<DeleteSubmodelBaseObserver["onDelete"]>(),
+const deleteObserver: Mocked<DeleteSubmodelBaseObserver> = {
+  onDelete: vi.fn<DeleteSubmodelBaseObserver["onDelete"]>(),
 };
 
 describe("environmentService", () => {
@@ -119,6 +120,7 @@ describe("environmentService", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
@@ -136,7 +138,7 @@ describe("environmentService", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
     await module.init();
@@ -152,7 +154,7 @@ describe("environmentService", () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should create environment", async () => {
@@ -1694,7 +1696,7 @@ describe("environmentService", () => {
   it("should delete submodel from environment", async () => {
     const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
       await createDefaultEnvironment();
-    const saveEnvironmentMock = jest.fn<() => Promise<void>>();
+    const saveEnvironmentMock = vi.fn<() => Promise<void>>();
 
     await expect(
       environmentService.deleteSubmodelFromEnvironment(
@@ -1976,7 +1978,7 @@ describe("environmentService", () => {
       it("invokes extraCleanup exactly once with the submodel idShort and the active transaction session", async () => {
         const { environment, admin, submodel1, correlationId, digitalProductDocumentId } =
           await createDefaultEnvironment();
-        const saveEnvironmentMock = jest.fn<() => Promise<void>>();
+        const saveEnvironmentMock = vi.fn<() => Promise<void>>();
 
         let capturedSession: ClientSession | undefined;
         deleteObserver.onDelete.mockImplementationOnce(async (_event, options) => {
@@ -2006,7 +2008,7 @@ describe("environmentService", () => {
       it("rolls back the submodel deletion when extraCleanup throws", async () => {
         const { environment, admin, submodel1, digitalProductDocumentId, correlationId } =
           await createDefaultEnvironment();
-        const saveEnvironmentMock = jest.fn<() => Promise<void>>();
+        const saveEnvironmentMock = vi.fn<() => Promise<void>>();
 
         deleteObserver.onDelete.mockRejectedValueOnce(new Error("submodel cleanup boom"));
 

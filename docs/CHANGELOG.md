@@ -1,5 +1,63 @@
 # @open-dpp/docs
 
+## 6.4.2
+
+## 6.4.1
+
+## 6.4.0
+
+## 6.3.6
+
+## 6.3.5
+
+## 6.3.4
+
+## 6.3.3
+
+## 6.3.2
+
+### Patch Changes
+
+- [#1076](https://github.com/open-dpp/open-dpp/pull/1076) [`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64) Thanks [@Hentra](https://github.com/Hentra)! - Log every request, including frontend page visits and `/gs1` resolver hits, with a correlation id that is returned in the `x-correlation-id` response header. A caller-supplied `x-correlation-id` is reused when it is a plain token of up to 128 characters; otherwise a new one is generated. Request logs record the path without the query string, so tokens in links such as `/password-reset?token=…` stay out of the logs.
+
+  Two new settings: `OPEN_DPP_LOG_LEVEL` sets the most verbose level that is printed (default `debug`, which hides `verbose` output printed before), and `OPEN_DPP_TRUST_PROXY` sets Express's `trust proxy` so the real client IP is logged and used for rate limiting behind a reverse proxy. Invalid `OPEN_DPP_TRUST_PROXY` values are rejected at startup.
+
+## 6.3.1
+
+## 6.3.0
+
+### Minor Changes
+
+- [#1071](https://github.com/open-dpp/open-dpp/pull/1071) [`aa82258`](https://github.com/open-dpp/open-dpp/commit/aa822584c6f463d15b6a4d1a0c07ccdfc901a334) Thanks [@Hentra](https://github.com/Hentra)! - Create a migration process on startup
+
+## 6.2.4
+
+### Patch Changes
+
+- [#1101](https://github.com/open-dpp/open-dpp/pull/1101) [`33baad7`](https://github.com/open-dpp/open-dpp/commit/33baad70829eb17f2a518194465d1dac649e3d32) Thanks [@Hentra](https://github.com/Hentra)! - Remove line about stability
+
+## 6.2.3
+
+## 6.2.2
+
+## 6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+## 6.1.4
+
+## 6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- [#976](https://github.com/open-dpp/open-dpp/pull/976) [`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce) Thanks [@mr42](https://github.com/mr42)! - Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates. The Github repository where the official templates are loaded from is configurable via environment variable.
+
 ## 6.1.1
 
 ## 6.1.0

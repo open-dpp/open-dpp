@@ -21,6 +21,10 @@ export class PolicyGuard implements CanActivate {
   ) {}
 
   async canActivate(ctx: ExecutionContext) {
+    // NestJS 12 also runs APP_GUARDs on WebSocket gateways; quotas apply to HTTP requests only.
+    if (ctx.getType() !== "http") {
+      return true;
+    }
     const req = ctx.switchToHttp().getRequest();
     const keys =
       this.reflector.getAllAndOverride<PolicyKey[]>(POLICY_META, [

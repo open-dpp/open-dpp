@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken } from "@nestjs/mongoose";
 import { NotFoundException } from "@nestjs/common";
 import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
@@ -312,7 +312,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const passport = await seedPublishedPassport();
     const { permalink } = await seedConfigWithPermalink(passport, "branding-down");
     const brandingRepo = ctx.getModuleRef().get(BrandingRepository);
-    const spy = jest
+    const spy = vi
       .spyOn(brandingRepo, "findOneByOrganizationId")
       .mockRejectedValue(new Error("branding db unavailable"));
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
@@ -324,12 +324,12 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     spy.mockRestore();
   });
 
-  it("resolvePublicUrlWithFreeze does NOT pin a published permalink when branding could not be loaded", async () => {
+  it("resolvePublicUrlAndFreezeIfPublished does NOT pin a published permalink when branding could not be loaded", async () => {
     const passport = await seedPublishedPassport();
     const { permalink } = await seedConfigWithPermalink(passport, "needs-branding");
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const { publicUrl } = await service.resolvePublicUrlWithFreeze(
+    const { publicUrl } = await service.resolvePublicUrlAndFreezeIfPublished(
       permalink,
       passport,
       null,
@@ -341,7 +341,76 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(persisted.publishedUrl).toBeNull();
   });
 
-  it("resolvePublicUrlWithFreeze computes the live GS1 Digital Link URL for an unfrozen gs1-link (unpublished passport)", async () => {
+  it("resolvePublicUrlAndFreezeIfPublished freezes an unfrozen permalink of a published passport", async () => {
+    const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
+    const { permalink } = await seedConfigWithPermalink(passport, "late-permalink");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const resolved = await service.resolvePublicUrlAndFreezeIfPublished(
+      permalink,
+      passport,
+      await service.loadBranding(passport.organizationId),
+      "http://localhost:3000/p",
+    );
+
+    expect(resolved.publicUrl).toBe("http://localhost:3000/p/late-permalink");
+    expect(resolved.permalink.publishedUrl).toBe("http://localhost:3000/p/late-permalink");
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
+    expect(persisted.publishedUrl).toBe("http://localhost:3000/p/late-permalink");
+  });
+
+  it("resolvePublicUrlAndFreezeIfPublished does NOT freeze the permalink of an unpublished passport, even with branding", async () => {
+    const passport = await seedPassport();
+    await seedBranding(passport.organizationId);
+    const { permalink } = await seedConfigWithPermalink(passport, "still-draft");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const resolved = await service.resolvePublicUrlAndFreezeIfPublished(
+      permalink,
+      passport,
+      await service.loadBranding(passport.organizationId),
+      "http://localhost:3000/p",
+    );
+
+    expect(resolved.publicUrl).toBe("http://localhost:3000/p/still-draft");
+    expect(resolved.permalink.publishedUrl).toBeNull();
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
+    expect(persisted.publishedUrl).toBeNull();
+  });
+
+  it("resolvePublicUrlAndFreezeIfPublished returns the first frozen URL to a racing request that computed another", async () => {
+    const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
+    // both requests loaded the permalink while it was still unfrozen
+    const { permalink: loadedUnfrozen } = await seedConfigWithPermalink(passport, "racing");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const branding = await service.loadBranding(passport.organizationId);
+
+    const first = await service.resolvePublicUrlAndFreezeIfPublished(
+      loadedUnfrozen,
+      passport,
+      branding,
+      "https://first.example.com/p",
+    );
+    const second = await service.resolvePublicUrlAndFreezeIfPublished(
+      loadedUnfrozen,
+      passport,
+      branding,
+      "https://second.example.com/p",
+    );
+
+    expect(first.publicUrl).toBe("https://first.example.com/p/racing");
+    expect(second.publicUrl).toBe("https://first.example.com/p/racing");
+    expect(second.permalink.publishedUrl).toBe("https://first.example.com/p/racing");
+    const persisted = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findOneOrFail(loadedUnfrozen.id);
+    expect(persisted.publishedUrl).toBe("https://first.example.com/p/racing");
+  });
+
+  it("resolvePublicUrlAndFreezeIfPublished computes the live GS1 Digital Link URL for an unfrozen gs1-link (unpublished passport)", async () => {
     const organizationId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({
       referenceId: randomUUID(),
@@ -359,7 +428,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     });
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const { permalink: unchanged, publicUrl } = await service.resolvePublicUrlWithFreeze(
+    const { permalink: unchanged, publicUrl } = await service.resolvePublicUrlAndFreezeIfPublished(
       permalink,
       passport,
       null,
@@ -370,7 +439,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(unchanged.publishedUrl).toBeNull();
   });
 
-  it("resolvePublicUrlWithFreeze falls back to the presentation form when the gs1-link's UPI is missing (deleted)", async () => {
+  it("resolvePublicUrlAndFreezeIfPublished falls back to the presentation form when the gs1-link's UPI is missing (deleted)", async () => {
     const organizationId = randomUUID();
     const passport = await seedPassport();
     const permalink = Permalink.create({
@@ -382,7 +451,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     });
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const { publicUrl } = await service.resolvePublicUrlWithFreeze(
+    const { publicUrl } = await service.resolvePublicUrlAndFreezeIfPublished(
       permalink,
       passport,
       null,

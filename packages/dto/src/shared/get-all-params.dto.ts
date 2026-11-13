@@ -1,7 +1,7 @@
 import { PopulateSchema } from "./populate.dto";
 import { PagingParamsDtoSchema } from "./pagination.dto";
 import { z } from "zod";
-import { FilterParamsDtoSchema } from "./filter.dto";
+import { FilterParamsDtoSchema, PassportFilterParamsDtoSchema } from "./filter.dto";
 
 export const GetAllParamsDtoSchema = z.object({
   pagination: PagingParamsDtoSchema.optional(),
@@ -10,3 +10,9 @@ export const GetAllParamsDtoSchema = z.object({
 });
 
 export type GetAllParamsDto = z.infer<typeof GetAllParamsDtoSchema>;
+
+export const GetAllPassportsParamsDtoSchema = GetAllParamsDtoSchema.extend({
+  filter: PassportFilterParamsDtoSchema.optional(),
+});
+
+export type GetAllPassportsParamsDto = z.infer<typeof GetAllPassportsParamsDtoSchema>;

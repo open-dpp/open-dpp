@@ -76,25 +76,6 @@ export class OrganizationsRepository {
     return documents.map((document) => document._id.toString());
   }
 
-  /**
-   * Data migration (#852): every organization's `slug` must equal its id. Runs on every
-   * bootstrap (see OrganizationSlugInitializerService), is idempotent and costs one round
-   * trip: only documents whose slug still differs are touched. Returns the number aligned.
-   *
-   * Deliberate exception to "no field-level $set in repositories": the domain update path
-   * ({@link update}) goes through better-auth's `updateOrganization`, which requires a session
-   * of an organization member — nothing of the kind exists at bootstrap. Keep this the only
-   * such write in the module.
-   */
-  async alignSlugsWithIds(): Promise<number> {
-    const result = await this.organizationModel.updateMany(
-      { $expr: { $ne: ["$slug", { $toString: "$_id" }] } },
-      [{ $set: { slug: { $toString: "$_id" } } }],
-      { updatePipeline: true },
-    );
-    return result.modifiedCount;
-  }
-
   async getAllOrganizations() {
     const organizations = await this.organizationModel.find().limit(100);
     return organizations.map((org) => OrganizationMapper.toDomain(org));

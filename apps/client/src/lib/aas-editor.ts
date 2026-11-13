@@ -26,6 +26,7 @@ export interface SharedEditorProps<Data, RequestDto> {
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
   deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
   isArchived: boolean;
+  isEditingRestrictedToData: boolean;
 }
 
 export function getVisualType(

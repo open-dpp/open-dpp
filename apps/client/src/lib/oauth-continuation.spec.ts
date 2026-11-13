@@ -103,29 +103,23 @@ describe("readOAuthContinuation", () => {
     expect(continuation.withOAuthQuery({ email: "a@b.c" })).toEqual({ email: "a@b.c" });
   });
 
-  it("hands the browser to the Trusted Client when the provider resumed the request", () => {
-    const navigate = vi.fn();
-    const continuation = readOAuthContinuation(`?${SIGNED}`, navigate);
+  // the hand-over itself: oauth-continuation.hand-over.spec.ts
+  it("reports that the provider resumed the request", () => {
+    const continuation = readOAuthContinuation(`?${SIGNED}`);
 
     expect(continuation.resumeFromResponse({ redirect: true, url: TRUSTED_CLIENT_REDIRECT })).toBe(
       true,
     );
-    expect(navigate).toHaveBeenCalledWith(TRUSTED_CLIENT_REDIRECT);
   });
 
   it("stays on the page for any other response or on a plain visit", () => {
-    const navigate = vi.fn();
-
-    expect(readOAuthContinuation(`?${SIGNED}`, navigate).resumeFromResponse({ token: "t" })).toBe(
-      false,
-    );
+    expect(readOAuthContinuation(`?${SIGNED}`).resumeFromResponse({ token: "t" })).toBe(false);
     expect(
-      readOAuthContinuation("", navigate).resumeFromResponse({
+      readOAuthContinuation("").resumeFromResponse({
         redirect: true,
         url: TRUSTED_CLIENT_REDIRECT,
       }),
     ).toBe(false);
-    expect(navigate).not.toHaveBeenCalled();
   });
 });
 

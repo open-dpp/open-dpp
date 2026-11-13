@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -24,7 +24,7 @@ describe("InvitationsRepository", () => {
   beforeAll(async () => {
     mockAuth = {
       api: {
-        createInvitation: jest.fn(),
+        createInvitation: vi.fn(),
       },
     };
 

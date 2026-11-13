@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { jest } from "@jest/globals";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { Test, TestingModule } from "@nestjs/testing";
 import { DataTypeDef, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
@@ -38,7 +38,7 @@ describe("export submodel value", () => {
         {
           provide: EnvironmentService,
           useValue: {
-            loadExpandedEnvironment: jest.fn(),
+            loadExpandedEnvironment: vi.fn(),
           },
         },
         { provide: AasRepository, useValue: {} },
@@ -46,12 +46,12 @@ describe("export submodel value", () => {
         { provide: ConceptDescriptionRepository, useValue: {} },
         {
           provide: MediaService,
-          useValue: { findByIds: jest.fn<() => Promise<string[]>>().mockResolvedValue([]) },
+          useValue: { findByIds: vi.fn<() => Promise<string[]>>().mockResolvedValue([]) },
         },
         {
           provide: PresentationConfigurationService,
           useValue: {
-            getEffective: jest
+            getEffective: vi
               .fn<
                 (holder: {
                   id: string;
@@ -106,7 +106,7 @@ describe("export submodel value", () => {
 
     const expandedEnvironment = ExpandedEnvironment.fromLoaded([aas], [submodel], []);
     (
-      environmentService.loadExpandedEnvironment as jest.Mock<() => Promise<ExpandedEnvironment>>
+      environmentService.loadExpandedEnvironment as Mock<() => Promise<ExpandedEnvironment>>
     ).mockResolvedValue(expandedEnvironment);
 
     const exportResult = await aasSerializationService.exportPassport(passport, member);
@@ -147,7 +147,7 @@ describe("export submodel value", () => {
 
     const expandedEnvironment = ExpandedEnvironment.fromLoaded([], [submodel], []);
     (
-      environmentService.loadExpandedEnvironment as jest.Mock<() => Promise<ExpandedEnvironment>>
+      environmentService.loadExpandedEnvironment as Mock<() => Promise<ExpandedEnvironment>>
     ).mockResolvedValue(expandedEnvironment);
 
     const exportResult = await aasSerializationService.exportPassport(passport, member);
@@ -184,7 +184,7 @@ describe("export submodel value", () => {
 
     const expandedEnvironment = ExpandedEnvironment.fromLoaded([], [submodel], []);
     (
-      environmentService.loadExpandedEnvironment as jest.Mock<() => Promise<ExpandedEnvironment>>
+      environmentService.loadExpandedEnvironment as Mock<() => Promise<ExpandedEnvironment>>
     ).mockResolvedValue(expandedEnvironment);
 
     const exportResult = await aasSerializationService.exportPassport(passport, member);

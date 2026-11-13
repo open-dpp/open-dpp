@@ -71,28 +71,23 @@ export interface OAuthContinuation {
   readonly requestsAccountCreation: boolean;
   /** The sign-in or sign-up body, with `oauth_query` when a request is pending. */
   withOAuthQuery: <T extends object>(body: T) => T & { oauth_query?: string };
-  /** Hands the browser to the URL the provider answered with; false when it did not resume. */
+  /**
+   * Whether the provider resumed the pending request with this sign-in or sign-up answer, so
+   * the page stops. The browser is already on its way: better-auth's default redirect plugin
+   * follows every `{ redirect: true, url }` answer. Navigating here as well would send it to
+   * the Trusted Client twice with one single-use code.
+   */
   resumeFromResponse: (data: unknown) => boolean;
 }
 
 /** Reads the pending request from the page's query string (`window.location.search`). */
-export function readOAuthContinuation(
-  search: string,
-  navigate: (url: string) => void = navigateTo,
-): OAuthContinuation {
+export function readOAuthContinuation(search: string): OAuthContinuation {
   const oauthQuery = signedOAuthQuery(search);
   return {
     oauthQuery,
     requestsAccountCreation: oauthQuery !== undefined && requestsAccountCreation(search),
     withOAuthQuery: (body) => (oauthQuery ? { ...body, oauth_query: oauthQuery } : body),
-    resumeFromResponse: (data) => {
-      const url = oauthQuery ? continuationUrl(data) : undefined;
-      if (!url) {
-        return false;
-      }
-      navigate(url);
-      return true;
-    },
+    resumeFromResponse: (data) => oauthQuery !== undefined && continuationUrl(data) !== undefined,
   };
 }
 

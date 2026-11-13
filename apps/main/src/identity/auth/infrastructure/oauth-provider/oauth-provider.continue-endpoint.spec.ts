@@ -1,6 +1,6 @@
 // Must stay the first import: it enables the OAuth Provider before the auth module validates env.
 import "./trusted-client.test-env";
-import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
@@ -13,6 +13,7 @@ import {
   signedQueryOf,
   TEST_REDIRECT_URI,
 } from "./oauth-flow.test-helpers";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 const CONTINUE_PATH = `${API_PATH}/oauth-provider/continue`;
 
@@ -34,7 +35,10 @@ describe("POST /oauth-provider/continue (sign-up continuation for the SPA)", () 
   }
 
   beforeAll(async () => {
-    const testApp = await createAuthTestContext({ withAuthGuard: true });
+    const testApp = await createAuthTestContext({
+      imports: [EventEmitterModule.forRoot()],
+      withAuthGuard: true,
+    });
     app = testApp.app;
     betterAuthHelper = testApp.betterAuthHelper;
     userId = (await betterAuthHelper.createUser()).user.id;

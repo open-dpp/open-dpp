@@ -1,11 +1,12 @@
 import { INestApplication, VersioningType } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, expect, vi } from "vitest";
 import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadata.interface";
 import { APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
-import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
+import type { ModelDefinition } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
   AasSubmodelElements,
@@ -91,7 +92,6 @@ import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { CorrelationIdService } from "../../common/middleware/correlation-id.service";
 import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
@@ -124,6 +124,7 @@ export function createAasTestContext<T>(
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
@@ -149,7 +150,6 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
-        CorrelationIdService,
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,
@@ -164,7 +164,7 @@ export function createAasTestContext<T>(
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 

@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import type { Model as MongooseModel } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { AasSubmodelElements, AssetKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
@@ -68,7 +68,7 @@ describe("aasRepository", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 

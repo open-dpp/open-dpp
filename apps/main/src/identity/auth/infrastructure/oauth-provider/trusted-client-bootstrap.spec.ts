@@ -1,13 +1,14 @@
 // Must stay the first import: it enables the OAuth Provider before the auth module validates env.
 import { TEST_TRUSTED_CLIENT } from "./trusted-client.test-env";
 import { randomUUID } from "node:crypto";
-import { afterEach, describe, expect, it } from "@jest/globals";
+import { afterEach, describe, expect, it } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 import type { Connection } from "mongoose";
 import { hashClientSecret, verifyClientSecret } from "./client-secret";
 import { createAuthTestContext } from "./auth.test.context";
 import { OAUTH_CLIENT_MODEL } from "./trusted-client-upsert";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 /** The stored row for the env-configured Trusted Client, as the plugin reads it. */
 const EXPECTED_ROW = {
@@ -39,7 +40,10 @@ describe("Trusted Client bootstrap", () => {
   const apps: INestApplication[] = [];
 
   async function boot(dbName: string) {
-    const testApp = await createAuthTestContext({ dbName });
+    const testApp = await createAuthTestContext({
+      imports: [EventEmitterModule.forRoot()],
+      dbName,
+    });
     apps.push(testApp.app);
     return testApp;
   }

@@ -1,5 +1,5 @@
 import { Connection, Model, Types } from "mongoose";
-import { expect } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { validateEnv } from "./env";
 
 const baseEnv = {
@@ -71,6 +71,34 @@ describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
     expect(() => validateEnv({ ...baseEnv, OPEN_DPP_CLAMAV_URL: "clamav-rest:9000" })).toThrow(
       /OPEN_DPP_CLAMAV_URL/,
     );
+  });
+});
+
+describe("validateEnv — OPEN_DPP_USAGE_MANAGEMENT_URL", () => {
+  it("accepts an https URL", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "https://billing.example.com/plan" })
+        .OPEN_DPP_USAGE_MANAGEMENT_URL,
+    ).toBe("https://billing.example.com/plan");
+  });
+
+  it("is optional (link hidden when omitted)", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_USAGE_MANAGEMENT_URL).toBeUndefined();
+  });
+
+  it("treats an empty string as omitted", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "" }).OPEN_DPP_USAGE_MANAGEMENT_URL,
+    ).toBeUndefined();
+  });
+
+  it("rejects a value that is not an http(s) URL", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "javascript:alert(1)" }),
+    ).toThrow(/OPEN_DPP_USAGE_MANAGEMENT_URL/);
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_USAGE_MANAGEMENT_URL: "billing.example.com" }),
+    ).toThrow(/OPEN_DPP_USAGE_MANAGEMENT_URL/);
   });
 });
 
@@ -221,5 +249,103 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
         OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: redirectUris,
       }),
     ).toThrow(/OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS/);
+  });
+});
+
+describe("validateEnv — OPEN_DPP_OFFICIAL_TEMPLATES_REPO", () => {
+  it("defaults to the open-dpp project's own repo when omitted", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_OFFICIAL_TEMPLATES_REPO).toBe(
+      "github:open-dpp/passport-templates",
+    );
+  });
+
+  it("accepts a bare owner/repo slug", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "github:some-org/some-repo" })
+        .OPEN_DPP_OFFICIAL_TEMPLATES_REPO,
+    ).toBe("github:some-org/some-repo");
+  });
+
+  it("accepts a slug with a pinned branch", () => {
+    expect(
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "github:some-org/some-repo@staging",
+      }).OPEN_DPP_OFFICIAL_TEMPLATES_REPO,
+    ).toBe("github:some-org/some-repo@staging");
+  });
+
+  it("rejects a value with no provider prefix", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "some-org/some-repo" }),
+    ).toThrow(/OPEN_DPP_OFFICIAL_TEMPLATES_REPO/);
+  });
+
+  it("rejects an unsupported provider", () => {
+    expect(() =>
+      validateEnv({ ...baseEnv, OPEN_DPP_OFFICIAL_TEMPLATES_REPO: "gitlab:some-org/some-repo" }),
+    ).toThrow(/Unsupported official templates provider "gitlab"/);
+  });
+});
+
+describe("validateEnv — OPEN_DPP_LOG_LEVEL", () => {
+  it("defaults to debug", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_LOG_LEVEL).toBe("debug");
+  });
+
+  it("accepts verbose", () => {
+    expect(validateEnv({ ...baseEnv, OPEN_DPP_LOG_LEVEL: "verbose" }).OPEN_DPP_LOG_LEVEL).toBe(
+      "verbose",
+    );
+  });
+
+  it("rejects an unknown level", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_LOG_LEVEL: "trace" })).toThrow(
+      "OPEN_DPP_LOG_LEVEL",
+    );
+  });
+});
+
+describe("validateEnv — OPEN_DPP_TRUST_PROXY", () => {
+  it("defaults to false", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_TRUST_PROXY).toBe(false);
+  });
+
+  it.each([
+    ["true", true],
+    ["FALSE", false],
+    ["2", 2],
+    ["loopback, 10.0.0.0/8", "loopback, 10.0.0.0/8"],
+    ["203.0.113.7,::1,fe80::/10", "203.0.113.7,::1,fe80::/10"],
+  ])("accepts %p", (value: string, expected: boolean | number | string) => {
+    expect(validateEnv({ ...baseEnv, OPEN_DPP_TRUST_PROXY: value }).OPEN_DPP_TRUST_PROXY).toBe(
+      expected,
+    );
+  });
+
+  it.each(["yes", "-1", "10.0.0.0/33", "10.0.0.1,", "loopback, proxy.internal"])(
+    "rejects %p",
+    (value: string) => {
+      expect(() => validateEnv({ ...baseEnv, OPEN_DPP_TRUST_PROXY: value })).toThrow(
+        "OPEN_DPP_TRUST_PROXY",
+      );
+    },
+  );
+});
+
+describe("validateEnv — AI SDK debug switches", () => {
+  it.each(["MISTRAL_DEBUG", "LANGCHAIN_VERBOSE"])("accepts %s unset or empty", (name: string) => {
+    expect(() => validateEnv(baseEnv)).not.toThrow();
+    expect(() => validateEnv({ ...baseEnv, [name]: "" })).not.toThrow();
+  });
+
+  it.each([
+    ["MISTRAL_DEBUG", "true"],
+    ["MISTRAL_DEBUG", "false"],
+    ["LANGCHAIN_VERBOSE", "true"],
+  ])("rejects %s=%p, which prints chat messages to the logs", (name: string, value: string) => {
+    expect(() => validateEnv({ ...baseEnv, [name]: value })).toThrow(
+      `${name} makes the AI SDK print chat messages to the logs`,
+    );
   });
 });

@@ -1,4 +1,22 @@
+import { describe, expect, it } from "vitest";
+import {
+  CARRIER_EXPORT_CONTENT_TYPES,
+  CARRIER_EXPORT_DEFAULTS,
+  CARRIER_EXPORT_LIMITS,
+  CarrierErrorCorrectionLevel,
+  CarrierExportFormat,
+} from "@open-dpp/dto";
+import { buildOpenApiDocumentation } from "./index";
 import { permalinkPaths } from "./permalink.paths";
+
+type ParameterObject = {
+  name?: string;
+  in?: string;
+  required?: boolean;
+  description?: string;
+  schema?: Record<string, unknown>;
+  $ref?: string;
+};
 
 describe("permalinkPaths", () => {
   it("should export GET /p with passportId query param", () => {
@@ -139,5 +157,90 @@ describe("permalinkPaths", () => {
     );
     expect(hasOrgHeader).toBe(true);
     expect(get.security).toEqual([{ apiKeyAuth: [] }]);
+  });
+
+  describe("GET /permalinks/{id}/carrier", () => {
+    const path = "/permalinks/{id}/carrier";
+
+    function carrierOperation() {
+      const document = buildOpenApiDocumentation();
+      return document.paths?.[path]?.get as Record<string, any> | undefined;
+    }
+
+    function parameter(name: string): ParameterObject | undefined {
+      const parameters = (carrierOperation()?.parameters ?? []) as ParameterObject[];
+      return parameters.find((p) => p.name === name);
+    }
+
+    it("is exported with API key security", () => {
+      expect(permalinkPaths).toHaveProperty(path);
+      expect(permalinkPaths[path].get.security).toEqual([{ apiKeyAuth: [] }]);
+    });
+
+    it("takes the permalink id and no organization header", () => {
+      const parameters = (carrierOperation()?.parameters ?? []) as ParameterObject[];
+
+      expect(parameter("id")).toMatchObject({ in: "path", required: true });
+      expect(parameters.some((p) => p.$ref?.endsWith("/OrganizationIdHeader"))).toBe(false);
+    });
+
+    it("documents every setting as an optional query parameter with its default", () => {
+      expect(parameter("format")).toMatchObject({
+        in: "query",
+        schema: {
+          enum: Object.values(CarrierExportFormat),
+          default: CARRIER_EXPORT_DEFAULTS.format,
+        },
+      });
+      expect(parameter("moduleSize")).toMatchObject({
+        in: "query",
+        schema: {
+          type: "number",
+          minimum: CARRIER_EXPORT_LIMITS.moduleSize.min,
+          maximum: CARRIER_EXPORT_LIMITS.moduleSize.max,
+          default: CARRIER_EXPORT_DEFAULTS.moduleSize,
+        },
+      });
+      expect(parameter("dpi")).toMatchObject({
+        in: "query",
+        schema: {
+          type: "integer",
+          minimum: CARRIER_EXPORT_LIMITS.dpi.min,
+          maximum: CARRIER_EXPORT_LIMITS.dpi.max,
+          default: CARRIER_EXPORT_DEFAULTS.dpi,
+        },
+      });
+      expect(parameter("errorCorrection")).toMatchObject({
+        in: "query",
+        schema: {
+          enum: Object.values(CarrierErrorCorrectionLevel),
+          default: CARRIER_EXPORT_DEFAULTS.errorCorrection,
+        },
+      });
+      for (const name of ["format", "moduleSize", "dpi", "errorCorrection"]) {
+        expect(parameter(name)?.required ?? false).toBe(false);
+        expect(parameter(name)?.description).toEqual(expect.any(String));
+      }
+    });
+
+    it("answers with an SVG or PNG file named in the Content-Disposition header", () => {
+      const ok = carrierOperation()?.responses?.["200"];
+
+      expect(Object.keys(ok?.content ?? {}).sort()).toEqual(
+        Object.values(CARRIER_EXPORT_CONTENT_TYPES).sort(),
+      );
+      for (const media of Object.values(ok?.content ?? {}) as { schema?: unknown }[]) {
+        expect(media.schema).toEqual({ type: "string", format: "binary" });
+      }
+      expect(ok?.headers).toHaveProperty("Content-Disposition");
+    });
+
+    it("documents the invalid-settings, forbidden, not-found and rate-limit responses", () => {
+      const responses = carrierOperation()?.responses ?? {};
+
+      for (const status of ["400", "403", "404", "429"]) {
+        expect(responses[status]?.description).toEqual(expect.any(String));
+      }
+    });
   });
 });

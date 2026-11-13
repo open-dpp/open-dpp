@@ -6,9 +6,13 @@ import {
   CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   DigitalProductDocumentStatusModificationDtoSchema,
+  ImportOfficialTemplatesResultDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
+  PassportRegistryExportRequestDtoSchema,
   PassportRequestCreateDtoSchema,
+  RemoveEditingRestrictionsDtoSchema,
+  RestrictPassportEditingDtoSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementModificationSchema,
   SubmodelElementPaginationResponseDtoSchema,
@@ -59,6 +63,7 @@ import {
   PopulateQueryParamSchema,
   StartDateQueryParamSchema,
   StatusQueryParamSchema,
+  TemplateIdQueryParamSchema,
 } from "../digital-product-document/presentation/digital-product-document-decorators";
 import { HTTPCode } from "./http.codes";
 import { ContentType } from "./content.types";
@@ -648,6 +653,8 @@ function createTemplatePaths() {
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
           StatusQueryParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -726,6 +733,29 @@ function createTemplatePaths() {
         security,
       },
     },
+    [`/${tag}/{id}/passport-editing-mode`]: {
+      put: {
+        tags: [tag],
+        summary: `Restrict Passports created from this template to data-only editing.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        requestBody: {
+          required: true,
+          content: {
+            [ContentType.JSON]: {
+              schema: RestrictPassportEditingDtoSchema,
+            },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
     [`/${tag}/import`]: {
       post: {
         tags: [tag],
@@ -761,6 +791,21 @@ function createTemplatePaths() {
         security,
       },
     },
+    [`/${tag}/import-official`]: {
+      post: {
+        tags: [tag],
+        summary: `Imports the official templates from the configured source repository into the organization. Fetches every template file currently in the repo and imports each independently, skipping (and reporting) any that fail rather than aborting the whole run.`,
+        parameters: [orgaIdHeader],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: ImportOfficialTemplatesResultDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
   };
 }
 
@@ -777,6 +822,9 @@ function createPassportPaths() {
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
           StatusQueryParamSchema,
+          TemplateIdQueryParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -803,6 +851,27 @@ function createPassportPaths() {
               [ContentType.JSON]: { schema: PassportDtoSchema },
             },
           },
+        },
+        security,
+      },
+    },
+    [`/${tag}/export-to-registry`]: {
+      post: {
+        tags: [tag],
+        summary: `Exports published passports as ZIP of EU registry files (max. 100 passports per file). Passports without a published permalink are listed in failed-passports.json.`,
+        parameters: [orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: PassportRegistryExportRequestDtoSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.ZIP]: { schema: { type: "string", format: "binary" } },
+            },
+          },
+          [HTTPCode.NOT_FOUND]: { description: "No published passport matches the filters" },
         },
         security,
       },
@@ -842,6 +911,29 @@ function createPassportPaths() {
           content: {
             [ContentType.JSON]: {
               schema: DigitalProductDocumentStatusModificationDtoSchema,
+            },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}/{id}/editing-mode`]: {
+      put: {
+        tags: [tag],
+        summary: `Remove this passport's data-only editing restriction.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        requestBody: {
+          required: true,
+          content: {
+            [ContentType.JSON]: {
+              schema: RemoveEditingRestrictionsDtoSchema,
             },
           },
         },

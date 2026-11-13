@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-mutable-exports
 export let API_URL = import.meta.env.VITE_API_ROOT as string;
 async function fetchConfig() {
   if (!API_URL) {
@@ -12,7 +11,6 @@ async function fetchConfig() {
     }
   }
 }
-// eslint-disable-next-line antfu/no-top-level-await
 await fetchConfig();
 
 export const MARKETPLACE_URL = API_URL; // import.meta.env.VITE_MARKETPLACE_ROOT;

@@ -1,5 +1,145 @@
 # @open-dpp/client
 
+## 6.4.2
+
+## 6.4.1
+
+## 6.4.0
+
+### Minor Changes
+
+- [#1130](https://github.com/open-dpp/open-dpp/pull/1130) [`6e81265`](https://github.com/open-dpp/open-dpp/commit/6e81265cb02deaef5f3279b971e8e57a80f2095e) Thanks [@florianBieck](https://github.com/florianBieck)! - Members can download the Carrier Export of a permalink as SVG (sized in mm) or PNG (at a chosen DPI) from `GET /permalinks/:id/carrier`, with a four-module quiet zone, a module size and an error-correction level. The api-client gains `permalinks.getCarrierExport`, and the back office shows and downloads the server-rendered Data Carrier instead of drawing its own.
+
+## 6.3.6
+
+## 6.3.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.5
+  - @open-dpp/dto@6.3.5
+
+## 6.3.4
+
+### Patch Changes
+
+- [#1108](https://github.com/open-dpp/open-dpp/pull/1108) [`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe) Thanks [@Hentra](https://github.com/Hentra)! - A button to manage usage appears on the usage page when `OPEN_DPP_USAGE_MANAGEMENT_URL` is set. A `{organizationId}` placeholder in the URL is replaced with the current organization's ID.
+
+- Updated dependencies [[`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe)]:
+  - @open-dpp/dto@6.3.4
+  - @open-dpp/api-client@6.3.4
+
+## 6.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`23201ff`](https://github.com/open-dpp/open-dpp/commit/23201ffe3c041ecdc24e1fa28bb6805614a66c05)]:
+  - @open-dpp/api-client@6.3.3
+  - @open-dpp/dto@6.3.3
+
+## 6.3.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.2
+  - @open-dpp/dto@6.3.2
+
+## 6.3.1
+
+### Patch Changes
+
+- [#1102](https://github.com/open-dpp/open-dpp/pull/1102) [`8e2596f`](https://github.com/open-dpp/open-dpp/commit/8e2596f7605fcf0e18ce3bbc503ff303840cb935) Thanks [@Hentra](https://github.com/Hentra)! - Show last time a user logged in in the admin overview
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.1
+  - @open-dpp/dto@6.3.1
+
+## 6.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.0
+  - @open-dpp/dto@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.4
+  - @open-dpp/dto@6.2.4
+
+## 6.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.3
+  - @open-dpp/dto@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.2
+  - @open-dpp/dto@6.2.2
+
+## 6.2.1
+
+### Patch Changes
+
+- [#1019](https://github.com/open-dpp/open-dpp/pull/1019) [`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83) Thanks [@mr42](https://github.com/mr42)! - Published passports can be exported to upload them to the EU registry.
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/api-client@6.2.1
+  - @open-dpp/dto@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/api-client@6.2.0
+  - @open-dpp/dto@6.2.0
+
+## 6.1.4
+
+### Patch Changes
+
+- [#904](https://github.com/open-dpp/open-dpp/pull/904) [`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36) Thanks [@mr42](https://github.com/mr42)! - In the template editor a user can restrict editing of derived passports to data only. Meaning, the structure, layout and security rules of a passport created from a template with restriction enabled cannot be modified. Only the data values of such a passport can be modified.
+
+- Updated dependencies [[`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36)]:
+  - @open-dpp/api-client@6.1.4
+  - @open-dpp/dto@6.1.4
+
+## 6.1.3
+
+### Patch Changes
+
+- [#980](https://github.com/open-dpp/open-dpp/pull/980) [`edb4deb`](https://github.com/open-dpp/open-dpp/commit/edb4deb19fbc4d93db7b592efca9d7f3c47f678a) Thanks [@florianBieck](https://github.com/florianBieck)! - Signing in with email and password while a Trusted Client waits for the OAuth Provider sends the browser to the Trusted Client once again. It went there twice with the same single-use code, so the second code exchange failed and the User saw the Trusted Client's sign-in error.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.1.3
+  - @open-dpp/dto@6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- [#976](https://github.com/open-dpp/open-dpp/pull/976) [`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce) Thanks [@mr42](https://github.com/mr42)! - Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates. The Github repository where the official templates are loaded from is configurable via environment variable.
+
+- Updated dependencies [[`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce)]:
+  - @open-dpp/api-client@6.1.2
+  - @open-dpp/dto@6.1.2
+
 ## 6.1.1
 
 ### Patch Changes

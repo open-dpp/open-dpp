@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { getModelToken } from "@nestjs/mongoose";
 import { LatestApiVersionWithPrefixDto, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import type { Model } from "mongoose";
@@ -446,31 +446,31 @@ describe("PermalinkController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassportWithPermalink);
+    await ctx.asserts.getShells(() => createPassportWithPermalink());
   });
 
   it(`/GET submodels`, async () => {
-    await ctx.asserts.getSubmodels(createPassportWithPermalink);
+    await ctx.asserts.getSubmodels(() => createPassportWithPermalink());
   });
 
   it(`/GET submodel by id`, async () => {
-    await ctx.asserts.getSubmodelById(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelById(() => createPassportWithPermalink());
   });
 
   it(`/GET submodel value`, async () => {
-    await ctx.asserts.getSubmodelValue(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelValue(() => createPassportWithPermalink());
   });
 
   it(`/GET submodel elements`, async () => {
-    await ctx.asserts.getSubmodelElements(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelElements(() => createPassportWithPermalink());
   });
 
   it(`/GET submodel element by id`, async () => {
-    await ctx.asserts.getSubmodelElementById(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelElementById(() => createPassportWithPermalink());
   });
 
   it(`/GET submodel element value`, async () => {
-    await ctx.asserts.getSubmodelElementValue(createPassportWithPermalink);
+    await ctx.asserts.getSubmodelElementValue(() => createPassportWithPermalink());
   });
 
   describe("draft passports — privacy gate", () => {

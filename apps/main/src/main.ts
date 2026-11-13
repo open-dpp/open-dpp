@@ -1,13 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import {
-  ConsoleLogger,
-  Logger,
-  RequestMethod,
-  ValidationPipe,
-  VersioningType,
-} from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
+import { ConsoleLogger, Logger, RequestMethod, VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -18,9 +13,11 @@ import {
 } from "@open-dpp/exception";
 import * as bodyParser from "body-parser";
 import { createProxyServer } from "http-proxy-3";
-import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
+import { LOG_LEVELS, logLevelsUpTo } from "./common/logging/log-levels";
+import { correlationIdMiddleware } from "./common/middleware/correlation-id.middleware";
+import { createLoggerMiddleware } from "./common/middleware/logger.middleware";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
 import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-dpp/dto";
 
@@ -54,16 +51,24 @@ async function bootstrap() {
   const logFormat = process.env.OPEN_DPP_LOG_FORMAT || "plain";
   const useJsonLogging = logFormat === "json";
 
-  const app = await NestFactory.create(AppModule, {
+  const consoleLogger = new ConsoleLogger({
+    json: useJsonLogging,
+    logLevels: LOG_LEVELS,
+  });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
-    logger: new ConsoleLogger({
-      json: useJsonLogging,
-      logLevels: ["log", "error", "warn", "debug", "verbose"],
-    }),
+    logger: consoleLogger,
   });
 
   const envService = app.get(EnvService);
   const logger = new Logger("Bootstrap");
+
+  consoleLogger.setLogLevels(logLevelsUpTo(envService.get("OPEN_DPP_LOG_LEVEL")));
+
+  app.set("trust proxy", envService.get("OPEN_DPP_TRUST_PROXY"));
+
+  app.use(correlationIdMiddleware);
+  app.use(createLoggerMiddleware(envService.get("OPEN_DPP_LOG_FORMAT")));
 
   if (!envService.get("OPEN_DPP_CLAMAV_URL")) {
     logger.warn("OPEN_DPP_CLAMAV_URL is not set — uploaded files are not virus-scanned");
@@ -130,6 +135,8 @@ async function bootstrap() {
     credentials: true,
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    // lets the client name a downloaded file after the server's suggestion
+    exposedHeaders: ["Content-Disposition"],
   });
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
@@ -140,7 +147,6 @@ async function bootstrap() {
   applyBodySizeHandler(app);
   app.use("/media/upload-dpp-file/:upi", bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-  app.useGlobalPipes(new ValidationPipe());
   if (envService.get("OPEN_DPP_BUILD_API_DOC")) {
     const doc = buildOpenApiDocumentation();
     addSwaggerToApp(app, doc);
@@ -148,14 +154,6 @@ async function bootstrap() {
   const port = envService.get("OPEN_DPP_PORT");
   logger.log(`Application is running on: ${port}`);
   await app.listen(port);
-  try {
-    const mcpClientService = app.get(McpClientService);
-    await mcpClientService.connect();
-  } catch (err) {
-    logger.error(`MCP connect failed: ${err instanceof Error ? err.message : String(err)}`);
-    await app.close();
-    process.exit(1);
-  }
 }
 
 bootstrap();

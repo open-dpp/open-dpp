@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
@@ -95,12 +95,14 @@ describe("BulkImportRun", () => {
     const allItems = [succeeded1, failed1, succeeded2, failed2, pending];
     let pendingItems = run.startOrResume(allItems);
     expect(pendingItems).toEqual(allItems);
-    succeeded1.markCreated(randomUUID());
+    succeeded1.assignPassport(randomUUID());
+    succeeded1.markCreated();
     run.recordItemOutcome(true);
     failed1.markFailed("error");
     run.recordItemOutcome(false);
     // run is canceled due to a deployment, so succeeded2 and failed2 have been processed but their outcome has not been recorded
-    succeeded2.markCreated(randomUUID());
+    succeeded2.assignPassport(randomUUID());
+    succeeded2.markCreated();
     failed2.markFailed("error");
     expect(run.succeededCount).toEqual(1);
     expect(run.failedCount).toEqual(1);

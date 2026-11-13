@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
+    "outDir": "./dist",
     "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
   },
   "exclude": [
@@ -11,6 +12,7 @@
     "**/*spec.ts",
     "**/*test.context.ts",
     "**/*.test-helpers.ts",
-    "**/*.test-env.ts"
+    "**/*.test-env.ts",
+    "vitest.config.ts"
   ]
 }

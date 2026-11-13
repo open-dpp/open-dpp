@@ -1,80 +1,41 @@
 {
   "name": "@open-dpp/testing",
-  "version": "6.1.1",
+  "version": "6.4.2",
   "private": true,
   "description": "",
   "license": "ISC",
   "author": "",
   "files": [
-    "dist",
     "src"
   ],
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "type": "module",
+  "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "require": "./dist/index.js"
-    },
+    ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
-    "test": "jest --passWithNoTests"
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@nestjs/common": "^11.2.5",
-    "@nestjs/config": "^4.0.4",
-    "@nestjs/core": "^11.2.5",
-    "@nestjs/mongoose": "^11.0.4",
+    "@nestjs/common": "^12.3.2",
+    "@nestjs/config": "^12.0.1",
+    "@nestjs/core": "^12.3.2",
+    "@nestjs/mongoose": "^12.0.0",
     "@open-dpp/dto": "workspace:*",
     "@open-dpp/env": "workspace:*",
-    "class-transformer": "^0.5.1",
     "fishery": "^2.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.41",
-    "@swc/jest": "^0.2.39",
-    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
-    "@types/jest": "^30.0.0",
-    "@types/lodash": "^4.17.25",
+    "@types/lodash": "^4.17.27",
     "@types/supertest": "^6.0.3",
-    "jest": "^30.4.2",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   },
-  "jest": {
-    "moduleNameMapper": {
-      "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
-    },
-    "testEnvironment": "node",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest",
-        {
-          "jsc": {
-            "target": "es2022",
-            "parser": {
-              "syntax": "typescript",
-              "decorators": true
-            },
-            "transform": {
-              "decoratorMetadata": true
-            }
-          },
-          "module": {
-            "type": "commonjs"
-          }
-        }
-      ]
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!.*(@open-dpp|uuid))"
-    ]
-  },
-  "packageManager": "pnpm@11.26.0"
+  "packageManager": "pnpm@11.28.9"
 }

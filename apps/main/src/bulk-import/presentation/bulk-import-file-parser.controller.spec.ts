@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
-import { expect, describe, it, afterEach, jest, afterAll, beforeAll } from "@jest/globals";
+import { type Mocked, afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import { INestApplication } from "@nestjs/common";
 import { BulkImportFileParserService } from "../infrastructure/bulk-import-file-parser.service";
@@ -11,6 +11,7 @@ import { UsersService } from "../../identity/users/application/services/users.se
 import type { Auth } from "better-auth";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { UsersModule } from "../../identity/users/users.module";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { MongooseModule } from "@nestjs/mongoose";
 import { generateMongoConfig } from "../../database/config";
@@ -19,17 +20,18 @@ import { EmailService } from "../../email/email.service";
 describe("BulkImportFileParserController", () => {
   let app: INestApplication;
   let module: TestingModule;
-  let mockService: jest.Mocked<BulkImportFileParserService>;
+  let mockService: Mocked<BulkImportFileParserService>;
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     mockService = {
-      parseFile: jest.fn(),
-    } as unknown as jest.Mocked<BulkImportFileParserService>;
+      parseFile: vi.fn(),
+    } as unknown as Mocked<BulkImportFileParserService>;
 
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
@@ -49,7 +51,7 @@ describe("BulkImportFileParserController", () => {
     })
       .overrideProvider(EmailService)
       .useValue({
-        send: jest.fn(),
+        send: vi.fn(),
       })
       .compile();
 
@@ -61,7 +63,7 @@ describe("BulkImportFileParserController", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(async () => {

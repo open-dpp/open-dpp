@@ -1,6 +1,6 @@
 // Must stay the first import: it enables the OAuth Provider before the auth module validates env.
 import "./trusted-client.test-env";
-import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { BetterAuthHelper, BetterAuthOrganization } from "../../../../../test/better-auth-helper";
@@ -12,6 +12,7 @@ import { ORGANIZATION_ID_HEADER } from "../../presentation/decorators/organizati
 import { obtainTokens, TEST_PASSWORD } from "./oauth-flow.test-helpers";
 import { API_PATH, createAuthTestContext } from "./auth.test.context";
 import { AUTH_BASE_PATH } from "../../auth-base-path";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 interface TestUser {
   id: string;
@@ -39,7 +40,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
 
   beforeAll(async () => {
     const testApp = await createAuthTestContext({
-      imports: [PolicyModule, ApiKeysModule],
+      imports: [PolicyModule, ApiKeysModule, EventEmitterModule.forRoot()],
       withAuthGuard: true,
     });
     app = testApp.app;

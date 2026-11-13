@@ -1,5 +1,216 @@
 # @open-dpp/main
 
+## 6.4.2
+
+### Patch Changes
+
+- [#1142](https://github.com/open-dpp/open-dpp/pull/1142) [`c9645c1`](https://github.com/open-dpp/open-dpp/commit/c9645c19192819d953bf1b70d09d973544110789) Thanks [@florianBieck](https://github.com/florianBieck)! - Build the project with TypeScript 6.0 instead of 5.9. TypeScript only type-checks here, so the Docker image, the web client and the published `@open-dpp/dto` and `@open-dpp/api-client` packages contain the same code as before, and nothing changes for projects that use the two packages. When you build from source, `pnpm install` installs TypeScript 6.0.3. The backend now type-checks in strict mode, so a `catch` variable is `unknown` until the code narrows it.
+
+## 6.4.1
+
+### Patch Changes
+
+- [#1141](https://github.com/open-dpp/open-dpp/pull/1141) [`a71f2bb`](https://github.com/open-dpp/open-dpp/commit/a71f2bb83caab7b471f20cbbf73ae3cd7584eacc) Thanks [@florianBieck](https://github.com/florianBieck)! - The backend now ships as a single ES module bundle (`dist/main.js`, built with Rspack) instead of one CommonJS file per source file. The container image sets `NODE_OPTIONS=--enable-source-maps`, so stack traces in the logs point to TypeScript source lines. If you override `NODE_OPTIONS` for the container, add `--enable-source-maps` to keep that.
+
+## 6.4.0
+
+### Minor Changes
+
+- [#1130](https://github.com/open-dpp/open-dpp/pull/1130) [`6e81265`](https://github.com/open-dpp/open-dpp/commit/6e81265cb02deaef5f3279b971e8e57a80f2095e) Thanks [@florianBieck](https://github.com/florianBieck)! - Members can download the Carrier Export of a permalink as SVG (sized in mm) or PNG (at a chosen DPI) from `GET /permalinks/:id/carrier`, with a four-module quiet zone, a module size and an error-correction level. The api-client gains `permalinks.getCarrierExport`, and the back office shows and downloads the server-rendered Data Carrier instead of drawing its own.
+
+## 6.3.6
+
+### Patch Changes
+
+- [#1140](https://github.com/open-dpp/open-dpp/pull/1140) [`1092700`](https://github.com/open-dpp/open-dpp/commit/1092700256473751b4950e42f0e999e156eecb68) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the backend to NestJS 12. Two things operators may notice:
+
+  - With `OPEN_DPP_LOG_FORMAT=json`, a log call that passes an object or an error now writes one record instead of two: the object goes into a `params` field, the error into an `error` field with `name`, `message` and `stack`.
+  - A non-`GET` request to an unknown path outside `/api` (for example `POST /does-not-exist`) now gets the Express HTML 404 page instead of a JSON 404 body. Responses under `/api` and `GET` requests are unchanged.
+
+## 6.3.5
+
+### Patch Changes
+
+- [#1134](https://github.com/open-dpp/open-dpp/pull/1134) [`0ce294e`](https://github.com/open-dpp/open-dpp/commit/0ce294e9dcbfef4eb419c3100aea91424bbb7710) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the container's Node.js runtime from 24.22.1 to 26.13.0 LTS. Node 24 entered maintenance on 2026-10-20, and Node 26 is the active LTS line, supported until 2029-04-30. Building from source now requires Node.js 26.13.0 or later: `pnpm install` stops with an error on older versions.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.5
+  - @open-dpp/dto@6.3.5
+  - @open-dpp/env@6.3.5
+  - @open-dpp/exception@6.3.5
+  - @open-dpp/permission@6.3.5
+
+## 6.3.4
+
+### Patch Changes
+
+- [#1108](https://github.com/open-dpp/open-dpp/pull/1108) [`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe) Thanks [@Hentra](https://github.com/Hentra)! - A button to manage usage appears on the usage page when `OPEN_DPP_USAGE_MANAGEMENT_URL` is set. A `{organizationId}` placeholder in the URL is replaced with the current organization's ID.
+
+- Updated dependencies [[`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe)]:
+  - @open-dpp/env@6.3.4
+  - @open-dpp/dto@6.3.4
+  - @open-dpp/api-client@6.3.4
+  - @open-dpp/exception@6.3.4
+  - @open-dpp/permission@6.3.4
+
+## 6.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`23201ff`](https://github.com/open-dpp/open-dpp/commit/23201ffe3c041ecdc24e1fa28bb6805614a66c05)]:
+  - @open-dpp/api-client@6.3.3
+  - @open-dpp/dto@6.3.3
+  - @open-dpp/env@6.3.3
+  - @open-dpp/exception@6.3.3
+  - @open-dpp/permission@6.3.3
+
+## 6.3.2
+
+### Patch Changes
+
+- [#1076](https://github.com/open-dpp/open-dpp/pull/1076) [`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64) Thanks [@Hentra](https://github.com/Hentra)! - Log every request, including frontend page visits and `/gs1` resolver hits, with a correlation id that is returned in the `x-correlation-id` response header. A caller-supplied `x-correlation-id` is reused when it is a plain token of up to 128 characters; otherwise a new one is generated. Request logs record the path without the query string, so tokens in links such as `/password-reset?token=…` stay out of the logs.
+
+  Two new settings: `OPEN_DPP_LOG_LEVEL` sets the most verbose level that is printed (default `debug`, which hides `verbose` output printed before), and `OPEN_DPP_TRUST_PROXY` sets Express's `trust proxy` so the real client IP is logged and used for rate limiting behind a reverse proxy. Invalid `OPEN_DPP_TRUST_PROXY` values are rejected at startup.
+
+- Updated dependencies [[`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64)]:
+  - @open-dpp/env@6.3.2
+  - @open-dpp/api-client@6.3.2
+  - @open-dpp/dto@6.3.2
+  - @open-dpp/exception@6.3.2
+  - @open-dpp/permission@6.3.2
+
+## 6.3.1
+
+### Patch Changes
+
+- [#1102](https://github.com/open-dpp/open-dpp/pull/1102) [`8e2596f`](https://github.com/open-dpp/open-dpp/commit/8e2596f7605fcf0e18ce3bbc503ff303840cb935) Thanks [@Hentra](https://github.com/Hentra)! - Show last time a user logged in in the admin overview
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.1
+  - @open-dpp/dto@6.3.1
+  - @open-dpp/env@6.3.1
+  - @open-dpp/exception@6.3.1
+  - @open-dpp/permission@6.3.1
+
+## 6.3.0
+
+### Minor Changes
+
+- [#1071](https://github.com/open-dpp/open-dpp/pull/1071) [`aa82258`](https://github.com/open-dpp/open-dpp/commit/aa822584c6f463d15b6a4d1a0c07ccdfc901a334) Thanks [@Hentra](https://github.com/Hentra)! - Create a migration process on startup
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.3.0
+  - @open-dpp/dto@6.3.0
+  - @open-dpp/env@6.3.0
+  - @open-dpp/exception@6.3.0
+  - @open-dpp/permission@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.4
+  - @open-dpp/dto@6.2.4
+  - @open-dpp/env@6.2.4
+  - @open-dpp/exception@6.2.4
+  - @open-dpp/permission@6.2.4
+
+## 6.2.3
+
+### Patch Changes
+
+- [#1090](https://github.com/open-dpp/open-dpp/pull/1090) [`d1b182f`](https://github.com/open-dpp/open-dpp/commit/d1b182fb7c292999bd3b85b2db5500dfa0f49f9e) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the container's Node.js runtime from 25.9.0 (end-of-life, no fix) to 24.22.1 LTS to patch CVE-2026-111497, an out-of-bounds write in Node's bundled Brotli decoder reachable via `Content-Encoding: br` request bodies and Brotli-encoded `fetch()` responses.
+
+  The production container now runs as the unprivileged `node` user (uid 1000) instead of root.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.3
+  - @open-dpp/dto@6.2.3
+  - @open-dpp/env@6.2.3
+  - @open-dpp/exception@6.2.3
+  - @open-dpp/permission@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- [#1078](https://github.com/open-dpp/open-dpp/pull/1078) [`28ebc44`](https://github.com/open-dpp/open-dpp/commit/28ebc44e713c24307975078495c7d813a365c2b3) Thanks [@Hentra](https://github.com/Hentra)! - Remove loopback MCP Server
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.2.2
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+  - @open-dpp/exception@6.2.2
+  - @open-dpp/permission@6.2.2
+
+## 6.2.1
+
+### Patch Changes
+
+- [#1019](https://github.com/open-dpp/open-dpp/pull/1019) [`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83) Thanks [@mr42](https://github.com/mr42)! - Published passports can be exported to upload them to the EU registry.
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/api-client@6.2.1
+  - @open-dpp/dto@6.2.1
+  - @open-dpp/env@6.2.1
+  - @open-dpp/exception@6.2.1
+  - @open-dpp/permission@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/api-client@6.2.0
+  - @open-dpp/permission@6.2.0
+  - @open-dpp/exception@6.2.0
+  - @open-dpp/dto@6.2.0
+  - @open-dpp/env@6.2.0
+
+## 6.1.4
+
+### Patch Changes
+
+- [#904](https://github.com/open-dpp/open-dpp/pull/904) [`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36) Thanks [@mr42](https://github.com/mr42)! - In the template editor a user can restrict editing of derived passports to data only. Meaning, the structure, layout and security rules of a passport created from a template with restriction enabled cannot be modified. Only the data values of such a passport can be modified.
+
+- Updated dependencies [[`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36)]:
+  - @open-dpp/api-client@6.1.4
+  - @open-dpp/dto@6.1.4
+  - @open-dpp/env@6.1.4
+  - @open-dpp/exception@6.1.4
+  - @open-dpp/permission@6.1.4
+
+## 6.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@6.1.3
+  - @open-dpp/dto@6.1.3
+  - @open-dpp/env@6.1.3
+  - @open-dpp/exception@6.1.3
+  - @open-dpp/permission@6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- [#976](https://github.com/open-dpp/open-dpp/pull/976) [`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce) Thanks [@mr42](https://github.com/mr42)! - Official templates are imported into an organization automatically when it's created, and can be re-imported at any time via "Import official templates" on the templates. The Github repository where the official templates are loaded from is configurable via environment variable.
+
+- Updated dependencies [[`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce)]:
+  - @open-dpp/api-client@6.1.2
+  - @open-dpp/dto@6.1.2
+  - @open-dpp/env@6.1.2
+  - @open-dpp/exception@6.1.2
+  - @open-dpp/permission@6.1.2
+
 ## 6.1.1
 
 ### Patch Changes

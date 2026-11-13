@@ -27,6 +27,7 @@ const props = defineProps<{
   submodels: TreeNode[];
   loading: boolean;
   isArchived: boolean;
+  isEditingRestrictedToData: boolean;
   selectTreeNode: (key: string) => void;
   createSubmodel: () => Promise<void>;
   deleteSubmodel: (submodelId: string) => Promise<void>;
@@ -92,7 +93,7 @@ async function deleteClicked(node: TreeNode) {
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</h3>
             <Button
-              v-if="!props.isArchived"
+              v-if="!props.isArchived && !props.isEditingRestrictedToData"
               :label="t('aasEditor.addSubmodel')"
               @click="props.createSubmodel"
             />
@@ -131,12 +132,12 @@ async function deleteClicked(node: TreeNode) {
                   @click="addClicked($event, node)"
                 />
                 <Button
-                  v-if="node.data.actions.edit.visible"
+                  v-if="node.data.actions.move.visible"
                   v-tooltip.top="t('common.move')"
                   :aria-label="t('common.move')"
                   icon="pi pi-sort-alt"
                   severity="secondary"
-                  :disabled="!node.data.actions.edit.enabled"
+                  :disabled="!node.data.actions.move.enabled"
                   @click="moveClicked($event, node)"
                 />
                 <Button

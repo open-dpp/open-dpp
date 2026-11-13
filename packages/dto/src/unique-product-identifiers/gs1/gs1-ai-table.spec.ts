@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
 
 /** Wide view so specs can index with runtime strings regardless of literal keys. */

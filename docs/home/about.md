@@ -6,8 +6,6 @@ outline: deep
 
 open-dpp is an open-source platform for managing digital product passports (DPPs).
 
-> **Note:** open-dpp is under active development and is rapidly evolving. Features, APIs, and architecture may change frequently, and a stable release has not yet been established. We recommend using open-dpp for testing and experimentation purposes only at this stage.
-
 ## Digital product passports
 
 Within Europe’s circular economy, the digital product passport acts as a shared data backbone for products from creation to end-of-life. It brings together standardized details such as material composition, provenance, emissions impact, repair options, recyclability, and applicable regulatory compliance. By providing this information in a trusted format, the DPP supports secure product-data exchange across every stage of the value chain.

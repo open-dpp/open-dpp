@@ -9,7 +9,7 @@ const { createPassport } = usePassports();
 const { t } = useI18n();
 
 const visible = ref(false);
-const mode = ref<"blank" | "template">("blank");
+const mode = ref<"blank" | "template">("template");
 const template = ref<string | null>(null);
 
 function open() {
@@ -38,7 +38,13 @@ defineExpose({
 </script>
 
 <template>
-  <Dialog v-model:visible="visible" modal :header="t('passports.create')" @hide="close">
+  <Dialog
+    class="w-3/4"
+    v-model:visible="visible"
+    modal
+    :header="t('passports.create')"
+    @hide="close"
+  >
     <div class="mb-8 flex flex-col flex-wrap gap-4">
       <div class="flex items-center gap-2">
         <RadioButton v-model="mode" input-id="blank" name="mode" value="blank" />
@@ -52,7 +58,7 @@ defineExpose({
           </span>
         </label>
       </div>
-      <TemplateSelect v-model="template" class="w-96" :disabled="mode === 'blank'" />
+      <TemplateSelect v-model="template" :disabled="mode === 'blank'" />
     </div>
     <div class="flex justify-end gap-2">
       <Button type="button" severity="secondary" @click="close">

@@ -1,11 +1,12 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ApiVersionsDto, PolicyKeyList } from "@open-dpp/dto";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -44,6 +45,7 @@ describe("BulkImport controllers", () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRootAsync({
           imports: [EnvModule],
           useFactory: (configService: EnvService) => ({
@@ -59,7 +61,7 @@ describe("BulkImport controllers", () => {
       providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
     })
       .overrideProvider(EmailService)
-      .useValue({ send: jest.fn() })
+      .useValue({ send: vi.fn() })
       .compile();
 
     betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));

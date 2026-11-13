@@ -1,5 +1,131 @@
 # @open-dpp/testing
 
+## 6.4.2
+
+## 6.4.1
+
+## 6.4.0
+
+## 6.3.6
+
+## 6.3.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.5
+  - @open-dpp/env@6.3.5
+
+## 6.3.4
+
+### Patch Changes
+
+- Updated dependencies [[`f6f684e`](https://github.com/open-dpp/open-dpp/commit/f6f684ec12181df529a8f0aada265b21cb2cb7fe)]:
+  - @open-dpp/env@6.3.4
+  - @open-dpp/dto@6.3.4
+
+## 6.3.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.3
+  - @open-dpp/env@6.3.3
+
+## 6.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`6707a40`](https://github.com/open-dpp/open-dpp/commit/6707a403bfd9ff5b6c91bb3357748f815e759c64)]:
+  - @open-dpp/env@6.3.2
+  - @open-dpp/dto@6.3.2
+
+## 6.3.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.1
+  - @open-dpp/env@6.3.1
+
+## 6.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.3.0
+  - @open-dpp/env@6.3.0
+
+## 6.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.4
+  - @open-dpp/env@6.2.4
+
+## 6.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.3
+  - @open-dpp/env@6.2.3
+
+## 6.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.2.2
+  - @open-dpp/env@6.2.2
+
+## 6.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`7ad9670`](https://github.com/open-dpp/open-dpp/commit/7ad9670cf7eefa079fef8afbc9fa44e118e14a83)]:
+  - @open-dpp/dto@6.2.1
+  - @open-dpp/env@6.2.1
+
+## 6.2.0
+
+### Minor Changes
+
+- [#1017](https://github.com/open-dpp/open-dpp/pull/1017) [`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33) Thanks [@mr42](https://github.com/mr42)! - Templates and passports can be filterd by multiple status and by date range. In addition, passports can also be filtered by template. Further ui improvements for passport creation dialog for long template names.
+
+### Patch Changes
+
+- Updated dependencies [[`f4c6f7c`](https://github.com/open-dpp/open-dpp/commit/f4c6f7cd1d3e50dc1376a88d14818dee768ecc33)]:
+  - @open-dpp/dto@6.2.0
+  - @open-dpp/env@6.2.0
+
+## 6.1.4
+
+### Patch Changes
+
+- [#904](https://github.com/open-dpp/open-dpp/pull/904) [`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36) Thanks [@mr42](https://github.com/mr42)! - In the template editor a user can restrict editing of derived passports to data only. Meaning, the structure, layout and security rules of a passport created from a template with restriction enabled cannot be modified. Only the data values of such a passport can be modified.
+
+- Updated dependencies [[`71c16fc`](https://github.com/open-dpp/open-dpp/commit/71c16fc23c4ccf7f9b82d14e822ed6fbd71fac36)]:
+  - @open-dpp/dto@6.1.4
+  - @open-dpp/env@6.1.4
+
+## 6.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@6.1.3
+  - @open-dpp/env@6.1.3
+
+## 6.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`d1dc6c7`](https://github.com/open-dpp/open-dpp/commit/d1dc6c7116f5eb999a730a41d662c5d6368a62ce)]:
+  - @open-dpp/dto@6.1.2
+  - @open-dpp/env@6.1.2
+
 ## 6.1.1
 
 ### Patch Changes

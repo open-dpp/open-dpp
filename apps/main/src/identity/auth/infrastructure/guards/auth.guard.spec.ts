@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -22,21 +22,21 @@ describe("authGuard Allowlist Repro", () => {
 
   beforeEach(async () => {
     mockSessionsService = {
-      getSession: jest.fn<() => Promise<null>>().mockResolvedValue(null),
-      verifyApiKey: jest.fn<() => Promise<null>>().mockResolvedValue(null),
-      verifyAccessToken: jest.fn<() => Promise<null>>().mockResolvedValue(null),
+      getSession: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      verifyApiKey: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      verifyAccessToken: vi.fn<() => Promise<null>>().mockResolvedValue(null),
       acceptsAccessTokens: false,
     };
     mockMembersRepository = {
-      findOneByUserIdAndOrganizationId: jest
+      findOneByUserIdAndOrganizationId: vi
         .fn<() => Promise<Member | null>>()
         .mockResolvedValue(null),
     };
     mockUsersRepository = {
-      findOneById: jest.fn<() => Promise<unknown>>().mockResolvedValue(undefined),
+      findOneById: vi.fn<() => Promise<unknown>>().mockResolvedValue(undefined),
     };
     mockReflector = {
-      getAllAndOverride: jest.fn(),
+      getAllAndOverride: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,7 +49,7 @@ describe("authGuard Allowlist Repro", () => {
         {
           provide: EnvService,
           useValue: {
-            get: jest.fn(),
+            get: vi.fn(),
           },
         },
         {
@@ -78,6 +78,7 @@ describe("authGuard Allowlist Repro", () => {
       session: null as any,
     };
     return {
+      getType: () => "http",
       switchToHttp: () => ({
         getRequest: () => request,
       }),
@@ -87,40 +88,27 @@ describe("authGuard Allowlist Repro", () => {
     } as ExecutionContext & { _request: any };
   };
 
-  it(`should allow /api/${LatestApiVersionWithPrefixDto}/sse exactly`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse`);
-    expect(await guard.canActivate(context)).toBe(true);
+  it("lets WebSocket messages through to the gateway's own guard", async () => {
+    const wsContext = {
+      getType: () => "ws",
+      switchToHttp: () => {
+        throw new Error("a WebSocket context has no HTTP request");
+      },
+      getHandler: () => {},
+      getClass: () => {},
+    } as unknown as ExecutionContext;
+
+    expect(await guard.canActivate(wsContext)).toBe(true);
+    expect(mockSessionsService.getSession).not.toHaveBeenCalled();
   });
 
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/sse/something`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse/123`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
-
-  it(`should allow /api/${LatestApiVersionWithPrefixDto}/sse?query=123`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse?foo=bar`);
-    expect(await guard.canActivate(context)).toBe(true);
-  });
-
-  it(`should allow /api/${LatestApiVersionWithPrefixDto}/messages exactly`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages`);
-    expect(await guard.canActivate(context)).toBe(true);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/messages/something`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages/123`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/sse-extension (partial match prefix)`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse-extension`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
-
-  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/messages-extension (partial match prefix)`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages-extension`);
-    expect(await guard.canActivate(context)).toBe(false);
-  });
+  it.each(["sse", "messages"])(
+    `should NOT allow anonymous requests to the former MCP endpoint /api/${LatestApiVersionWithPrefixDto}/%s`,
+    async (path) => {
+      const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/${path}`);
+      expect(await guard.canActivate(context)).toBe(false);
+    },
+  );
 
   describe("api key authentication", () => {
     it("should create synthetic session when API key is valid", async () => {

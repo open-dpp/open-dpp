@@ -234,6 +234,11 @@ export class AasNamespace {
     return this.axiosInstance.patch<SubmodelResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/$value`,
       data,
+      // ValueRequestDto allows any JSON value, including bare scalars. Axios only
+      // JSON.stringify's the body when the payload is an object/array or the
+      // content-type is already declared as JSON — without this, a scalar value
+      // (e.g. a string) would be sent unquoted, which isn't valid JSON at all.
+      { headers: { "Content-Type": "application/json" } },
     );
   }
 
@@ -577,6 +582,11 @@ export class AasNamespace {
     return this.axiosInstance.patch<SubmodelElementResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/$value`,
       data,
+      // ValueRequestDto allows any JSON value, including bare scalars (e.g. a Property's
+      // value). Axios only JSON.stringify's the body when the payload is an object/array
+      // or the content-type is already declared as JSON — without this, a scalar value
+      // would be sent unquoted, which isn't valid JSON at all.
+      { headers: { "Content-Type": "application/json" } },
     );
   }
 }
