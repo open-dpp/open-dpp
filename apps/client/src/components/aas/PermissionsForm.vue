@@ -10,7 +10,7 @@ import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import type { PermissionsPerSubject } from "../../composables/aas-permissions-form.ts";
 
 import type { Subject } from "../../lib/aas-security.ts";
-import { Permissions } from "@open-dpp/dto";
+import { Permissions, UserRoleDto } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAasPermissionOptions } from "../../composables/aas-permission-options.ts";
@@ -36,6 +36,7 @@ const {
   savePermissions,
   resetToInheritedPermissions,
   takeOverInheritedPermissions,
+  rolesWithoutReadThroughPublic,
   permissionSourceText,
 } = useAasPermissionsForm({
   getAccessPermissionRules: props.getAccessPermissionRules,
@@ -46,7 +47,8 @@ const {
 });
 
 const { asSubject } = useUserStore();
-const { getVisibleRoles, canEditPermissionsOfRole, getRoleDescription } = useRoleHierarchy();
+const { getVisibleRoles, canEditPermissionsOfRole, getRoleDescription, getRoleName } =
+  useRoleHierarchy();
 
 const roles = ref(getVisibleRoles(asSubject()));
 const selectedRole = ref<Subject>(asSubject());
@@ -91,6 +93,15 @@ async function onToggleInheritance(shouldOverride: boolean) {
 
 const showInheritance = computed(() =>
   canInheritPermissions(selectedRole.value, !props.hideInheritanceToggle),
+);
+
+// Shown at the public: turning its Read off takes the access of the roles which inherit from it
+const namesOfRolesWithoutRead = computed(() =>
+  selectedRole.value.userRole === UserRoleDto.ANONYMOUS
+    ? rolesWithoutReadThroughPublic()
+        .filter((subject) => roles.value.some((role) => isEqualSubject(role.key, subject)))
+        .map((subject) => getRoleName(subject))
+    : [],
 );
 
 const permissionsInherited = computed(() => permissionsOfSelectedRole.value.inheritedFrom !== null);
@@ -148,6 +159,18 @@ defineExpose<{
         data-cy="permission-source"
       >
         {{ sourceText }}
+      </p>
+      <p
+        v-if="namesOfRolesWithoutRead.length > 0"
+        class="rounded border border-amber-400 bg-amber-50 p-2 text-sm text-amber-900"
+        role="status"
+        data-cy="roles-without-read"
+      >
+        {{
+          t("aasEditor.security.rolesWithoutReadThroughPublic", {
+            roles: namesOfRolesWithoutRead.join(", "),
+          })
+        }}
       </p>
       <div
         v-for="permission in permissionOptions"

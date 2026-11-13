@@ -1,4 +1,4 @@
-import type { SecurityResponseDto } from "@open-dpp/dto";
+import type { PermissionType, SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasPermissionsFormProps } from "./aas-permissions-form.ts";
 import {
@@ -509,6 +509,87 @@ describe("aasPermissionsForm composable", () => {
 
     it("has no text for permissions which are not inherited", () => {
       expect(formWithoutRules().permissionSourceText(null)).toBeUndefined();
+    });
+  });
+
+  describe("rolesWithoutReadThroughPublic", () => {
+    const anonymous = { userRole: UserRoleDto.ANONYMOUS };
+    const repairer = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.REPAIRER };
+    const recycler = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.RECYCLER };
+    const memberRole = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
+
+    function formWithPublic(publicPermissions: PermissionType[]) {
+      const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+        transient: {
+          policies: [
+            {
+              subject: anonymous,
+              object: { idShortPath: "section1" },
+              permissions: publicPermissions.map((permission) => ({
+                permission,
+                kindOfPermission: PermissionKind.Allow,
+              })),
+            },
+            {
+              subject: memberRole,
+              object: { idShortPath: "section1" },
+              permissions: allPermissionsPlainAllow,
+            },
+            {
+              subject: recycler,
+              object: { idShortPath: "section1" },
+              permissions: [
+                { permission: Permissions.Read, kindOfPermission: PermissionKind.Allow },
+              ],
+            },
+          ],
+        },
+      });
+      return mountHarness({
+        getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+    }
+
+    it("lists the roles which inherit from a public rule without Read", () => {
+      const form = formWithPublic([]);
+
+      const roles = form.rolesWithoutReadThroughPublic();
+
+      expect(roles.some((role) => isEqualSubject(role, repairer))).toBe(true);
+      expect(roles.some((role) => isEqualSubject(role, anonymous))).toBe(false);
+    });
+
+    it("leaves out the roles with a rule of their own", () => {
+      const roles = formWithPublic([]).rolesWithoutReadThroughPublic();
+
+      expect(roles.some((role) => isEqualSubject(role, recycler))).toBe(false);
+      expect(roles.some((role) => isEqualSubject(role, memberRole))).toBe(false);
+    });
+
+    it("lists nothing while the public may read", () => {
+      expect(formWithPublic([Permissions.Read]).rolesWithoutReadThroughPublic()).toEqual([]);
+    });
+
+    it("lists the role again as soon as the public loses Read", () => {
+      const form = formWithPublic([Permissions.Read]);
+
+      form.editPermissions([], anonymous);
+
+      const roles = form.rolesWithoutReadThroughPublic();
+      expect(roles.some((role) => isEqualSubject(role, repairer))).toBe(true);
+    });
+
+    it("lists a role no more once it has a Read rule of its own", () => {
+      const form = formWithPublic([Permissions.Read]);
+      form.editPermissions([], anonymous);
+
+      form.editPermissions([Permissions.Read], repairer);
+
+      const roles = form.rolesWithoutReadThroughPublic();
+      expect(roles.some((role) => isEqualSubject(role, repairer))).toBe(false);
     });
   });
 });

@@ -104,6 +104,7 @@
       "inheritedPermission": "Inherited permissions",
       "overriddenPermission": "Overridden permissions",
       "inheritedFromParent": "Inherited from parent node {object}",
+      "rolesWithoutReadThroughPublic": "These roles cannot read this object, because they inherit the permissions of the public role, and that role does not allow Read: {roles}. If a role should still be able to read, switch it to \"Overridden permissions\" and grant the read permission.",
       "inheritedFromPublic": "Inherited from the public",
       "permissions": "Permissions",
       "edit": "Edit",

@@ -7,7 +7,7 @@ import type {
 import type { Ref } from "vue";
 import type { PermissionSource } from "../lib/aas-permission-resolution.ts";
 import type { Subject } from "../lib/aas-security.ts";
-import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { resolvePermissions } from "../lib/aas-permission-resolution.ts";
@@ -33,6 +33,11 @@ export interface IAasPermissionsForm {
   savePermissions: () => Promise<void>;
   resetToInheritedPermissions: (subject: Subject) => Promise<void>;
   takeOverInheritedPermissions: (subject: Subject) => void;
+  /**
+   * The subjects which read this object only through the rule of the public, while that rule does
+   * not give Read: they have no access, and would keep it with a Read rule of their own.
+   */
+  rolesWithoutReadThroughPublic: () => Subject[];
   /** Tells where inherited permissions come from, e.g. "Inherited from the public". */
   permissionSourceText: (inheritedFrom: PermissionSource | null) => string | undefined;
 }
@@ -184,6 +189,18 @@ export function useAasPermissionsForm({
     return resolvePermissions({ rules: currentRules(), subject, object });
   }
 
+  function rolesWithoutReadThroughPublic(): Subject[] {
+    const publicPermissions = permissions.value.find((p) =>
+      isEqualSubject(p.subject, { userRole: UserRoleDto.ANONYMOUS }),
+    );
+    if (!publicPermissions || publicPermissions.permissions.includes(Permissions.Read)) {
+      return [];
+    }
+    return permissions.value
+      .filter((p) => p.inheritedFrom?.kind === "public")
+      .map((p) => p.subject);
+  }
+
   function permissionSourceText(inheritedFrom: PermissionSource | null): string | undefined {
     if (inheritedFrom === null) {
       return undefined;
@@ -200,6 +217,7 @@ export function useAasPermissionsForm({
     savePermissions,
     resetToInheritedPermissions,
     takeOverInheritedPermissions,
+    rolesWithoutReadThroughPublic,
     permissionSourceText,
   };
 }

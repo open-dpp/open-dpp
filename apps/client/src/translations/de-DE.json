@@ -104,6 +104,7 @@
       "inheritedPermission": "Berechtigungen werden geerbt",
       "overriddenPermission": "Berechtigungen werden überschrieben",
       "inheritedFromParent": "Geerbt vom übergeordneten Knoten {object}",
+      "rolesWithoutReadThroughPublic": "Folgende Rollen können dieses Objekt nicht lesen, weil sie die Berechtigungen der Rolle Öffentlichkeit erben und diese kein Lesen erlaubt: {roles}. Soll eine Rolle weiterhin lesen dürfen, stellen Sie sie auf „Berechtigungen werden überschrieben“ um und vergeben Sie das Leserecht.",
       "inheritedFromPublic": "Geerbt von der Öffentlichkeit",
       "permissions": "Berechtigungen",
       "edit": "Bearbeiten",
