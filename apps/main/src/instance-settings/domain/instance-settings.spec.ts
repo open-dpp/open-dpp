@@ -32,6 +32,12 @@ describe("InstanceSettings", () => {
       expect(settings.organizationCreationEnabled.value).toBeTruthy();
     });
 
+    it("should enable mail by default", () => {
+      const settings = InstanceSettings.create();
+      expect(settings.mailEnabled.value).toBe(true);
+      expect(settings.mailEnabled.locked).toBeUndefined();
+    });
+
     it("should expose permalinkBaseUrl defaulting to null", () => {
       const settings = InstanceSettings.create();
       expect(settings.permalinkBaseUrl.value).toBeNull();
@@ -46,11 +52,23 @@ describe("InstanceSettings", () => {
         signupEnabled: false,
         organizationCreationEnabled: false,
         permalinkBaseUrl: null,
+        mailEnabled: false,
       });
       expect(settings.id).toBe("abc");
       expect(settings.signupEnabled.value).toBeFalsy();
       expect(settings.organizationCreationEnabled.value).toBeFalsy();
       expect(settings.permalinkBaseUrl.value).toBeNull();
+      expect(settings.mailEnabled.value).toBe(false);
+    });
+
+    it("should default mailEnabled to true for documents written before the setting existed", () => {
+      const settings = InstanceSettings.loadFromDb({
+        id: "abc",
+        signupEnabled: true,
+        organizationCreationEnabled: true,
+        permalinkBaseUrl: null,
+      } as never);
+      expect(settings.mailEnabled.value).toBe(true);
     });
   });
 
@@ -124,6 +142,21 @@ describe("InstanceSettings", () => {
       expect(overridden.permalinkBaseUrl.locked).toBe(true);
     });
 
+    it("should apply env override on mailEnabled and lock the setting", () => {
+      const overridden = InstanceSettings.create().withEnvOverrides({ mailEnabled: false });
+
+      expect(overridden.mailEnabled.value).toBe(false);
+      expect(overridden.mailEnabled.locked).toBe(true);
+    });
+
+    it("should reject update when mailEnabled is locked", () => {
+      const settings = InstanceSettings.create().withEnvOverrides({ mailEnabled: false });
+
+      expect(() => settings.update({ mailEnabled: true })).toThrow(
+        "Cannot override mailEnabled when OPEN_DPP_INSTANCE_MAIL_ENABLED is set",
+      );
+    });
+
     it("should reject update when permalinkBaseUrl is locked", () => {
       const settings = InstanceSettings.create().withEnvOverrides({
         permalinkBaseUrl: "https://env.example.com/p",
@@ -132,6 +165,71 @@ describe("InstanceSettings", () => {
       expect(() => settings.update({ permalinkBaseUrl: "https://other.example.com/p" })).toThrow(
         "Cannot override permalinkBaseUrl when OPEN_DPP_PERMALINK_BASE_URL is set",
       );
+    });
+  });
+
+  describe("withMailNotConfigured", () => {
+    it("forces mail off and locks it, even over an env lock that says on", () => {
+      const settings = InstanceSettings.create()
+        .withEnvOverrides({ mailEnabled: true })
+        .withMailNotConfigured();
+
+      expect(settings.mailEnabled.value).toBe(false);
+      expect(settings.mailEnabled.locked).toBe(true);
+    });
+
+    it("names the missing SMTP host when an update tries to turn mail on", () => {
+      const settings = InstanceSettings.create().withMailNotConfigured();
+
+      expect(() => settings.update({ mailEnabled: true })).toThrow(
+        "Cannot override mailEnabled when OPEN_DPP_MAIL_HOST is not set",
+      );
+    });
+
+    it("leaves the other settings alone", () => {
+      const original = InstanceSettings.create({ signupEnabled: { value: false } });
+      const settings = original.withMailNotConfigured();
+
+      expect(settings.id).toBe(original.id);
+      expect(settings.signupEnabled.value).toBe(false);
+      expect(original.mailEnabled.value).toBe(true);
+    });
+  });
+
+  describe("persistableUpdates", () => {
+    it("passes updates to unlocked settings through", () => {
+      const settings = InstanceSettings.create();
+
+      expect(settings.persistableUpdates({ signupEnabled: false, mailEnabled: false })).toEqual({
+        signupEnabled: false,
+        mailEnabled: false,
+      });
+    });
+
+    it("rejects an update that would change a locked setting", () => {
+      const settings = InstanceSettings.create().withEnvOverrides({ signupEnabled: true });
+
+      expect(() => settings.persistableUpdates({ signupEnabled: false })).toThrow(
+        "Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is set",
+      );
+    });
+
+    it("drops an update that repeats a locked value, so the env value is never persisted", () => {
+      const settings = InstanceSettings.create().withMailNotConfigured();
+
+      expect(settings.persistableUpdates({ mailEnabled: false, signupEnabled: false })).toEqual({
+        signupEnabled: false,
+      });
+    });
+
+    it("keeps an explicit null that clears permalinkBaseUrl", () => {
+      const settings = InstanceSettings.create({
+        permalinkBaseUrl: { value: "https://acme.com/p" },
+      });
+
+      expect(settings.persistableUpdates({ permalinkBaseUrl: null })).toEqual({
+        permalinkBaseUrl: null,
+      });
     });
   });
 
@@ -161,6 +259,11 @@ describe("InstanceSettings", () => {
 
       expect(updated.signupEnabled.value).toBeFalsy();
       expect(updated.organizationCreationEnabled.value).toBeFalsy();
+    });
+
+    it("should turn mail off", () => {
+      const updated = InstanceSettings.create().update({ mailEnabled: false });
+      expect(updated.mailEnabled.value).toBe(false);
     });
 
     it("should update permalinkBaseUrl from null to a string", () => {
@@ -194,6 +297,7 @@ describe("InstanceSettings", () => {
         signupEnabled: settings.signupEnabled.value,
         organizationCreationEnabled: settings.organizationCreationEnabled.value,
         permalinkBaseUrl: settings.permalinkBaseUrl.value,
+        mailEnabled: settings.mailEnabled.value,
       });
     });
   });
@@ -211,6 +315,7 @@ describe("InstanceSettings", () => {
         signupEnabled: settings.signupEnabled.toResponse(),
         organizationCreationEnabled: settings.organizationCreationEnabled.toResponse(),
         permalinkBaseUrl: settings.permalinkBaseUrl.toResponse(),
+        mailEnabled: settings.mailEnabled.toResponse(),
       });
     });
   });

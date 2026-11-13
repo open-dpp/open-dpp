@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import {
+  type MockInstance,
   type Mock,
   afterAll,
   afterEach,
@@ -10,7 +11,12 @@ import {
   it,
   vi,
 } from "vitest";
+import { ConsoleLogger, Logger, type LogLevel } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
 import { EnvService } from "@open-dpp/env";
+import type { Transporter } from "nodemailer";
+import { logLevelsUpTo } from "../common/logging/log-levels";
+import { InstanceSettingsService } from "../instance-settings/application/services/instance-settings.service";
 import { BaseEmail } from "./domain/base-email";
 import { EmailChangeNotificationMail } from "./domain/email-change-notification-mail";
 import { EmailTemplate } from "./domain/email-template";
@@ -26,9 +32,220 @@ interface CapturedMail {
 // directory where the templates actually live (Jest runs with apps/main as cwd).
 const moduleDir = resolve(process.cwd(), "src/email");
 
+type SendMail = Mock<(options: { html: string }) => Promise<void>>;
+
+const envWith = (values: Record<string, unknown>) =>
+  new EnvService({ get: (key: string) => values[key] } as unknown as ConfigService);
+
+const settingsWith = (mailEnabled: boolean) =>
+  ({
+    getSettings: vi.fn(async () => ({ mailEnabled: { value: mailEnabled } })),
+  }) as unknown as InstanceSettingsService;
+
+const SMTP_ENV = {
+  OPEN_DPP_MAIL_HOST: "smtp.example.com",
+  OPEN_DPP_MAIL_PORT: 587,
+  OPEN_DPP_MAIL_SENDER_ADDRESS: "noreply@open-dpp.test",
+};
+
+/** A fake SMTP transporter, plus its sendMail mock to assert on. */
+function smtpStub(): { transporter: Transporter; sendMail: SendMail } {
+  const sendMail = vi
+    .fn<(options: { html: string }) => Promise<void>>()
+    .mockResolvedValue(undefined);
+  return { transporter: { sendMail } as unknown as Transporter, sendMail };
+}
+
+const VERIFY_LINK = "https://app.open-dpp.test/verify-email?token=abc";
+
+const verifyMail = () =>
+  new BaseEmail(
+    "test-id",
+    "VERIFY_EMAIL",
+    new EmailTemplate("email-verify.mjml", {
+      firstName: "Ada",
+      link: VERIFY_LINK,
+    } as never),
+    "ada@example.com",
+    "Verify E-Mail address",
+  );
+
+describe("EmailService when mail is disabled", () => {
+  let warn: MockInstance<ConsoleLogger["warn"]>;
+
+  beforeAll(() => {
+    (globalThis as Record<string, unknown>).__dirname = moduleDir;
+  });
+
+  afterAll(() => {
+    delete (globalThis as Record<string, unknown>).__dirname;
+  });
+
+  beforeEach(() => {
+    warn = vi.spyOn(ConsoleLogger.prototype, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("logs type, recipient, subject and link instead of sending when no host is set", async () => {
+    // without a host there is no transporter, whatever the setting says
+    const service = new EmailService(envWith({}), settingsWith(true), null);
+
+    await expect(service.send(verifyMail())).resolves.toBeUndefined();
+
+    const line = warn.mock.calls
+      .map(([message]) => String(message))
+      .find((m) => m.includes("VERIFY_EMAIL"));
+    expect(line).toContain("ada@example.com");
+    expect(line).toContain("Verify E-Mail address");
+    expect(line).toContain("https://app.open-dpp.test/verify-email?token=abc");
+  });
+
+  it("logs instead of sending when SMTP is configured but the admin switched mail off", async () => {
+    const smtp = smtpStub();
+    const service = new EmailService(envWith(SMTP_ENV), settingsWith(false), smtp.transporter);
+
+    await service.send(verifyMail());
+
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("VERIFY_EMAIL"));
+  });
+
+  it("keeps a forged line and link from a user's name out of the log", async () => {
+    const service = new EmailService(envWith({}), settingsWith(true), null);
+    const mail = new BaseEmail(
+      "test-id",
+      "VERIFY_EMAIL",
+      new EmailTemplate("email-verify.mjml", {
+        firstName: "https://evil.test/reset\nMail not sent (mail disabled): type=FORGED",
+        link: "https://app.open-dpp.test/verify-email?token=abc",
+      } as never),
+      "ada@example.com",
+      "Verify E-Mail address",
+    );
+
+    await service.send(mail);
+
+    const logged = warn.mock.calls.map(([message]) => String(message)).join("\n");
+    expect(logged).toContain("https://app.open-dpp.test/verify-email?token=abc");
+    expect(logged).not.toContain("evil.test");
+    expect(logged).not.toContain("FORGED");
+  });
+
+  it("still logs the link, then surfaces the error, when the template fails to render", async () => {
+    const service = new EmailService(envWith({}), settingsWith(true), null);
+    const brokenMail = new BaseEmail(
+      "test-id",
+      "VERIFY_EMAIL",
+      new EmailTemplate("does-not-exist.mjml", {
+        link: "https://app.open-dpp.test/verify-email?token=abc",
+      } as never),
+      "ada@example.com",
+      "Verify E-Mail address",
+    );
+
+    await expect(service.send(brokenMail)).rejects.toThrow();
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("https://app.open-dpp.test/verify-email?token=abc"),
+    );
+  });
+
+  it("sends via SMTP when configured and enabled", async () => {
+    const smtp = smtpStub();
+    const service = new EmailService(envWith(SMTP_ENV), settingsWith(true), smtp.transporter);
+
+    await service.send(verifyMail());
+
+    expect(smtp.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "noreply@open-dpp.test",
+        to: "ada@example.com",
+        subject: "Verify E-Mail address",
+      }),
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+// The real logger on purpose: the level filter runs inside ConsoleLogger.warn(), so
+// a spec that mocks warn() cannot see a line being dropped.
+describe("EmailService when the log level hides warnings", () => {
+  let stdout: MockInstance<typeof process.stdout.write>;
+
+  const printed = () => stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
+
+  /** Wires the app logger the way main.ts does. */
+  const useAppLogger = (level: LogLevel) =>
+    Logger.overrideLogger(new ConsoleLogger({ logLevels: logLevelsUpTo(level) }));
+
+  beforeAll(() => {
+    (globalThis as Record<string, unknown>).__dirname = moduleDir;
+  });
+
+  afterAll(() => {
+    delete (globalThis as Record<string, unknown>).__dirname;
+  });
+
+  beforeEach(() => {
+    stdout = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    Logger.overrideLogger(new ConsoleLogger());
+  });
+
+  it.each(["error", "fatal"] as const)(
+    "still prints the link at OPEN_DPP_LOG_LEVEL=%s",
+    async (level) => {
+      useAppLogger(level);
+      const service = new EmailService(envWith({}), settingsWith(true), null);
+
+      await service.send(verifyMail());
+      new Logger("Control").warn("an ordinary warning");
+
+      expect(printed()).toContain(VERIFY_LINK);
+      expect(printed()).toContain("WARN");
+      expect(printed()).toContain("[EmailService]");
+      expect(printed()).not.toContain("an ordinary warning");
+    },
+  );
+
+  it("still prints the link when an admin switched mail off", async () => {
+    useAppLogger("error");
+    const smtp = smtpStub();
+    const service = new EmailService(envWith(SMTP_ENV), settingsWith(false), smtp.transporter);
+
+    await service.send(verifyMail());
+
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+    expect(printed()).toContain(VERIFY_LINK);
+  });
+
+  it("prints the line as JSON when OPEN_DPP_LOG_FORMAT is json", async () => {
+    useAppLogger("error");
+    const service = new EmailService(
+      envWith({ OPEN_DPP_LOG_FORMAT: "json" }),
+      settingsWith(true),
+      null,
+    );
+
+    await service.send(verifyMail());
+
+    expect(JSON.parse(printed())).toMatchObject({
+      level: "warn",
+      context: "EmailService",
+      message: expect.stringContaining(VERIFY_LINK),
+    });
+  });
+});
+
 describe("EmailService template localization", () => {
   let service: EmailService;
-  let sendMail: Mock<(options: { html: string }) => Promise<void>>;
+  let sendMail: SendMail;
 
   const notificationMail = (language?: "en" | "de") =>
     EmailChangeNotificationMail.create({
@@ -57,16 +274,9 @@ describe("EmailService template localization", () => {
   });
 
   beforeEach(() => {
-    const env = {
-      get: vi.fn((key: string) =>
-        key === "OPEN_DPP_MAIL_SENDER_ADDRESS" ? "noreply@open-dpp.test" : undefined,
-      ),
-    } as unknown as EnvService;
-    service = new EmailService(env);
-    sendMail = vi.fn<(options: { html: string }) => Promise<void>>().mockResolvedValue(undefined);
-    (service as unknown as { transporter: { sendMail: typeof sendMail } }).transporter = {
-      sendMail,
-    };
+    const smtp = smtpStub();
+    service = new EmailService(envWith(SMTP_ENV), settingsWith(true), smtp.transporter);
+    sendMail = smtp.sendMail;
   });
 
   afterEach(() => {

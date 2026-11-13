@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMailConfigured } from "./mail";
 import { isHttpsOrLoopbackUrl, parseTrustedClientEnv } from "./trusted-client";
 
 // "<provider>:<owner>/<repo>" or "<provider>:<owner>/<repo>@<branch>". Only "github" is
@@ -30,7 +31,10 @@ function isTrustProxyValue(value: string): boolean {
     );
 }
 
-/** `KEY=""` in an env file means "not set", like an absent variable. */
+/**
+ * `KEY=""` in an env file means "not set", like an absent variable (compose also passes
+ * unset vars through as empty strings).
+ */
 const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema);
 
@@ -144,14 +148,14 @@ export const envSchema = z
     OPEN_DPP_BUILD_API_DOC: asStrictBoolean.optional().default(false),
     OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce.string().or(z.number()).optional().default("10mb"),
     OPEN_DPP_JSON_LIMIT_INTEGRATION: z.coerce.string().or(z.number()).optional().default("50mb"),
-    // Mail
-    OPEN_DPP_MAIL_HOST: z.coerce.string(),
-    OPEN_DPP_MAIL_PORT: z.coerce.number().max(65535).min(0),
-    OPEN_DPP_MAIL_USER: z.coerce.string(),
-    OPEN_DPP_MAIL_PASSWORD: z.coerce.string(),
-    OPEN_DPP_MAIL_SENDER_ADDRESS: z.coerce.string(),
-    OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: z.coerce.string().optional(),
-    OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: z.coerce.string().optional(),
+    // Mail (optional: unset host = mail disabled, links are logged instead)
+    OPEN_DPP_MAIL_HOST: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_MAIL_PORT: emptyAsUndefined(
+      z.coerce.number().max(65535).min(0).optional().default(587),
+    ),
+    OPEN_DPP_MAIL_USER: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_MAIL_PASSWORD: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_MAIL_SENDER_ADDRESS: emptyAsUndefined(z.string().optional()),
     // Auth
     OPEN_DPP_AUTH_SECRET: z.coerce.string(),
     OPEN_DPP_AUTH_CLOUD_ENABLED: asStrictBoolean.optional().default(false),
@@ -172,6 +176,7 @@ export const envSchema = z
     // Instance Settings
     OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),
     OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: asStrictBoolean.optional(),
+    OPEN_DPP_INSTANCE_MAIL_ENABLED: asStrictBoolean.optional(),
     // Default Caps
     OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
     OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),
@@ -218,6 +223,13 @@ export const envSchema = z
           ],
         });
       }
+    }
+    if (isMailConfigured(val) && !val.OPEN_DPP_MAIL_SENDER_ADDRESS) {
+      ctx.addIssue({
+        code: "custom",
+        message: "OPEN_DPP_MAIL_SENDER_ADDRESS is required when OPEN_DPP_MAIL_HOST is set.",
+        path: ["OPEN_DPP_MAIL_SENDER_ADDRESS"],
+      });
     }
     // an enabled OAuth Provider needs its whole Trusted Client; a disabled one ignores it
     if (val.OPEN_DPP_OAUTH_PROVIDER_ENABLED) {
