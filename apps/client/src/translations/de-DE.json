@@ -1,6 +1,7 @@
 {
   "validation": {
-    "required": "Erforderlich"
+    "required": "Erforderlich",
+    "passwordMismatch": "Passwörter stimmen nicht überein"
   },
   "common": {
     "refresh": "Aktualisieren",

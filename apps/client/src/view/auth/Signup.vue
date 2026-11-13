@@ -28,6 +28,7 @@ const { handleSubmit, errors, submitCount, defineField } = useForm({
     lastName: "",
     email: "",
     password: "",
+    passwordRepeat: "",
   },
 });
 
@@ -35,6 +36,7 @@ const [firstName, firstNameAttrs] = defineField("firstName");
 const [lastName, lastNameAttrs] = defineField("lastName");
 const [email, emailAttrs] = defineField("email");
 const [password, passwordAttrs] = defineField("password");
+const [passwordRepeat, passwordRepeatAttrs] = defineField("passwordRepeat");
 
 const showErrors = computed(() => {
   return submitCount.value > 0;
@@ -247,6 +249,38 @@ const signup = handleSubmit(async (values) => {
                 variant="simple"
               >
                 {{ errors.password }}
+              </Message>
+            </div>
+
+            <div>
+              <label
+                for="passwordRepeat"
+                class="block text-sm/6 font-medium text-gray-900 dark:text-white"
+                >{{ t("user.passwordRepeat") }}</label
+              >
+              <div class="mt-2">
+                <Password
+                  v-model="passwordRepeat"
+                  v-bind="passwordRepeatAttrs"
+                  input-id="passwordRepeat"
+                  :feedback="false"
+                  toggle-mask
+                  fluid
+                  :disabled="loading"
+                  :invalid="showErrors && !!errors.passwordRepeat"
+                  :input-props="{
+                    name: 'passwordRepeat',
+                    autocomplete: 'new-password',
+                  }"
+                />
+              </div>
+              <Message
+                v-if="showErrors && errors.passwordRepeat"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.passwordRepeat }}
               </Message>
             </div>
 
