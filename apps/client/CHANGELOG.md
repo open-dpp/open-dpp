@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 6.5.1
+
+### Patch Changes
+
+- [#1139](https://github.com/open-dpp/open-dpp/pull/1139) [`3465b2a`](https://github.com/open-dpp/open-dpp/commit/3465b2afc6dc18b1bb99aeb9fb33d9c31beeef47) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `postcss` ^8.5.31 → ^8.5.32 (dev)
+
 ## 6.5.0
 
 ### Minor Changes
