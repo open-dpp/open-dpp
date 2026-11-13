@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 6.5.2
+
+### Patch Changes
+
+- [#1138](https://github.com/open-dpp/open-dpp/pull/1138) [`884c025`](https://github.com/open-dpp/open-dpp/commit/884c0256dfebcad01022810c4e5efc8ec66667d1) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `autoprefixer` ^10.6.1 → ^10.6.2 (dev)
+
 ## 6.5.1
 
 ### Patch Changes

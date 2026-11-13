@@ -1,5 +1,13 @@
 # @open-dpp/docs
 
+## 6.5.2
+
+### Patch Changes
+
+- [#1129](https://github.com/open-dpp/open-dpp/pull/1129) [`ccebbd0`](https://github.com/open-dpp/open-dpp/commit/ccebbd01b2a75aafc8c983d0b2fb3645948a8ca0) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/docs: `vitepress` 2.0.0-alpha.20 → 2.0.0-alpha.21 (dev)
+
 ## 6.5.1
 
 ## 6.5.0
