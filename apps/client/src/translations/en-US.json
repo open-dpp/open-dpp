@@ -1,6 +1,7 @@
 {
   "validation": {
-    "required": "Required"
+    "required": "Required",
+    "passwordMismatch": "Passwords do not match"
   },
   "common": {
     "refresh": "Refresh",
