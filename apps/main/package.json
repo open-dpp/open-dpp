@@ -85,7 +85,7 @@
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
     "@open-dpp/testing": "workspace:*",
-    "@rspack/core": "^2.3.0",
+    "@rspack/core": "^2.3.2",
     "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/archiver": "^7.0.0",
