@@ -1,5 +1,11 @@
 # @open-dpp/client
 
+## 6.5.0
+
+### Minor Changes
+
+- [#1163](https://github.com/open-dpp/open-dpp/pull/1163) [`c97a7c4`](https://github.com/open-dpp/open-dpp/commit/c97a7c4ae87d4f0cb0ba44eb9bf34bf7f53fda7e) Thanks [@Hentra](https://github.com/Hentra)! - Add password confirmation field
+
 ## 6.4.4
 
 ### Patch Changes
