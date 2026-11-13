@@ -54,6 +54,10 @@ export class User {
 
   @Prop({ default: null, type: Date })
   lastLoginAt: Date | null;
+
+  /** When the User accepted the linked terms and privacy policy at sign-up; set server-side. */
+  @Prop({ default: null, type: Date })
+  termsAcceptedAt: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -6,17 +6,21 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations";
-import { useInstanceSettings } from "../../composables/instance.settings.ts";
+import { storeToRefs } from "pinia";
+import { useInstanceSettingsStore } from "../../stores/instance-settings.ts";
 
 const organizationsStore = useOrganizationsStore();
 const indexStore = useIndexStore();
 const router = useRouter();
 const { t } = useI18n();
 
-const { canCreateOrganization, fetchInstanceSettings } = useInstanceSettings();
+const instanceSettingsStore = useInstanceSettingsStore();
+const { canCreateOrganization } = storeToRefs(instanceSettingsStore);
 
 onMounted(async () => {
-  await fetchInstanceSettings();
+  await instanceSettingsStore.fetchPublicSettings({
+    errorMessage: t("organizations.admin.instanceSettings.errorLoading"),
+  });
 });
 
 function setOrganization(organizationId: string) {

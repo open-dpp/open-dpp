@@ -82,6 +82,8 @@ export class BetterAuthHelper {
       name: "First Last",
       email: userEmail,
       password: this.defaultPassword,
+      // test users accept the terms, so they sign up whether or not legal links are configured
+      termsAccepted: true,
       ...(userData?.preferredLanguage !== undefined
         ? { preferredLanguage: userData.preferredLanguage }
         : {}),

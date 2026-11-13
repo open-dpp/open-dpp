@@ -933,7 +933,13 @@
       "ctaSignIn": "Jetzt anmelden",
       "error": "Registrierung fehlgeschlagen.",
       "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator.",
-      "oauthContinueError": "Die Weiterleitung zur aufrufenden Anwendung ist fehlgeschlagen. Bitte registrieren Sie sich oder melden Sie sich erneut an."
+      "oauthContinueError": "Die Weiterleitung zur aufrufenden Anwendung ist fehlgeschlagen. Bitte registrieren Sie sich oder melden Sie sich erneut an.",
+      "consent": {
+        "termsAndPrivacy": "Ich akzeptiere die {terms} und habe die {privacy} zur Kenntnis genommen.",
+        "termsOnly": "Ich akzeptiere die {terms}.",
+        "privacyOnly": "Ich habe die {privacy} zur Kenntnis genommen.",
+        "required": "Bitte bestätigen Sie, um sich zu registrieren."
+      }
     },
     "passwordResetRequest": {
       "title": "Passwort zurücksetzen",
@@ -1244,5 +1250,11 @@
     "loadError": "Der Datenträger konnte nicht geladen werden.",
     "downloadError": "Der Datenträger konnte nicht heruntergeladen werden.",
     "copyError": "Der Link konnte nicht in die Zwischenablage kopiert werden."
+  },
+  "legal": {
+    "navigationLabel": "Rechtliches",
+    "privacyPolicy": "Datenschutzerklärung",
+    "termsOfService": "Nutzungsbedingungen",
+    "imprint": "Impressum"
   }
 }

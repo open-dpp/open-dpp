@@ -2,14 +2,18 @@
 import { useI18n } from "vue-i18n";
 import CreateOrganizationForm from "../../components/organizations/CreateOrganizationForm.vue";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
-import { useInstanceSettings } from "../../composables/instance.settings.ts";
+import { storeToRefs } from "pinia";
+import { useInstanceSettingsStore } from "../../stores/instance-settings.ts";
 import { onMounted } from "vue";
 
 const { t } = useI18n();
-const { canCreateOrganization, fetchInstanceSettings } = useInstanceSettings();
+const instanceSettingsStore = useInstanceSettingsStore();
+const { canCreateOrganization } = storeToRefs(instanceSettingsStore);
 
 onMounted(async () => {
-  await fetchInstanceSettings();
+  await instanceSettingsStore.fetchPublicSettings({
+    errorMessage: t("organizations.admin.instanceSettings.errorLoading"),
+  });
 });
 </script>
 
