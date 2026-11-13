@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "6.4.0",
+  "version": "6.4.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -63,7 +63,7 @@
     "postcss": "^8.5.31",
     "resize-observer-polyfill": "^1.5.1",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3",
+    "typescript": "~6.0.3",
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
     "vite": "^8.3.5",

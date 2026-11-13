@@ -1,5 +1,25 @@
 # @open-dpp/main
 
+## 6.4.3
+
+### Patch Changes
+
+- [#1161](https://github.com/open-dpp/open-dpp/pull/1161) [`0f9ebbc`](https://github.com/open-dpp/open-dpp/commit/0f9ebbc2069ff1b6eb68dbd68d7ebeb8526531bf) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@rspack/core` ^2.3.0 → ^2.3.2 (dev)
+
+## 6.4.2
+
+### Patch Changes
+
+- [#1142](https://github.com/open-dpp/open-dpp/pull/1142) [`c9645c1`](https://github.com/open-dpp/open-dpp/commit/c9645c19192819d953bf1b70d09d973544110789) Thanks [@florianBieck](https://github.com/florianBieck)! - Build the project with TypeScript 6.0 instead of 5.9. TypeScript only type-checks here, so the Docker image, the web client and the published `@open-dpp/dto` and `@open-dpp/api-client` packages contain the same code as before, and nothing changes for projects that use the two packages. When you build from source, `pnpm install` installs TypeScript 6.0.3. The backend now type-checks in strict mode, so a `catch` variable is `unknown` until the code narrows it.
+
+## 6.4.1
+
+### Patch Changes
+
+- [#1141](https://github.com/open-dpp/open-dpp/pull/1141) [`a71f2bb`](https://github.com/open-dpp/open-dpp/commit/a71f2bb83caab7b471f20cbbf73ae3cd7584eacc) Thanks [@florianBieck](https://github.com/florianBieck)! - The backend now ships as a single ES module bundle (`dist/main.js`, built with Rspack) instead of one CommonJS file per source file. The container image sets `NODE_OPTIONS=--enable-source-maps`, so stack traces in the logs point to TypeScript source lines. If you override `NODE_OPTIONS` for the container, add `--enable-source-maps` to keep that.
+
 ## 6.4.0
 
 ### Minor Changes

@@ -1,27 +1,22 @@
 {
   "name": "@open-dpp/exception",
-  "version": "6.4.0",
+  "version": "6.4.3",
   "private": true,
   "description": "",
   "keywords": [],
   "license": "ISC",
   "author": "",
   "files": [
-    "dist",
     "src"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "type": "module",
+  "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "require": "./dist/index.js"
-    },
+    ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
@@ -32,9 +27,9 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^12.3.2",
-    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   },
   "packageManager": "pnpm@11.28.9"
 }

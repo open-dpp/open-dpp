@@ -9,7 +9,7 @@ describe("invitation", () => {
       email: "test@example.com",
       inviterId: "user-123",
       organizationId: "org-123",
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
     };
 
     const invitation = Invitation.create(props);
@@ -28,7 +28,7 @@ describe("invitation", () => {
       email: "test@example.com",
       inviterId: "user-123",
       organizationId: "org-123",
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
       ttl: 24 * 60 * 60 * 1000, // 1 day
     };
 
@@ -45,7 +45,7 @@ describe("invitation", () => {
       email: "test@example.com",
       inviterId: "user-123",
       organizationId: "org-123",
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
       ttl: -1000,
     };
 

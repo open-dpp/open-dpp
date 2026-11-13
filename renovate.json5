@@ -21,6 +21,13 @@
   minimumReleaseAge: "3 days",
   internalChecksFilter: "strict",
 
+  // Commits by the changeset bot (.github/workflows/renovate-changeset.yml).
+  // Without this, Renovate treats a PR that carries one as edited and stops
+  // rebasing it. Renovate's own rebases drop the bot commit, and the workflow
+  // adds it again. Matches the GitHub App `open-dpp-changeset-bot` (see
+  // RELEASING.md); the numeric prefix is the App's bot user ID.
+  gitIgnoredAuthors: ["/^\\d+\\+open-dpp-changeset-bot\\[bot\\]@users\\.noreply\\.github\\.com$/"],
+
   osvVulnerabilityAlerts: true,
   vulnerabilityAlerts: {
     labels: ["dependencies", "security"],
@@ -49,6 +56,14 @@
       // by hand, as one deliberate change, not as a scheduled Renovate PR.
       matchPackageNames: ["node", "@types/node"],
       allowedVersions: "<27",
+    },
+    {
+      // TypeScript 7 is the native compiler without the JS compiler API that the
+      // Nest CLI (every builder), `nest generate`, fork-ts-checker,
+      // @rollup/plugin-typescript and vue-tsc call. Moving to 7 is its own effort,
+      // done by hand; Renovate keeps the 6.0 patches coming.
+      matchPackageNames: ["typescript"],
+      allowedVersions: "<7",
     },
     {
       // A NestJS major moves core and every satellite (swagger, mongoose, config,

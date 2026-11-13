@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/dto",
-  "version": "6.4.0",
+  "version": "6.4.3",
   "description": "",
   "keywords": [],
   "homepage": "https://github.com/open-dpp/open-dpp#readme",
@@ -18,18 +18,24 @@
     "dist",
     "src"
   ],
-  "main": "./dist/index.js",
+  "main": "./src/index.ts",
   "module": "./dist/index.js",
   "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "require": "./dist/index.js"
-    },
+    ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./src/index.ts",
+        "require": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "main": "./dist/index.js",
+    "types": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
@@ -42,10 +48,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/node": "^26.6.6",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   },
   "packageManager": "pnpm@11.28.9"
 }

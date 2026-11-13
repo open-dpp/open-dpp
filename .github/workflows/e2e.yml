@@ -106,7 +106,6 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter e2e exec playwright install --with-deps chromium
 
-      # Also builds packages/env, whose schema the Playwright process parses.
       - name: Build project
         run: pnpm build
 
