@@ -48,8 +48,13 @@ import { PermalinkController } from "./presentation/permalink.controller";
     PermalinkApplicationService,
     BaseUrlResolver,
     CarrierExportService,
-    PassportSubjectResolver
+    PassportSubjectResolver,
   ],
-  exports: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver, PassportSubjectResolver],
+  exports: [
+    PermalinkRepository,
+    PermalinkApplicationService,
+    BaseUrlResolver,
+    PassportSubjectResolver,
+  ],
 })
 export class PermalinkModule {}
