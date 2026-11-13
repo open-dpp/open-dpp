@@ -1,0 +1,101 @@
+name: Renovate changeset
+
+# Commits a changeset to Renovate PRs that change the runtime dependencies of a
+# published package (@open-dpp/dto, @open-dpp/api-client), so the update ships
+# in the next release and appears in its CHANGELOG. PRs labelled `security`
+# also get one for the private packages (apps/main, apps/client), so the fix
+# reaches a versioned Docker image with the next release.
+# Logic: .github/scripts/renovate-changeset.mjs. Setup: RELEASING.md.
+
+on:
+  pull_request:
+    branches: [main]
+    # `labeled`: Renovate adds its labels after opening the PR, so `security`
+    # is usually not yet on the PR in the `opened` event.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+# One run per PR, the newest wins. `github.event.label` is set only on label
+# events. An event for another label (Renovate adds `dependencies` right after
+# opening the PR) skips the job, so it gets a group of its own: in the shared
+# group it would cancel the run that writes the changeset.
+concurrency:
+  group: >-
+    renovate-changeset-${{ github.event.pull_request.number }}-${{
+    github.event.label && github.event.label.name != 'security' && github.run_id || 'write' }}
+  cancel-in-progress: true
+
+jobs:
+  # Not named `changeset`: that is the check build.yml runs and the main
+  # ruleset requires, and two checks with one name would blur it.
+  renovate-changeset:
+    # PR author, not github.actor: the actor is whoever pushed last. Skipped
+    # until the GitHub App is set up (vars.CHANGESET_BOT_CLIENT_ID).
+    if: >-
+      github.event.pull_request.user.login == 'renovate[bot]'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && vars.CHANGESET_BOT_CLIENT_ID != ''
+      && (!github.event.label || github.event.label.name == 'security')
+    runs-on: ubuntu-latest
+    steps:
+      # An App token, not GITHUB_TOKEN: a push made with GITHUB_TOKEN starts no
+      # workflow runs, which would leave the PR's new head commit without CI.
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.CHANGESET_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.CHANGESET_BOT_PRIVATE_KEY }}
+          permission-contents: write
+
+      # The branch, not the event's head SHA: a run for an older event (a
+      # label added after the bot's last push) then builds on the current tip
+      # instead of failing to push.
+      - name: Checkout PR branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      # No pnpm install on purpose: this job holds a write token, and the PR
+      # brings a new dependency version whose install scripts must not run here.
+      - name: Write changeset
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          INCLUDE_PRIVATE: ${{ contains(github.event.pull_request.labels.*.name, 'security') }}
+        run: |
+          set -euo pipefail
+          args=("origin/$BASE_REF" "$PR_NUMBER")
+          if [ "$INCLUDE_PRIVATE" = true ]; then args+=(--include-private); fi
+          node .github/scripts/renovate-changeset.mjs "${args[@]}"
+
+      - name: Commit and push
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          # The directory, not the file: the file may not exist (nothing to
+          # release) or may just have been deleted (PR no longer qualifies).
+          git add --all .changeset
+          if git diff --cached --quiet; then
+            echo "Changeset already up to date."
+            exit 0
+          fi
+
+          # This identity must match gitIgnoredAuthors in renovate.json5, or
+          # Renovate treats the PR as edited and stops rebasing it.
+          user_id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          git -c user.name="${APP_SLUG}[bot]" \
+              -c user.email="${user_id}+${APP_SLUG}[bot]@users.noreply.github.com" \
+              commit -m "chore: add changeset for dependency update"
+          # A plain push: if Renovate pushed in the meantime, it is rejected
+          # rather than overwriting Renovate's commit, and the run for that push
+          # writes the changeset instead.
+          git push origin "HEAD:refs/heads/${HEAD_REF}"

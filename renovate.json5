@@ -21,6 +21,13 @@
   minimumReleaseAge: "3 days",
   internalChecksFilter: "strict",
 
+  // Commits by the changeset bot (.github/workflows/renovate-changeset.yml).
+  // Without this, Renovate treats a PR that carries one as edited and stops
+  // rebasing it. Renovate's own rebases drop the bot commit, and the workflow
+  // adds it again. Matches the GitHub App `open-dpp-changeset-bot` (see
+  // RELEASING.md); the numeric prefix is the App's bot user ID.
+  gitIgnoredAuthors: ["/^\\d+\\+open-dpp-changeset-bot\\[bot\\]@users\\.noreply\\.github\\.com$/"],
+
   osvVulnerabilityAlerts: true,
   vulnerabilityAlerts: {
     labels: ["dependencies", "security"],
