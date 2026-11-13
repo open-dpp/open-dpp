@@ -1,5 +1,7 @@
 # @open-dpp/api-client
 
+## 6.4.3
+
 ## 6.4.2
 
 ### Patch Changes

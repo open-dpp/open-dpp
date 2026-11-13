@@ -1,5 +1,13 @@
 # @open-dpp/main
 
+## 6.4.3
+
+### Patch Changes
+
+- [#1161](https://github.com/open-dpp/open-dpp/pull/1161) [`0f9ebbc`](https://github.com/open-dpp/open-dpp/commit/0f9ebbc2069ff1b6eb68dbd68d7ebeb8526531bf) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@rspack/core` ^2.3.0 → ^2.3.2 (dev)
+
 ## 6.4.2
 
 ### Patch Changes
