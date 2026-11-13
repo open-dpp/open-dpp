@@ -81,21 +81,23 @@ Add `listProducts` endpoint for fetching a paginated list of products.
 
 ## Renovate dependency updates
 
-Renovate cannot write changesets, so the [`Renovate changeset`](./.github/workflows/renovate-changeset.yml) workflow writes them instead. On every push to a PR opened by `renovate[bot]`, it runs [`.github/scripts/renovate-changeset.mjs`](./.github/scripts/renovate-changeset.mjs). The script compares each workspace package's `dependencies` and `peerDependencies` with the merge-base of `main`, ignoring internal `@open-dpp/*` references. If anything changed, it commits a patch changeset `.changeset/renovate-<pr>.md` that lists each change:
+Renovate cannot write changesets, so the [`Renovate changeset`](./.github/workflows/renovate-changeset.yml) workflow writes them instead. On every push to a PR opened by `renovate[bot]`, it runs [`.github/scripts/renovate-changeset.mjs`](./.github/scripts/renovate-changeset.mjs). The script compares the `dependencies`, `peerDependencies`, `optionalDependencies` and `devDependencies` of each released workspace package with the merge-base of `main`. It ignores internal `@open-dpp/*` references and the packages in the changesets `ignore` list (`apps/e2e`). If anything changed, it commits a patch changeset `.changeset/renovate-<pr>.md` that lists each change and marks dev dependencies:
 
 ```markdown
 ---
 "@open-dpp/api-client": patch
+"@open-dpp/main": patch
 ---
 
-Update runtime dependencies:
+Update dependencies:
 
 - @open-dpp/api-client: `axios` ^1.18.0 → ^1.20.0
+- @open-dpp/main: `@rspack/core` ^2.3.0 → ^2.3.2 (dev)
 ```
 
-- **Which PRs get one:** PRs that change the runtime dependencies of a published package (`@open-dpp/dto`, `@open-dpp/api-client`). PRs labelled `security` also get one for private packages such as `apps/main` and `apps/client`, so the fix reaches a versioned Docker image with the next release. PRs that change only `devDependencies` or the lockfile get none. Nor do PRs that change only private packages without the `security` label. Those updates ship with the next release that has a changeset.
+- **Which PRs get one:** PRs that change the dependencies of any released package, private ones such as `apps/main` and `apps/client` included. Dev dependencies count too: build tools such as Rspack, Vite and TypeScript decide what ends up in the npm packages and the Docker image. PRs that change only the lockfile, or only files outside the workspace packages (the root `package.json`, the `Dockerfile`, workflows), get none, because no package manifest names the change. Those updates ship with the next release that has a changeset.
 - **Why a patch:** the `fixed` group releases every `@open-dpp/*` package together. Changesets pile up in the version PR until a maintainer merges it, so a Renovate changeset does not mean one release per PR.
-- **Kept in sync:** the file is rewritten on every push and deleted when the PR no longer qualifies. Each PR writes its own file, so Renovate PRs never conflict with each other.
+- **Kept in sync:** the file is rewritten on every push and deleted when the PR no longer qualifies. Each PR writes its own file, so Renovate PRs never conflict with each other. The workflow runs the script as it is on `main`, not the copy on the PR branch, so a change to the rules reaches every open Renovate PR with its next push.
 - **CI and rebasing:** the bot pushes with a GitHub App token, so CI (build, test, e2e) runs on its commit. A push made with `GITHUB_TOKEN` would start no workflow runs. `gitIgnoredAuthors` in [`renovate.json5`](./renovate.json5) tells Renovate to ignore the bot's commits, so Renovate keeps rebasing the PR. Renovate's rebases drop the bot commit, and the workflow adds it again.
 - **No install:** the job holds a write token and does not run `pnpm install`, so the install scripts of the updated dependency never run there. The script uses Node built-ins only. Its tests run in the `lint` job of [`build.yml`](./.github/workflows/build.yml) (`node --test ".github/scripts/*.test.mjs"`).
 
@@ -260,7 +262,7 @@ git push --follow-tags
 ## Troubleshooting
 
 - **"No changesets found" in a Release PR** — a changeset was not added to the merged PR. Create one with `pnpm changeset` in a follow-up PR. The `changeset` CI job exists to stop this happening; if the PR was exempt from it (Renovate, or the release PR itself), that is expected.
-- **A Renovate PR has no changeset** — expected when it changes only `devDependencies`, the lockfile, or private packages without the `security` label (see [Renovate dependency updates](#renovate-dependency-updates)). Otherwise check the `Renovate changeset` run on the PR. If it was skipped, `CHANGESET_BOT_CLIENT_ID` is not set.
+- **A Renovate PR has no changeset** — expected when it changes only the lockfile or files outside the workspace packages (see [Renovate dependency updates](#renovate-dependency-updates)). Otherwise check the `Renovate changeset` run on the PR. If it was skipped, `CHANGESET_BOT_CLIENT_ID` is not set.
 - **Renovate stopped rebasing a PR** — Renovate treats a PR as edited once someone other than itself commits to it. The changeset bot is exempt through `gitIgnoredAuthors` in [`renovate.json5`](./renovate.json5). If the bot's commits no longer match that pattern (for example because the App was renamed), update the pattern. A maintainer's commit stops rebasing by design; tick the rebase checkbox in the PR description to let Renovate take over again.
 - **The Release run failed at the publish step** — fix the cause and re-run the failed Release run. The next push to `main` also retries it, because the version still has no `v<version>` tag. If npm has the version but the run failed before pushing the tag, the retry can hit `E409` for a few minutes. Push the tag yourself instead (see [Docker images](#docker-images)). Once the `v<version>` tag exists, a re-run skips every post-publish step, so finish them yourself: create the GitHub release if it is missing (see [GitHub release](#github-release)), and if the workflow pushed the tag, dispatch the Docker build with `gh workflow run build.yml --ref v<version>` (a tag you push yourself triggers it already).
 - **Release PR has no version bumps** — the changesets targeted only private packages. Target `@open-dpp/api-client` (or any member of the `fixed` group) so the bump actually happens.
