@@ -9,6 +9,7 @@ import type { PermissionSource } from "../lib/aas-permission-resolution.ts";
 import type { Subject } from "../lib/aas-security.ts";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
+import { useI18n } from "vue-i18n";
 import { resolvePermissions } from "../lib/aas-permission-resolution.ts";
 import {
   isEqualSubject,
@@ -32,6 +33,8 @@ export interface IAasPermissionsForm {
   savePermissions: () => Promise<void>;
   resetToInheritedPermissions: (subject: Subject) => Promise<void>;
   takeOverInheritedPermissions: (subject: Subject) => void;
+  /** Tells where inherited permissions come from, e.g. "Inherited from the public". */
+  permissionSourceText: (inheritedFrom: PermissionSource | null) => string | undefined;
 }
 
 export interface AasPermissionsFormProps {
@@ -51,6 +54,7 @@ export function useAasPermissionsForm({
 }: AasPermissionsFormProps): IAasPermissionsForm {
   const { canEditPermissionsOfRole, hierarchy } = useRoleHierarchy();
   const { asSubject } = useUserStore();
+  const { t } = useI18n();
 
   const accessPermissionRulesOfObjectWhichAreNotInherited = ref<AccessPermissionRuleResponseDto[]>(
     filterRulesForObject(object),
@@ -180,11 +184,22 @@ export function useAasPermissionsForm({
     return resolvePermissions({ rules: currentRules(), subject, object });
   }
 
+  function permissionSourceText(inheritedFrom: PermissionSource | null): string | undefined {
+    if (inheritedFrom === null) {
+      return undefined;
+    }
+    if (inheritedFrom.kind === "public") {
+      return t("aasEditor.security.inheritedFromPublic");
+    }
+    return t("aasEditor.security.inheritedFromParent", { object: inheritedFrom.object });
+  }
+
   return {
     permissions,
     editPermissions,
     savePermissions,
     resetToInheritedPermissions,
     takeOverInheritedPermissions,
+    permissionSourceText,
   };
 }

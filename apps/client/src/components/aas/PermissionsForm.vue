@@ -16,6 +16,7 @@ import { useI18n } from "vue-i18n";
 import { useAasPermissionOptions } from "../../composables/aas-permission-options.ts";
 import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
+import { canInheritPermissions } from "../../lib/aas-permission-resolution.ts";
 import { isEqualSubject } from "../../lib/aas-security.ts";
 import { useUserStore } from "../../stores/user.ts";
 
@@ -35,6 +36,7 @@ const {
   savePermissions,
   resetToInheritedPermissions,
   takeOverInheritedPermissions,
+  permissionSourceText,
 } = useAasPermissionsForm({
   getAccessPermissionRules: props.getAccessPermissionRules,
   object: props.path.idShortPathIncludingSubmodel ?? "",
@@ -87,7 +89,15 @@ async function onToggleInheritance(shouldOverride: boolean) {
   }
 }
 
+const showInheritance = computed(() =>
+  canInheritPermissions(selectedRole.value, !props.hideInheritanceToggle),
+);
+
 const permissionsInherited = computed(() => permissionsOfSelectedRole.value.inheritedFrom !== null);
+
+const sourceText = computed(() =>
+  permissionSourceText(permissionsOfSelectedRole.value.inheritedFrom),
+);
 
 function isReadDisabledCauseOfOtherPermissionsAreActive(key: PermissionType) {
   return (
@@ -121,7 +131,7 @@ defineExpose<{
       {{ roleDescription }}
     </p>
     <div class="flex flex-col gap-3 p-2">
-      <div v-if="!props.hideInheritanceToggle" class="flex items-center gap-2">
+      <div v-if="showInheritance" class="flex items-center gap-2">
         <ToggleSwitch
           input-id="toggle-inheritance"
           :model-value="!permissionsInherited"
@@ -132,6 +142,13 @@ defineExpose<{
           `${permissionsInherited ? t("aasEditor.security.inheritedPermission") : t("aasEditor.security.overriddenPermission")}`
         }}</label>
       </div>
+      <p
+        v-if="showInheritance && sourceText"
+        class="text-sm text-gray-600"
+        data-cy="permission-source"
+      >
+        {{ sourceText }}
+      </p>
       <div
         v-for="permission in permissionOptions"
         :key="permission.key"

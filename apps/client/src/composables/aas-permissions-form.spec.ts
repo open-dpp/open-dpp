@@ -36,7 +36,8 @@ vi.mock("../stores/user.ts", () => ({
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, string>) =>
+      params ? `${key} ${JSON.stringify(params)}` : key,
   }),
 }));
 
@@ -481,6 +482,33 @@ describe("aasPermissionsForm composable", () => {
       expect(
         permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, repairer)),
       ).toEqual({ subject: repairer, permissions: [Permissions.Read], inheritedFrom: null });
+    });
+  });
+
+  describe("permissionSourceText", () => {
+    function formWithoutRules() {
+      return mountHarness({
+        getAccessPermissionRules: () => [],
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+    }
+
+    it("names the public", () => {
+      expect(formWithoutRules().permissionSourceText({ kind: "public" })).toBe(
+        "aasEditor.security.inheritedFromPublic",
+      );
+    });
+
+    it("names the parent node", () => {
+      expect(
+        formWithoutRules().permissionSourceText({ kind: "parent", object: "section1.list" }),
+      ).toBe('aasEditor.security.inheritedFromParent {"object":"section1.list"}');
+    });
+
+    it("has no text for permissions which are not inherited", () => {
+      expect(formWithoutRules().permissionSourceText(null)).toBeUndefined();
     });
   });
 });

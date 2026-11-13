@@ -8,7 +8,7 @@ import {
   UserRoleDto,
 } from "@open-dpp/dto";
 import { describe, expect, it } from "vitest";
-import { resolvePermissions } from "./aas-permission-resolution.ts";
+import { canInheritPermissions, resolvePermissions } from "./aas-permission-resolution.ts";
 import { makeRule } from "./aas-security.ts";
 
 const admin: Subject = { userRole: UserRoleDto.ADMIN };
@@ -88,5 +88,24 @@ describe("resolvePermissions", () => {
       permissions: [],
       inheritedFrom: null,
     });
+  });
+});
+
+describe("canInheritPermissions", () => {
+  it("is true for every object with a parent", () => {
+    for (const subject of [admin, member, repairer, anonymous]) {
+      expect(canInheritPermissions(subject, true)).toBe(true);
+    }
+  });
+
+  it("is true without a parent for the roles which fall back to the public", () => {
+    for (const subject of [admin, owner, member, repairer]) {
+      expect(canInheritPermissions(subject, false)).toBe(true);
+    }
+  });
+
+  it("is false without a parent for the public and a user without an organization", () => {
+    expect(canInheritPermissions(anonymous, false)).toBe(false);
+    expect(canInheritPermissions({ userRole: UserRoleDto.USER }, false)).toBe(false);
   });
 });

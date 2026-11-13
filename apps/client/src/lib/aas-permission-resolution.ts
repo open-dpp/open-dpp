@@ -1,7 +1,11 @@
 import type { AccessPermissionRuleResponseDto, PermissionType } from "@open-dpp/dto";
 import type { PermissionEntry } from "@open-dpp/permission";
 import type { Subject } from "./aas-security.ts";
-import { PermissionEntryOrigin, resolvePermissionEntry } from "@open-dpp/permission";
+import {
+  PermissionEntryOrigin,
+  resolvePermissionEntry,
+  subjectFallsBackToPublic,
+} from "@open-dpp/permission";
 import { ruleHelper } from "./aas-security.ts";
 
 /** Where the permissions of a subject on an object come from, if not from a rule on the object. */
@@ -11,6 +15,14 @@ export interface ResolvedPermissions {
   permissions: PermissionType[];
   /** `null`: the subject has its own rule on the object, or no rule applies at all. */
   inheritedFrom: PermissionSource | null;
+}
+
+/**
+ * Whether the permissions of the subject can be inherited at all: from the parent node of the
+ * object, if it has one, or from the public, which admins, owners, members and guests fall back to.
+ */
+export function canInheritPermissions(subject: Subject, objectHasParent: boolean): boolean {
+  return objectHasParent || subjectFallsBackToPublic(subject);
 }
 
 function entriesOf(rules: AccessPermissionRuleResponseDto[]): PermissionEntry[] {
