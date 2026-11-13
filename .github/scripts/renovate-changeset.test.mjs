@@ -111,7 +111,7 @@ describe("renovate-changeset", () => {
         '"@open-dpp/api-client": patch',
         "---",
         "",
-        "Update runtime dependencies:",
+        "Update dependencies:",
         "",
         "- @open-dpp/api-client: `axios` ^1.18.0 → ^1.20.0",
         "",
@@ -138,7 +138,7 @@ describe("renovate-changeset", () => {
         '"@open-dpp/dto": patch',
         "---",
         "",
-        "Update runtime dependencies:",
+        "Update dependencies:",
         "",
         "- @open-dpp/api-client: `axios` ^1.18.0 → (removed)",
         "- @open-dpp/api-client: `ky` (added) → ^1.0.0",
@@ -148,10 +148,53 @@ describe("renovate-changeset", () => {
     );
   });
 
-  test("ignores devDependencies and internal workspace references", () => {
-    setDependency(API_CLIENT, "dependencies", "@open-dpp/dto", "workspace:^");
+  test("lists devDependency and optionalDependency bumps, marking the dev ones", () => {
     setDependency(API_CLIENT, "devDependencies", "vitest", "^4.0.0");
-    commit("bump vitest");
+    setDependency(API_CLIENT, "optionalDependencies", "fsevents", "^2.3.0");
+    commit("bump vitest, add fsevents");
+
+    const result = run();
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      changeset(),
+      [
+        "---",
+        '"@open-dpp/api-client": patch',
+        "---",
+        "",
+        "Update dependencies:",
+        "",
+        "- @open-dpp/api-client: `fsevents` (added) → ^2.3.0",
+        "- @open-dpp/api-client: `vitest` ^3.0.0 → ^4.0.0 (dev)",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  test("lists a dependency once when a runtime field and devDependencies change it alike", () => {
+    updateManifest("packages/dto/package.json", (pkg) => ({
+      ...pkg,
+      devDependencies: { zod: "^4.0.0" },
+    }));
+    commit("declare zod as a dev dependency too");
+    git("checkout", "--quiet", "main");
+    git("merge", "--quiet", "--ff-only", "renovate/some-update");
+    git("checkout", "--quiet", "renovate/some-update");
+    setDependency("packages/dto/package.json", "peerDependencies", "zod", "^4.1.0");
+    setDependency("packages/dto/package.json", "devDependencies", "zod", "^4.1.0");
+    commit("bump zod");
+
+    const result = run();
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(changeset(), /^- @open-dpp\/dto: `zod` \^4\.0\.0 → \^4\.1\.0$/m);
+    assert.equal(changeset().match(/`zod`/g).length, 1);
+  });
+
+  test("ignores internal workspace references", () => {
+    setDependency(API_CLIENT, "dependencies", "@open-dpp/dto", "workspace:^");
+    commit("switch to workspace:^");
 
     const result = run();
 
@@ -159,32 +202,32 @@ describe("renovate-changeset", () => {
     assert.equal(changeset(), null);
   });
 
-  test("ignores private packages by default", () => {
+  test("includes private packages", () => {
     setDependency("apps/main/package.json", "dependencies", "better-auth", "^1.4.0");
     commit("bump better-auth");
 
     const result = run();
-
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(changeset(), null);
-  });
-
-  test("includes private packages with --include-private", () => {
-    setDependency("apps/main/package.json", "dependencies", "better-auth", "^1.4.0");
-    commit("bump better-auth");
-
-    const result = run("--include-private");
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(changeset(), /^"@open-dpp\/main": patch$/m);
     assert.match(changeset(), /^- @open-dpp\/main: `better-auth` \^1\.3\.0 → \^1\.4\.0$/m);
   });
 
+  test("writes nothing for a lockfile-only change", () => {
+    writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+    commit("lock file maintenance");
+
+    const result = run();
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(changeset(), null);
+  });
+
   test("never names a package the changesets config ignores", () => {
     setDependency("apps/e2e/package.json", "dependencies", "@playwright/test", "^1.55.0");
     commit("bump playwright");
 
-    const result = run("--include-private");
+    const result = run();
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(changeset(), null);
@@ -222,7 +265,7 @@ describe("renovate-changeset", () => {
     assert.equal(changeset(), null);
   });
 
-  test("lists every runtime dependency of a package the PR adds", () => {
+  test("lists every dependency of a package the PR adds", () => {
     writeJson("packages/sdk/package.json", {
       name: "@open-dpp/sdk",
       version: "1.0.0",
@@ -255,10 +298,10 @@ describe("renovate-changeset", () => {
   });
 
   test("reports an unknown option before the usage", () => {
-    const result = run("--include-privat");
+    const result = run("--include-private");
 
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /Unknown option '--include-privat'/);
+    assert.match(result.stderr, /Unknown option '--include-private'/);
     assert.match(result.stderr, /Usage/);
   });
 });

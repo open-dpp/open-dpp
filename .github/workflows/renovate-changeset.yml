@@ -1,30 +1,22 @@
 name: Renovate changeset
 
-# Commits a changeset to Renovate PRs that change the runtime dependencies of a
-# published package (@open-dpp/dto, @open-dpp/api-client), so the update ships
-# in the next release and appears in its CHANGELOG. PRs labelled `security`
-# also get one for the private packages (apps/main, apps/client), so the fix
-# reaches a versioned Docker image with the next release.
+# Commits a changeset to Renovate PRs that change the dependencies (runtime or
+# dev) of a released package, so the update ships in the next release (npm
+# packages and the versioned Docker image) and appears in its CHANGELOG.
+# Lockfile-only PRs get none.
 # Logic: .github/scripts/renovate-changeset.mjs. Setup: RELEASING.md.
 
 on:
   pull_request:
     branches: [main]
-    # `labeled`: Renovate adds its labels after opening the PR, so `security`
-    # is usually not yet on the PR in the `opened` event.
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
 
-# One run per PR, the newest wins. `github.event.label` is set only on label
-# events. An event for another label (Renovate adds `dependencies` right after
-# opening the PR) skips the job, so it gets a group of its own: in the shared
-# group it would cancel the run that writes the changeset.
+# One run per PR, the newest wins.
 concurrency:
-  group: >-
-    renovate-changeset-${{ github.event.pull_request.number }}-${{
-    github.event.label && github.event.label.name != 'security' && github.run_id || 'write' }}
+  group: renovate-changeset-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -37,7 +29,6 @@ jobs:
       github.event.pull_request.user.login == 'renovate[bot]'
       && github.event.pull_request.head.repo.full_name == github.repository
       && vars.CHANGESET_BOT_CLIENT_ID != ''
-      && (!github.event.label || github.event.label.name == 'security')
     runs-on: ubuntu-latest
     steps:
       # An App token, not GITHUB_TOKEN: a push made with GITHUB_TOKEN starts no
@@ -50,9 +41,8 @@ jobs:
           private-key: ${{ secrets.CHANGESET_BOT_PRIVATE_KEY }}
           permission-contents: write
 
-      # The branch, not the event's head SHA: a run for an older event (a
-      # label added after the bot's last push) then builds on the current tip
-      # instead of failing to push.
+      # The branch, not the event's head SHA: the commit below must build on
+      # the branch's current tip, or the push fails.
       - name: Checkout PR branch
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -62,16 +52,18 @@ jobs:
 
       # No pnpm install on purpose: this job holds a write token, and the PR
       # brings a new dependency version whose install scripts must not run here.
+      # The script comes from the base branch, not the PR: a Renovate branch
+      # carries the script as of its last rebase, so an open PR would otherwise
+      # keep stale rules until Renovate happens to rebase it.
       - name: Write changeset
         env:
           BASE_REF: ${{ github.base_ref }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          INCLUDE_PRIVATE: ${{ contains(github.event.pull_request.labels.*.name, 'security') }}
         run: |
           set -euo pipefail
-          args=("origin/$BASE_REF" "$PR_NUMBER")
-          if [ "$INCLUDE_PRIVATE" = true ]; then args+=(--include-private); fi
-          node .github/scripts/renovate-changeset.mjs "${args[@]}"
+          script="$RUNNER_TEMP/renovate-changeset.mjs"
+          git show "origin/$BASE_REF:.github/scripts/renovate-changeset.mjs" > "$script"
+          node "$script" "origin/$BASE_REF" "$PR_NUMBER"
 
       - name: Commit and push
         env:
