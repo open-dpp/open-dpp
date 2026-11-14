@@ -1,7 +1,13 @@
-import type { SecurityResponseDto } from "@open-dpp/dto";
+import type { PermissionType, SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasPermissionsFormProps } from "./aas-permissions-form.ts";
-import { MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
+import {
+  GuestRoleDto,
+  MemberRoleDto,
+  PermissionKind,
+  Permissions,
+  UserRoleDto,
+} from "@open-dpp/dto";
 import {
   allPermissionsPlainAllow,
   permissionObjectPlainFactory,
@@ -30,7 +36,8 @@ vi.mock("../stores/user.ts", () => ({
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, string>) =>
+      params ? `${key} ${JSON.stringify(params)}` : key,
   }),
 }));
 
@@ -121,7 +128,7 @@ describe("aasPermissionsForm composable", () => {
       {
         subject: admin,
         permissions: [Permissions.Create, Permissions.Edit],
-        inheritsPermissionsOf: null,
+        inheritedFrom: null,
       },
     );
 
@@ -131,12 +138,12 @@ describe("aasPermissionsForm composable", () => {
     };
     expect(
       permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
-    ).toEqual({ subject: member, permissions: [Permissions.Create], inheritsPermissionsOf: null });
+    ).toEqual({ subject: member, permissions: [Permissions.Create], inheritedFrom: null });
 
     const anonymous = { userRole: UserRoleDto.ANONYMOUS };
     expect(
       permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, anonymous)),
-    ).toEqual({ subject: anonymous, permissions: [], inheritsPermissionsOf: null });
+    ).toEqual({ subject: anonymous, permissions: [], inheritedFrom: null });
 
     permissionsForm = mountHarness({
       getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
@@ -149,7 +156,7 @@ describe("aasPermissionsForm composable", () => {
       {
         subject: admin,
         permissions: [Permissions.Create, Permissions.Edit],
-        inheritsPermissionsOf: "section1",
+        inheritedFrom: { kind: "parent", object: "section1" },
       },
     );
 
@@ -164,7 +171,7 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({
       subject: member,
       permissions: allPermissionsPlainAllow.map((p) => p.permission),
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
   });
 
@@ -209,20 +216,20 @@ describe("aasPermissionsForm composable", () => {
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Read],
-      inheritsPermissionsOf: "section1",
+      inheritedFrom: { kind: "parent", object: "section1" },
     });
     editPermissions([Permissions.Edit], member);
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
     editPermissions([], member);
 
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
   });
 
@@ -287,14 +294,14 @@ describe("aasPermissionsForm composable", () => {
     expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
     editPermissions([Permissions.Read, Permissions.Delete], owner);
 
     expect(permissions.value.find((p) => isEqualSubject(p.subject, owner))).toEqual({
       subject: owner,
       permissions: [Permissions.Read, Permissions.Delete],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
 
     await savePermissions();
@@ -396,7 +403,7 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({
       subject: member,
       permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     });
     deletePolicyMock.mockResolvedValue({ status: HTTPCode.NO_CONTENT });
     await permissionsForm.resetToInheritedPermissions(member);
@@ -409,10 +416,180 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({
       subject: member,
       permissions: [Permissions.Read, Permissions.Create],
-      inheritsPermissionsOf: "section1",
+      inheritedFrom: { kind: "parent", object: "section1" },
     });
     mocks.asSubject.mockReturnValueOnce(owner);
     await permissionsForm.savePermissions();
     expect(modifyShellMock).not.toHaveBeenCalled();
+  });
+
+  describe("public fallback", () => {
+    const anonymous = { userRole: UserRoleDto.ANONYMOUS };
+    const repairer = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.REPAIRER };
+
+    function securityWithPublicRead(): SecurityResponseDto {
+      return securityPlainFactory.build(undefined, {
+        transient: {
+          policies: [
+            {
+              subject: anonymous,
+              object: { idShortPath: "section1" },
+              permissions: [
+                { permission: Permissions.Read, kindOfPermission: PermissionKind.Allow },
+              ],
+            },
+          ],
+        },
+      });
+    }
+
+    it("shows a role without a rule of its own the permissions of the public", () => {
+      const security = securityWithPublicRead();
+      const permissionsForm = mountHarness({
+        getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+
+      expect(
+        permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, repairer)),
+      ).toEqual({
+        subject: repairer,
+        permissions: [Permissions.Read],
+        inheritedFrom: { kind: "public" },
+      });
+      expect(
+        permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, anonymous)),
+      ).toEqual({
+        subject: anonymous,
+        permissions: [Permissions.Read],
+        inheritedFrom: null,
+      });
+    });
+
+    it("takes over the permissions of the public as a rule of the role and shows them as own", () => {
+      const security = securityWithPublicRead();
+      const permissionsForm = mountHarness({
+        getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+
+      permissionsForm.takeOverInheritedPermissions(repairer);
+
+      expect(
+        permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, repairer)),
+      ).toEqual({ subject: repairer, permissions: [Permissions.Read], inheritedFrom: null });
+    });
+  });
+
+  describe("permissionSourceText", () => {
+    function formWithoutRules() {
+      return mountHarness({
+        getAccessPermissionRules: () => [],
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+    }
+
+    it("names the public", () => {
+      expect(formWithoutRules().permissionSourceText({ kind: "public" })).toBe(
+        "aasEditor.security.inheritedFromPublic",
+      );
+    });
+
+    it("names the parent node", () => {
+      expect(
+        formWithoutRules().permissionSourceText({ kind: "parent", object: "section1.list" }),
+      ).toBe('aasEditor.security.inheritedFromParent {"object":"section1.list"}');
+    });
+
+    it("has no text for permissions which are not inherited", () => {
+      expect(formWithoutRules().permissionSourceText(null)).toBeUndefined();
+    });
+  });
+
+  describe("rolesWithoutReadThroughPublic", () => {
+    const anonymous = { userRole: UserRoleDto.ANONYMOUS };
+    const repairer = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.REPAIRER };
+    const recycler = { userRole: UserRoleDto.USER, guestRole: GuestRoleDto.RECYCLER };
+    const memberRole = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
+
+    function formWithPublic(publicPermissions: PermissionType[]) {
+      const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+        transient: {
+          policies: [
+            {
+              subject: anonymous,
+              object: { idShortPath: "section1" },
+              permissions: publicPermissions.map((permission) => ({
+                permission,
+                kindOfPermission: PermissionKind.Allow,
+              })),
+            },
+            {
+              subject: memberRole,
+              object: { idShortPath: "section1" },
+              permissions: allPermissionsPlainAllow,
+            },
+            {
+              subject: recycler,
+              object: { idShortPath: "section1" },
+              permissions: [
+                { permission: Permissions.Read, kindOfPermission: PermissionKind.Allow },
+              ],
+            },
+          ],
+        },
+      });
+      return mountHarness({
+        getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+        object: "section1",
+        modifyShell: modifyShellMock,
+        deletePolicyBySubjectAndObject: deletePolicyMock,
+      });
+    }
+
+    it("lists the roles which inherit from a public rule without Read", () => {
+      const form = formWithPublic([]);
+
+      const roles = form.rolesWithoutReadThroughPublic();
+
+      expect(roles.some((role) => isEqualSubject(role, repairer))).toBe(true);
+      expect(roles.some((role) => isEqualSubject(role, anonymous))).toBe(false);
+    });
+
+    it("leaves out the roles with a rule of their own", () => {
+      const roles = formWithPublic([]).rolesWithoutReadThroughPublic();
+
+      expect(roles.some((role) => isEqualSubject(role, recycler))).toBe(false);
+      expect(roles.some((role) => isEqualSubject(role, memberRole))).toBe(false);
+    });
+
+    it("lists nothing while the public may read", () => {
+      expect(formWithPublic([Permissions.Read]).rolesWithoutReadThroughPublic()).toEqual([]);
+    });
+
+    it("lists the role again as soon as the public loses Read", () => {
+      const form = formWithPublic([Permissions.Read]);
+
+      form.editPermissions([], anonymous);
+
+      const roles = form.rolesWithoutReadThroughPublic();
+      expect(roles.some((role) => isEqualSubject(role, repairer))).toBe(true);
+    });
+
+    it("lists a role no more once it has a Read rule of its own", () => {
+      const form = formWithPublic([Permissions.Read]);
+      form.editPermissions([], anonymous);
+
+      form.editPermissions([Permissions.Read], repairer);
+
+      const roles = form.rolesWithoutReadThroughPublic();
+      expect(roles.some((role) => isEqualSubject(role, repairer))).toBe(false);
+    });
   });
 });

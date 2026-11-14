@@ -1,4 +1,5 @@
 import { setupServer } from "msw/node";
+import { guestAccessHandlers } from "./handlers/guest-access";
 import { organizationHandlers } from "./handlers/organization";
 import { aasHandlers } from "./handlers/aas";
 import { aasIntegrationHandlers } from "./handlers/aas-integration";
@@ -13,6 +14,7 @@ import { digitalProductDocumentHandlers } from "./handlers/digital-product-docum
 const handlers = [
   ...uniqueProductIdentifierHandlers,
   ...organizationHandlers,
+  ...guestAccessHandlers,
   ...userHandlers,
   ...aasIntegrationHandlers,
   ...aasHandlers("templates"),

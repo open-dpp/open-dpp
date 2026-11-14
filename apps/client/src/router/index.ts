@@ -88,6 +88,18 @@ export const routes: RouteRecordRaw[] = [
       onlyAnonymous: false,
     },
   },
+  {
+    // Not public: someone who is not signed in is sent to the sign in and comes back here
+    path: "/accept-guest-access/:id",
+    name: "AcceptGuestAccess",
+    props: true,
+    component: () => import("../view/organizations/AcceptGuestAccessView.vue"),
+    meta: {
+      layout: "none",
+      public: false,
+      onlyAnonymous: false,
+    },
+  },
   ...AUTH_ROUTES,
   ...ORGANIZATION_ROUTES,
   ...MEDIA_ROUTES,

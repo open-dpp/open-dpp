@@ -6,8 +6,6 @@ export default mergeConfig(
   defineConfig({
     test: {
       include: ["src/**/*.spec.ts", "tests/**/*.spec.ts"],
-      // No specs yet.
-      passWithNoTests: true,
     },
   }),
 );

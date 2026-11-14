@@ -1,5 +1,6 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { subjectFallsBackToPublic } from "@open-dpp/permission";
 import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
@@ -56,6 +57,24 @@ export class Security implements ITrackable {
   findPoliciesBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
     const rule = this.localAccessControl.findRuleOfSubject(subject);
     return rule ? [rule] : [];
+  }
+
+  /**
+   * The rules which apply to the subject when its own rules have no entry for an object, nor for
+   * any parent of it: the rule of the public. Admins, owners, members and guests have them, so
+   * whoever the public may read, they may read too. The public itself and a signed in user without
+   * an organization have none.
+   *
+   * Reading only. Changing policies looks at the stored rules of a subject, never at these,
+   * otherwise editing a guest role would edit the rule of the public.
+   */
+  findFallbackPoliciesBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
+    const publicRule = subjectFallsBackToPublic(subject.getRoles())
+      ? this.localAccessControl.findRuleOfSubject(
+          SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+        )
+      : undefined;
+    return publicRule ? [publicRule] : [];
   }
 
   private hasPoliciesForObject(object: IdShortPath): boolean {
@@ -141,13 +160,14 @@ export class Security implements ITrackable {
         }
       }
 
+      // The public gets Read only. Guests have no rule of their own by default: they fall back to
+      // the rule of the public, see findPoliciesBySubject.
       const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-      const permissions = [
+      const readOnly = [
         Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       ];
-
-      if (!this.hasPolicy(anonymous, object, permissions)) {
-        this.addPolicy(anonymous, object, permissions);
+      if (!this.hasPolicy(anonymous, object, readOnly)) {
+        this.addPolicy(anonymous, object, readOnly);
       }
     }
   }
@@ -157,6 +177,13 @@ export class Security implements ITrackable {
   }
 
   defineAbilityForSubject(subject: SubjectAttributes, userId?: string): AasAbility {
-    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject, userId });
+    return AasAbility.create({
+      rules: [
+        ...this.findPoliciesBySubject(subject),
+        ...this.findFallbackPoliciesBySubject(subject),
+      ],
+      subject,
+      userId,
+    });
   }
 }

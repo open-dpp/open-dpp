@@ -2,16 +2,17 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
-import { Member } from "../identity/organizations/domain/member";
 import { User } from "../identity/users/domain/user";
+import { UserRole } from "../identity/users/domain/user-role.enum";
 import { PassportService } from "../passports/application/services/passport.service";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
+import { PassportSubjectResolver } from "../permalink/application/services/passport-subject-resolver.service";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { logChatError } from "./chat-error-log";
 import { AiService } from "./infrastructure/ai.service";
-import { chatSubject, createPassportTool } from "./tools/passport.tool";
+import { createPassportTool } from "./tools/passport.tool";
 import { PolicyKeyList } from "@open-dpp/dto";
 
 @Injectable()
@@ -24,6 +25,7 @@ export class ChatService {
   private readonly policyService: PolicyService;
   private readonly passportRepository: PassportRepository;
   private readonly passportService: PassportService;
+  private readonly passportSubjectResolver: PassportSubjectResolver;
 
   constructor(
     aiService: AiService,
@@ -32,6 +34,7 @@ export class ChatService {
     policyService: PolicyService,
     passportRepository: PassportRepository,
     passportService: PassportService,
+    passportSubjectResolver: PassportSubjectResolver,
   ) {
     this.aiService = aiService;
     this.uniqueProductIdentifierRepository = uniqueProductIdentifierRepository;
@@ -39,14 +42,10 @@ export class ChatService {
     this.policyService = policyService;
     this.passportRepository = passportRepository;
     this.passportService = passportService;
+    this.passportSubjectResolver = passportSubjectResolver;
   }
 
-  async askAgent(
-    query: string,
-    uniqueProductIdentifierUuid: string,
-    user: User | null,
-    member: Member | null,
-  ) {
+  async askAgent(query: string, uniqueProductIdentifierUuid: string, user: User | null) {
     this.logger.log(
       `Resolve passport from UniqueProductIdentifier: ${uniqueProductIdentifierUuid}`,
     );
@@ -81,7 +80,12 @@ export class ChatService {
       throw new Error("AI is not enabled");
     }
     const llm = this.aiService.getLLM(aiConfiguration.provider, aiConfiguration.model);
-    const subject = chatSubject(user, member, passport.organizationId);
+    // Admin, member of the passport's organization, accepted guest or the public: the same
+    // decision as for the permalink endpoints
+    const subject = await this.passportSubjectResolver.resolve(passport, {
+      userId: user?.id,
+      userRole: user?.role ?? UserRole.ANONYMOUS,
+    });
     const tools = [createPassportTool(this.passportService, passport.id, subject)];
     const agent = this.aiService.getAgent({
       llm,

@@ -195,6 +195,7 @@ onMounted(async () => {
               <PolicyAdded
                 v-else-if="change.type === ChangeEventDtoTypes.PolicyAdded"
                 :memberRole="change.memberRole"
+                :guestRole="change.guestRole"
                 :userRole="change.userRole"
                 :value="change.value"
                 :path="change.path"
@@ -202,6 +203,7 @@ onMounted(async () => {
               <PolicyModified
                 v-else-if="change.type === ChangeEventDtoTypes.PolicyModified"
                 :memberRole="change.memberRole"
+                :guestRole="change.guestRole"
                 :userRole="change.userRole"
                 :oldValue="change.oldValue"
                 :newValue="change.newValue"
@@ -210,6 +212,7 @@ onMounted(async () => {
               <PolicyDeleted
                 v-else-if="change.type === ChangeEventDtoTypes.PolicyDeleted"
                 :memberRole="change.memberRole"
+                :guestRole="change.guestRole"
                 :userRole="change.userRole"
                 :path="change.path"
               />

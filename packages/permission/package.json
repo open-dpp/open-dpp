@@ -17,12 +17,13 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@casl/ability": "^6.8.1"
+    "@open-dpp/dto": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.1",

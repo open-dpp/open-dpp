@@ -13,8 +13,10 @@ import type { Subject } from "../../lib/aas-security.ts";
 import { Permissions, UserRoleDto } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useAasPermissionOptions } from "../../composables/aas-permission-options.ts";
 import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
+import { canInheritPermissions } from "../../lib/aas-permission-resolution.ts";
 import { isEqualSubject } from "../../lib/aas-security.ts";
 import { useUserStore } from "../../stores/user.ts";
 
@@ -34,6 +36,8 @@ const {
   savePermissions,
   resetToInheritedPermissions,
   takeOverInheritedPermissions,
+  rolesWithoutReadThroughPublic,
+  permissionSourceText,
 } = useAasPermissionsForm({
   getAccessPermissionRules: props.getAccessPermissionRules,
   object: props.path.idShortPathIncludingSubmodel ?? "",
@@ -43,7 +47,8 @@ const {
 });
 
 const { asSubject } = useUserStore();
-const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
+const { getVisibleRoles, canEditPermissionsOfRole, getRoleDescription, getRoleName } =
+  useRoleHierarchy();
 
 const roles = ref(getVisibleRoles(asSubject()));
 const selectedRole = ref<Subject>(asSubject());
@@ -53,7 +58,7 @@ const permissionsOfSelectedRole = computed<PermissionsPerSubject>(
     permissions.value.find((p) => isEqualSubject(p.subject, selectedRole.value)) ?? {
       subject: selectedRole.value,
       permissions: [],
-      inheritsPermissionsOf: null,
+      inheritedFrom: null,
     },
 );
 
@@ -66,27 +71,9 @@ const canEditPermissions = computed(() => {
 
 const { t } = useI18n();
 
-const permissionOptions = computed(() => {
-  let options: { name: string; key: PermissionType }[] = [
-    { name: t("aasEditor.security.read"), key: Permissions.Read },
-  ];
-
-  if (selectedRole.value.userRole !== UserRoleDto.ANONYMOUS) {
-    options.push(
-      { name: t("aasEditor.security.create"), key: Permissions.Create },
-      { name: t("aasEditor.security.edit"), key: Permissions.Edit },
-      { name: t("aasEditor.security.delete"), key: Permissions.Delete },
-    );
-  }
-  if (props.ignoredPermissionOptions !== undefined) {
-    options = options.filter(
-      (permission) =>
-        props.ignoredPermissionOptions && !props.ignoredPermissionOptions.includes(permission.key),
-    );
-  }
-
-  return options;
-});
+const { getPermissionOptions } = useAasPermissionOptions(props.ignoredPermissionOptions);
+const permissionOptions = computed(() => getPermissionOptions(selectedRole.value));
+const roleDescription = computed(() => getRoleDescription(selectedRole.value));
 
 function onPermissionChange(newPermissions: PermissionType[]) {
   editPermissions(newPermissions, selectedRole.value);
@@ -104,8 +91,23 @@ async function onToggleInheritance(shouldOverride: boolean) {
   }
 }
 
-const permissionsInherited = computed(
-  () => permissionsOfSelectedRole.value.inheritsPermissionsOf !== null,
+const showInheritance = computed(() =>
+  canInheritPermissions(selectedRole.value, !props.hideInheritanceToggle),
+);
+
+// Shown at the public: turning its Read off takes the access of the roles which inherit from it
+const namesOfRolesWithoutRead = computed(() =>
+  selectedRole.value.userRole === UserRoleDto.ANONYMOUS
+    ? rolesWithoutReadThroughPublic()
+        .filter((subject) => roles.value.some((role) => isEqualSubject(role.key, subject)))
+        .map((subject) => getRoleName(subject))
+    : [],
+);
+
+const permissionsInherited = computed(() => permissionsOfSelectedRole.value.inheritedFrom !== null);
+
+const sourceText = computed(() =>
+  permissionSourceText(permissionsOfSelectedRole.value.inheritedFrom),
 );
 
 function isReadDisabledCauseOfOtherPermissionsAreActive(key: PermissionType) {
@@ -136,8 +138,11 @@ defineExpose<{
         :disabled="disabled"
       />
     </div>
+    <p v-if="roleDescription" class="text-sm text-gray-600" data-cy="role-description">
+      {{ roleDescription }}
+    </p>
     <div class="flex flex-col gap-3 p-2">
-      <div v-if="!props.hideInheritanceToggle" class="flex items-center gap-2">
+      <div v-if="showInheritance" class="flex items-center gap-2">
         <ToggleSwitch
           input-id="toggle-inheritance"
           :model-value="!permissionsInherited"
@@ -148,6 +153,25 @@ defineExpose<{
           `${permissionsInherited ? t("aasEditor.security.inheritedPermission") : t("aasEditor.security.overriddenPermission")}`
         }}</label>
       </div>
+      <p
+        v-if="showInheritance && sourceText"
+        class="text-sm text-gray-600"
+        data-cy="permission-source"
+      >
+        {{ sourceText }}
+      </p>
+      <p
+        v-if="namesOfRolesWithoutRead.length > 0"
+        class="rounded border border-amber-400 bg-amber-50 p-2 text-sm text-amber-900"
+        role="status"
+        data-cy="roles-without-read"
+      >
+        {{
+          t("aasEditor.security.rolesWithoutReadThroughPublic", {
+            roles: namesOfRolesWithoutRead.join(", "),
+          })
+        }}
+      </p>
       <div
         v-for="permission in permissionOptions"
         :key="permission.key"

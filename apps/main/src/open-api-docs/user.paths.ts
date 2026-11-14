@@ -3,6 +3,7 @@ import {
   InvitationResponseSchema,
   MeDtoSchema,
   RequestEmailChangeDtoSchema,
+  ResendVerificationEmailDtoSchema,
   SetUserRoleDtoSchema,
   UpdateProfileDtoSchema,
   UserDtoSchema,
@@ -134,6 +135,45 @@ export const userPaths = {
         [HTTPCode.OK]: {
           content: {
             [ContentType.JSON]: { schema: RevokeInfoSchema },
+          },
+        },
+      },
+    },
+  },
+  "/users/me/resend-verification-email": {
+    post: {
+      tags: [tag],
+      summary: "Resends the verification email of the current user",
+      description:
+        "The body is optional. With a callback path, the link of the mail leads to that page of " +
+        "this application once the address is verified, e.g. back to an invitation.",
+      requestBody: {
+        content: {
+          [ContentType.JSON]: { schema: ResendVerificationEmailDtoSchema },
+        },
+      },
+      responses: {
+        [HTTPCode.OK]: {
+          content: {
+            [ContentType.JSON]: { schema: UserDtoSchema },
+          },
+        },
+        [HTTPCode.BAD_REQUEST]: {
+          description: "The callback path is not a path of this application.",
+        },
+      },
+    },
+  },
+  "/users/{id}/resend-verification-email": {
+    post: {
+      tags: [tag],
+      parameters: [IdParamSchema],
+      summary: "Resends the verification email of a user",
+      description: "Admin only.",
+      responses: {
+        [HTTPCode.OK]: {
+          content: {
+            [ContentType.JSON]: { schema: UserDtoSchema },
           },
         },
       },

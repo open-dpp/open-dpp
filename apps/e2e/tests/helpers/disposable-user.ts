@@ -27,6 +27,9 @@ async function signUpViaApi(
   },
 ): Promise<void> {
   const res = await request.post(`${AuthBase}/sign-up/email`, {
+    // Better Auth refuses a request which carries cookies, like the one of the logged-in setup
+    // user in the chromium project, without an Origin. Browsers always send it.
+    headers: { Origin: EnvConfig.OPEN_DPP_URL },
     data: {
       email: u.email,
       password: u.password,
@@ -74,7 +77,12 @@ export async function createDisposableUser(
 
   // de-DE so the app i18n renders German throughout (matches the German UI
   // assertions in the account specs); without it a fresh context defaults to en-US.
-  const context = await deps.browser.newContext({ locale: "de-DE" });
+  // An empty storage state keeps the shared setup user's session out of the new context, which
+  // the chromium project would otherwise apply to every context it creates.
+  const context = await deps.browser.newContext({
+    locale: "de-DE",
+    storageState: { cookies: [], origins: [] },
+  });
   const page = await context.newPage();
 
   if (opts.verified) {

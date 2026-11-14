@@ -102,8 +102,11 @@
       "missingPermission": "Missing permissions",
       "archivedTooltip": "This document is archived and cannot be modified.",
       "editingRestrictedTooltip": "This passport allows data changes only. Its template controls the structure.",
-      "inheritedPermission": "Inherits permissions of parent node",
-      "overriddenPermission": "Overrides permissions of parent node",
+      "inheritedPermission": "Inherited permissions",
+      "overriddenPermission": "Overridden permissions",
+      "inheritedFromParent": "Inherited from parent node {object}",
+      "rolesWithoutReadThroughPublic": "These roles cannot read this object, because they inherit the permissions of the public role, and that role does not allow Read: {roles}. If a role should still be able to read, switch the setting for this role to \"Overridden permissions\" and grant the read permission.",
+      "inheritedFromPublic": "Inherited from the public",
       "permissions": "Permissions",
       "edit": "Edit",
       "delete": "Delete",
@@ -449,6 +452,47 @@
     "monthlyView": "Monthly view",
     "yearlyView": "Yearly view"
   },
+  "guestAccess": {
+    "title": "Guests",
+    "description": "External people such as repairers, recyclers or authorities who may see selected product passport data. Guests can only read and see nothing else of your organization.",
+    "invite": "Invite guest",
+    "email": "Email address",
+    "role": "Role",
+    "status": {
+      "label": "Status",
+      "Pending": "Invited",
+      "Accepted": "Accepted",
+      "Revoked": "Revoked"
+    },
+    "inviteSuccess": "The invitation has been sent.",
+    "inviteError": "The guest could not be invited. Check whether this email address already has access or belongs to a member.",
+    "changeRole": "Change role",
+    "changeRoleError": "The role could not be changed.",
+    "revoke": "Revoke access",
+    "revokeError": "The access could not be revoked.",
+    "revokeDialog": {
+      "header": "Revoke guest access",
+      "message": "Do you really want to revoke the access of {email}? The guest can no longer see data of your organization."
+    },
+    "errorLoading": "The guests could not be loaded.",
+    "accept": {
+      "title": "Accept guest access",
+      "organization": "Organization",
+      "readOnly": "As a guest you can only read selected product passport data. You cannot see or change anything else of the organization.",
+      "accept": "Accept access",
+      "accepted": "You have access now. Scan the QR code of a product of the organization that added you as a guest. If you are signed in, you can now see the data that has been released for your role.",
+      "revoked": "This invitation is no longer valid.",
+      "unavailable": "This invitation is not available for your account. Sign in with the email address the invitation was sent to and make sure that the address is verified.",
+      "verifyEmail": "Please verify your email address first. We sent a verification link to {email}. Click it and you will come back to this page to accept the access.",
+      "resend": "Send the verification email again",
+      "resent": "The verification email was sent again.",
+      "checkAgain": "I have verified my address",
+      "errorResending": "The verification email could not be sent.",
+      "errorLoading": "The invitation could not be loaded.",
+      "errorAccepting": "The access could not be accepted."
+    },
+    "empty": "No guests invited yet."
+  },
   "members": {
     "members": "Members"
   },
@@ -792,9 +836,24 @@
   "user": {
     "admin": "Admin",
     "public": "Public",
+    "guestRoles": {
+      "Repairer": "Repairer",
+      "Recycler": "Recycler",
+      "MarketSurveillance": "Market surveillance authority",
+      "IndependentOperator": "Independent operator",
+      "Supplier": "Supplier"
+    },
+    "guestRoleDescriptions": {
+      "Repairer": "Provides professional repair or maintenance services for a product, whether within the manufacturer's distribution system or independently.",
+      "Recycler": "Collects, processes and recovers reusable materials and applies a decontamination process.",
+      "MarketSurveillance": "Authority designated by a Member State to carry out market surveillance in its territory.",
+      "IndependentOperator": "Independent of the manufacturer and directly or indirectly involved in refurbishing, repairing, maintaining or repurposing products. Includes waste management operators, refurbishers, repairers, manufacturers or distributors of repair equipment, tools or spare parts, publishers of technical information, and providers of inspection, testing or training.",
+      "Supplier": "Supplies materials, components or parts that are used to manufacture the product."
+    },
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",
+    "backToPassport": "Back to passport",
     "firstName": "First name",
     "lastName": "Last name",
     "language": "Language",

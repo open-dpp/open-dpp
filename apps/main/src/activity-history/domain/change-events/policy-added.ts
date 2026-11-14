@@ -1,4 +1,8 @@
 import { IChangeEvent, IPolicyChangeEvent } from "./change-event";
+import {
+  GuestRoleEnum,
+  GuestRoleType,
+} from "../../../identity/guest-access/domain/guest-role.enum";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -16,6 +20,7 @@ const PolicyAddedSchema = z.object({
   path: z.string(),
   userRole: UserRoleEnum,
   memberRole: MemberRoleEnum.nullable(),
+  guestRole: GuestRoleEnum.nullish(), // missing in events recorded before guest roles existed
   value: PermissionSchema.array(),
 });
 
@@ -25,6 +30,7 @@ export class PolicyAdded implements IPolicyChangeEvent {
     public readonly path: IdShortPath,
     public readonly userRole: UserRoleType,
     public readonly memberRole: MemberRoleType | null,
+    public readonly guestRole: GuestRoleType | null,
     public readonly value: Permission[],
   ) {}
 
@@ -35,6 +41,7 @@ export class PolicyAdded implements IPolicyChangeEvent {
   static create(data: {
     userRole: UserRoleType;
     memberRole?: MemberRoleType;
+    guestRole?: GuestRoleType;
     object: ReferenceElement;
     value: Permission[];
   }) {
@@ -42,6 +49,7 @@ export class PolicyAdded implements IPolicyChangeEvent {
       IdShortPath.create({ path: data.object.idShort }),
       data.userRole,
       data.memberRole ?? null,
+      data.guestRole ?? null,
       data.value,
     );
   }
@@ -52,6 +60,7 @@ export class PolicyAdded implements IPolicyChangeEvent {
       IdShortPath.create({ path: parsed.path }),
       parsed.userRole,
       parsed.memberRole,
+      parsed.guestRole ?? null,
       parsed.value.map(Permission.fromPlain),
     );
   }
@@ -62,6 +71,7 @@ export class PolicyAdded implements IPolicyChangeEvent {
       path: this.path.toString(),
       userRole: this.userRole,
       memberRole: this.memberRole,
+      guestRole: this.guestRole,
       value: this.value.map((permission) => permission.toPlain()),
     };
   }

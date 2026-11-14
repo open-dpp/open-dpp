@@ -9,6 +9,7 @@ import type {
   MeDto,
   PagingParamsDto,
   RequestEmailChangeDto,
+  ResendVerificationEmailDto,
   SetUserRoleDto,
   UpdateApiKeyDto,
   UpdateProfileDto,
@@ -39,8 +40,12 @@ export class UsersNamespace {
     return this.axiosInstance.delete<MeDto>("/users/me/email-change");
   }
 
-  public async resendMyVerificationEmail() {
-    return this.axiosInstance.post<UserDto>("/users/me/resend-verification-email");
+  /**
+   * `callbackPath` is the path of the application the link of the mail leads to after the
+   * verification, by default the page which confirms it.
+   */
+  public async resendMyVerificationEmail(data?: ResendVerificationEmailDto) {
+    return this.axiosInstance.post<UserDto>("/users/me/resend-verification-email", data);
   }
 
   public async revokeEmailChange(token: string) {

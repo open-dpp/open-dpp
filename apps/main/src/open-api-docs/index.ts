@@ -11,6 +11,7 @@ import { permalinkPaths } from "./permalink.paths";
 import { bulkImportPaths } from "./bulk-import.paths";
 import { uniqueProductIdentifierPaths } from "./unique-product-identifier.paths";
 import { policyPaths } from "./policy.paths";
+import { guestAccessPaths } from "./guest-access.paths";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 const document = createDocument({
@@ -44,6 +45,7 @@ const document = createDocument({
     ...bulkImportPaths,
     ...uniqueProductIdentifierPaths,
     ...policyPaths,
+    ...guestAccessPaths,
   },
   components: {
     parameters: {
