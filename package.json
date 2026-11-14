@@ -37,7 +37,7 @@
     "@changesets/cli": "^2.31.1",
     "@dotenvx/dotenvx": "^1.75.1",
     "@shadcn/lint": "^0.2.3",
-    "@swc/core": "^1.16.20",
+    "@swc/core": "^1.16.22",
     "@types/node": "^26.6.6",
     "@typescript-eslint/parser": "^8.72.2",
     "@vitest/coverage-v8": "^4.1.12",
