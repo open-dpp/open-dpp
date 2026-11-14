@@ -1,5 +1,7 @@
 # @open-dpp/docs
 
+## 6.5.3
+
 ## 6.5.2
 
 ### Patch Changes

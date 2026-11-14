@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 6.5.3
+
+### Patch Changes
+
+- [#1174](https://github.com/open-dpp/open-dpp/pull/1174) [`c3a790e`](https://github.com/open-dpp/open-dpp/commit/c3a790efde5a6a6d3e718dee4165f029164a6d1a) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vite` ^8.3.5 → ^8.3.8 (dev)
+
 ## 6.5.2
 
 ### Patch Changes
