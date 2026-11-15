@@ -50,6 +50,16 @@ export const LOGOUT: RouteRecordRaw = {
   component: () => import("../../view/Logout.vue"),
 };
 
+// The profile of a user without an organization, e.g. a guest: without the structure of the app
+export const GUEST_PROFILE: RouteRecordRaw = {
+  path: "/guest-profile",
+  name: "GuestProfile",
+  component: () => import("../../view/profile/GuestProfileView.vue"),
+  meta: {
+    layout: "none",
+  },
+};
+
 export const EMAIL_CHANGE_REVOKE_CONFIRM: RouteRecordRaw = {
   path: "/account/email-change-revoke",
   name: "EmailChangeRevokeConfirm",
@@ -82,6 +92,7 @@ export const EMAIL_VERIFIED: RouteRecordRaw = {
 
 export const AUTH_ROUTES = [
   PROFILE,
+  GUEST_PROFILE,
   LOGOUT,
   EMAIL_CHANGE_REVOKE_CONFIRM,
   EMAIL_CHANGE_REVOKED,

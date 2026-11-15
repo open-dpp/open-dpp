@@ -342,21 +342,9 @@ describe("UsersController", () => {
     });
 
     it("resends the verification email for the logged-in unverified user", async () => {
-      const auth = moduleRef.get<Auth>(AUTH);
-      const email = `${randomUUID()}@test.test`;
-
-      // Do NOT use betterAuthHelper.createUser (it auto-verifies). Sign up fresh
-      // so emailVerified stays false and there's something to resend.
-      const { user } = await (auth.api as any).signUpEmail({
-        body: {
-          firstName: "Fresh",
-          lastName: "Signup",
-          name: "Fresh Signup",
-          email,
-          password: TEST_PASSWORD,
-        },
+      const { user, userEmail: email } = await betterAuthHelper.createUser({
+        emailVerified: false,
       });
-      betterAuthHelper.userMap.set(user.id, user);
       const userCookie = await betterAuthHelper.signAsUser(user.id);
       emailSendMock.mockClear();
 
@@ -372,6 +360,69 @@ describe("UsersController", () => {
       const verifyCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.VerifyEmail);
       expect(verifyCall).toBeDefined();
       expect(verifyCall![0].to).toBe(email);
+    });
+
+    describe("callback path", () => {
+      async function signUpUnverified() {
+        const { user } = await betterAuthHelper.createUser({ emailVerified: false });
+        const userCookie = await betterAuthHelper.signAsUser(user.id);
+        emailSendMock.mockClear();
+        return { userCookie };
+      }
+
+      // where the link of the sent verification mail leads to after the verification
+      function callbackOfVerificationMail(): string | null {
+        const calls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
+        const mail = calls.find(([sent]) => sent.type === BaseEmailTypes.VerifyEmail)?.[0];
+        const { template } = z
+          .looseObject({
+            template: z.looseObject({ properties: z.looseObject({ link: z.string() }) }),
+          })
+          .parse(mail);
+        return new URL(template.properties.link).searchParams.get("callbackURL");
+      }
+
+      it("leads back to the page the user came from", async () => {
+        const { userCookie } = await signUpUnverified();
+
+        const response = await request(app.getHttpServer())
+          .post("/users/me/resend-verification-email")
+          .set("Cookie", userCookie)
+          .send({ callbackPath: "/accept-guest-access/access-1" });
+
+        expect(response.status).toBe(200);
+        expect(callbackOfVerificationMail()).toEqual("/accept-guest-access/access-1");
+      });
+
+      it("leads to the verified page without a callback path", async () => {
+        const { userCookie } = await signUpUnverified();
+
+        const response = await request(app.getHttpServer())
+          .post("/users/me/resend-verification-email")
+          .set("Cookie", userCookie)
+          .send({});
+
+        expect(response.status).toBe(200);
+        expect(callbackOfVerificationMail()).toEqual("/email-verified");
+      });
+
+      it("rejects a callback path which leads away from the application", async () => {
+        const { userCookie } = await signUpUnverified();
+
+        for (const callbackPath of [
+          "https://evil.example.com/x",
+          "//evil.example.com/x",
+          "accept-guest-access/access-1",
+        ]) {
+          const response = await request(app.getHttpServer())
+            .post("/users/me/resend-verification-email")
+            .set("Cookie", userCookie)
+            .send({ callbackPath });
+
+          expect(response.status).toBe(400);
+        }
+        expect(emailSendMock).not.toHaveBeenCalled();
+      });
     });
 
     it("returns 200 but sends nothing when the logged-in user is already verified", async () => {
@@ -1218,17 +1269,8 @@ describe("UsersController", () => {
       const email = `${randomUUID()}@test.test`;
       emailSendMock.mockClear();
 
-      // Do NOT use betterAuthHelper.createUser (it auto-verifies, making the verify route a no-op).
       // Sign up fresh + unverified so the verification actually flips emailVerified.
-      await (auth.api as any).signUpEmail({
-        body: {
-          firstName: "Fresh",
-          lastName: "Signup",
-          name: "Fresh Signup",
-          email,
-          password: TEST_PASSWORD,
-        },
-      });
+      await betterAuthHelper.createUser({ email, emailVerified: false });
 
       const verifyEmailCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
         const link = (args[0] as { templateProperties?: { link?: string } } | undefined)

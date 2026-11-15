@@ -1,0 +1,124 @@
+import { describe, expect, it } from "vitest";
+import {
+  CreateGuestAccessDtoSchema,
+  GuestAccessInvitationDtoSchema,
+  GuestAccessResponseDtoSchema,
+  GuestRoleDtoEnum,
+  UpdateGuestAccessRoleDtoSchema,
+} from "./guest-access.dto";
+
+describe("GuestRoleDtoEnum", () => {
+  it("contains the five guest roles", () => {
+    expect(GuestRoleDtoEnum.options).toEqual([
+      "Repairer",
+      "Recycler",
+      "MarketSurveillance",
+      "IndependentOperator",
+      "Supplier",
+    ]);
+  });
+
+  it("rejects member and user roles", () => {
+    expect(() => GuestRoleDtoEnum.parse("member")).toThrow();
+    expect(() => GuestRoleDtoEnum.parse("owner")).toThrow();
+  });
+});
+
+describe("CreateGuestAccessDtoSchema", () => {
+  const valid = { kind: "Direct", email: "repairer@example.com", guestRole: "Repairer" };
+
+  it("parses a direct guest access", () => {
+    expect(CreateGuestAccessDtoSchema.parse(valid)).toEqual(valid);
+  });
+
+  it("rejects an invalid email", () => {
+    expect(() => CreateGuestAccessDtoSchema.parse({ ...valid, email: "nope" })).toThrow();
+  });
+
+  it("rejects a missing, unknown or multiple roles", () => {
+    const { guestRole: _guestRole, ...withoutRole } = valid;
+    expect(() => CreateGuestAccessDtoSchema.parse(withoutRole)).toThrow();
+    expect(() => CreateGuestAccessDtoSchema.parse({ ...valid, guestRole: "Member" })).toThrow();
+    expect(() =>
+      CreateGuestAccessDtoSchema.parse({ ...valid, guestRole: ["Repairer", "Recycler"] }),
+    ).toThrow();
+  });
+
+  it("rejects an unknown kind", () => {
+    expect(() => CreateGuestAccessDtoSchema.parse({ ...valid, kind: "Organization" })).toThrow();
+  });
+});
+
+describe("UpdateGuestAccessRoleDtoSchema", () => {
+  it("requires exactly one role", () => {
+    expect(UpdateGuestAccessRoleDtoSchema.parse({ guestRole: "Supplier" })).toEqual({
+      guestRole: "Supplier",
+    });
+    expect(() => UpdateGuestAccessRoleDtoSchema.parse({})).toThrow();
+    expect(() => UpdateGuestAccessRoleDtoSchema.parse({ guestRole: ["Supplier"] })).toThrow();
+  });
+});
+
+describe("GuestAccessResponseDtoSchema", () => {
+  const pending = {
+    id: "0a6e9a7e-2b0c-4a9b-9a53-8c2a3bd0a111",
+    organizationId: "acme",
+    kind: "Direct",
+    email: "repairer@example.com",
+    guestRole: "IndependentOperator",
+    grantedBy: "user-1",
+    status: "Pending",
+    createdAt: "2026-10-13T10:00:00.000Z",
+  };
+
+  it("parses a pending direct guest access without acceptance data", () => {
+    const parsed = GuestAccessResponseDtoSchema.parse(pending);
+    expect(parsed).toEqual(pending);
+  });
+
+  it("parses an accepted one including the accepting user id", () => {
+    const accepted = {
+      ...pending,
+      status: "Accepted",
+      acceptedAt: "2026-10-14T10:00:00.000Z",
+      acceptedByUserId: "user-2",
+    };
+    const parsed = GuestAccessResponseDtoSchema.parse(accepted);
+    expect(parsed).toEqual(accepted);
+  });
+
+  it("rejects an unknown status", () => {
+    expect(() => GuestAccessResponseDtoSchema.parse({ ...pending, status: "Active" })).toThrow();
+  });
+});
+
+describe("GuestAccessInvitationDtoSchema", () => {
+  const invitation = {
+    id: "0a6e9a7e-2b0c-4a9b-9a53-8c2a3bd0a111",
+    organizationName: "ACME GmbH",
+    email: "repairer@example.com",
+    guestRole: "Repairer",
+    status: "Pending",
+  };
+
+  it("parses an invitation", () => {
+    expect(GuestAccessInvitationDtoSchema.parse(invitation)).toEqual(invitation);
+  });
+
+  it("does not expose who invited or when", () => {
+    const parsed = GuestAccessInvitationDtoSchema.parse({
+      ...invitation,
+      grantedBy: "owner-1",
+      organizationId: "org-1",
+      createdAt: "2026-10-27T10:00:00.000Z",
+    });
+
+    expect(parsed).toEqual(invitation);
+  });
+
+  it("rejects an unknown role", () => {
+    expect(() =>
+      GuestAccessInvitationDtoSchema.parse({ ...invitation, guestRole: "Owner" }),
+    ).toThrow();
+  });
+});

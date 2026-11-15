@@ -1,5 +1,6 @@
 import type {
   AccessPermissionRuleResponseDto,
+  GuestRoleDtoType,
   MemberRoleDtoType,
   PermissionKindType,
   PermissionType,
@@ -32,7 +33,11 @@ export const permissionObjectPlainFactory = Factory.define<
 
 export interface SecurityPlainTransientParams {
   policies: {
-    subject: { userRole: UserRoleDtoType; memberRole?: MemberRoleDtoType };
+    subject: {
+      userRole: UserRoleDtoType;
+      memberRole?: MemberRoleDtoType;
+      guestRole?: GuestRoleDtoType;
+    };
     object: { idShortPath: string };
     permissions: { permission: PermissionType; kindOfPermission: PermissionKindType }[];
   }[];
@@ -41,6 +46,7 @@ export interface SecurityPlainTransientParams {
 export interface SubjectPlainParams {
   userRole: UserRoleDtoType;
   memberRole?: MemberRoleDtoType;
+  guestRole?: GuestRoleDtoType;
 }
 
 export const subjectPlainFactory = Factory.define<SubjectAttributesDto, SubjectPlainParams>(
@@ -52,6 +58,14 @@ export const subjectPlainFactory = Factory.define<SubjectAttributesDto, SubjectP
             propertyOutputPlainFactory.build({
               idShort: "memberRole",
               value: transientParams.memberRole,
+            }),
+          ]
+        : []),
+      ...(transientParams.guestRole
+        ? [
+            propertyOutputPlainFactory.build({
+              idShort: "guestRole",
+              value: transientParams.guestRole,
             }),
           ]
         : []),
@@ -92,7 +106,11 @@ export const securityPlainFactory = Factory.define<
       } else {
         accessPermissionRules.push({
           targetSubjectAttributes: subjectPlainFactory.build(undefined, {
-            transient: { userRole: policy.subject.userRole, memberRole: policy.subject.memberRole },
+            transient: {
+              userRole: policy.subject.userRole,
+              memberRole: policy.subject.memberRole,
+              guestRole: policy.subject.guestRole,
+            },
           }),
           permissionsPerObject: [permissionPerObject],
         });

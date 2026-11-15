@@ -102,8 +102,11 @@
       "missingPermission": "Fehlende Rechte",
       "archivedTooltip": "Dieses Dokument ist archiviert und kann nicht geändert werden.",
       "editingRestrictedTooltip": "Dieser Pass erlaubt ausschließlich Datenänderungen. Seine Vorlage legt die Struktur fest.",
-      "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
-      "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
+      "inheritedPermission": "Berechtigungen werden geerbt",
+      "overriddenPermission": "Berechtigungen werden überschrieben",
+      "inheritedFromParent": "Geerbt vom übergeordneten Knoten {object}",
+      "rolesWithoutReadThroughPublic": "Folgende Rollen können dieses Objekt nicht lesen, weil sie die Berechtigungen der Rolle Öffentlichkeit erben und diese kein Lesen erlaubt: {roles}. Soll eine Rolle weiterhin lesen dürfen, stellen Sie für diese Rolle die Einstellung auf „Berechtigungen werden überschrieben“ um und vergeben Sie das Leserecht.",
+      "inheritedFromPublic": "Geerbt von der Öffentlichkeit",
       "permissions": "Berechtigungen",
       "edit": "Bearbeiten",
       "delete": "Löschen",
@@ -448,6 +451,47 @@
     "weeklyView": "Wochenansicht",
     "monthlyView": "Monatsansicht",
     "yearlyView": "Jahresansicht"
+  },
+  "guestAccess": {
+    "title": "Gäste",
+    "description": "Externe Personen wie Reparateur*innen, Recycler*innen oder Behörden, die ausgewählte Daten von Produktpässen sehen dürfen. Gäste können nur lesen und sehen nichts anderes aus deiner Organisation.",
+    "invite": "Gast einladen",
+    "email": "E-Mail-Adresse",
+    "role": "Rolle",
+    "status": {
+      "label": "Status",
+      "Pending": "Eingeladen",
+      "Accepted": "Angenommen",
+      "Revoked": "Entzogen"
+    },
+    "inviteSuccess": "Die Einladung wurde versendet.",
+    "inviteError": "Der Gast konnte nicht eingeladen werden. Prüfe, ob diese E-Mail-Adresse bereits Zugriff hat oder zu einem Mitglied gehört.",
+    "changeRole": "Rolle ändern",
+    "changeRoleError": "Die Rolle konnte nicht geändert werden.",
+    "revoke": "Zugriff entziehen",
+    "revokeError": "Der Zugriff konnte nicht entzogen werden.",
+    "revokeDialog": {
+      "header": "Gastzugriff entziehen",
+      "message": "Möchtest du den Zugriff von {email} wirklich entziehen? Der Gast kann dann keine Daten deiner Organisation mehr sehen."
+    },
+    "errorLoading": "Die Gäste konnten nicht geladen werden.",
+    "accept": {
+      "title": "Gastzugriff annehmen",
+      "organization": "Organisation",
+      "readOnly": "Als Gast kannst du ausgewählte Daten von Produktpässen nur lesen. Du kannst sonst nichts aus der Organisation sehen oder ändern.",
+      "accept": "Zugriff annehmen",
+      "accepted": "Du hast jetzt Zugriff. Scanne den QR-Code eines Produkts der Organisation, zu der du als Gast hinzugefügt wurdest. Wenn du angemeldet bist, kannst du nun die Daten sehen, die für deine Rolle freigegeben wurden.",
+      "revoked": "Diese Einladung ist nicht mehr gültig.",
+      "unavailable": "Diese Einladung ist für dein Konto nicht verfügbar. Melde dich mit der E-Mail-Adresse an, an die die Einladung gesendet wurde, und stelle sicher, dass die Adresse bestätigt ist.",
+      "verifyEmail": "Bitte bestätige zuerst deine E-Mail-Adresse. Wir haben einen Bestätigungslink an {email} gesendet. Klicke darauf, danach kommst du zu dieser Seite zurück und kannst den Zugriff annehmen.",
+      "resend": "Bestätigungs-E-Mail erneut senden",
+      "resent": "Die Bestätigungs-E-Mail wurde erneut gesendet.",
+      "checkAgain": "Ich habe meine Adresse bestätigt",
+      "errorResending": "Die Bestätigungs-E-Mail konnte nicht gesendet werden.",
+      "errorLoading": "Die Einladung konnte nicht geladen werden.",
+      "errorAccepting": "Der Zugriff konnte nicht angenommen werden."
+    },
+    "empty": "Noch keine Gäste eingeladen."
   },
   "members": {
     "members": "Mitglieder"
@@ -822,9 +866,24 @@
   "user": {
     "admin": "Administrator*in",
     "public": "Öffentlichkeit",
+    "guestRoles": {
+      "Repairer": "Reparateur*in",
+      "Recycler": "Recycler",
+      "MarketSurveillance": "Marktüberwachungsbehörde",
+      "IndependentOperator": "Unabhängige*r Wirtschaftsakteur*in",
+      "Supplier": "Lieferant*in"
+    },
+    "guestRoleDescriptions": {
+      "Repairer": "Erbringt gewerbliche Reparatur- oder Wartungsleistungen für ein Produkt, innerhalb des Vertriebssystems des Herstellers oder unabhängig davon.",
+      "Recycler": "Sammelt, verarbeitet und verwertet wiederverwendbare Materialien und wendet ein Dekontaminationsverfahren an.",
+      "MarketSurveillance": "Von einem Mitgliedstaat benannte Behörde, die für die Marktüberwachung in dessen Hoheitsgebiet zuständig ist.",
+      "IndependentOperator": "Vom Hersteller unabhängig und direkt oder indirekt an der Aufarbeitung, Reparatur, Wartung oder Umnutzung von Produkten beteiligt. Dazu zählen Abfallbewirtschafter, Aufarbeiter, Reparateure, Hersteller oder Händler von Reparaturausrüstung, Werkzeugen oder Ersatzteilen, Herausgeber technischer Informationen sowie Anbieter von Prüf-, Test- oder Schulungsleistungen.",
+      "Supplier": "Liefert Materialien, Bauteile oder Teile, die zur Herstellung des Produkts verwendet werden."
+    },
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",
+    "backToPassport": "Zurück zum Produktpass",
     "firstName": "Vorname",
     "lastName": "Nachname",
     "language": "Sprache",

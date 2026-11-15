@@ -54,5 +54,16 @@ export const useOrganizationsStore = defineStore("organizations", () => {
     }
   }
 
-  return { organizations, fetchOrganizations, createOrganization, fetchCurrentOrganization };
+  // On sign out: the next user must not see the organizations of this one
+  function reset() {
+    organizations.value = [];
+  }
+
+  return {
+    organizations,
+    fetchOrganizations,
+    createOrganization,
+    fetchCurrentOrganization,
+    reset,
+  };
 });

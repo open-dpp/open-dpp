@@ -18,6 +18,7 @@ import type {
   InvitationStatusDtoType,
   MeDto,
   RequestEmailChangeDto,
+  ResendVerificationEmailDto,
   SetUserRoleDto,
   UpdateProfileDto,
   UserDto,
@@ -25,6 +26,7 @@ import type {
 import {
   CreateUserDtoSchema,
   RequestEmailChangeDtoSchema,
+  ResendVerificationEmailDtoSchema,
   SetUserRoleDtoSchema,
   UpdateProfileDtoSchema,
 } from "@open-dpp/dto";
@@ -118,8 +120,13 @@ export class UsersController {
 
   @Post("me/resend-verification-email")
   @HttpCode(HttpStatus.OK)
-  async resendMyVerificationEmail(@AuthSession() session: SessionDomainEntity): Promise<UserDto> {
-    const user = await this.usersService.resendVerificationEmail(session.userId);
+  async resendMyVerificationEmail(
+    @AuthSession() session: SessionDomainEntity,
+    // Callers which send no body keep working
+    @Body(new ZodValidationPipe(ResendVerificationEmailDtoSchema.optional()))
+    body: ResendVerificationEmailDto = {},
+  ): Promise<UserDto> {
+    const user = await this.usersService.resendVerificationEmail(session.userId, body.callbackPath);
     return UserMapper.toDto(user);
   }
 

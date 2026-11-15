@@ -2,6 +2,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import {
   DigitalProductDocumentStatusDto,
+  GuestAccessInvitationDtoSchema,
+  GuestAccessResponseDtoSchema,
+  GuestRoleDto,
   InvitationStatusDto,
   MeDtoSchema,
   PassportEditingModeDto,
@@ -37,6 +40,7 @@ import {
   bulkImportRun1Interrupted,
   bulkImportRunItem1,
 } from "./handlers/bulk-import";
+import { guestAccessOrganizationId, pendingGuestAccess } from "./handlers/guest-access";
 import { passport1, passport2, passportFilterParams } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
@@ -80,6 +84,69 @@ describe("apiClient", () => {
       sdk.setActiveOrganizationId(activeOrganization.id);
       const response = await sdk.dpp.organizations.changeMemberRole(randomUUID(), "owner");
       expect(response.status).toEqual(200);
+    });
+  });
+
+  describe("guest access", () => {
+    function createOwnerSdk() {
+      const sdk = new OpenDppClient({ dpp: { baseURL } });
+      sdk.setActiveOrganizationId(guestAccessOrganizationId);
+      return sdk;
+    }
+
+    it("should invite a guest via POST /guest-accesses", async () => {
+      const response = await createOwnerSdk().dpp.guestAccess.invite({
+        kind: "Direct",
+        email: "authority@example.com",
+        guestRole: GuestRoleDto.MARKET_SURVEILLANCE,
+      });
+      expect(response.status).toEqual(201);
+      expect(response.data.email).toEqual("authority@example.com");
+      expect(response.data.guestRole).toEqual(GuestRoleDto.MARKET_SURVEILLANCE);
+      expect(GuestAccessResponseDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should list the guest accesses via GET /guest-accesses", async () => {
+      const response = await createOwnerSdk().dpp.guestAccess.getAll();
+      expect(response.data).toEqual([pendingGuestAccess]);
+    });
+
+    it("should change the role via PATCH /guest-accesses/:id/role", async () => {
+      const response = await createOwnerSdk().dpp.guestAccess.changeRole(pendingGuestAccess.id, {
+        guestRole: GuestRoleDto.SUPPLIER,
+      });
+      expect(response.status).toEqual(200);
+      expect(response.data.id).toEqual(pendingGuestAccess.id);
+      expect(response.data.guestRole).toEqual(GuestRoleDto.SUPPLIER);
+    });
+
+    it("should revoke via POST /guest-accesses/:id/revoke", async () => {
+      const response = await createOwnerSdk().dpp.guestAccess.revoke(pendingGuestAccess.id);
+      expect(response.data.status).toEqual("Revoked");
+      expect(GuestAccessResponseDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should get the invitation without an organization via GET /guest-accesses/:id/invitation", async () => {
+      const sdk = new OpenDppClient({ dpp: { baseURL } });
+      const response = await sdk.dpp.guestAccess.getInvitation(pendingGuestAccess.id);
+      expect(response.data.organizationName).toEqual("ACME GmbH");
+      expect(response.data.guestRole).toEqual(pendingGuestAccess.guestRole);
+      expect(GuestAccessInvitationDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should accept without an organization via POST /guest-accesses/:id/accept", async () => {
+      const sdk = new OpenDppClient({ dpp: { baseURL } });
+      const response = await sdk.dpp.guestAccess.accept(pendingGuestAccess.id);
+      expect(response.data.status).toEqual("Accepted");
+      expect(response.data.acceptedByUserId).toEqual("user-1");
+      expect(GuestAccessResponseDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should send the owner requests only with the active organization", async () => {
+      const sdk = new OpenDppClient({ dpp: { baseURL } });
+      await expect(sdk.dpp.guestAccess.getAll()).rejects.toMatchObject({
+        response: { status: 403 },
+      });
     });
   });
 
@@ -128,6 +195,34 @@ describe("apiClient", () => {
       expect(response.status).toEqual(202);
       expect(response.data.pendingEmailChange?.newEmail).toEqual("fresh@example.com");
       expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should resend the verification email without a body via POST /users/me/resend-verification-email", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.resendMyVerificationEmail();
+      expect(response.status).toEqual(200);
+      expect(response.data.email).toEqual(meResponse.user.email);
+    });
+
+    it("should resend the verification email with the path to return to", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.resendMyVerificationEmail({
+        callbackPath: "/accept-guest-access/access-1",
+      });
+      expect(response.status).toEqual(200);
+    });
+
+    it("should not resend the verification email to a path outside the application", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      await expect(
+        sdk.dpp.users.resendMyVerificationEmail({ callbackPath: "https://evil.example.com" }),
+      ).rejects.toMatchObject({ response: { status: 422 } });
     });
 
     it("should cancel the pending email change via DELETE /users/me/email-change", async () => {

@@ -1,6 +1,11 @@
 import type { ArgumentsHost, ExceptionFilter } from "@nestjs/common";
 import { Catch, HttpStatus } from "@nestjs/common";
-import { ForbiddenError, NotFoundError, ValueError } from "./domain.errors";
+import {
+  ConcurrentModificationError,
+  ForbiddenError,
+  NotFoundError,
+  ValueError,
+} from "./domain.errors";
 import { NotFoundInDatabaseException } from "./service.exceptions";
 
 @Catch(NotFoundInDatabaseException)
@@ -56,6 +61,21 @@ export class ValueErrorFilter implements ExceptionFilter {
     const request = ctx.getRequest();
     response.status(HttpStatus.BAD_REQUEST).json({
       statusCode: HttpStatus.BAD_REQUEST,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      message: exception.message,
+    });
+  }
+}
+
+@Catch(ConcurrentModificationError)
+export class ConcurrentModificationErrorFilter implements ExceptionFilter {
+  catch(exception: ConcurrentModificationError, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
+    response.status(HttpStatus.CONFLICT).json({
+      statusCode: HttpStatus.CONFLICT,
       timestamp: new Date().toISOString(),
       path: request.url,
       message: exception.message,
