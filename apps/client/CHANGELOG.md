@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 6.5.4
+
+### Patch Changes
+
+- [#1004](https://github.com/open-dpp/open-dpp/pull/1004) [`664de6e`](https://github.com/open-dpp/open-dpp/commit/664de6eb83f102ea385d93aa88d03dcaa99d839b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `jest-diff` ^30.4.1 → ^30.5.2 (dev)
+
 ## 6.5.3
 
 ### Patch Changes
