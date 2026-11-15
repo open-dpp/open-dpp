@@ -1,5 +1,7 @@
 # @open-dpp/client
 
+## 6.5.5
+
 ## 6.5.4
 
 ### Patch Changes
