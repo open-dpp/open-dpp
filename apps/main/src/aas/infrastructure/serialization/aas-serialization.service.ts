@@ -10,7 +10,7 @@ import {
 } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
 import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";

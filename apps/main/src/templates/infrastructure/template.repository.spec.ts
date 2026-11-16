@@ -13,7 +13,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 import { FindOptions } from "../../lib/repositories";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";

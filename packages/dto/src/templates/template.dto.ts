@@ -4,7 +4,7 @@ import { DigitalProductDocumentDtoSchema } from "../digital-product-document/dig
 import {
   PassportEditingModeDto,
   PassportEditingModeDtoEnum,
-} from "../digital-product-document/passport-editing-mode.dto";
+} from "../digital-product-document/editing-mode.dto";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 export const TemplateDtoSchema = DigitalProductDocumentDtoSchema.extend({

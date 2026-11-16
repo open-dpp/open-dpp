@@ -1,6 +1,6 @@
 import { DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { DigitalProductDocumentStatusChange } from "../../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingModeType } from "../../../digital-product-document/domain/editing-mode";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { Template } from "../../../templates/domain/template";
 import { ExpandedEnvironment } from "../expanded-environment";

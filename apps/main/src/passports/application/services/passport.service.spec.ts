@@ -45,7 +45,7 @@ import { PassportService } from "./passport.service";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
 import { ActivityTypes } from "../../../activity-history/domain/activities/activity-types";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
 import { EmailService } from "../../../email/email.service";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Template } from "../../../templates/domain/template";

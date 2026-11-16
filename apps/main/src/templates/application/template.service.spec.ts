@@ -17,7 +17,7 @@ import { ActivityTypes } from "../../activity-history/domain/activities/activity
 import { BulkImportConfigService } from "../../bulk-import/application/services/bulk-import-config.service";
 import { generateMongoConfig } from "../../database/config";
 import { DatabaseModule } from "../../database/database.module";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 import { EmailService } from "../../email/email.service";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";

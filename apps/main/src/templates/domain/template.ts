@@ -15,7 +15,7 @@ import {
   PassportEditingMode,
   PassportEditingModeEnum,
   PassportEditingModeType,
-} from "../../digital-product-document/domain/passport-editing-mode";
+} from "../../digital-product-document/domain/editing-mode";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import {

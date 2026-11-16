@@ -18,7 +18,7 @@ import {
 import {
   PassportEditingMode,
   PassportEditingModeType,
-} from "../../digital-product-document/domain/passport-editing-mode";
+} from "../../digital-product-document/domain/editing-mode";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";

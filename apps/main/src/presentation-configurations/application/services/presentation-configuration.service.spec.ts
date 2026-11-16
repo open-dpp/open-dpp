@@ -22,8 +22,8 @@ import { SubjectAttributes } from "../../../aas/domain/security/subject-attribut
 import { generateMongoConfig } from "../../../database/config";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
-import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/editing-mode";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";

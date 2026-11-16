@@ -1,4 +1,4 @@
-import type { PassportEditingModeType } from "../../digital-product-document/domain/passport-editing-mode";
+import type { PassportEditingModeType } from "../../digital-product-document/domain/editing-mode";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import {
@@ -9,7 +9,7 @@ import {
   DigitalProductDocumentStatusChangeDbSchema,
   DigitalProductDocumentStatusChangeDoc,
 } from "../../digital-product-document/infrastructure/digital-product-document-status-change-db.schema";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",

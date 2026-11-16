@@ -5,7 +5,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 import { Template } from "./template";
 
 describe("template", () => {

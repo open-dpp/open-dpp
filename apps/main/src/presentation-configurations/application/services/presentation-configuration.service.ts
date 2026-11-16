@@ -10,8 +10,8 @@ import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { AasAbility } from "../../../aas/domain/security/aas-ability";
 import type { DbSessionOptions } from "../../../database/query-options";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
-import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
+import { EditingMode } from "../../../digital-product-document/domain/editing-mode";
+import type { EditingModeType } from "../../../digital-product-document/domain/editing-mode";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import {
@@ -31,7 +31,7 @@ export interface PresentationReferenceHolder {
   readonly id: string;
   readonly organizationId: string;
   readonly referenceType: DigitalProductDocumentTypesType;
-  readonly editingMode?: PassportEditingModeType;
+  readonly editingMode?: EditingModeType;
 }
 
 @Injectable()
@@ -101,7 +101,7 @@ export class PresentationConfigurationService {
   private assertPassportEditingNotRestricted(holder: PresentationReferenceHolder): void {
     if (
       holder.referenceType === DigitalProductDocumentTypes.Passport &&
-      holder.editingMode === PassportEditingMode.DataOnly
+      holder.editingMode === EditingMode.DataOnly
     ) {
       throw new ValueError(
         `Passport ${holder.id} editing is restricted to data; presentation configuration is not editable`,

@@ -55,7 +55,7 @@ import {
   LatestAasExportVersion,
 } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 import { TransactionService } from "../../../database/transaction.service";
 import { EmailService } from "../../../email/email.service";

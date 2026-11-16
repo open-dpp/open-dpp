@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 import {
   findAllByOrganizationId,
   findOne,

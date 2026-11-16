@@ -5,7 +5,7 @@ import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain"
 import {
   PassportEditingModeEnum,
   PassportEditingModeType,
-} from "../../../digital-product-document/domain/passport-editing-mode";
+} from "../../../digital-product-document/domain/editing-mode";
 
 const PassportEditingModeChangedSchema = z.object({
   type: z.literal(ChangeEventTypes.PassportEditingModeChanged),
