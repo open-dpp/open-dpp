@@ -28,7 +28,7 @@
   "devDependencies": {
     "@nestjs/testing": "^12.5.0",
     "@tsconfig/node-lts": "^24.0.1",
-    "@tsconfig/node-ts": "^23.6.4",
+    "@tsconfig/node-ts": "^23.6.5",
     "typescript": "~6.0.3"
   },
   "packageManager": "pnpm@11.28.9"
