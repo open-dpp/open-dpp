@@ -15,7 +15,6 @@ import { OrganizationsService } from "./organizations.service";
 import { InstanceSettingsService } from "../../../../instance-settings/application/services/instance-settings.service";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { InstanceSettings } from "../../../../instance-settings/domain/instance-settings";
-import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { PolicyManagementService } from "../../../../policy/application/services/policy-management.service";
 
 describe("OrganizationsService", () => {
@@ -23,9 +22,7 @@ describe("OrganizationsService", () => {
 
   const mockOrganizationsRepository = {
     create:
-      vi.fn<
-        (organization: Organization, headers: BetterAuthHeaders) => Promise<Organization | null>
-      >(),
+      vi.fn<(organization: Organization, ownerId: string) => Promise<Organization | null>>(),
     findOneById: vi.fn(),
     findManyByIds: vi.fn<(ids: string[]) => Promise<Organization[]>>(),
     update: vi.fn(),
@@ -132,7 +129,6 @@ describe("OrganizationsService", () => {
       InstanceSettings.create({ organizationCreationEnabled: { value: false } }),
     );
     const session = { userId: "user1" } as Session;
-    const headers = {};
     const organization = Organization.create({
       name: "Test Organization",
       metadata: {},
@@ -141,18 +137,21 @@ describe("OrganizationsService", () => {
 
     const userRole = UserRole.USER;
     await expect(
-      service.createOrganization(organization, session, headers, userRole),
+      service.createOrganization(organization, session, userRole),
     ).rejects.toThrow(
       new ForbiddenException("Organization creation is not enabled for this instance."),
     );
 
-    await service.createOrganization(organization, session, headers, UserRole.ADMIN);
-    expect(mockOrganizationsRepository.create).toHaveBeenCalled();
+    await service.createOrganization(organization, session, UserRole.ADMIN);
+    expect(mockOrganizationsRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ name: organization.name }),
+      "user1",
+    );
 
     mockInstanceSettingsService.getSettings.mockResolvedValue(
       InstanceSettings.create({ organizationCreationEnabled: { value: true } }),
     );
-    await service.createOrganization(organization, session, headers, userRole);
+    await service.createOrganization(organization, session, userRole);
 
     expect(mockOrganizationsRepository.create).toHaveBeenCalledTimes(2);
   });
@@ -170,7 +169,6 @@ describe("OrganizationsService", () => {
     await service.createOrganization(
       { name: created.name, metadata: {} },
       { userId: "user1" } as Session,
-      {},
       UserRole.USER,
     );
 
@@ -190,7 +188,6 @@ describe("OrganizationsService", () => {
     await service.createOrganization(
       { name: created.name, metadata: {} },
       { userId: "user1" } as Session,
-      {},
       UserRole.USER,
     );
 

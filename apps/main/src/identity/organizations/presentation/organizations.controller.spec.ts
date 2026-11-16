@@ -117,6 +117,22 @@ describe("OrganizationsController", () => {
     expect(members.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("creates an organization with an api key, owned by the key's user", async () => {
+    const { user, apiKey } = await betterAuthHelper.createOrganizationAndUserWithApiKey();
+
+    const response = await request(app.getHttpServer())
+      .post("/organizations")
+      .set("x-api-key", apiKey)
+      .send({ name: "Api key organization" });
+
+    expect(response.status).toEqual(201);
+    const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
+    const members = await membersRepository.findByOrganizationId(response.body.id);
+    expect(members).toEqual([
+      expect.objectContaining({ userId: user.id, role: MemberRole.OWNER }),
+    ]);
+  });
+
   it("ignores a slug provided by the caller", async () => {
     const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
