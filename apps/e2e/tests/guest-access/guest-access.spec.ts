@@ -5,7 +5,7 @@ import { newAnonymousContext } from "../helpers/anonymous";
 import { DEFAULT_PASSWORD, uniqueEmail } from "../helpers/disposable-user";
 import { MailpitClient } from "../helpers/mailpit";
 import {
-  createBlankPassport,
+  createBlankPassportViaApi,
   ORG_ID_HEADER,
   type PassportIds,
   publishPassport,
@@ -43,7 +43,7 @@ async function createPassportWithGuestOnlySection(page: Page): Promise<{
   ids: PassportIds;
   permalinkId: string;
 }> {
-  const ids = await createBlankPassport(page);
+  const ids = await createBlankPassportViaApi(page);
   await publishPassport(page, ids);
 
   const created = await page.request.post(`${ApiBase}/passports/${ids.passportId}/submodels`, {

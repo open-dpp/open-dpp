@@ -326,27 +326,30 @@ describe("GuestAccessController", () => {
       req.set("Cookie", guest.userCookie).set(ORGANIZATION_ID_HEADER, owner.org.id);
     const server = app.getHttpServer();
 
-    const responses = await Promise.all([
-      asGuest(request(server).get("/guest-accesses")),
-      asGuest(
+    const requests: Array<() => request.Test> = [
+      () => request(server).get("/guest-accesses"),
+      () =>
         request(server)
           .post("/guest-accesses")
           .send({ kind: "Direct", email: "x@example.com", guestRole: "Repairer" }),
-      ),
-      asGuest(request(server).post(`/guest-accesses/${guest.id}/revoke`)),
-      asGuest(
+      () => request(server).post(`/guest-accesses/${guest.id}/revoke`),
+      () =>
         request(server).patch(`/guest-accesses/${guest.id}/role`).send({ guestRole: "Supplier" }),
-      ),
-      asGuest(request(server).get(`/organizations/${owner.org.id}/members`)),
-      asGuest(request(server).patch(`/organizations/${owner.org.id}`).send({ name: "Hijacked" })),
-      asGuest(
+      () => request(server).get(`/organizations/${owner.org.id}/members`),
+      () => request(server).patch(`/organizations/${owner.org.id}`).send({ name: "Hijacked" }),
+      () =>
         request(server)
           .post(`/organizations/${owner.org.id}/invite`)
           .send({ email: "y@example.com", role: "member" }),
-      ),
-    ]);
+    ];
+    // One after another: parallel requests each open their own ephemeral listener on the
+    // test server and are reset (ECONNRESET) under load on CI.
+    const statuses: number[] = [];
+    for (const createRequest of requests) {
+      statuses.push((await asGuest(createRequest())).status);
+    }
 
-    expect(responses.map((r) => r.status)).toEqual(responses.map(() => 403));
+    expect(statuses).toEqual(requests.map(() => 403));
   });
 
   it("shows the invited person the invitation before accepting", async () => {
