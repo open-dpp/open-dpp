@@ -59,7 +59,7 @@ describe("OrganizationsRepository", () => {
       createdAt: new Date(),
     });
 
-    await repository.create(organization, {});
+    await repository.create(organization, "user-1");
 
     expect(mockAuth.api.createOrganization).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -118,8 +118,8 @@ describe("OrganizationsRepository", () => {
     const first = Organization.create({ name: "Test Org", metadata: {} });
     const second = Organization.create({ name: "Test Org", metadata: {} });
 
-    await repository.create(first, {});
-    await repository.create(second, {});
+    await repository.create(first, "user-1");
+    await repository.create(second, "user-1");
 
     const slugs = mockAuth.api.createOrganization.mock.calls.map(
       ([call]: [{ body: { slug: string } }]) => call.body.slug,
@@ -139,7 +139,7 @@ describe("OrganizationsRepository", () => {
       createdAt: new Date(),
     });
 
-    const created = await repository.create(organization, {});
+    const created = await repository.create(organization, "user-1");
 
     expect(created?.id).toEqual(organization.id);
     expect(created?.slug).toEqual(organization.id);
