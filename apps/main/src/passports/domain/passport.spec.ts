@@ -87,4 +87,18 @@ describe("passport", () => {
     expect(() => passport.assertStructureEditable()).not.toThrow();
     expect(() => passport.assertDataEditable()).not.toThrow();
   });
+
+  it("should not allow any edit of an archived passport", () => {
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      }),
+    });
+    const message = "Cannot modify an archived digital product document";
+    expect(() => passport.assertStructureEditable()).toThrow(message);
+    expect(() => passport.assertDataEditable()).toThrow(message);
+  });
 });

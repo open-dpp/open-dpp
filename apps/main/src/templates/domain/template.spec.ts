@@ -43,7 +43,6 @@ describe("template", () => {
     expect(template.isDraft()).toBeTruthy();
   });
 
-
   describe("editing mode", () => {
     function createTemplate(status?: DigitalProductDocumentStatusChange) {
       return Template.create({

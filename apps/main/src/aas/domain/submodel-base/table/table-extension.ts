@@ -412,26 +412,24 @@ export class TableExtension implements ITableExtendable {
   }
 
   addRow(options: AddOptions) {
-    let newRow: ISubmodelElement;
-    if (!this.headerRow) {
-      newRow = this.addHeaderRow(options);
-    } else {
-      newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
-      this.data.addSubmodelElement(newRow, options);
-      this.columns.forEach((column) => {
-        const columnCopy = column.copy({
-          transformer: new TableRowCopyVisitor(),
-        });
-        if (columnCopy.isAllowed) {
-          newRow.addSubmodelElement(columnCopy.value, {
-            ability: options.ability,
-          });
-        }
+    if (this.columns.length === 0) {
+      throw new ValueError("Cannot add a row to a table without columns. Add a column first.");
+    }
+    const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
+    this.data.addSubmodelElement(newRow, options);
+    this.columns.forEach((column) => {
+      const columnCopy = column.copy({
+        transformer: new TableRowCopyVisitor(),
       });
-
-      if (options?.position === 0) {
-        this.setHeaderRow();
+      if (columnCopy.isAllowed) {
+        newRow.addSubmodelElement(columnCopy.value, {
+          ability: options.ability,
+        });
       }
+    });
+
+    if (options?.position === 0) {
+      this.setHeaderRow();
     }
     this.tracker.track(
       RowAdded.create({

@@ -138,11 +138,19 @@ export class Passport
   }
 
   assertStructureEditable(): void {
+    this.assertNotArchived();
     assertModeAllowsStructureEdit(this.editingMode, `Passport ${this.id}`);
   }
 
   assertDataEditable(): void {
+    this.assertNotArchived();
     assertModeAllowsDataEdit(this.editingMode, `Passport ${this.id}`);
+  }
+
+  private assertNotArchived(): void {
+    if (this.isArchived()) {
+      throw new ValueError("Cannot modify an archived digital product document");
+    }
   }
 
   removeEditingRestrictions(): void {

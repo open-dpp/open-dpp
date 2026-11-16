@@ -1,8 +1,4 @@
-import {
-  DigitalProductDocumentStatusDto,
-  EditingModeDto,
-  TemplateDtoSchema,
-} from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, EditingModeDto, TemplateDtoSchema } from "@open-dpp/dto";
 import type { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";

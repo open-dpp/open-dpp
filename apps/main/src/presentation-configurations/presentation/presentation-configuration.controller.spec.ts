@@ -131,7 +131,7 @@ describe("PresentationConfigurationController", () => {
       id: passport.id,
       organizationId: passport.organizationId,
       referenceType: DigitalProductDocumentTypes.Passport,
-      editingMode: passport.getEditingMode(),
+      assertStructureEditable: expect.any(Function),
     };
   }
 
@@ -140,6 +140,7 @@ describe("PresentationConfigurationController", () => {
       id: template.id,
       organizationId: template.organizationId,
       referenceType: DigitalProductDocumentTypes.Template,
+      assertStructureEditable: expect.any(Function),
     };
   }
 

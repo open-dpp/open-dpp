@@ -819,6 +819,25 @@ describe("tableExtension", () => {
     expect(table.columns).toEqual([expectedCol1, expectedCol2]);
   });
 
+  it("should not add a row to a table without columns", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "idShort",
+    });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodelElementList.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    expect(() => table.addRow({ ability })).toThrow(
+      new ValueError("Cannot add a row to a table without columns. Add a column first."),
+    );
+    expect(table.rows).toHaveLength(0);
+  });
+
   it("should not delete the last row because it holds the column definitions", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,

@@ -379,13 +379,6 @@ export class PassportController
     @UserIdDecorator() userId: string,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.modifyShell(
       correlationId,
       organizationId,
@@ -434,13 +427,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.createSubmodel(
       correlationId,
       organizationId,
@@ -462,13 +448,6 @@ export class PassportController
     @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     await this.passportService.digitalProductDocumentService.deletePolicyBySubjectAndObject(
       correlationId,
       organizationId,
@@ -489,13 +468,6 @@ export class PassportController
     @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     await this.passportService.digitalProductDocumentService.deleteSubmodel(
       correlationId,
       organizationId,
@@ -518,13 +490,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.modifySubmodel(
       correlationId,
       organizationId,
@@ -549,13 +514,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.moveSubmodel(
       correlationId,
       organizationId,
@@ -654,13 +612,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
       correlationId,
       organizationId,
@@ -689,13 +640,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
       correlationId,
       organizationId,
@@ -725,13 +669,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.reorderColumn(
       correlationId,
       organizationId,
@@ -760,13 +697,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
       correlationId,
       organizationId,
@@ -795,13 +725,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.addColumnToGroupInSubmodelElementList(
       correlationId,
       organizationId,
@@ -832,13 +755,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.modifyColumnInGroupOfSubmodelElementList(
       correlationId,
       organizationId,
@@ -868,13 +784,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.deleteColumnFromGroupInSubmodelElementList(
       correlationId,
       organizationId,
@@ -903,13 +812,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.moveColumnToGroupInSubmodelElementList(
       correlationId,
       organizationId,
@@ -937,13 +839,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.createGroupFromColumnInSubmodelElementList(
       correlationId,
       organizationId,
@@ -971,13 +866,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.addRowToSubmodelElementList(
       correlationId,
       organizationId,
@@ -1004,13 +892,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
       correlationId,
       organizationId,
@@ -1036,13 +917,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.createSubmodelElement(
       correlationId,
       organizationId,
@@ -1066,13 +940,6 @@ export class PassportController
     @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     await this.passportService.digitalProductDocumentService.deleteSubmodelElement(
       correlationId,
       organizationId,
@@ -1097,13 +964,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.modifySubmodelElement(
       correlationId,
       organizationId,
@@ -1210,13 +1070,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
       correlationId,
       organizationId,
@@ -1243,13 +1096,6 @@ export class PassportController
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    this.passportService.assertFullEditingMode(passport);
     return await this.passportService.digitalProductDocumentService.moveSubmodelElement(
       correlationId,
       organizationId,

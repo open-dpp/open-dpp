@@ -81,7 +81,6 @@ describe("templateService", () => {
     await module.close();
   });
 
-
   it("modifyTemplateStatus publishes a template", async () => {
     const organizationId = randomUUID();
     const subject = SubjectAttributes.create({
