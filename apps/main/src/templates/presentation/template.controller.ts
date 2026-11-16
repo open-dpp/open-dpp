@@ -34,10 +34,9 @@ import {
   ImportOfficialTemplatesResultDtoSchema,
   Populates,
   TemplateCreateDtoSchema,
-  TemplateDtoSchema,
-  TemplatePaginationDtoSchema,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import { toTemplateDto, toTemplatePaginationDto } from "./template-dto.mapper";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
   Body,
@@ -121,7 +120,6 @@ import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
-import { PagingResult } from "../../pagination/paging-result";
 import { Period } from "../../time/period";
 import { OfficialTemplatesImportService } from "../application/services/official-templates-import.service";
 import { TemplateService } from "../application/template.service";
@@ -965,10 +963,12 @@ export class TemplateController
     body: DigitalProductDocumentStatusModificationDto,
   ): Promise<TemplateDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return this.templateService.modifyTemplateStatus(correlationId, organizationId, id, body, {
-      subject,
-      userId,
-    });
+    return toTemplateDto(
+      await this.templateService.modifyTemplateStatus(correlationId, organizationId, id, body, {
+        subject,
+        userId,
+      }),
+    );
   }
 
   @ApiGetActivities()
@@ -1038,7 +1038,7 @@ export class TemplateController
   ): Promise<TemplateDto> {
     const environment = await this.environmentService.createEnvironment(body.environment, true);
     const template = Template.create({ organizationId, environment });
-    return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+    return toTemplateDto(await this.templateRepository.save(template));
   }
 
   @Get("/:id/export")
@@ -1070,7 +1070,7 @@ export class TemplateController
         await this.templateRepository.save(t, options);
       },
     );
-    return TemplateDtoSchema.parse(template.toPlain());
+    return toTemplateDto(template);
   }
 
   @Post("/import-official")
@@ -1098,19 +1098,20 @@ export class TemplateController
     const pagination = Pagination.create({ limit, cursor });
     const period =
       startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
-    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(
-      organizationId,
-      { pagination, filter: { status, period } },
-    );
+    const templates = await this.templateRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+      filter: { status, period },
+    });
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {
-      pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
-        pagingResult,
-        { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
-        subject,
-      );
-    }
-    return TemplatePaginationDtoSchema.parse(pagingResult.toPlain());
+    const pagingResult =
+      populate.includes(Populates.assetAdministrationShells) && templates.items.length > 0
+        ? await this.environmentService.populateEnvironmentForPagingResult(
+            templates,
+            { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+            subject,
+          )
+        : templates;
+    return toTemplatePaginationDto(pagingResult);
   }
 
   @Get(":id")
@@ -1127,6 +1128,6 @@ export class TemplateController
         subject,
         organizationId,
       );
-    return TemplateDtoSchema.parse(template.toPlain());
+    return toTemplateDto(template);
   }
 }

@@ -2042,7 +2042,7 @@ describe("environmentService", () => {
     });
     const session = await connection.startSession();
     await session.withTransaction(async () => {
-      await environmentService.deleteEnvironment(environment, session);
+      await environmentService.deleteEnvironment(environment, { session });
     });
     await session.endSession();
     for (const aasId of environment.assetAdministrationShells) {

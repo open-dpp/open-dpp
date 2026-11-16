@@ -24,7 +24,7 @@ export function useDigitalProductDocumentToolbar(
 
   const passportEditingMode = computed(() =>
     type === DigitalProductDocumentType.Template
-      ? TemplateDtoSchema.optional().parse(model.value)?.passportEditingMode
+      ? TemplateDtoSchema.optional().parse(model.value)?.editingMode
       : undefined,
   );
 

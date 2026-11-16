@@ -1,4 +1,9 @@
-import { PassportEditingModeDto, type PassportDto, type TemplateDto } from "@open-dpp/dto";
+import {
+  EditingModeDto,
+  PassportEditingModeDto,
+  type PassportDto,
+  type TemplateDto,
+} from "@open-dpp/dto";
 import { passportsPlainFactory, templatesPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
@@ -68,10 +73,10 @@ describe("useDigitalProductDocumentToolbar", () => {
   describe("passportEditingMode / editingMode", () => {
     it("exposes passportEditingMode for a Template and leaves it undefined for a Passport", () => {
       const template = templatesPlainFactory.build({
-        passportEditingMode: PassportEditingModeDto.DataOnly,
+        editingMode: EditingModeDto.ReadOnly,
       });
       const { passportEditingMode } = mountHarness(DigitalProductDocumentType.Template, template);
-      expect(passportEditingMode.value).toEqual(PassportEditingModeDto.DataOnly);
+      expect(passportEditingMode.value).toEqual(EditingModeDto.ReadOnly);
 
       const passport = passportsPlainFactory.build();
       const { passportEditingMode: forPassport } = mountHarness(
@@ -100,7 +105,7 @@ describe("useDigitalProductDocumentToolbar", () => {
   describe("onRestrictPassportEditingButtonClicked", () => {
     it("only calls setPassportEditingMode after the confirm dialog is accepted", async () => {
       const template = templatesPlainFactory.build({
-        passportEditingMode: PassportEditingModeDto.Full,
+        editingMode: EditingModeDto.Full,
       });
       const { onRestrictPassportEditingButtonClicked, fetchDPD } = mountHarness(
         DigitalProductDocumentType.Template,
@@ -123,7 +128,7 @@ describe("useDigitalProductDocumentToolbar", () => {
 
     it("does not call setPassportEditingMode when the dialog is dismissed without accepting", () => {
       const template = templatesPlainFactory.build({
-        passportEditingMode: PassportEditingModeDto.Full,
+        editingMode: EditingModeDto.Full,
       });
       const { onRestrictPassportEditingButtonClicked, fetchDPD } = mountHarness(
         DigitalProductDocumentType.Template,

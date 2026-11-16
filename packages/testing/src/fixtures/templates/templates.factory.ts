@@ -1,6 +1,6 @@
 import {
   DigitalProductDocumentStatusDto,
-  PassportEditingModeDto,
+  EditingModeDto,
   TemplateDtoSchema,
 } from "@open-dpp/dto";
 import type { z } from "zod";
@@ -21,5 +21,5 @@ export const templatesPlainFactory = Factory.define<z.infer<typeof TemplateDtoSc
     currentStatus: DigitalProductDocumentStatusDto.Draft,
     previousStatus: null,
   },
-  passportEditingMode: PassportEditingModeDto.Full,
+  editingMode: EditingModeDto.Full,
 }));

@@ -274,7 +274,7 @@ export class PassportService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.environmentService.deleteEnvironment(passport.getEnvironment(), session);
+        await this.environmentService.deleteEnvironment(passport.getEnvironment(), { session });
         await this.passportRepository.deleteById(passport.id, { session });
         await this.permalinkRepository.deleteGs1LinksByUpiIds(
           upis.map((upi) => upi.uuid),

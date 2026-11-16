@@ -5,7 +5,7 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "./organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
-import { DigitalProductDocumentStatusDto, PassportEditingModeDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, EditingModeDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
@@ -59,7 +59,7 @@ export function templatesHandlers() {
       return HttpResponse.json(
         {
           ...template1,
-          passportEditingMode: PassportEditingModeDto.DataOnly,
+          editingMode: EditingModeDto.ReadOnly,
         },
         { status: 200 },
       );

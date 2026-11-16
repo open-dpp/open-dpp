@@ -7,6 +7,7 @@ import {
   GuestRoleDto,
   InvitationStatusDto,
   MeDtoSchema,
+  EditingModeDto,
   PassportEditingModeDto,
   SubmodelElementSchema,
   UserRoleDto,
@@ -276,7 +277,7 @@ describe("apiClient", () => {
       const response = await sdk.dpp.templates.setPassportEditingMode(template1.id, {
         mode: "DataOnly",
       });
-      expect(response.data.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
+      expect(response.data.editingMode).toEqual(EditingModeDto.ReadOnly);
     });
   });
 

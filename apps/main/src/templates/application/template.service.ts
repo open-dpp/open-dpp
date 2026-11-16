@@ -1,6 +1,4 @@
-import type { Connection } from "mongoose";
 import { ForbiddenException, Injectable } from "@nestjs/common";
-import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
@@ -12,7 +10,6 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 import {
   DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentTypes,
-  TemplateDtoSchema,
 } from "@open-dpp/dto";
 import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
@@ -29,7 +26,6 @@ export class TemplateService {
     private readonly environmentService: EnvironmentService,
     private readonly activityRepository: ActivityRepository,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
-    @InjectConnection() private readonly connection: Connection,
     presentationConfigurationService: PresentationConfigurationService,
     private readonly bulkImportConfigService: BulkImportConfigService,
     private readonly transactionService: TransactionService,
@@ -62,18 +58,13 @@ export class TemplateService {
       digitalProductDocumentId: id,
       item: template,
     });
-    const session = await this.connection.startSession();
-    try {
-      await session.withTransaction(async () => {
-        await this.templateRepository.save(template, { session });
-        if (!activity.isNoop()) {
-          await this.activityRepository.createMany([activity], { session });
-        }
-      });
-    } finally {
-      await session.endSession();
-    }
-    return TemplateDtoSchema.parse(template.toPlain());
+    await this.transactionService.withTransaction(async (options) => {
+      await this.templateRepository.save(template, options);
+      if (!activity.isNoop()) {
+        await this.activityRepository.createMany([activity], options);
+      }
+    });
+    return template;
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {
@@ -87,20 +78,15 @@ export class TemplateService {
       throw new ForbiddenException('Only templates with the status "Draft" can be deleted');
     }
 
-    const session = await this.connection.startSession();
-    try {
-      await session.withTransaction(async () => {
-        await this.environmentService.deleteEnvironment(template.environment, session);
-        await this.templateRepository.deleteById(template.id, { session });
-        await this.activityRepository.deleteByAggregateId(template.id, { session });
-        await this.presentationConfigurationRepository.deleteByReference(
-          { referenceType: DigitalProductDocumentTypes.Template, referenceId: template.id },
-          { session },
-        );
-        await this.bulkImportConfigService.deleteAllByTemplateId(template.id, { session });
-      });
-    } finally {
-      await session.endSession();
-    }
+    await this.transactionService.withTransaction(async (options) => {
+      await this.environmentService.deleteEnvironment(template.environment, options);
+      await this.templateRepository.deleteById(template.id, options);
+      await this.activityRepository.deleteByAggregateId(template.id, options);
+      await this.presentationConfigurationRepository.deleteByReference(
+        { referenceType: DigitalProductDocumentTypes.Template, referenceId: template.id },
+        options,
+      );
+      await this.bulkImportConfigService.deleteAllByTemplateId(template.id, options);
+    });
   }
 }
