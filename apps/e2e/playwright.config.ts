@@ -58,6 +58,7 @@ export default defineConfig({
       testIgnore: /account\//,
       use: {
         ...devices["Desktop Firefox"],
+        locale: "de-DE",
         // Use prepared auth state.
         storageState: "playwright/.auth/user.json",
       },
@@ -67,7 +68,13 @@ export default defineConfig({
     {
       name: "webkit",
       testIgnore: /account\//,
-      use: { ...devices["Desktop Safari"] },
+      use: {
+        ...devices["Desktop Safari"],
+        locale: "de-DE",
+        // Use prepared auth state.
+        storageState: "playwright/.auth/user.json",
+      },
+      dependencies: ["setup"],
     },
 
     // Account / email-change + profile specs. Self-contained: each test mints a

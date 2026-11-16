@@ -22,7 +22,8 @@ export class SignupPage {
   async signUp(firstName: string, lastName: string, password: string) {
     await this.page.locator('input[name="given-name"]').fill(firstName);
     await this.page.locator('input[name="lastName"]').fill(lastName);
-    await this.page.locator('input[type="password"]').first().fill(password);
+    await this.page.locator("#password").fill(password);
+    await this.page.locator("#passwordRepeat").fill(password);
     await this.page.locator('form button[type="submit"]').click();
   }
 }

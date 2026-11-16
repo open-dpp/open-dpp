@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { v4 as uuid4 } from "uuid";
 import { ApiBase, EnvConfig } from "../config";
+import { getOrganizationId } from "./organizations";
 
 export const GTIN14 = "04006381333931";
 
@@ -25,6 +26,25 @@ export async function createBlankPassport(page: Page): Promise<PassportIds> {
   const match = page.url().match(/\/organizations\/([0-9a-f]{24})\/passports\/([0-9a-f-]{36})/i);
   expect(match, "passport editor URL should carry the organization and passport id").not.toBeNull();
   return { orgId: match![1], passportId: match![2] };
+}
+
+/**
+ * A blank passport created through the API, in the organization the client selected last. For
+ * tests which only need the passport and do not use the editor: no dialog to click through, so
+ * nothing to time out on. The page is not moved.
+ */
+export async function createBlankPassportViaApi(page: Page): Promise<PassportIds> {
+  const orgId = await getOrganizationId(page);
+  if (!orgId) throw new Error("the setup should have selected an organization");
+
+  const created = await page.request.post(`${ApiBase}/passports`, {
+    headers: { [ORG_ID_HEADER]: orgId },
+    data: { environment: { assetAdministrationShells: [{ displayName: [] }] } },
+  });
+  expect(created.status(), `creating the passport should succeed: ${await created.text()}`).toBe(
+    201,
+  );
+  return { orgId, passportId: (await created.json()).id };
 }
 
 export function passportUrl({ orgId, passportId }: PassportIds): string {
