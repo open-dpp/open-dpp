@@ -65,4 +65,26 @@ describe("passport", () => {
       "This passport's editing is not restricted.",
     );
   });
+
+  it("should only allow data edits when editing is restricted to data", () => {
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      environment: Environment.create({}),
+      editingMode: PassportEditingMode.DataOnly,
+    });
+    expect(() => passport.assertStructureEditable()).toThrow(
+      `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+    );
+    expect(() => passport.assertDataEditable()).not.toThrow();
+  });
+
+  it("should allow structure and data edits when fully editable", () => {
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
+    expect(() => passport.assertStructureEditable()).not.toThrow();
+    expect(() => passport.assertDataEditable()).not.toThrow();
+  });
 });

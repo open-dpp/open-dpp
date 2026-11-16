@@ -16,6 +16,8 @@ import {
   restoreDpp,
 } from "../../digital-product-document/domain/digital-product-document-status";
 import {
+  assertModeAllowsDataEdit,
+  assertModeAllowsStructureEdit,
   PassportEditingMode,
   PassportEditingModeType,
 } from "../../digital-product-document/domain/editing-mode";
@@ -133,6 +135,14 @@ export class Passport
 
   getEditingMode(): PassportEditingModeType {
     return this.editingMode;
+  }
+
+  assertStructureEditable(): void {
+    assertModeAllowsStructureEdit(this.editingMode, `Passport ${this.id}`);
+  }
+
+  assertDataEditable(): void {
+    assertModeAllowsDataEdit(this.editingMode, `Passport ${this.id}`);
   }
 
   removeEditingRestrictions(): void {

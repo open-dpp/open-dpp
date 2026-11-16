@@ -12,6 +12,10 @@ import {
 } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import {
+  assertModeAllowsDataEdit,
+  assertModeAllowsStructureEdit,
+  EditingMode,
+  EditingModeType,
   PassportEditingMode,
   PassportEditingModeEnum,
   PassportEditingModeType,
@@ -109,6 +113,19 @@ export class Template
 
   getPassportEditingMode(): PassportEditingModeType {
     return this.passportEditingMode;
+  }
+
+  /** Derived, never stored: a template is editable only while it is a draft. */
+  getEditingMode(): EditingModeType {
+    return this.isDraft() ? EditingMode.Full : EditingMode.ReadOnly;
+  }
+
+  assertStructureEditable(): void {
+    assertModeAllowsStructureEdit(this.getEditingMode(), `Template ${this.id}`);
+  }
+
+  assertDataEditable(): void {
+    assertModeAllowsDataEdit(this.getEditingMode(), `Template ${this.id}`);
   }
 
   restrictPassportEditingToData(): void {
