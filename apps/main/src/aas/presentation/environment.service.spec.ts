@@ -1437,7 +1437,13 @@ describe("environmentService", () => {
       submodel1,
       row1,
       listIdShortPath,
+      security,
     } = await createEnvironmentWithList();
+    // A table always keeps its last row, so add a second one that can stay
+    submodel1.addRow(listIdShortPath, {
+      ability: security.defineAbilityForSubject(admin.subject, admin.userId),
+    });
+    await submodelRepository.save(submodel1);
 
     await expect(
       environmentService.deleteRow(
@@ -1468,6 +1474,7 @@ describe("environmentService", () => {
     );
 
     expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);
+    expect(list.value).toHaveLength(1);
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
     expect(
       foundActivities.items.map((e) => ({

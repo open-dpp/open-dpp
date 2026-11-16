@@ -1437,33 +1437,45 @@ export function createAasTestContext<T>(
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
+    const row2 = SubmodelElementCollection.create({ idShort: "row_2" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    const col1OfRow2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     submodel.addSubmodelElement(submodelElementList, {
       ability,
     });
     submodelElementList.addSubmodelElement(row1, { ability });
+    submodelElementList.addSubmodelElement(row2, { ability });
 
     row1.addSubmodelElement(col1, { ability });
+    row2.addSubmodelElement(col1OfRow2, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
 
-    const response = await request(app.getHttpServer())
-      .delete(
-        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`,
-      )
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send();
+    const deleteRow = async (rowIdShort: string) =>
+      await request(app.getHttpServer())
+        .delete(
+          `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${rowIdShort}`,
+        )
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send();
+
+    const response = await deleteRow(row1.idShort);
     expect(response.status).toEqual(200);
-    expect(response.body.value).toEqual([]);
+    expect(response.body.value.map((row: any) => row.idShort)).toEqual([row2.idShort]);
+
+    // The last remaining row holds the column definitions and cannot be deleted
+    const lastRowResponse = await deleteRow(row2.idShort);
+    expect(lastRowResponse.status).toEqual(400);
+
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(
       IdShortPath.create({ path: "tableList" }),
     );
     const tableExtension = new TableExtension(foundList as SubmodelElementList);
-    expect(tableExtension.rows).toEqual([]);
+    expect(tableExtension.rows.map((row) => row.idShort)).toEqual([row2.idShort]);
   }
 
   async function assertDeleteSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
