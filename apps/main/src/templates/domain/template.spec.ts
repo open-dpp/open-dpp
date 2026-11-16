@@ -5,7 +5,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { EditingMode, PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
+import { EditingMode } from "../../digital-product-document/domain/editing-mode";
 import { Template } from "./template";
 
 describe("template", () => {
@@ -43,26 +43,6 @@ describe("template", () => {
     expect(template.isDraft()).toBeTruthy();
   });
 
-  it("should restrict passport editing to data", () => {
-    const template = Template.create({
-      organizationId: randomUUID(),
-      environment: Environment.create({}),
-    });
-    expect(template.getPassportEditingMode()).toEqual(PassportEditingMode.Full);
-    template.restrictPassportEditingToData();
-    expect(template.getPassportEditingMode()).toEqual(PassportEditingMode.DataOnly);
-  });
-
-  it("should not restrict passport editing twice", () => {
-    const template = Template.create({
-      organizationId: randomUUID(),
-      environment: Environment.create({}),
-      passportEditingMode: PassportEditingMode.DataOnly,
-    });
-    expect(() => template.restrictPassportEditingToData()).toThrow(
-      "Passport editing is already restricted to data for this template.",
-    );
-  });
 
   describe("editing mode", () => {
     function createTemplate(status?: DigitalProductDocumentStatusChange) {

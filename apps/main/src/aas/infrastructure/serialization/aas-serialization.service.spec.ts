@@ -55,7 +55,7 @@ import {
   LatestAasExportVersion,
 } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
+import { EditingMode, PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 import { TransactionService } from "../../../database/transaction.service";
 import { EmailService } from "../../../email/email.service";
@@ -1073,7 +1073,7 @@ describe("aasSerializationService", () => {
   describe("editing mode export/import", () => {
     const orgId = "org-1";
 
-    it("defaults passportEditingMode to Full on v5.0 import (Template)", async () => {
+    it("imports a v5.0 template as an editable draft", async () => {
       const data = buildExportData({ version: AasExportVersion.v5_0 });
 
       const imported = await aasSerializationService.importTemplate(
@@ -1084,7 +1084,7 @@ describe("aasSerializationService", () => {
         },
       );
 
-      expect(imported.getPassportEditingMode()).toEqual(PassportEditingMode.Full);
+      expect(imported.getEditingMode()).toEqual(EditingMode.Full);
     });
 
     it("defaults editingMode to Full on v5.0 import (Passport)", async () => {
@@ -1101,7 +1101,7 @@ describe("aasSerializationService", () => {
       expect(imported.getEditingMode()).toEqual(PassportEditingMode.Full);
     });
 
-    it("round-trips passportEditingMode through v6.0 export/import (Template)", async () => {
+    it("ignores a legacy passportEditingMode on v6.0 template import and does not export it", async () => {
       const data = buildExportData({ version: AasExportVersion.v6_0 });
       (data as any).passportEditingMode = PassportEditingMode.DataOnly;
 
@@ -1112,12 +1112,12 @@ describe("aasSerializationService", () => {
           await templateRepository.save(t, options);
         },
       );
-      expect(imported.getPassportEditingMode()).toEqual(PassportEditingMode.DataOnly);
+      expect(imported.getEditingMode()).toEqual(EditingMode.Full);
 
       const loaded = await templateRepository.findOneOrFail(imported.id);
       const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const reExported = await aasSerializationService.exportTemplate(loaded, admin);
-      expect((reExported as any).passportEditingMode).toEqual(PassportEditingMode.DataOnly);
+      expect(reExported).not.toHaveProperty("passportEditingMode");
     });
 
     it("round-trips editingMode through v6.0 export/import (Passport)", async () => {

@@ -18,7 +18,6 @@ import { DigitalProductDocumentService } from "../../digital-product-document/ap
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { handleDppStatusChangeRequest } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentStatusChangedActivity } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
-import { PassportEditingModeChangedActivity } from "../../activity-history/domain/activities/passport-editing-mode-changed.activity";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 
 @Injectable()
@@ -75,36 +74,6 @@ export class TemplateService {
       await session.endSession();
     }
     return TemplateDtoSchema.parse(template.toPlain());
-  }
-
-  async restrictPassportEditingToData(
-    correlationId: string,
-    organizationId: string,
-    id: string,
-    userContext: UserContext,
-  ) {
-    const template =
-      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        userContext.subject,
-        organizationId,
-      );
-    template.withTracking();
-    template.restrictPassportEditingToData();
-    const activity = PassportEditingModeChangedActivity.create({
-      correlationId,
-      userId: userContext.userId,
-      digitalProductDocumentId: id,
-      item: template,
-    });
-    const saved = await this.transactionService.withTransaction(async (options) => {
-      const persisted = await this.templateRepository.save(template, options);
-      if (!activity.isNoop()) {
-        await this.activityRepository.createMany([activity], options);
-      }
-      return persisted;
-    });
-    return TemplateDtoSchema.parse(saved.toPlain());
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {

@@ -193,7 +193,7 @@ export class PassportService {
       environment,
       templateId,
       options,
-      template.getPassportEditingMode(),
+      template.isPublished() ? PassportEditingMode.DataOnly : PassportEditingMode.Full,
     );
   }
 

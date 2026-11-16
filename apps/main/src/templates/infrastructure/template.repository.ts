@@ -3,7 +3,6 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 import {
   findAllByOrganizationId,
   findOne,
@@ -44,8 +43,16 @@ export class TemplateRepository implements IDigitalProductDocumentRepository<Tem
   migrate1_1_0To1_2_0(plain: any) {
     return {
       ...plain,
-      passportEditingMode: PassportEditingMode.Full,
       _schemaVersion: TemplateDocVersion.v1_2_0,
+    };
+  }
+
+  /** 1.3.0 no longer stores the passport editing mode (derived from the status instead). */
+  migrate1_2_0To1_3_0(plain: any) {
+    const { passportEditingMode: _passportEditingMode, ...rest } = plain;
+    return {
+      ...rest,
+      _schemaVersion: TemplateDocVersion.v1_3_0,
     };
   }
 
@@ -60,6 +67,9 @@ export class TemplateRepository implements IDigitalProductDocumentRepository<Tem
     if (migratedVersion._schemaVersion === TemplateDocVersion.v1_1_0) {
       migratedVersion = this.migrate1_1_0To1_2_0(migratedVersion);
     }
+    if (migratedVersion._schemaVersion === TemplateDocVersion.v1_2_0) {
+      migratedVersion = this.migrate1_2_0To1_3_0(migratedVersion);
+    }
     return this.fromPlain(migratedVersion);
   }
 
@@ -67,7 +77,7 @@ export class TemplateRepository implements IDigitalProductDocumentRepository<Tem
     return await save(
       template,
       this.templateDoc,
-      TemplateDocVersion.v1_2_0,
+      TemplateDocVersion.v1_3_0,
       this.fromPlain.bind(this),
       undefined,
       options,

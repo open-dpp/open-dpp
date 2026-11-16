@@ -134,13 +134,12 @@ export class AasSerializationService {
     return this.importEntity(
       data,
       organizationId,
-      (environment, schema: TemplateExportLatestVersion) =>
+      (environment) =>
         Template.create({
           organizationId,
           environment,
           createdAt: new Date(),
           updatedAt: new Date(),
-          passportEditingMode: schema.passportEditingMode ?? PassportEditingMode.Full,
         }),
       DigitalProductDocumentTypes.Template,
       saveTemplate,

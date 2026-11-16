@@ -13,7 +13,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
+import { EditingMode } from "../../digital-product-document/domain/editing-mode";
 import { FindOptions } from "../../lib/repositories";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
@@ -111,7 +111,7 @@ describe("templateRepository", () => {
     );
   });
 
-  it(`should load and migrate template from version 1.1.0 to 1.2.0`, async () => {
+  it(`should load and migrate template from version 1.1.0 to the latest version`, async () => {
     const id = randomUUID();
     const now = new Date();
     const legacyDoc = new TemplateDocument({
@@ -131,7 +131,6 @@ describe("templateRepository", () => {
     });
     await legacyDoc.save({ validateBeforeSave: false });
     const foundTemplate = await templateRepository.findOneOrFail(id);
-    expect(foundTemplate.getPassportEditingMode()).toEqual(PassportEditingMode.Full);
     expect(foundTemplate).toEqual(
       Template.fromPlain({
         id,
@@ -142,9 +141,50 @@ describe("templateRepository", () => {
         lastStatusChange: DigitalProductDocumentStatusChange.create({
           currentStatus: DigitalProductDocumentStatus.Draft,
         }),
-        passportEditingMode: PassportEditingMode.Full,
       }),
     );
+  });
+
+  it("should ignore the legacy passportEditingMode of a stored template", async () => {
+    const id = randomUUID();
+    const now = new Date();
+    await TemplateDocument.collection.insertOne({
+      _id: id as any,
+      _schemaVersion: TemplateDocVersion.v1_2_0,
+      organizationId: randomUUID(),
+      environment: { submodels: [], assetAdministrationShells: [], conceptDescriptions: [] },
+      createdAt: now,
+      updatedAt: now,
+      lastStatusChange: { currentStatus: DigitalProductDocumentStatus.Published },
+      passportEditingMode: "DataOnly",
+    });
+
+    const found = await templateRepository.findOneOrFail(id);
+
+    expect(found.isPublished()).toBeTruthy();
+    expect(found.toPlain()).not.toHaveProperty("passportEditingMode");
+    expect(found.getEditingMode()).toEqual(EditingMode.ReadOnly);
+  });
+
+  it("should drop the legacy passportEditingMode when migrating from 1.2.0 to 1.3.0", () => {
+    const migrated = templateRepository.migrate1_2_0To1_3_0({
+      id: randomUUID(),
+      _schemaVersion: TemplateDocVersion.v1_2_0,
+      passportEditingMode: "DataOnly",
+    });
+
+    expect(migrated).not.toHaveProperty("passportEditingMode");
+    expect(migrated._schemaVersion).toEqual(TemplateDocVersion.v1_3_0);
+  });
+
+  it("should save templates with the latest schema version and without a passportEditingMode", async () => {
+    const template = Template.create({ organizationId: randomUUID() });
+    await templateRepository.save(template);
+
+    const raw = await TemplateDocument.collection.findOne({ _id: template.id as any });
+
+    expect(raw?._schemaVersion).toEqual(TemplateDocVersion.v1_3_0);
+    expect(raw).not.toHaveProperty("passportEditingMode");
   });
 
   it("should delete a template", async () => {

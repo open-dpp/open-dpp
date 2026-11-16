@@ -7,7 +7,6 @@ import {
   AssetKind,
   DigitalProductDocumentStatusModificationMethodDto,
   DigitalProductDocumentTypes,
-  PassportEditingModeDto,
 } from "@open-dpp/dto";
 import { AxiosResponse } from "axios";
 import { of } from "rxjs";
@@ -312,6 +311,7 @@ describe("templateController", () => {
         const plain = t.toPlain();
         return {
           ...plain,
+          passportEditingMode: "Full",
           environment: {
             ...t.environment.toPlain(),
             assetAdministrationShells: [
@@ -337,6 +337,7 @@ describe("templateController", () => {
         const plain = t.toPlain();
         return {
           ...plain,
+          passportEditingMode: "Full",
           createdAt: t.createdAt.toISOString(),
           updatedAt: t.updatedAt.toISOString(),
         };
@@ -358,6 +359,7 @@ describe("templateController", () => {
         const plain = p.toPlain();
         return {
           ...plain,
+          passportEditingMode: "Full",
           createdAt: p.createdAt.toISOString(),
           updatedAt: p.updatedAt.toISOString(),
         };
@@ -603,34 +605,6 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
     expect(foundPassport.isPublished()).toBeTruthy();
-  });
-
-  it("/PUT template passport-editing-mode", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-
-    const { dppIdentifiableRepository } = ctx.getRepositories();
-
-    const template = Template.create({
-      organizationId: org!.id,
-      environment: Environment.create({}),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    await dppIdentifiableRepository.save(template);
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePathV2}/${template.id}/passport-editing-mode`)
-      .set("Cookie", userCookie)
-      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
-      .send({
-        mode: PassportEditingModeDto.DataOnly,
-      });
-    expect(response.status).toEqual(200);
-    expect(response.body.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
-    const found = await dppIdentifiableRepository.findOneOrFail(template.id);
-    expect(found.getPassportEditingMode()).toEqual(PassportEditingModeDto.DataOnly);
   });
 
   it("/DELETE template", async () => {
