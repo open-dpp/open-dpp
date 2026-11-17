@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/main",
-  "version": "6.6.0",
+  "version": "6.6.2",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -87,7 +87,7 @@
     "@open-dpp/testing": "workspace:*",
     "@rspack/core": "^2.3.2",
     "@tsconfig/node-lts": "^24.0.1",
-    "@tsconfig/node-ts": "^23.6.4",
+    "@tsconfig/node-ts": "^23.6.5",
     "@types/archiver": "^7.0.0",
     "@types/body-parser": "^1.19.6",
     "@types/express": "^5.0.6",

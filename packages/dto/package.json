@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/dto",
-  "version": "6.6.0",
+  "version": "6.6.2",
   "description": "",
   "keywords": [],
   "homepage": "https://github.com/open-dpp/open-dpp#readme",
@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.1",
-    "@tsconfig/node-ts": "^23.6.4",
+    "@tsconfig/node-ts": "^23.6.5",
     "@types/node": "^26.6.6",
     "typescript": "~6.0.3"
   },

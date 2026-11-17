@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/env",
-  "version": "6.6.0",
+  "version": "6.6.2",
   "private": true,
   "description": "",
   "keywords": [],
@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.1",
-    "@tsconfig/node-ts": "^23.6.4",
+    "@tsconfig/node-ts": "^23.6.5",
     "typescript": "~6.0.3"
   },
   "packageManager": "pnpm@11.28.9"
