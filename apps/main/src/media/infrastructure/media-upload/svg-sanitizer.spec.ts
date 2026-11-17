@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vitest";
 import { ValueError } from "@open-dpp/exception";
 import { JSDOM } from "jsdom";
-import { sanitizeSvg } from "./svg-sanitizer";
+import { sanitizeSvg, SVG_LIMITS } from "./svg-sanitizer";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
@@ -21,6 +21,15 @@ function parseOutput(output: Buffer): Document {
 function sanitizeAndParse(input: Buffer): { text: string; document: Document } {
   const output = sanitizeSvg(input);
   return { text: output.toString("utf8"), document: parseOutput(output) };
+}
+
+/** `levels` elements nested in the svg root, which is the first level itself. */
+function nested(levels: number): Buffer {
+  return svg("<g>".repeat(levels) + "</g>".repeat(levels));
+}
+
+function attributes(count: number): string {
+  return Array.from({ length: count }, (_, index) => ` data-a${index}=""`).join("");
 }
 
 describe("sanitizeSvg", () => {
@@ -177,6 +186,61 @@ describe("sanitizeSvg", () => {
     expect(() => sanitizeSvg(Buffer.from(`<svg viewBox="0 0 1 1"><rect/></svg>`))).toThrow(
       ValueError,
     );
+  });
+
+  it("sanitizes the tree an XML parser builds, not one an HTML parser would", () => {
+    // An HTML parser closes the svg at <p> and turns the following rect into an HTML element.
+    const { document } = sanitizeAndParse(svg(`<p/><rect width="1" height="1"/>`));
+
+    expect(document.getElementsByTagName("p")).toHaveLength(0);
+    expect(document.getElementsByTagName("rect")).toHaveLength(1);
+  });
+
+  describe("limits", () => {
+    it("accepts as many nodes as the limit allows", () => {
+      // The svg root is a node as well.
+      const { document } = sanitizeAndParse(svg("<g/>".repeat(SVG_LIMITS.maxNodes - 1)));
+
+      expect(document.getElementsByTagName("g")).toHaveLength(SVG_LIMITS.maxNodes - 1);
+    });
+
+    it("rejects more elements than the node limit", () => {
+      expect(() => sanitizeSvg(svg("<g/>".repeat(SVG_LIMITS.maxNodes)))).toThrow(ValueError);
+    });
+
+    it("counts comments towards the node limit", () => {
+      expect(() => sanitizeSvg(svg("<!---->".repeat(SVG_LIMITS.maxNodes)))).toThrow(ValueError);
+    });
+
+    it("does not count markup inside a CDATA section or a comment as elements", () => {
+      const markup = "<g/>".repeat(SVG_LIMITS.maxNodes);
+
+      expect(() =>
+        sanitizeSvg(svg(`<style><![CDATA[${markup}]]></style><!--${markup}-->`)),
+      ).not.toThrow();
+    });
+
+    it("accepts elements nested as deep as the limit allows", () => {
+      const { document } = sanitizeAndParse(nested(SVG_LIMITS.maxDepth - 1));
+
+      expect(document.getElementsByTagName("g")).toHaveLength(SVG_LIMITS.maxDepth - 1);
+    });
+
+    it("rejects elements nested deeper than the limit", () => {
+      expect(() => sanitizeSvg(nested(SVG_LIMITS.maxDepth))).toThrow(ValueError);
+    });
+
+    it("accepts an element with as many attributes as the limit allows", () => {
+      expect(() =>
+        sanitizeSvg(svg(`<g${attributes(SVG_LIMITS.maxAttributesPerElement)}/>`)),
+      ).not.toThrow();
+    });
+
+    it("rejects an element with more attributes than the limit", () => {
+      expect(() =>
+        sanitizeSvg(svg(`<g${attributes(SVG_LIMITS.maxAttributesPerElement + 1)}/>`)),
+      ).toThrow(ValueError);
+    });
   });
 
   it("rejects a file that is not valid UTF-8", () => {
