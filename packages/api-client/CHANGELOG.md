@@ -1,5 +1,7 @@
 # @open-dpp/api-client
 
+## 6.6.1
+
 ## 6.6.0
 
 ### Minor Changes
