@@ -58,48 +58,46 @@ const { can } = useAasAbility({
 
 const idShortPathList = computed(() => props.path.idShortPathIncludingSubmodel ?? "");
 
-const canCreateColumnsAndRows = computed(() => {
-  return (
-    !props.isArchived &&
-    !props.isEditingRestrictedToData &&
-    can(Permissions.Create, idShortPathList.value)
-  );
-});
+// Rows are repeating values, so they follow the data-edit rules: they stay available while
+// editing is restricted to data. Columns are structure and are blocked in that case.
+const canCreateRows = computed(
+  () => !props.isReadOnly && can(Permissions.Create, idShortPathList.value),
+);
+
+const canDeleteRows = computed(
+  () => !props.isReadOnly && can(Permissions.Delete, idShortPathList.value),
+);
+
+const canCreateColumns = computed(() => canCreateRows.value && !props.isEditingRestrictedToData);
+
+const canDeleteColumns = computed(() => canDeleteRows.value && !props.isEditingRestrictedToData);
 
 const canEdit = computed(() => {
   return (
-    !props.isArchived &&
+    !props.isReadOnly &&
     !props.isEditingRestrictedToData &&
     can(Permissions.Edit, idShortPathList.value)
   );
 });
 
-// A table row is an element of this SubmodelElementList, and a cell is that element's
-// (or one of its columns') leaf value — same category as a Property/File editor's value
-// field, which stays editable while restricted to data. `canEdit` above stays the gate for
-// everything structural about the list itself (its own metadata/permissions, column
-// definitions/reordering via `disableColumnEditing`) — only cell rendering/editing uses
-// this looser check.
+// A table cell is a leaf value, same category as a Property/File editor's value field, which
+// stays editable while restricted to data. `canEdit` above stays the gate for everything
+// structural about the list itself (its own metadata/permissions, column
+// definitions/reordering via `disableColumnEditing`) — only cell rendering/editing and
+// clearing a row's values use this looser check.
 const canEditCellValues = computed(() => {
-  return !props.isArchived && can(Permissions.Edit, idShortPathList.value);
+  return !props.isReadOnly && can(Permissions.Edit, idShortPathList.value);
 });
 
-const canDeleteColumnsAndRows = computed(() => {
-  return (
-    !props.isArchived &&
-    !props.isEditingRestrictedToData &&
-    can(Permissions.Delete, idShortPathList.value)
-  );
-});
-
-// While archived or restricted to data, every action in the column/row menus (create,
-// edit, delete) is uniformly blocked — so hide the menu trigger itself instead of
-// letting the user open a menu full of disabled items. This is distinct from a partial
+// While read-only, every action in the menus is uniformly blocked — so hide the menu trigger
+// itself instead of letting the user open a menu full of disabled items. While restricted to
+// data, only the column menu is blocked, the row menu stays. This is distinct from a partial
 // permission gap (e.g. can edit but not delete a column), where only some menu items are
 // disabled and the trigger must stay reachable — that per-item gating (via
 // disableColumnEditing/disableRowCreation/etc., already threaded into the menu builders)
 // is unaffected by this and still applies whenever the trigger itself is shown.
-const columnRowMenuVisible = computed(() => !props.isArchived && !props.isEditingRestrictedToData);
+const rowMenuVisible = computed(() => !props.isReadOnly);
+const columnMenuVisible = computed(() => !props.isReadOnly && !props.isEditingRestrictedToData);
 
 const confirm = useConfirm();
 
@@ -132,10 +130,11 @@ const {
   translate: props.translate,
   openConfirm: confirm.require,
   aasNamespace: props.aasNamespace,
-  disableRowCreation: !canCreateColumnsAndRows.value,
-  disableColumnCreation: !canCreateColumnsAndRows.value,
-  disableRowDeletion: !canDeleteColumnsAndRows.value,
-  disableColumnDeletion: !canDeleteColumnsAndRows.value,
+  disableRowCreation: !canCreateRows.value,
+  disableRowDeletion: !canDeleteRows.value,
+  disableRowValueEditing: !canEditCellValues.value,
+  disableColumnCreation: !canCreateColumns.value,
+  disableColumnDeletion: !canDeleteColumns.value,
   disableColumnEditing: !canEdit.value,
 });
 
@@ -273,9 +272,9 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           </div>
           <Button
             v-if="!props.isEditingRestrictedToData"
-            v-tooltip.top="!canCreateColumnsAndRows ? missingPermissionsMsg : undefined"
+            v-tooltip.top="!canCreateColumns ? missingPermissionsMsg : undefined"
             :label="t('aasEditor.table.addColumnEnd')"
-            :disabled="!canCreateColumnsAndRows"
+            :disabled="!canCreateColumns"
             @click="toggleColumnMenu($event, { position: columns.length })"
           />
         </div>
@@ -294,7 +293,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             <template #header>
               <div class="flex items-center gap-2">
                 <Button
-                  v-if="col.children && columnRowMenuVisible"
+                  v-if="col.children && columnMenuVisible"
                   :data-cy="`column-menu-${col.idShort}`"
                   :aria-label="t('common.actions')"
                   icon="pi pi-chevron-down"
@@ -310,7 +309,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                   "
                 />
                 <Button
-                  v-else-if="columnRowMenuVisible"
+                  v-else-if="columnMenuVisible"
                   :data-cy="`column-menu-${col.idShort}`"
                   :aria-label="t('common.actions')"
                   icon="pi pi-chevron-down"
@@ -339,7 +338,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
               <template #header>
                 <div class="flex items-center gap-2">
                   <Button
-                    v-if="columnRowMenuVisible"
+                    v-if="columnMenuVisible"
                     :data-cy="`column-menu-${col.idShort}-${subCol.idShort}`"
                     :aria-label="t('common.actions')"
                     icon="pi pi-chevron-down"
@@ -368,7 +367,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         <template #body="{ index }">
           <div class="flex items-center gap-2 rounded-md">
             <Button
-              v-if="columnRowMenuVisible"
+              v-if="rowMenuVisible"
               :data-cy="`row-menu-${index}`"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
@@ -390,7 +389,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         <template #header>
           <div class="flex items-center gap-2">
             <Button
-              v-if="columnRowMenuVisible"
+              v-if="columnMenuVisible"
               :data-cy="`column-menu-${flatCol.idShort}`"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"

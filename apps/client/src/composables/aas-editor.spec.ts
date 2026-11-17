@@ -3,7 +3,6 @@ import {
   type AssetAdministrationShellResponseDto,
   AssetKind,
   DataTypeDef,
-  DigitalProductDocumentStatusDto,
   KeyTypes,
   Language,
   MemberRoleDto,
@@ -207,7 +206,7 @@ describe("aasEditor composable", () => {
 
   const selectedLanguage = Language["en"];
   const mockOpenConfirm = vi.fn();
-  const status = DigitalProductDocumentStatusDto.Draft;
+  const isReadOnly = false;
 
   it("should return displayName", async () => {
     const submodelsResponse = {
@@ -238,7 +237,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
-      status,
+      isReadOnly,
     });
     await init();
     expect(mocks.getShells).toHaveBeenCalledWith(aasWrapperId, {
@@ -278,7 +277,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
     await init();
     openAssetAdministrationShellEditor();
@@ -342,7 +341,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
-      status,
+      isReadOnly,
     });
     await init();
 
@@ -524,7 +523,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
-      status,
+      isReadOnly,
       isEditingRestrictedToData: true,
     });
     await init();
@@ -568,7 +567,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
-      status,
+      isReadOnly,
       isEditingRestrictedToData: true,
     });
     await init();
@@ -691,7 +690,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
-      status,
+      isReadOnly,
     });
     await init();
     selectTreeNode(keyToSelect);
@@ -743,7 +742,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
       await init();
       await createSubmodel();
@@ -849,7 +848,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
 
       const data = { idShort: "newProperty", valueType };
@@ -896,7 +895,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
 
       const data = { idShort: "newProperty" };
@@ -947,7 +946,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
 
       const expectedRequestBody = {
@@ -1014,7 +1013,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
 
       const data = {
@@ -1063,7 +1062,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         translate,
         openConfirm: mockOpenConfirm,
-        status,
+        isReadOnly,
       });
 
       const data = {
@@ -1120,7 +1119,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: openAutoConfirm,
         translate,
-        status,
+        isReadOnly,
       });
       await init();
       mocks.deleteSubmodelById.mockResolvedValueOnce({
@@ -1154,7 +1153,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: openAutoConfirm,
         translate,
-        status,
+        isReadOnly,
       });
       await init();
       mocks.deleteSubmodelElementById.mockResolvedValueOnce({
@@ -1201,7 +1200,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
       await init();
 
@@ -1242,7 +1241,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
       });
       await init();
 
@@ -1306,7 +1305,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
-        status,
+        isReadOnly,
         onAfterMove,
       });
       await init();
@@ -1336,7 +1335,7 @@ describe("aasEditor composable", () => {
           selectedLanguage,
           openConfirm: mockOpenConfirm,
           translate,
-          status,
+          isReadOnly,
         });
       await init();
 

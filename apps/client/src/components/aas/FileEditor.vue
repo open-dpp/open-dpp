@@ -26,7 +26,7 @@ const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
 });
 const disableEdit = computed(() => {
-  return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+  return props.isReadOnly || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
 // Metadata (idShort, displayName, description, semanticId, qualifiers) and permissions are

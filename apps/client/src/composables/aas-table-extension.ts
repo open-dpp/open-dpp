@@ -7,7 +7,7 @@ import type {
   SubmodelElementSharedRequestDto,
   TableModificationParamsDto,
 } from "@open-dpp/dto";
-import { KeyTypes, SubmodelElementListJsonSchema } from "@open-dpp/dto";
+import { AasSubmodelElements, KeyTypes, SubmodelElementListJsonSchema } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem } from "primevue/menuitem";
 import type { Ref } from "vue";
@@ -56,6 +56,7 @@ interface AasTableExtensionProps {
   disableRowCreation?: boolean;
   disableColumnCreation?: boolean;
   disableRowDeletion?: boolean;
+  disableRowValueEditing?: boolean;
   disableColumnDeletion?: boolean;
   disableColumnEditing?: boolean;
   /**
@@ -106,6 +107,7 @@ export function useAasTableExtension({
   disableColumnCreation,
   disableRowCreation,
   disableRowDeletion,
+  disableRowValueEditing,
   disableColumnDeletion,
   disableColumnEditing,
   timezone,
@@ -362,6 +364,39 @@ export function useAasTableExtension({
     );
   }
 
+  /**
+   * Resets the values of one row to empty through the regular value endpoints. Cells that open
+   * a nested table are skipped: they hold a row count, not a value of their own.
+   */
+  async function onClearRow(rowIndex: number) {
+    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
+    const fieldsToClear = flatColumns.value
+      .map((column) => column.field)
+      .filter(
+        (field) =>
+          rowsContext.value[rowIndex]?.[field]?.modelType !==
+          AasSubmodelElements.SubmodelElementList,
+      );
+    try {
+      const modifications = rows.value.map((row, index) => {
+        if (index !== rowIndex) {
+          return convertRowToRequestDto(row, rowsContext.value);
+        }
+        const cleared = { ...row };
+        fieldsToClear.forEach((field) => setFieldValue(cleared, field, null));
+        return convertRowToRequestDto(cleared, rowsContext.value);
+      });
+      const success = await tableMutations.saveRows(modifications, mutationDeps, errorMessage);
+      if (success) {
+        fieldsToClear.forEach((field) => setFieldValue(rows.value[rowIndex]!, field, null));
+      } else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    } catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
+
   const menuDeps: TableMenuDeps = {
     translate,
     openDrawer,
@@ -371,6 +406,7 @@ export function useAasTableExtension({
     errorHandlingStore,
     disableRowCreation,
     disableRowDeletion,
+    disableRowValueEditing,
     disableColumnCreation,
     disableColumnDeletion,
     disableColumnEditing,
@@ -385,6 +421,7 @@ export function useAasTableExtension({
     onCreateGroupFromColumn,
     onAddRow,
     onRemoveRow,
+    onClearRow,
   };
 
   function buildColumnMenu(options: ColumnMenuOptions) {
@@ -397,7 +434,7 @@ export function useAasTableExtension({
   }
 
   function buildRowMenu(options: RowMenuOptions) {
-    rowMenu.value = computeRowMenu(options, rows.value.length, menuDeps);
+    rowMenu.value = computeRowMenu(options, rows.value.length, columns.value.length, menuDeps);
   }
 
   async function save() {

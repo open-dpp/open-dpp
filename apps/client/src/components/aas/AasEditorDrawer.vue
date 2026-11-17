@@ -31,7 +31,7 @@ export interface AasEditorContext {
   id: string;
   aasNamespace: AasNamespace;
   errorHandlingStore: IErrorHandlingStore;
-  isArchived: boolean;
+  isReadOnly: boolean;
   isEditingRestrictedToData: boolean;
   type: DigitalProductDocumentTypeType;
   openDrawer: IAasDrawer["openDrawer"];
@@ -206,7 +206,7 @@ function canEditPath(path: string): boolean {
               :delete-policy-by-subject-and-object="
                 props.editorContext.deletePolicyBySubjectAndObject
               "
-              :is-archived="props.editorContext.isArchived"
+              :is-read-only="props.editorContext.isReadOnly"
               :is-editing-restricted-to-data="props.editorContext.isEditingRestrictedToData"
               :hide-drawer="props.hideDrawer"
             />
@@ -216,7 +216,7 @@ function canEditPath(path: string): boolean {
               :element="props.editorVNode!.props.data"
               :path="props.editorVNode!.props.path.idShortPathIncludingSubmodel!"
               :disabled="
-                props.editorContext.isArchived ||
+                props.editorContext.isReadOnly ||
                 props.editorContext.isEditingRestrictedToData ||
                 !canEditPath(props.editorVNode!.props.path.idShortPathIncludingSubmodel!)
               "

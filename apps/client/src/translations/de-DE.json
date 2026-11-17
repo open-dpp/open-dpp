@@ -100,7 +100,7 @@
     "security": {
       "unknownRole": "Unbekannte Rolle",
       "missingPermission": "Fehlende Rechte",
-      "archivedTooltip": "Dieses Dokument ist archiviert und kann nicht geändert werden.",
+      "readOnlyTooltip": "Dieses Dokument ist schreibgeschützt und kann nicht geändert werden.",
       "editingRestrictedTooltip": "Dieser Pass erlaubt ausschließlich Datenänderungen. Seine Vorlage legt die Struktur fest.",
       "inheritedPermission": "Berechtigungen werden geerbt",
       "overriddenPermission": "Berechtigungen werden überschrieben",
@@ -132,6 +132,7 @@
       "emptyCell": "Bitte ausfüllen",
       "addRowAbove": "@:aasEditor.table.row oberhalb @.lower:common.add",
       "addRowBelow": "@:aasEditor.table.row unterhalb @.lower:common.add",
+      "clearRowValues": "Zeilenwerte leeren",
       "addColumnLeft": "@:aasEditor.table.column links @.lower:common.add",
       "addColumnRight": "@:aasEditor.table.column rechts @.lower:common.add",
       "addColumnEnd": "@:aasEditor.table.column am Ende @.lower:common.add",

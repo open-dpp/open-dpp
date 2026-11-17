@@ -1,15 +1,8 @@
-import {
-  EditingModeDto,
-  type DigitalProductDocumentDto,
-  PassportDtoSchema,
-  TemplateDtoSchema,
-} from "@open-dpp/dto";
+import { EditingModeDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
 import { computed, type Ref } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-  DigitalProductDocumentType,
-  type DigitalProductDocumentTypeType,
-} from "../lib/digital-product-document.ts";
+import type { DigitalProductDocumentTypeType } from "../lib/digital-product-document.ts";
+import { useEditingMode } from "./editing-capabilities.ts";
 
 export function useDigitalProductDocumentToolbar(
   type: DigitalProductDocumentTypeType,
@@ -17,11 +10,7 @@ export function useDigitalProductDocumentToolbar(
 ) {
   const { t } = useI18n();
 
-  const editingMode = computed(() =>
-    type === DigitalProductDocumentType.Template
-      ? TemplateDtoSchema.optional().parse(model.value)?.editingMode
-      : PassportDtoSchema.optional().parse(model.value)?.editingMode,
-  );
+  const editingMode = useEditingMode(type, model);
 
   /** Tag explaining why the document is (partly) locked; undefined while fully editable. */
   const editingModeBadge = computed(() => {

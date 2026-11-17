@@ -142,9 +142,9 @@ export type OpenDrawerCallback<K extends EditorType, M extends EditorModeType> =
 }) => void;
 interface AasDrawerProps {
   onHideDrawer: () => void;
-  isArchived?: MaybeRefOrGetter<boolean>;
+  isReadOnly?: MaybeRefOrGetter<boolean>;
   /** Passport-only: true when editing is restricted to leaf data values. Unlike
-   * `isArchived`, this only hides the Save button for editors with no leaf value of
+   * `isReadOnly`, this only hides the Save button for editors with no leaf value of
    * their own (container/shell/column types) — a Property/File editor's Save stays
    * available since the value field remains editable while restricted. */
   isEditingRestrictedToData?: MaybeRefOrGetter<boolean>;
@@ -168,7 +168,7 @@ export interface IAasDrawer {
 export function useAasDrawer({
   onHideDrawer,
   can,
-  isArchived,
+  isReadOnly,
   isEditingRestrictedToData,
 }: AasDrawerProps): IAasDrawer {
   const drawerHeader = ref<string>("");
@@ -196,7 +196,7 @@ export function useAasDrawer({
     drawerHeader.value = title;
     drawerVisible.value = true;
 
-    if (toValue(isArchived)) {
+    if (toValue(isReadOnly)) {
       saveButtonIsVisible.value = false;
     } else if (
       toValue(isEditingRestrictedToData) &&

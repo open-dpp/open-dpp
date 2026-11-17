@@ -48,7 +48,7 @@ vi.mock("primevue/useconfirm", () => ({
 }));
 
 // Bypasses the permission-rule fixture entirely — this spec only exercises the
-// isArchived/isEditingRestrictedToData gating, not the permission system itself
+// isReadOnly/isEditingRestrictedToData gating, not the permission system itself
 // (already covered by aas-ability.spec.ts).
 vi.mock("../../composables/aas-ability.ts", () => ({
   useAasAbility: () => ({ can: () => true }),
@@ -88,7 +88,7 @@ const listData = SubmodelElementListJsonSchema.parse({
   ],
 });
 
-function mountEditor(props: { isArchived?: boolean; isEditingRestrictedToData?: boolean } = {}) {
+function mountEditor(props: { isReadOnly?: boolean; isEditingRestrictedToData?: boolean } = {}) {
   const Harness = defineComponent({
     name: "SubmodelElementListEditorHarness",
     components: { SubmodelElementListEditor },
@@ -109,7 +109,7 @@ function mountEditor(props: { isArchived?: boolean; isEditingRestrictedToData?: 
         :get-access-permission-rules="getAccessPermissionRules"
         :modify-shell="modifyShell"
         :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
-        :is-archived="editorProps.isArchived ?? false"
+        :is-read-only="editorProps.isReadOnly ?? false"
         :is-editing-restricted-to-data="editorProps.isEditingRestrictedToData ?? false"
       />
     `,
@@ -163,7 +163,7 @@ describe("SubmodelElementListEditor — cell values stay editable while restrict
   });
 
   it("disables the File cell's value when archived (unlike restricted-to-data)", () => {
-    const wrapper = mountEditor({ isArchived: true });
+    const wrapper = mountEditor({ isReadOnly: true });
     const fileField = wrapper.findComponent(FileFieldStub);
     // When archived, the File cell has no editable widget at all (it falls
     // through to the read-only MediaFieldView branch instead of FileField).
@@ -179,14 +179,14 @@ describe("SubmodelElementListEditor — cell values stay editable while restrict
 });
 
 describe("SubmodelElementListEditor — column/row action menu triggers", () => {
-  it("hides the row and column menu triggers (not their individual items) when restricted to data", () => {
+  it("keeps the row menu but hides the column menu triggers when restricted to data", () => {
     const wrapper = mountEditor({ isEditingRestrictedToData: true });
-    expect(wrapper.find('[data-cy="row-menu-0"]').exists()).toBe(false);
+    expect(wrapper.find('[data-cy="row-menu-0"]').exists()).toBe(true);
     expect(wrapper.find('[data-cy="column-menu-Attachment"]').exists()).toBe(false);
   });
 
-  it("hides the row and column menu triggers when archived", () => {
-    const wrapper = mountEditor({ isArchived: true });
+  it("hides the row and column menu triggers when read-only", () => {
+    const wrapper = mountEditor({ isReadOnly: true });
     expect(wrapper.find('[data-cy="row-menu-0"]').exists()).toBe(false);
     expect(wrapper.find('[data-cy="column-menu-Attachment"]').exists()).toBe(false);
   });

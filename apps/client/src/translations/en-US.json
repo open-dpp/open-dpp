@@ -100,7 +100,7 @@
     "security": {
       "unknownRole": "Unknown role",
       "missingPermission": "Missing permissions",
-      "archivedTooltip": "This document is archived and cannot be modified.",
+      "readOnlyTooltip": "This document is read-only and cannot be modified.",
       "editingRestrictedTooltip": "This passport allows data changes only. Its template controls the structure.",
       "inheritedPermission": "Inherited permissions",
       "overriddenPermission": "Overridden permissions",
@@ -138,6 +138,7 @@
       "addColumnEnd": "@:common.add @:aasEditor.table.column to the end",
       "addRowAbove": "@:common.add @:aasEditor.table.row above",
       "addRowBelow": "@:common.add @:aasEditor.table.row below",
+      "clearRowValues": "Clear row values",
       "editColumn": "@:common.edit @:aasEditor.table.column",
       "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column",
       "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
