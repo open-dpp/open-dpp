@@ -20,8 +20,8 @@ const JSDOM_SAXES_OPTIONS = {
 /**
  * Parsing, sanitizing and serializing run synchronously on the request thread. jsdom and saxes
  * slow down quadratically with nesting depth and with the attributes of one element, every
- * attribute costs jsdom a few kilobytes, and jsdom parses a `style` attribute as CSS each time
- * it is set.
+ * attribute costs jsdom a few kilobytes, jsdom parses a `style` attribute as CSS each time it is
+ * set, and saxes copies a namespace URI once for every attribute with its prefix.
  */
 export const SVG_LIMITS = {
   /** Elements, comments, CDATA sections and processing instructions; text sits between them. */
@@ -32,6 +32,8 @@ export const SVG_LIMITS = {
   maxAttributes: 50_000,
   /** Characters in all `style` attributes together. */
   maxStyleLength: 1_000_000,
+  /** Characters in one namespace URI; editors declare URIs of up to about 50. */
+  maxNamespaceLength: 256,
 } as const;
 
 type Purifier = ReturnType<typeof createDOMPurify>;
@@ -80,57 +82,71 @@ function decodeUtf8(input: Buffer): string {
   }
 }
 
+/** Adds to a running count, which may also go down, and throws once it is above `max`. */
+function limitedCount(max: number, message: string): (amount?: number) => void {
+  let count = 0;
+  return (amount = 1) => {
+    count += amount;
+    if (count > max) {
+      throw new ValueError(message);
+    }
+  };
+}
+
+function limitedAttributesOfElement(): (amount?: number) => void {
+  return limitedCount(
+    SVG_LIMITS.maxAttributesPerElement,
+    `An element of the SVG image has more than ${SVG_LIMITS.maxAttributesPerElement} attributes.`,
+  );
+}
+
 /**
  * Streams the text through saxes, which builds no DOM, and stops at the first limit exceeded,
- * before saxes reads any deeper. Counts what the parser reports, so markup inside a comment or a
+ * before saxes reads any further. Counts what the parser reports, so markup inside a comment or a
  * CDATA section is text, and an element is counted however its name is spelled.
  */
 function assertWithinLimits(text: string): void {
+  const { maxNodes, maxDepth, maxAttributes, maxStyleLength, maxNamespaceLength } = SVG_LIMITS;
+  const countNode = limitedCount(maxNodes, `The SVG image has more than ${maxNodes} elements.`);
+  const countDepth = limitedCount(
+    maxDepth,
+    `The SVG image nests elements more than ${maxDepth} levels deep.`,
+  );
+  const countAttribute = limitedCount(
+    maxAttributes,
+    `The SVG image has more than ${maxAttributes} attributes.`,
+  );
+  const countStyle = limitedCount(
+    maxStyleLength,
+    `The style attributes of the SVG image are longer than ${maxStyleLength} characters.`,
+  );
+  let countAttributeOfElement = limitedAttributesOfElement();
+
   const parser = new SaxesParser(JSDOM_SAXES_OPTIONS);
-  let nodes = 0;
-  let depth = 0;
-  let attributes = 0;
-  let styleLength = 0;
-  const countNode = (): void => {
-    nodes += 1;
-    if (nodes > SVG_LIMITS.maxNodes) {
-      throw new ValueError(`The SVG image has more than ${SVG_LIMITS.maxNodes} elements.`);
-    }
-  };
   parser.on("opentagstart", () => {
     countNode();
-    depth += 1;
-    if (depth > SVG_LIMITS.maxDepth) {
+    countDepth();
+    countAttributeOfElement = limitedAttributesOfElement();
+  });
+  // Called as each attribute is read: before saxes stores the rest of the start tag, and before
+  // it resolves the namespaces of the prefixed attributes when the start tag ends.
+  parser.on("attribute", ({ name, prefix, value }) => {
+    countAttributeOfElement();
+    countAttribute();
+    if ((name === "xmlns" || prefix === "xmlns") && value.length > maxNamespaceLength) {
       throw new ValueError(
-        `The SVG image nests elements more than ${SVG_LIMITS.maxDepth} levels deep.`,
+        `A namespace of the SVG image is longer than ${maxNamespaceLength} characters.`,
       );
     }
-  });
-  parser.on("opentag", (tag) => {
-    const count = Object.keys(tag.attributes).length;
-    if (count > SVG_LIMITS.maxAttributesPerElement) {
-      throw new ValueError(
-        `An element of the SVG image has more than ${SVG_LIMITS.maxAttributesPerElement} attributes.`,
-      );
-    }
-    attributes += count;
-    if (attributes > SVG_LIMITS.maxAttributes) {
-      throw new ValueError(`The SVG image has more than ${SVG_LIMITS.maxAttributes} attributes.`);
-    }
-    // Keyed by qualified name: a prefixed style attribute is not parsed as CSS.
-    styleLength += tag.attributes.style?.value.length ?? 0;
-    if (styleLength > SVG_LIMITS.maxStyleLength) {
-      throw new ValueError(
-        `The style attributes of the SVG image are longer than ${SVG_LIMITS.maxStyleLength} characters.`,
-      );
+    // A prefixed style attribute is not parsed as CSS.
+    if (name === "style") {
+      countStyle(value.length);
     }
   });
-  parser.on("closetag", () => {
-    depth -= 1;
-  });
-  parser.on("comment", countNode);
-  parser.on("cdata", countNode);
-  parser.on("processinginstruction", countNode);
+  parser.on("closetag", () => countDepth(-1));
+  parser.on("comment", () => countNode());
+  parser.on("cdata", () => countNode());
+  parser.on("processinginstruction", () => countNode());
   parser.on("error", (error) => {
     throw new ValueError("The file is not a well-formed SVG image.", { cause: error });
   });

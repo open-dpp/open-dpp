@@ -241,6 +241,30 @@ describe("sanitizeSvg", () => {
         sanitizeSvg(svg(`<g${attributes(SVG_LIMITS.maxAttributesPerElement + 1)}/>`)),
       ).toThrow(ValueError);
     });
+
+    it("rejects an element over the attribute limit before the rest of its start tag is read", () => {
+      // The start tag never ends: the limit has to stop the parser before it notices.
+      const input = svg(`<g${attributes(SVG_LIMITS.maxAttributesPerElement + 1)}`);
+
+      expect(() => sanitizeSvg(input)).toThrow(
+        `more than ${SVG_LIMITS.maxAttributesPerElement} attributes`,
+      );
+    });
+
+    it("accepts a namespace declaration as long as the limit allows", () => {
+      const uri = "u".repeat(SVG_LIMITS.maxNamespaceLength);
+
+      expect(() =>
+        sanitizeSvg(svg(`<g xmlns:p="${uri}" p:a="1"/>`, ` xmlns:q="${uri}"`)),
+      ).not.toThrow();
+    });
+
+    it("rejects a namespace declaration longer than the limit", () => {
+      const uri = "u".repeat(SVG_LIMITS.maxNamespaceLength + 1);
+
+      expect(() => sanitizeSvg(svg("", ` xmlns:p="${uri}"`))).toThrow(ValueError);
+      expect(() => sanitizeSvg(svg(`<g xmlns="${uri}"/>`))).toThrow(ValueError);
+    });
   });
 
   it("rejects a file that is not valid UTF-8", () => {
