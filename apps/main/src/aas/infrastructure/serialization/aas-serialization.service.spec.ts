@@ -1123,6 +1123,17 @@ describe("aasSerializationService", () => {
       expect(reExported).not.toHaveProperty("passportEditingMode");
     });
 
+    it("rejects a passport import whose editingMode is ReadOnly", async () => {
+      const data = buildExportData({ version: AasExportVersion.v6_0 });
+      (data as any).editingMode = EditingMode.ReadOnly;
+
+      await expect(
+        aasSerializationService.importPassport(data, orgId, async (p, options) => {
+          await passportRepository.save(p, options);
+        }),
+      ).rejects.toThrow("Invalid import data format");
+    });
+
     it("round-trips editingMode through v6.0 export/import (Passport)", async () => {
       const data = buildExportData({ version: AasExportVersion.v6_0 });
       (data as any).editingMode = PassportEditingMode.DataOnly;
