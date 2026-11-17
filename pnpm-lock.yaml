@@ -453,8 +453,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       '@tsconfig/node-ts':
-        specifier: ^23.6.4
-        version: 23.6.4
+        specifier: ^23.6.5
+        version: 23.6.5
       '@types/archiver':
         specifier: ^7.0.0
         version: 7.0.0
@@ -569,8 +569,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       '@tsconfig/node-ts':
-        specifier: ^23.6.4
-        version: 23.6.4
+        specifier: ^23.6.5
+        version: 23.6.5
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
@@ -597,8 +597,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       '@tsconfig/node-ts':
-        specifier: ^23.6.4
-        version: 23.6.4
+        specifier: ^23.6.5
+        version: 23.6.5
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -619,8 +619,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       '@tsconfig/node-ts':
-        specifier: ^23.6.4
-        version: 23.6.4
+        specifier: ^23.6.5
+        version: 23.6.5
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -635,8 +635,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       '@tsconfig/node-ts':
-        specifier: ^23.6.4
-        version: 23.6.4
+        specifier: ^23.6.5
+        version: 23.6.5
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -672,8 +672,8 @@ importers:
         specifier: ^24.0.1
         version: 24.0.1
       '@tsconfig/node-ts':
-        specifier: ^23.6.4
-        version: 23.6.4
+        specifier: ^23.6.5
+        version: 23.6.5
       '@types/lodash':
         specifier: ^4.17.27
         version: 4.17.27
@@ -3245,8 +3245,8 @@ packages:
   '@tsconfig/node-lts@24.0.1':
     resolution: {integrity: sha512-xo+1KtV5zVb90fyyeglG1n5cqg3cQXLlCkEpLptYlZUNk28xmwhuD5GmxoXwmrVtUTvaMyclun9kAd0TK7H+Pg==}
 
-  '@tsconfig/node-ts@23.6.4':
-    resolution: {integrity: sha512-37BMJvNQZ+vTgd1xG2TGBkJ6ENeT4eO4Wh2CHrnn0IwH7ybLFCzh4Uc//kc7UIvqiRac4uGdIc1meKOjMSlKzw==}
+  '@tsconfig/node-ts@23.6.5':
+    resolution: {integrity: sha512-Wi2qMgKqBddhC/rN1CfYAB+Ayk5KxR8i8bVOQGPI26+2URbY435D9f28pRKmplWOIR0Ii/MmyWPDH12P38pRXw==}
 
   '@turbo/darwin-64@2.11.10':
     resolution: {integrity: sha512-By4idRap5+nLnMuRzLB4qkOPRlvNdyY1ne4VJYDyUoUB11H94k7uif9mbe3JT8JSNXs1D68uMcBj6hJ/jMQRvA==}
@@ -10952,7 +10952,7 @@ snapshots:
 
   '@tsconfig/node-lts@24.0.1': {}
 
-  '@tsconfig/node-ts@23.6.4': {}
+  '@tsconfig/node-ts@23.6.5': {}
 
   '@turbo/darwin-64@2.11.10':
     optional: true
