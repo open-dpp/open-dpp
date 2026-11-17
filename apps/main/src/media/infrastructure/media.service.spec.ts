@@ -178,8 +178,8 @@ describe("MediaService", () => {
       expect(result).toBeInstanceOf(Media);
     });
 
-    it("should delete existing media if found", async () => {
-      mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
+    it("creates a media nobody has updated when the passport field has no file yet", async () => {
+      mockMediaModel.find.mockResolvedValue([]);
       mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
@@ -194,10 +194,114 @@ describe("MediaService", () => {
         "org-id",
       );
 
+      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          createdByUserId: "user-id",
+          ownedByOrganizationId: "org-id",
+          updatedByUserId: null,
+        }),
+        expect.anything(),
+      );
+      expect(mockMediaModel.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("replaces the file of the existing media in place", async () => {
+      const existing = {
+        ...validMediaDoc,
+        _id: "existing",
+        createdByUserId: "creator",
+        ownedByOrganizationId: "creator-org",
+      };
+      mockMediaModel.find.mockResolvedValue([existing]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "new-etag", versionId: "v2" });
+      mockMediaModel.findOneAndUpdate.mockResolvedValue(existing);
+
+      const result = await service.uploadFileOfProductPassport(
+        "new.pdf",
+        Buffer.from("test"),
+        "field-id",
+        "upid",
+        "replacer",
+        "org-id",
+      );
+
+      expect(result.id).toBe("existing");
+      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
+      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: "existing" },
+        expect.objectContaining({
+          createdByUserId: "creator",
+          ownedByOrganizationId: "creator-org",
+          updatedByUserId: "replacer",
+          title: "new.pdf",
+          originalFilename: "new.pdf",
+          mimeType: "application/pdf",
+          fileExtension: "pdf",
+          size: processedPdf.buffer.length,
+          eTag: "new-etag",
+          versionId: "v2",
+          createdAt: existing.createdAt,
+        }),
+        expect.anything(),
+      );
+      expect(mockMediaModel.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("keeps the existing media when the upload to the bucket fails", async () => {
+      mockMediaModel.find.mockResolvedValue([{ ...validMediaDoc, _id: "existing" }]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockRejectedValue(new Error("bucket unavailable"));
+
+      await expect(
+        service.uploadFileOfProductPassport(
+          "new.pdf",
+          Buffer.from("test"),
+          "field-id",
+          "upid",
+          "replacer",
+          "org-id",
+        ),
+      ).rejects.toThrow("bucket unavailable");
+
+      expect(mockMediaModel.deleteMany).not.toHaveBeenCalled();
+      expect(mockMediaModel.findOneAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it("removes further media of the same passport field after the replacement is saved", async () => {
+      mockMediaModel.find.mockResolvedValue([
+        { ...validMediaDoc, _id: "existing" },
+        { ...validMediaDoc, _id: "duplicate-1" },
+        { ...validMediaDoc, _id: "duplicate-2" },
+      ]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
+
+      await service.uploadFileOfProductPassport(
+        "new.pdf",
+        Buffer.from("test"),
+        "field-id",
+        "upid",
+        "replacer",
+        "org-id",
+      );
+
+      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: "existing" },
+        expect.anything(),
+        expect.anything(),
+      );
       expect(mockMediaModel.deleteMany).toHaveBeenCalledWith({
-        dataFieldId: "field-id",
-        uniqueProductIdentifier: "upid",
+        _id: { $in: ["duplicate-1", "duplicate-2"] },
       });
+      expect(mockMediaModel.findOneAndUpdate.mock.invocationCallOrder[0]).toBeLessThan(
+        mockMediaModel.deleteMany.mock.invocationCallOrder[0],
+      );
     });
 
     it("stores the processed file, checked against the media upload types", async () => {

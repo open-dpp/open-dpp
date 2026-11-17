@@ -8,6 +8,8 @@ import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import _ from "lodash";
 import { Client as S3Client } from "minio";
+import type { MediaFileProps } from "../domain/media";
+import type { ProcessedMediaUpload } from "./media-upload/media-upload-processor";
 import { Media } from "../domain/media";
 import { detectMediaProcessor } from "./media-upload/media-upload-processor";
 import { MediaDoc } from "./media.schema";
@@ -98,28 +100,44 @@ export class MediaService {
     return this.removeById(id);
   }
 
+  /** How a media describes a file that was just processed and stored in the bucket. */
+  private describeStoredFile(
+    originalFilename: string,
+    processed: ProcessedMediaUpload,
+    stored: Awaited<ReturnType<MediaService["uploadFile"]>>,
+  ): MediaFileProps {
+    return {
+      title: originalFilename,
+      description: originalFilename,
+      mimeType: processed.mimeType,
+      fileExtension: processed.fileExtension,
+      size: processed.buffer.length,
+      originalFilename,
+      bucket: stored.location.bucket,
+      objectName: stored.location.objectName,
+      eTag: stored.info.etag,
+      versionId: stored.info.versionId || this.fallbackMediaVersionId,
+    };
+  }
+
+  /**
+   * Stores the file of a passport field. If the field already has a media, its file is replaced
+   * and the media stays the same one; the organization is only used for a new media.
+   */
   async uploadFileOfProductPassport(
     originalFilename: string,
     buffer: Buffer,
     dataFieldId: string,
     uniqueProductIdentifier: string,
-    createdByUserId: string,
+    uploadedByUserId: string,
     ownedByOrganizationId: string,
   ) {
-    // Processed first: a rejected file must not remove the media it was meant to replace.
+    // Processed first: a rejected file must not touch the media it was meant to replace.
     const processor = await detectMediaProcessor(buffer);
     const processed = await processor.process(buffer, MEDIA_UPLOAD_MIME_TYPES);
-    const findMedia = await this.mediaDoc.find({
-      dataFieldId,
-      uniqueProductIdentifier,
-    });
-    if (findMedia.length > 0) {
-      await this.mediaDoc.deleteMany({
-        dataFieldId,
-        uniqueProductIdentifier,
-      });
-    }
-    const uploadInfo = await this.uploadFile(
+    const [existing, ...duplicates] = await this.findDppFiles(dataFieldId, uniqueProductIdentifier);
+    // Uploaded before any record changes: if the bucket fails, the field keeps its media.
+    const stored = await this.uploadFile(
       this.bucketNameDefault,
       processed.buffer,
       dataFieldId,
@@ -127,23 +145,21 @@ export class MediaService {
       processed.buffer.length,
       processed.mimeType,
     );
-    const media = Media.create({
-      createdByUserId,
-      ownedByOrganizationId,
-      title: originalFilename,
-      description: originalFilename,
-      mimeType: processed.mimeType,
-      fileExtension: processed.fileExtension,
-      size: processed.buffer.length,
-      originalFilename,
-      uniqueProductIdentifier,
-      dataFieldId,
-      bucket: uploadInfo.location.bucket,
-      objectName: uploadInfo.location.objectName,
-      eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
-    });
+    const file = this.describeStoredFile(originalFilename, processed, stored);
+    const media = existing
+      ? existing.withReplacedFile(file, uploadedByUserId)
+      : Media.create({
+          ...file,
+          createdByUserId: uploadedByUserId,
+          ownedByOrganizationId,
+          uniqueProductIdentifier,
+          dataFieldId,
+        });
     await this.save(media);
+    // Nothing prevents two media for one passport field. Only the one just saved stays.
+    if (duplicates.length > 0) {
+      await this.mediaDoc.deleteMany({ _id: { $in: duplicates.map((duplicate) => duplicate.id) } });
+    }
     return media;
   }
 
@@ -159,30 +175,20 @@ export class MediaService {
       buffer,
       options.allowedMimeTypes ?? MEDIA_UPLOAD_MIME_TYPES,
     );
-    const uuid = randomUUID();
-    const uploadInfo = await this.uploadFile(
+    const stored = await this.uploadFile(
       this.bucketNameDefault,
       processed.buffer,
-      uuid,
+      randomUUID(),
       options.remoteFolders ?? [BucketDefaultPaths.PRODUCT_PASSPORT_FILES],
       processed.buffer.length,
       processed.mimeType,
     );
     const media = Media.create({
+      ...this.describeStoredFile(originalFilename, processed, stored),
       createdByUserId,
       ownedByOrganizationId,
-      title: originalFilename,
-      description: originalFilename,
-      mimeType: processed.mimeType,
-      fileExtension: processed.fileExtension,
-      size: processed.buffer.length,
-      originalFilename,
       uniqueProductIdentifier: null,
       dataFieldId: null,
-      bucket: uploadInfo.location.bucket,
-      objectName: uploadInfo.location.objectName,
-      eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
     });
     await this.save(media);
     return media;
@@ -228,6 +234,7 @@ export class MediaService {
       id: mediaDoc._id,
       ownedByOrganizationId: mediaDoc.ownedByOrganizationId,
       createdByUserId: mediaDoc.createdByUserId,
+      updatedByUserId: mediaDoc.updatedByUserId,
       title: mediaDoc.title,
       description: mediaDoc.description,
       mimeType: mediaDoc.mimeType,
@@ -251,6 +258,7 @@ export class MediaService {
       {
         ownedByOrganizationId: media.ownedByOrganizationId,
         createdByUserId: media.createdByUserId,
+        updatedByUserId: media.updatedByUserId,
         title: media.title,
         description: media.description,
         mimeType: media.mimeType,
@@ -291,15 +299,21 @@ export class MediaService {
     return this.convertToDomain(mediaDocument);
   }
 
-  async findOneDppFileOrFail(dataFieldId: string, uniqueProductIdentifier: string) {
+  /** The media of a passport field. It should be one at most, but nothing enforces that. */
+  private async findDppFiles(dataFieldId: string, uniqueProductIdentifier: string) {
     const mediaDocuments = await this.mediaDoc.find({
       dataFieldId,
       uniqueProductIdentifier,
     });
-    if (mediaDocuments.length === 0) {
+    return mediaDocuments.map((mediaDocument) => this.convertToDomain(mediaDocument));
+  }
+
+  async findOneDppFileOrFail(dataFieldId: string, uniqueProductIdentifier: string) {
+    const [media] = await this.findDppFiles(dataFieldId, uniqueProductIdentifier);
+    if (!media) {
       throw new NotFoundInDatabaseException(Media.name);
     }
-    return this.convertToDomain(mediaDocuments[0]); // Assuming there's only one match
+    return media;
   }
 
   async findAll() {
@@ -318,6 +332,7 @@ export class MediaService {
         _id: true,
         ownedByOrganizationId: true,
         createdByUserId: true,
+        updatedByUserId: true,
         title: true,
         description: true,
         mimeType: true,

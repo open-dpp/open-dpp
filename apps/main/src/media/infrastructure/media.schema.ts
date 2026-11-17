@@ -44,6 +44,10 @@ export class MediaDoc extends Document {
   @Prop({ required: true })
   createdByUserId: string;
 
+  // The user who last replaced the file. Not set on media that were never replaced.
+  @Prop({ type: "string", required: false })
+  updatedByUserId: string | null;
+
   @Prop({ type: "string", required: false })
   uniqueProductIdentifier: string | null;
 
