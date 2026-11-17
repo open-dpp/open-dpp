@@ -692,6 +692,7 @@
     "upload": "Datei hochladen",
     "uploadSuccess": "Datei erfolgreich hochgeladen.",
     "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "uploadInvalid": "Diese Datei kann nicht hochgeladen werden. Der Dateityp wird nicht unterstützt, die Datei ist ungültig oder sie ist größer als {maxSizeMb} MB.",
     "change": "Datei ändern",
     "download": "Datei herunterladen",
     "downloadError": "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",

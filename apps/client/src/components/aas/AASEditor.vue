@@ -192,7 +192,7 @@ const editorContext = computed<AasEditorContext>(() => ({
       <template #content>
         <div class="flex items-start justify-between gap-2">
           <div class="flex gap-2">
-            <div style="width: 340px">
+            <div style="width: 340px" data-testid="product-image-galleria">
               <ProductImageGalleria v-model="aasGalleryFiles" />
             </div>
             <div class="flex flex-col gap-2">

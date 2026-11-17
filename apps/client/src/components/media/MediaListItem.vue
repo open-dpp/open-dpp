@@ -21,6 +21,7 @@ const emits = defineEmits<{
       'ring-primary-500 ring-2 ring-offset-2 ring-offset-gray-100': isSelected,
     }"
     class="flex h-64 w-64 flex-col gap-2 rounded"
+    data-testid="media-list-item"
     @click="selectable && emits('onSelect', media)"
   >
     <MediaPreview :media="media" :show-type="true" :preview="false" class="grow" />
