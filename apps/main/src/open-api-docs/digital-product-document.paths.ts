@@ -11,7 +11,6 @@ import {
   PassportPaginationDtoSchema,
   PassportRegistryExportRequestDtoSchema,
   PassportRequestCreateDtoSchema,
-  RemoveEditingRestrictionsDtoSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementModificationSchema,
   SubmodelElementPaginationResponseDtoSchema,
@@ -887,29 +886,6 @@ function createPassportPaths() {
           content: {
             [ContentType.JSON]: {
               schema: DigitalProductDocumentStatusModificationDtoSchema,
-            },
-          },
-        },
-        responses: {
-          [HTTPCode.OK]: {
-            content: {
-              [ContentType.JSON]: { schema: PassportDtoSchema },
-            },
-          },
-        },
-        security,
-      },
-    },
-    [`/${tag}/{id}/editing-mode`]: {
-      put: {
-        tags: [tag],
-        summary: `Remove this passport's data-only editing restriction.`,
-        parameters: [IdParamSchema, orgaIdHeader],
-        requestBody: {
-          required: true,
-          content: {
-            [ContentType.JSON]: {
-              schema: RemoveEditingRestrictionsDtoSchema,
             },
           },
         },

@@ -30,7 +30,6 @@ import {
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
-import { PassportEditingModeChanged } from "../../activity-history/domain/change-events/passport-editing-mode-changed";
 import { ValueError } from "@open-dpp/exception";
 
 export class Passport
@@ -151,19 +150,6 @@ export class Passport
     if (this.isArchived()) {
       throw new ValueError("Cannot modify an archived digital product document");
     }
-  }
-
-  removeEditingRestrictions(): void {
-    if (this.editingMode === PassportEditingMode.Full) {
-      throw new ValueError("This passport's editing is not restricted.");
-    }
-    this.tracker.track(
-      PassportEditingModeChanged.create({
-        oldValue: this.editingMode,
-        newValue: PassportEditingMode.Full,
-      }),
-    );
-    this.editingMode = PassportEditingMode.Full;
   }
 
   publish() {

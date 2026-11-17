@@ -43,29 +43,6 @@ describe("passport", () => {
     expect(passport.isDraft()).toBeTruthy();
   });
 
-  it("should remove editing restrictions", () => {
-    const passport = Passport.create({
-      organizationId: randomUUID(),
-      templateId: randomUUID(),
-      environment: Environment.create({}),
-      editingMode: PassportEditingMode.DataOnly,
-    });
-    expect(passport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
-    passport.removeEditingRestrictions();
-    expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
-  });
-
-  it("should not remove editing restrictions from a fully-editable passport", () => {
-    const passport = Passport.create({
-      organizationId: randomUUID(),
-      templateId: randomUUID(),
-      environment: Environment.create({}),
-    });
-    expect(() => passport.removeEditingRestrictions()).toThrow(
-      "This passport's editing is not restricted.",
-    );
-  });
-
   it("should only allow data edits when editing is restricted to data", () => {
     const passport = Passport.create({
       organizationId: randomUUID(),

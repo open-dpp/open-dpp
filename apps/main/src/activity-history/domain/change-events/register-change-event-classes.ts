@@ -27,7 +27,7 @@ import { ColumnModifiedInGroup } from "./column-modified-in-group";
 import { ColumnMovedToGroup } from "./column-moved-to-group";
 import { SubmodelElementMoved } from "./submodel-element-moved";
 import { SubmodelMoved } from "./submodel-moved";
-import { PassportEditingModeChanged } from "./passport-editing-mode-changed";
+import { PassportEditingModeChanged } from "./legacy/passport-editing-mode-changed";
 
 export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);

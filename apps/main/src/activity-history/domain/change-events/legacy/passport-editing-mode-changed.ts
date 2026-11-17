@@ -1,11 +1,11 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent } from "../change-event";
 import { z } from "zod/v4";
-import { ChangeEventTypes } from "./change-event-types";
-import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
+import { ChangeEventTypes } from "../change-event-types";
+import { ConvertToPlainOptions } from "../../../../aas/domain/convertable-to-plain";
 import {
   PassportEditingModeEnum,
   PassportEditingModeType,
-} from "../../../digital-product-document/domain/editing-mode";
+} from "../../../../digital-product-document/domain/editing-mode";
 
 const PassportEditingModeChangedSchema = z.object({
   type: z.literal(ChangeEventTypes.PassportEditingModeChanged),
@@ -13,6 +13,11 @@ const PassportEditingModeChangedSchema = z.object({
   newValue: PassportEditingModeEnum,
 });
 
+/**
+ * Legacy: recorded when a passport's data-only restriction was removed. Nothing creates it any
+ * more (the editing mode is derived from the template's publication), but it stays registered so
+ * stored activity history still deserializes.
+ */
 export class PassportEditingModeChanged implements IChangeEvent {
   public readonly type = ChangeEventTypes.PassportEditingModeChanged;
 
@@ -23,10 +28,6 @@ export class PassportEditingModeChanged implements IChangeEvent {
 
   isNoop(): boolean {
     return this.oldValue === this.newValue;
-  }
-
-  static create(data: { oldValue: PassportEditingModeType; newValue: PassportEditingModeType }) {
-    return new PassportEditingModeChanged(data.oldValue, data.newValue);
   }
 
   static fromPlain(data: unknown): IChangeEvent {
