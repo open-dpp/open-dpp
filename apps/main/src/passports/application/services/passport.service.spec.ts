@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { ApiVersionsDto, KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Model } from "mongoose";
@@ -120,51 +120,109 @@ describe("passportService", () => {
     expect(service).toBeDefined();
   });
 
-  it("createPassportFromTemplate copies the template's environment, and links it to the passport", async () => {
+  describe("createPassportFromTemplate", () => {
     const organizationId = randomUUID();
     const subject = SubjectAttributes.create({
       userRole: UserRole.USER,
       memberRole: MemberRole.MEMBER,
     });
-    const environment = await environmentService.createEnvironment(
-      { assetAdministrationShells: [{}] },
-      true,
-    );
-    const template = Template.create({
-      organizationId,
-      environment,
+
+    async function saveTemplate(options: { published: boolean }) {
+      const template = Template.create({
+        organizationId,
+        environment: await environmentService.createEnvironment(
+          { assetAdministrationShells: [{}] },
+          true,
+        ),
+      });
+      if (options.published) {
+        template.publish();
+      }
+      await templateRepository.save(template);
+      return template;
+    }
+
+    it("copies the template's environment, and links it to the passport", async () => {
+      const template = await saveTemplate({ published: false });
+
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+
+      expect(passport.templateId).toEqual(template.id);
+      expect(passport.organizationId).toEqual(organizationId);
+      expect(await passportRepository.findOne(passport.id)).toBeDefined();
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: DigitalProductDocumentTypes.Passport,
+          referenceId: passport.id,
+        }),
+      ).toBeDefined();
     });
-    await templateRepository.save(template);
 
-    const passport = await service.createPassportFromTemplate(organizationId, template.id, subject);
+    it("stores full editing mode for a passport of a draft template", async () => {
+      const template = await saveTemplate({ published: false });
 
-    expect(passport.templateId).toEqual(template.id);
-    expect(passport.organizationId).toEqual(organizationId);
-    expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
-    expect(await passportRepository.findOne(passport.id)).toBeDefined();
-    expect(
-      await presentationConfigurationRepository.findByReference({
-        referenceType: DigitalProductDocumentTypes.Passport,
-        referenceId: passport.id,
-      }),
-    ).toBeDefined();
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
 
-    const publishedTemplate = Template.create({
-      organizationId,
-      environment: await environmentService.createEnvironment(
-        { assetAdministrationShells: [{}] },
-        true,
-      ),
+      expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
+      const persisted = await passportRepository.findOneOrFail(passport.id);
+      expect(persisted.getEditingMode()).toEqual(PassportEditingMode.Full);
     });
-    publishedTemplate.publish();
-    await templateRepository.save(publishedTemplate);
 
-    const dataOnlyPassport = await service.createPassportFromTemplate(
-      organizationId,
-      publishedTemplate.id,
-      subject,
-    );
-    expect(dataOnlyPassport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+    it("stores data-only editing mode for a passport of a published template", async () => {
+      const template = await saveTemplate({ published: true });
+
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+
+      expect(passport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+      const persisted = await passportRepository.findOneOrFail(passport.id);
+      expect(persisted.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+    });
+
+    it("keeps the stored editing mode when the template is archived later", async () => {
+      const template = await saveTemplate({ published: true });
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+      template.archive();
+      await templateRepository.save(template);
+
+      const persisted = await passportRepository.findOneOrFail(passport.id);
+      expect(persisted.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+    });
+
+    it("accepts value writes on the data-only passport of a published template, as bulk import does", async () => {
+      const template = await saveTemplate({ published: true });
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+
+      await expect(
+        service.digitalProductDocumentService.modifyValueOfMultipleSubmodels(
+          randomUUID(),
+          organizationId,
+          passport.id,
+          {},
+          { subject, userId: randomUUID() },
+          ApiVersionsDto.v2,
+        ),
+      ).resolves.not.toThrow();
+    });
   });
 
   it("createPassportFromTemplate rejects an archived template", async () => {
