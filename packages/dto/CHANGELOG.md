@@ -1,5 +1,18 @@
 # @open-dpp/dto
 
+## 6.6.1
+
+### Patch Changes
+
+- [#1179](https://github.com/open-dpp/open-dpp/pull/1179) [`ffbc851`](https://github.com/open-dpp/open-dpp/commit/ffbc85125b709a4603a84e7e6a2910a29615dc99) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/dto: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/env: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/exception: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/permission: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/testing: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+
 ## 6.6.0
 
 ### Minor Changes
