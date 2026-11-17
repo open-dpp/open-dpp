@@ -34,6 +34,9 @@ export function sendMediaFile(
   file.stream.on("error", () => {
     if (!res.headersSent) {
       res.status(500).json({ error: "Failed to retrieve file" });
+    } else {
+      // Part of the file is already out: end the connection so the client sees a failed download.
+      res.destroy();
     }
   });
 }
