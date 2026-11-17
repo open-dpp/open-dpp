@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { v4 as uuid4 } from "uuid";
 import { ApiBase, EnvConfig } from "../config";
+import { getOrganizationId } from "./organizations";
 
 export const GTIN14 = "04006381333931";
 
@@ -27,12 +28,35 @@ export async function createBlankPassport(page: Page): Promise<PassportIds> {
   return { orgId: match![1], passportId: match![2] };
 }
 
-export function upiListUrl({ orgId, passportId }: PassportIds): string {
-  return `${EnvConfig.OPEN_DPP_URL}/organizations/${orgId}/passports/${passportId}/unique-product-identifiers`;
+/**
+ * A blank passport created through the API, in the organization the client selected last. For
+ * tests which only need the passport and do not use the editor: no dialog to click through, so
+ * nothing to time out on. The page is not moved.
+ */
+export async function createBlankPassportViaApi(page: Page): Promise<PassportIds> {
+  const orgId = await getOrganizationId(page);
+  if (!orgId) throw new Error("the setup should have selected an organization");
+
+  const created = await page.request.post(`${ApiBase}/passports`, {
+    headers: { [ORG_ID_HEADER]: orgId },
+    data: { environment: { assetAdministrationShells: [{ displayName: [] }] } },
+  });
+  expect(created.status(), `creating the passport should succeed: ${await created.text()}`).toBe(
+    201,
+  );
+  return { orgId, passportId: (await created.json()).id };
 }
 
-export function permalinkListUrl({ orgId, passportId }: PassportIds): string {
-  return `${EnvConfig.OPEN_DPP_URL}/organizations/${orgId}/passports/${passportId}/permalinks`;
+export function passportUrl({ orgId, passportId }: PassportIds): string {
+  return `${EnvConfig.OPEN_DPP_URL}/organizations/${orgId}/passports/${passportId}`;
+}
+
+export function upiListUrl(ids: PassportIds): string {
+  return `${passportUrl(ids)}/unique-product-identifiers`;
+}
+
+export function permalinkListUrl(ids: PassportIds): string {
+  return `${passportUrl(ids)}/permalinks`;
 }
 
 export async function gotoUpiList(page: Page, ids: PassportIds): Promise<void> {

@@ -1,5 +1,47 @@
 # @open-dpp/api-client
 
+## 6.6.0
+
+### Minor Changes
+
+- [#1185](https://github.com/open-dpp/open-dpp/pull/1185) [`0f33629`](https://github.com/open-dpp/open-dpp/commit/0f33629e5d528cda9f7477c89b1eea4414a10463) Thanks [@mr42](https://github.com/mr42)! - Fix tests in main and e2e
+
+### Patch Changes
+
+- [#1149](https://github.com/open-dpp/open-dpp/pull/1149) [`0d27e45`](https://github.com/open-dpp/open-dpp/commit/0d27e45ead4375e66fbd8e3751dcc4cc8b779eba) Thanks [@mr42](https://github.com/mr42)! - Add guest access for external verified users such as repairers. Organization owners invite a person by email and assign a guest role (Repairer, Recycler, Market Surveillance Authority, Independent Operator, Supplier). The invitation is accepted explicitly after sign-in or sign-up with the invited address. A guest is not a member: they can only read, via the presentation view of a passport, and only after the owner has granted access. A guest reads everything the public reads, plus the fields that the access rules allow for their role. Admins, owners, members and guests fall back to the rule of the public for objects without a rule of their own, so existing passports need no migration and new submodels no longer get a default rule per guest role. A guest-only field needs a Read rule for the guest role first, and then the public Read rule can be removed. A role's own rules win over the public rule, on the object and on its parents. Owners manage guests (invite, change role, revoke) in the new organization guests view, and guests are notified by email about invitations, role changes and revocations. The shared subject role hierarchy now lives in `@open-dpp/permission`.
+
+## 6.5.5
+
+## 6.5.4
+
+## 6.5.3
+
+## 6.5.2
+
+## 6.5.1
+
+## 6.5.0
+
+## 6.4.4
+
+## 6.4.3
+
+## 6.4.2
+
+### Patch Changes
+
+- [#1142](https://github.com/open-dpp/open-dpp/pull/1142) [`c9645c1`](https://github.com/open-dpp/open-dpp/commit/c9645c19192819d953bf1b70d09d973544110789) Thanks [@florianBieck](https://github.com/florianBieck)! - Build the project with TypeScript 6.0 instead of 5.9. TypeScript only type-checks here, so the Docker image, the web client and the published `@open-dpp/dto` and `@open-dpp/api-client` packages contain the same code as before, and nothing changes for projects that use the two packages. When you build from source, `pnpm install` installs TypeScript 6.0.3. The backend now type-checks in strict mode, so a `catch` variable is `unknown` until the code narrows it.
+
+## 6.4.1
+
+## 6.4.0
+
+### Minor Changes
+
+- [#1130](https://github.com/open-dpp/open-dpp/pull/1130) [`6e81265`](https://github.com/open-dpp/open-dpp/commit/6e81265cb02deaef5f3279b971e8e57a80f2095e) Thanks [@florianBieck](https://github.com/florianBieck)! - Members can download the Carrier Export of a permalink as SVG (sized in mm) or PNG (at a chosen DPI) from `GET /permalinks/:id/carrier`, with a four-module quiet zone, a module size and an error-correction level. The api-client gains `permalinks.getCarrierExport`, and the back office shows and downloads the server-rendered Data Carrier instead of drawing its own.
+
+## 6.3.6
+
 ## 6.3.5
 
 ### Patch Changes

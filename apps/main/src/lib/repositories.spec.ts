@@ -77,7 +77,7 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
     expect(found).toBeUndefined();
   });
 
-  it.each([
+  it.each<[Record<string, unknown>, string]>([
     [{ $gt: "" }, "$gt empty"],
     [{ $ne: null }, "$ne null"],
     [{ $regex: ".*" }, "$regex .*"],

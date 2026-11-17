@@ -43,10 +43,21 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
+      # Rspack transpiles with swc. `nest build` type-checks only the backend's
+      # production sources (fork-ts-checker, tsconfig.build.json); this covers
+      # the spec files, every workspace package and the client.
+      - name: Type-check
+        run: pnpm run check-ts
+
+      - name: Test CI scripts
+        run: node --test ".github/scripts/*.test.mjs"
+
   changeset:
+    # PR author, not github.actor: the actor is whoever pushed last, which on a
+    # Renovate PR can be a maintainer or the changeset bot.
     if: >-
       github.event_name == 'pull_request'
-      && github.actor != 'renovate[bot]'
+      && github.event.pull_request.user.login != 'renovate[bot]'
       && github.head_ref != 'changeset-release/main'
       && !contains(github.event.pull_request.labels.*.name, 'dependencies')
     runs-on: ubuntu-latest
@@ -157,11 +168,7 @@ jobs:
       - name: Build project
         run: pnpm build
 
-      # Step 7: Build testing support package
-      - name: Build project
-        run: cd packages/testing && pnpm build
-
-      # Step 8: Run tests
+      # Step 7: Run tests
       - name: Run tests
         run: pnpm test:ci
 

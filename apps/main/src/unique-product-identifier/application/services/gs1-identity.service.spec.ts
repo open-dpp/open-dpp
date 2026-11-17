@@ -19,7 +19,7 @@ function makeService(overrides?: {
   }>;
   permalinkService?: Partial<{
     resolveToPassport: Mock;
-    resolvePublicUrlWithFreeze: Mock;
+    resolvePublicUrlAndFreezeIfPublished: Mock;
     getPermalinkBaseUrl: Mock;
     loadBranding: Mock;
   }>;
@@ -38,7 +38,7 @@ function makeService(overrides?: {
   };
   const permalinkService = {
     resolveToPassport: vi.fn(),
-    resolvePublicUrlWithFreeze: vi.fn(),
+    resolvePublicUrlAndFreezeIfPublished: vi.fn(),
     getPermalinkBaseUrl: vi.fn(),
     loadBranding: vi.fn(async () => ({ permalinkBaseUrl: null })),
     ...overrides?.permalinkService,
@@ -169,7 +169,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -200,7 +200,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -250,7 +250,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -263,7 +263,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalinkId, undefined);
     expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalinkId}`);
     expect(url).not.toContain("/01/");
-    expect(permalinkService.resolvePublicUrlWithFreeze).toHaveBeenCalledTimes(1);
+    expect(permalinkService.resolvePublicUrlAndFreezeIfPublished).toHaveBeenCalledTimes(1);
   });
 
   it("(M1) uses the gs1-link permalink's slug in the viewer URL when set", async () => {
@@ -282,7 +282,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -311,7 +311,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://qr.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -341,7 +341,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: vi.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
@@ -396,7 +396,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
           passport: configPassport,
         })),
         getPermalinkBaseUrl: vi.fn(async () => "https://instance.example.com/p"),
-        resolvePublicUrlWithFreeze: vi.fn(async () => ({
+        resolvePublicUrlAndFreezeIfPublished: vi.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),

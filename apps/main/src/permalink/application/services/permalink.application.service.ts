@@ -193,6 +193,7 @@ export class PermalinkApplicationService {
     }
     const publicUrl = await this.computeFreezeUrl(permalink, branding, fallbackEnvUrl);
     const frozen = permalink.withPublishedUrl(publicUrl);
+    // a racing freeze may have won since `permalink` was loaded; this returns the persisted winner
     return await this.permalinkRepository.save(frozen, options);
   }
 
@@ -215,7 +216,14 @@ export class PermalinkApplicationService {
     return resolveGs1LinkPublicUrl(permalink, upi.gs1, branding, fallbackEnvUrl);
   }
 
-  async resolvePublicUrlWithFreeze(
+  /**
+   * The permalink's public URL, freezing the permalink first when {@link isDueForFreeze} says so.
+   * Publishing freezes a passport's permalinks; this catches up the ones it missed, such as a
+   * gs1-link created after the passport was published.
+   *
+   * @param branding `null` when it could not be loaded; the permalink then stays unfrozen.
+   */
+  async resolvePublicUrlAndFreezeIfPublished(
     permalink: Permalink,
     passport: Passport,
     branding: Branding | null,
@@ -225,7 +233,7 @@ export class PermalinkApplicationService {
     if (permalink.publishedUrl !== null) {
       return { permalink, publicUrl: permalink.publishedUrl };
     }
-    if (!passport.isPublished() || branding === null) {
+    if (!isDueForFreeze(permalink, passport, branding)) {
       const gs1Identities = await this.loadGs1IdentitiesForPermalinks([permalink]);
       return {
         permalink,
@@ -509,6 +517,19 @@ export class PermalinkApplicationService {
       ]),
     );
   }
+}
+
+/**
+ * A permalink is frozen once its passport is published and it has no published URL yet. A failed
+ * branding load holds the freeze back: the URL would be pinned to the instance's fallback base
+ * instead of the organization's own.
+ */
+function isDueForFreeze(
+  permalink: Permalink,
+  passport: Passport,
+  branding: Branding | null,
+): boolean {
+  return permalink.publishedUrl === null && passport.isPublished() && branding !== null;
 }
 
 export function resolvePublicUrl(

@@ -2,13 +2,15 @@ import type {
   AccessPermissionRuleResponseDto,
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
-  MemberRoleDtoType,
   PermissionType,
-  UserRoleDtoType,
 } from "@open-dpp/dto";
 import type { Ref } from "vue";
-import { PermissionKind, Permissions } from "@open-dpp/dto";
+import type { PermissionSource } from "../lib/aas-permission-resolution.ts";
+import type { Subject } from "../lib/aas-security.ts";
+import { PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
+import { useI18n } from "vue-i18n";
+import { resolvePermissions } from "../lib/aas-permission-resolution.ts";
 import {
   isEqualSubject,
   makeRule,
@@ -18,15 +20,11 @@ import {
 import { useUserStore } from "../stores/user.ts";
 import { useRoleHierarchy } from "./role-hierarchy.ts";
 
-interface Subject {
-  userRole: UserRoleDtoType;
-  memberRole?: MemberRoleDtoType;
-}
-
 export interface PermissionsPerSubject {
   subject: Subject;
   permissions: PermissionType[];
-  inheritsPermissionsOf: string | null;
+  /** Where the permissions come from if the subject has no rule of its own on the object. */
+  inheritedFrom: PermissionSource | null;
 }
 
 export interface IAasPermissionsForm {
@@ -35,6 +33,13 @@ export interface IAasPermissionsForm {
   savePermissions: () => Promise<void>;
   resetToInheritedPermissions: (subject: Subject) => Promise<void>;
   takeOverInheritedPermissions: (subject: Subject) => void;
+  /**
+   * The subjects which read this object only through the rule of the public, while that rule does
+   * not give Read: they have no access, and would keep it with a Read rule of their own.
+   */
+  rolesWithoutReadThroughPublic: () => Subject[];
+  /** Tells where inherited permissions come from, e.g. "Inherited from the public". */
+  permissionSourceText: (inheritedFrom: PermissionSource | null) => string | undefined;
 }
 
 export interface AasPermissionsFormProps {
@@ -54,6 +59,7 @@ export function useAasPermissionsForm({
 }: AasPermissionsFormProps): IAasPermissionsForm {
   const { canEditPermissionsOfRole, hierarchy } = useRoleHierarchy();
   const { asSubject } = useUserStore();
+  const { t } = useI18n();
 
   const accessPermissionRulesOfObjectWhichAreNotInherited = ref<AccessPermissionRuleResponseDto[]>(
     filterRulesForObject(object),
@@ -153,49 +159,56 @@ export function useAasPermissionsForm({
     const allPermissions: {
       subject: Subject;
       permissions: PermissionType[];
-      inheritsPermissionsOf: string | null;
+      inheritedFrom: PermissionSource | null;
     }[] = [];
     const allSubjects = hierarchy.map((role) => role.key);
     for (const subject of allSubjects) {
-      const { permissions, inheritsPermissionsOf } = getPermissionsForSubject(subject);
+      const { permissions, inheritedFrom } = getPermissionsForSubject(subject);
       let filteredPermissions = permissions;
       if (ignoredPermissionOptions) {
         filteredPermissions = permissions.filter((p) => !ignoredPermissionOptions.includes(p));
       }
 
-      allPermissions.push({ subject, permissions: filteredPermissions, inheritsPermissionsOf });
+      allPermissions.push({ subject, permissions: filteredPermissions, inheritedFrom });
     }
     return allPermissions;
   }
 
-  function getPermissionsForSubject(
-    subject: Subject,
-    consideredObject: string = object,
-  ): { permissions: PermissionType[]; inheritsPermissionsOf: string | null } {
-    const inheritsPermissionsOf = consideredObject === object ? null : consideredObject;
+  // The rules on the object as edited so far, and the rules of all other objects as loaded
+  function currentRules(): AccessPermissionRuleResponseDto[] {
+    const rulesOfOtherObjects = structuredClone(toRaw(getAccessPermissionRules()))
+      .map((rule) => ({
+        ...rule,
+        permissionsPerObject: rule.permissionsPerObject.filter((p) => p.object.idShort !== object),
+      }))
+      .filter((rule) => rule.permissionsPerObject.length > 0);
+    return [...accessPermissionRulesOfObjectWhichAreNotInherited.value, ...rulesOfOtherObjects];
+  }
 
-    const rules =
-      inheritsPermissionsOf !== null
-        ? filterRulesForObject(consideredObject)
-        : accessPermissionRulesOfObjectWhichAreNotInherited.value;
+  function getPermissionsForSubject(subject: Subject) {
+    return resolvePermissions({ rules: currentRules(), subject, object });
+  }
 
-    for (const rule of rules) {
-      for (const permissionPerObject of rule.permissionsPerObject) {
-        if (ruleHelper(rule).hasEqualSubject(subject)) {
-          return {
-            permissions: permissionPerObject.permissions.map((p) => p.permission),
-            inheritsPermissionsOf,
-          };
-        }
-      }
+  function rolesWithoutReadThroughPublic(): Subject[] {
+    const publicPermissions = permissions.value.find((p) =>
+      isEqualSubject(p.subject, { userRole: UserRoleDto.ANONYMOUS }),
+    );
+    if (!publicPermissions || publicPermissions.permissions.includes(Permissions.Read)) {
+      return [];
     }
-    const parentPath = consideredObject.split(".").slice(0, -1);
+    return permissions.value
+      .filter((p) => p.inheritedFrom?.kind === "public")
+      .map((p) => p.subject);
+  }
 
-    if (parentPath.length > 0) {
-      return getPermissionsForSubject(subject, parentPath.join("."));
+  function permissionSourceText(inheritedFrom: PermissionSource | null): string | undefined {
+    if (inheritedFrom === null) {
+      return undefined;
     }
-
-    return { permissions: [], inheritsPermissionsOf: null };
+    if (inheritedFrom.kind === "public") {
+      return t("aasEditor.security.inheritedFromPublic");
+    }
+    return t("aasEditor.security.inheritedFromParent", { object: inheritedFrom.object });
   }
 
   return {
@@ -204,5 +217,7 @@ export function useAasPermissionsForm({
     savePermissions,
     resetToInheritedPermissions,
     takeOverInheritedPermissions,
+    rolesWithoutReadThroughPublic,
+    permissionSourceText,
   };
 }

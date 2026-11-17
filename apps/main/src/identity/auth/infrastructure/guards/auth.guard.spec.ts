@@ -78,6 +78,7 @@ describe("authGuard Allowlist Repro", () => {
       session: null as any,
     };
     return {
+      getType: () => "http",
       switchToHttp: () => ({
         getRequest: () => request,
       }),
@@ -86,6 +87,20 @@ describe("authGuard Allowlist Repro", () => {
       _request: request,
     } as ExecutionContext & { _request: any };
   };
+
+  it("lets WebSocket messages through to the gateway's own guard", async () => {
+    const wsContext = {
+      getType: () => "ws",
+      switchToHttp: () => {
+        throw new Error("a WebSocket context has no HTTP request");
+      },
+      getHandler: () => {},
+      getClass: () => {},
+    } as unknown as ExecutionContext;
+
+    expect(await guard.canActivate(wsContext)).toBe(true);
+    expect(mockSessionsService.getSession).not.toHaveBeenCalled();
+  });
 
   it.each(["sse", "messages"])(
     `should NOT allow anonymous requests to the former MCP endpoint /api/${LatestApiVersionWithPrefixDto}/%s`,

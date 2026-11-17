@@ -22,9 +22,12 @@ export class UsersService {
     });
   }
 
-  private async sendVerificationEmail(email: string): Promise<void> {
+  private async sendVerificationEmail(
+    email: string,
+    callbackPath = "/email-verified",
+  ): Promise<void> {
     await this.auth.api.sendVerificationEmail({
-      body: { email, callbackURL: "/email-verified" },
+      body: { email, callbackURL: callbackPath },
     });
   }
 
@@ -64,9 +67,10 @@ export class UsersService {
     return user;
   }
 
-  async resendVerificationEmail(id: string): Promise<User> {
+  /** `callbackPath` is where the link of the mail leads to after the verification. */
+  async resendVerificationEmail(id: string, callbackPath?: string): Promise<User> {
     const user = await this.findOneOrFail(id);
-    await this.sendVerificationEmail(user.email);
+    await this.sendVerificationEmail(user.email, callbackPath);
     return user;
   }
 

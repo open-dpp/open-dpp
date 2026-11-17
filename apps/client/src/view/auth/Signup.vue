@@ -8,6 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
+import { callbackUrlOf, prefilledEmailOf, sameOriginRedirectOf } from "../../lib/login-utils.ts";
 import { continueOAuthSignup, readOAuthContinuation } from "../../lib/oauth-continuation.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
@@ -21,13 +22,17 @@ const loading = ref<boolean>(false);
 const signupEnabled = ref<boolean>(true);
 const checkingSettings = ref<boolean>(true);
 
+// A link can bring the address along, e.g. the invitation of a guest. The address stays fixed then.
+const prefilledEmail = prefilledEmailOf(route.query);
+
 const { handleSubmit, errors, submitCount, defineField } = useForm({
   validationSchema: toTypedSchema(SignupFormSchema),
   initialValues: {
     firstName: "",
     lastName: "",
-    email: "",
+    email: prefilledEmail ?? "",
     password: "",
+    passwordRepeat: "",
   },
 });
 
@@ -35,14 +40,15 @@ const [firstName, firstNameAttrs] = defineField("firstName");
 const [lastName, lastNameAttrs] = defineField("lastName");
 const [email, emailAttrs] = defineField("email");
 const [password, passwordAttrs] = defineField("password");
+const [passwordRepeat, passwordRepeatAttrs] = defineField("passwordRepeat");
 
 const showErrors = computed(() => {
   return submitCount.value > 0;
 });
 
-const redirectUri = computed(() => {
-  return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
-});
+// undefined without a redirect, or if it leads to another site
+const redirectTarget = computed(() => sameOriginRedirectOf(route.query));
+const redirectUri = computed(() => redirectTarget.value ?? "/");
 
 /** Set when the OAuth Provider opened this page: the pending authorize request, sent back with the sign-up. */
 const oauthContinuation = readOAuthContinuation(window.location.search);
@@ -82,7 +88,7 @@ const signup = handleSubmit(async (values) => {
         lastName: values.lastName,
         name: `${values.firstName} ${values.lastName}`,
         preferredLanguage: convertLocaleToLanguage(locale.value as string),
-        callbackURL: redirectUri.value,
+        callbackURL: callbackUrlOf(redirectUri.value),
       }),
     );
 
@@ -97,6 +103,11 @@ const signup = handleSubmit(async (values) => {
     // the provider resumed the authorize request, or sent the page back here to continue
     // a `prompt=create` request now that a session exists
     if (oauthContinuation.resumeFromResponse(data)) {
+      return;
+    }
+    // Whoever came from a link, e.g. an invitation, continues there instead of in the onboarding
+    if (redirectTarget.value !== undefined) {
+      window.location.assign(redirectTarget.value);
       return;
     }
     router.push("/signin");
@@ -205,6 +216,7 @@ const signup = handleSubmit(async (values) => {
                   autocomplete="email"
                   class="w-full"
                   :disabled="loading"
+                  :readonly="prefilledEmail !== undefined"
                   :invalid="showErrors && !!errors.email"
                 />
               </div>
@@ -247,6 +259,38 @@ const signup = handleSubmit(async (values) => {
                 variant="simple"
               >
                 {{ errors.password }}
+              </Message>
+            </div>
+
+            <div>
+              <label
+                for="passwordRepeat"
+                class="block text-sm/6 font-medium text-gray-900 dark:text-white"
+                >{{ t("user.passwordRepeat") }}</label
+              >
+              <div class="mt-2">
+                <Password
+                  v-model="passwordRepeat"
+                  v-bind="passwordRepeatAttrs"
+                  input-id="passwordRepeat"
+                  :feedback="false"
+                  toggle-mask
+                  fluid
+                  :disabled="loading"
+                  :invalid="showErrors && !!errors.passwordRepeat"
+                  :input-props="{
+                    name: 'passwordRepeat',
+                    autocomplete: 'new-password',
+                  }"
+                />
+              </div>
+              <Message
+                v-if="showErrors && errors.passwordRepeat"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.passwordRepeat }}
               </Message>
             </div>
 

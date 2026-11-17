@@ -3,8 +3,9 @@ import type { ArgumentsHost } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import { HttpStatus } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { ForbiddenError, ValueError } from "./domain.errors";
+import { ConcurrentModificationError, ForbiddenError, ValueError } from "./domain.errors";
 import {
+  ConcurrentModificationErrorFilter,
   ForbiddenExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
@@ -54,6 +55,21 @@ describe("exceptionFilter", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("should transform ConcurrentModificationError to a 409 response", () => {
+    new ConcurrentModificationErrorFilter().catch(
+      new ConcurrentModificationError("changed in the meantime"),
+      mockArgumentsHost,
+    );
+
+    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.CONFLICT);
+    expect(mockJson).toHaveBeenCalledWith({
+      statusCode: HttpStatus.CONFLICT,
+      timestamp: "2025-03-26T12:00:00.000Z",
+      path: "/test-url",
+      message: "changed in the meantime",
+    });
   });
 
   it("should be defined", () => {

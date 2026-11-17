@@ -70,7 +70,8 @@ describe("bulkImportRunItemRepository", () => {
     });
     await repository.createMany([item]);
 
-    item.markCreated(randomUUID());
+    item.assignPassport(randomUUID());
+    item.markCreated();
     await repository.save(item);
 
     const found = await repository.findOneOrFail(item.id);

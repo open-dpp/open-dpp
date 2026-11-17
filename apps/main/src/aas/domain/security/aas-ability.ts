@@ -1,7 +1,7 @@
 import { PermissionKind, PermissionType } from "@open-dpp/dto";
+import { PermissionEntry, resolvePermissionEntry } from "@open-dpp/permission";
 import { IdShortPath } from "../common/id-short-path";
 import { AccessPermissionRule } from "./access-permission-rule";
-import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
 
 export class AasAbility {
@@ -11,6 +11,10 @@ export class AasAbility {
     private readonly _userId: string | null,
   ) {}
 
+  /**
+   * `rules` are the rules of the subject itself and the rules of the public, which the subject falls
+   * back to. How they are combined is defined in `@open-dpp/permission`.
+   */
   static create(data: {
     rules: AccessPermissionRule[];
     subject: SubjectAttributes;
@@ -27,29 +31,24 @@ export class AasAbility {
     return this.subject;
   }
 
-  private findPermissionForObject(object: IdShortPath): PermissionPerObject | undefined {
-    for (const rule of this.rules) {
-      for (const permissionPerObject of rule.permissionsPerObject) {
-        if (permissionPerObject.object.idShort === object.toString()) {
-          return permissionPerObject;
-        }
-      }
-    }
+  private entries(): PermissionEntry[] {
+    return this.rules.flatMap((rule) =>
+      rule.permissionsPerObject.map((permissionPerObject) => ({
+        subject: rule.targetSubjectAttributes.getRoles(),
+        object: permissionPerObject.object.idShort,
+        permissions: permissionPerObject.permissions
+          .filter((p) => p.kindOfPermission === PermissionKind.Allow)
+          .map((p) => p.permission),
+      })),
+    );
   }
 
   can(action: PermissionType, object: IdShortPath): boolean {
-    const permissionForObject = this.findPermissionForObject(object);
-    if (permissionForObject) {
-      return permissionForObject.permissions.some(
-        (p) => p.permission === action && p.kindOfPermission === PermissionKind.Allow,
-      );
-    }
-
-    const parentPath = object.getParentPath();
-
-    if (!parentPath.isEmpty()) {
-      return this.can(action, parentPath);
-    }
-    return false;
+    const resolved = resolvePermissionEntry(
+      this.entries(),
+      this.subject.getRoles(),
+      object.toString(),
+    );
+    return resolved?.permissions.includes(action) ?? false;
   }
 }

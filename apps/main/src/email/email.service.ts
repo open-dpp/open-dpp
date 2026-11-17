@@ -6,7 +6,10 @@ import Handlebars from "handlebars";
 import mjml2html from "mjml";
 import { createTransport, Transporter } from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
+import { APP_ROOT } from "../app-root";
 import { BaseEmail } from "./domain/base-email";
+
+const TEMPLATES_DIR = resolve(APP_ROOT, "email", "templates");
 
 @Injectable()
 export class EmailService implements OnApplicationBootstrap {
@@ -24,7 +27,7 @@ export class EmailService implements OnApplicationBootstrap {
   }
 
   private registerPartial(name: string, file: string) {
-    const content = readFileSync(resolve(__dirname, "templates", file), "utf-8");
+    const content = readFileSync(resolve(TEMPLATES_DIR, file), "utf-8");
     Handlebars.registerPartial(name, content);
   }
 
@@ -46,13 +49,13 @@ export class EmailService implements OnApplicationBootstrap {
   }
 
   private templateExists(template: string): boolean {
-    return existsSync(resolve(__dirname, "templates", template));
+    return existsSync(resolve(TEMPLATES_DIR, template));
   }
 
   async send(mail: BaseEmail) {
     const localized = mail.template.localizedName(mail.language);
     const template = this.templateExists(localized) ? localized : mail.template.name;
-    const templatePath = resolve(__dirname, "templates", template);
+    const templatePath = resolve(TEMPLATES_DIR, template);
     const templateContent = readFileSync(templatePath, "utf-8");
     const compiler = Handlebars.compile(templateContent);
     const compilerData = { ...mail.template.properties, logoUrl: this.logoUrl };

@@ -47,6 +47,17 @@ describe("ChatGateway", () => {
     expect(logs.text()).not.toContain(BOT_REPLY);
   });
 
+  it("asks the agent as the signed-in user and leaves the organization to the passport", async () => {
+    askAgent.mockResolvedValue(BOT_REPLY);
+    const user = { id: "user-1" };
+    // an organization named by the client in the handshake does not decide what is read
+    client = { data: { user, member: { organizationId: "other-org" } }, emit: vi.fn() } as never;
+
+    await gateway.handleMessage({ msg: CHAT_CONTENT, permalink: "permalink-1" }, client);
+
+    expect(askAgent).toHaveBeenCalledExactlyOnceWith(CHAT_CONTENT, "upi-1", user);
+  });
+
   it("logs a failing chat without the error message that quotes the chat", async () => {
     askAgent.mockRejectedValue(new Error(`Provider rejected: ${CHAT_CONTENT}`));
 

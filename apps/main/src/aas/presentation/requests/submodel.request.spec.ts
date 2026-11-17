@@ -37,7 +37,7 @@ describe("SubmodelRequest", () => {
       });
 
       const result = request.toDomain();
-      const prop = result.submodelElements[0].toPlain();
+      const prop = result.getSubmodelElements()[0].toPlain();
       expect(prop.modelType).toBe(KeyTypes.Property);
       expect(prop.value).toEqual("https://example.com");
     });
@@ -51,7 +51,7 @@ describe("SubmodelRequest", () => {
       });
 
       const result = request.toDomain();
-      const prop = result.submodelElements[0].toPlain();
+      const prop = result.getSubmodelElements()[0].toPlain();
       expect(prop.modelType).toBe(KeyTypes.Property);
       expect(prop.value).toEqual("https://example.com");
     });

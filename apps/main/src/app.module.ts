@@ -11,6 +11,7 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
+import { APP_ROOT } from "./app-root";
 import { BrandingModule } from "./branding/branding.module";
 import { BulkImportModule } from "./bulk-import/bulk-import.module";
 import { generateMongoConfig } from "./database/config";
@@ -18,6 +19,7 @@ import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
 import { EmailChangeRequestsModule } from "./identity/email-change-requests/email-change-requests.module";
+import { GuestAccessModule } from "./identity/guest-access/guest-access.module";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { ApiKeysModule } from "./identity/api-keys/api-keys.module";
 import { UsersModule } from "./identity/users/users.module";
@@ -52,13 +54,14 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     TemplatesModule,
     PassportsModule,
     OrganizationsModule,
+    GuestAccessModule,
     UsersModule,
     ApiKeysModule,
     EmailChangeRequestsModule,
     HttpModule,
     TraceabilityEventsModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, "client", "dist"),
+      rootPath: join(APP_ROOT, "client", "dist"),
       exclude: ["/api", "/api/{*test}"],
       serveStaticOptions: {
         fallthrough: true,

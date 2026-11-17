@@ -1,9 +1,11 @@
 import { setupServer } from "msw/node";
+import { guestAccessHandlers } from "./handlers/guest-access";
 import { organizationHandlers } from "./handlers/organization";
 import { aasHandlers } from "./handlers/aas";
 import { aasIntegrationHandlers } from "./handlers/aas-integration";
 import { bulkImportHandlers } from "./handlers/bulk-import";
 import { passportsHandlers } from "./handlers/passports";
+import { permalinksHandlers } from "./handlers/permalinks";
 import { templatesHandlers } from "./handlers/templates";
 import { uniqueProductIdentifierHandlers } from "./handlers/unique-product-identifiers";
 import { userHandlers } from "./handlers/users";
@@ -12,6 +14,7 @@ import { digitalProductDocumentHandlers } from "./handlers/digital-product-docum
 const handlers = [
   ...uniqueProductIdentifierHandlers,
   ...organizationHandlers,
+  ...guestAccessHandlers,
   ...userHandlers,
   ...aasIntegrationHandlers,
   ...aasHandlers("templates"),
@@ -20,6 +23,7 @@ const handlers = [
   ...digitalProductDocumentHandlers("passports"),
   ...templatesHandlers(),
   ...passportsHandlers(),
+  ...permalinksHandlers(),
   ...bulkImportHandlers(),
 ];
 

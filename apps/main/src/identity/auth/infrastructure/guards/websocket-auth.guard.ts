@@ -2,7 +2,6 @@ import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import { Injectable } from "@nestjs/common";
 import { Session } from "better-auth";
 import { Socket } from "socket.io";
-import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 
@@ -14,13 +13,13 @@ import { SessionsService } from "../../application/services/sessions.service";
 export class WebsocketAuthGuard implements CanActivate {
   constructor(
     private readonly sessionsService: SessionsService,
-    private readonly membersRepository: MembersRepository,
     private readonly usersRepository: UsersRepository,
   ) {}
 
   /**
    * Validates if the current request is authenticated
-   * Attaches session and user information to the request object
+   * Attaches the user of the session to the socket. What the user may read is decided by the
+   * handler from the resource itself, never from an organization the client names on connect.
    * @param context - The execution context of the current request
    * @returns True if the request is authorized to proceed, throws an error otherwise
    */
@@ -41,13 +40,6 @@ export class WebsocketAuthGuard implements CanActivate {
 
     if (session) {
       client.data.user = (await this.usersRepository.findOneById(session.userId)) ?? null;
-      const organizationId = client.handshake.auth.organizationId ?? null;
-      if (organizationId) {
-        client.data.member = await this.membersRepository.findOneByUserIdAndOrganizationId(
-          session.userId,
-          organizationId,
-        );
-      }
     }
 
     return true;

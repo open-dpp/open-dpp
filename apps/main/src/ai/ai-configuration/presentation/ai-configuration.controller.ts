@@ -6,6 +6,7 @@ import { OrganizationId } from "../../../identity/auth/presentation/decorators/o
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";
+import type { AiConfigurationUpsertDto } from "./dto/ai-configuration.dto";
 import { AiConfigurationUpsertDtoSchema } from "./dto/ai-configuration.dto";
 
 @Controller("configurations")
@@ -21,7 +22,7 @@ export class AiConfigurationController {
     @OrganizationId() organizationId: string,
     @AuthSession() session: Session,
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
-    aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
+    aiConfigurationUpsertDto: AiConfigurationUpsertDto,
   ) {
     let aiConfiguration = await this.aiConfigurationService.findOneByOrganizationId(organizationId);
 

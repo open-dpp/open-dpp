@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "types": ["node"],
     "allowJs": true,
@@ -16,10 +16,9 @@
     "noUnusedParameters": true,
     "declaration": true,
     "emitDeclarationOnly": true,
+    "rootDir": "src",
     "outDir": "dist",
     "stripInternal": true,
-    /* This needs to be false so our types are possible to consume without setting this */
-    "esModuleInterop": false,
     "isolatedModules": true,
     "skipLibCheck": true
   },

@@ -5,7 +5,6 @@ import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { AGENT_WEBSOCKET_URL } from "../const";
-import { useIndexStore } from "./index.ts";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export enum Sender {
@@ -25,7 +24,6 @@ export const useAiAgentStore = defineStore("socket", () => {
   const route = useRoute();
   const isLastMessagePendingFromBot = ref<boolean>(false);
   const { t } = useI18n();
-  const indexStore = useIndexStore();
 
   let listenersBound = false;
   const connect = () => {
@@ -38,9 +36,6 @@ export const useAiAgentStore = defineStore("socket", () => {
         autoConnect: true,
         path: `/api/${LatestApiVersionWithPrefixDto}/ai-socket`,
         withCredentials: true,
-        auth: {
-          organizationId: indexStore.selectedOrganization,
-        },
       });
     } else if (!socket.value.connected) {
       socket.value.connect();

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { ValueError } from "@open-dpp/exception";
 import {
+  PermalinkKind,
   UniqueProductIdentifierListItemDtoSchema,
   UniqueProductIdentifierType,
 } from "@open-dpp/dto";
@@ -412,7 +413,11 @@ describe("UniqueProductIdentifier (GS1)", () => {
         referenceId: randomUUID(),
         gtin: VALID_GTIN13,
       });
-      const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+      const summary = {
+        id: randomUUID(),
+        kind: PermalinkKind.OPEN_DPP,
+        publicUrl: "https://dpp.example.com/my-link",
+      };
       expect(upi.toListItem({ passportPublished: false, permalink: summary }).permalink).toEqual(
         summary,
       );

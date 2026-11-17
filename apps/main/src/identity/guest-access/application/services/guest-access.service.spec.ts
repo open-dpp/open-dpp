@@ -1,0 +1,780 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
+import { ForbiddenException, Logger } from "@nestjs/common";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import {
+  ConcurrentModificationError,
+  NotFoundInDatabaseException,
+  ValueError,
+} from "@open-dpp/exception";
+import { Connection } from "mongoose";
+import { generateMongoConfig } from "../../../../database/config";
+import { BaseEmail, BaseEmailTypes } from "../../../../email/domain/base-email";
+import { EmailService } from "../../../../email/email.service";
+import { MembersService } from "../../../organizations/application/services/members.service";
+import { OrganizationsRepository } from "../../../organizations/infrastructure/adapters/organizations.repository";
+import { DisplayLanguage, DisplayLanguageType } from "@open-dpp/dto";
+import { User } from "../../../users/domain/user";
+import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
+import { UserRole } from "../../../users/domain/user-role.enum";
+import type { GuestAccess } from "../../domain/guest-access";
+import { GuestAccessStatus } from "../../domain/guest-access-kind.enum";
+import { GuestRole } from "../../domain/guest-role.enum";
+import { GuestAccessRepository } from "../../infrastructure/adapters/guest-access.repository";
+import {
+  GUEST_ACCESS_COLLECTION,
+  GuestAccess as GuestAccessSchemaClass,
+  GuestAccessSchema,
+} from "../../infrastructure/schemas/guest-access.schema";
+import { GuestAccessService } from "./guest-access.service";
+
+describe("GuestAccessService", () => {
+  let module: TestingModule;
+  let service: GuestAccessService;
+  let repository: GuestAccessRepository;
+  let owners: Set<string>;
+  let members: { user: { email: string } | null }[];
+  let memberOfOrganization: Set<string>;
+  let sentMails: BaseEmail[];
+  let languages: Map<string, DisplayLanguageType>;
+  let accountEmails: Set<string>;
+  let sendMail: Mock<(mail: BaseEmail) => Promise<void>>;
+
+  const organizationId = "org-1";
+  const ownerId = "owner-1";
+
+  function createUser(email = "repairer@example.com", emailVerified = true) {
+    return User.create({ email, firstName: "Rita", lastName: "Repair", emailVerified });
+  }
+
+  // The link of a mail leads to sign up or sign in, which bring the address along and lead to the
+  // accept page afterwards. The redirect is encoded once more, like the router does.
+  function parseInvitationLink(link: string) {
+    const url = new URL(link);
+    return {
+      page: url.pathname,
+      email: url.searchParams.get("email"),
+      returnUrl: decodeURIComponent(url.searchParams.get("redirect") ?? ""),
+    };
+  }
+
+  // the same account with another verified email, e.g. after the user changed their email
+  function createUserWithId(id: string, email: string) {
+    const now = new Date();
+    return User.loadFromDb({
+      id,
+      email,
+      firstName: "Rita",
+      lastName: "Repair",
+      emailVerified: true,
+      role: UserRole.USER,
+      preferredLanguage: DisplayLanguage.en,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  beforeEach(async () => {
+    vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    owners = new Set([ownerId]);
+    members = [];
+    memberOfOrganization = new Set();
+    sentMails = [];
+    languages = new Map();
+    accountEmails = new Set();
+    sendMail = vi.fn(async (mail: BaseEmail) => {
+      sentMails.push(mail);
+    });
+
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (env: EnvService) => generateMongoConfig(env),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: GuestAccessSchemaClass.name, schema: GuestAccessSchema },
+        ]),
+      ],
+      providers: [
+        GuestAccessService,
+        GuestAccessRepository,
+        {
+          provide: MembersService,
+          useValue: {
+            isOwnerOrAdmin: async (_organizationId: string, userId: string) => owners.has(userId),
+            getMembers: async () => members,
+            isMemberOfOrganization: async (userId: string) => memberOfOrganization.has(userId),
+          },
+        },
+        {
+          provide: OrganizationsRepository,
+          useValue: { findOneById: async () => ({ id: organizationId, name: "ACME GmbH" }) },
+        },
+        {
+          provide: UsersRepository,
+          useValue: {
+            findOneById: async (id: string) =>
+              languages.has(id) ? { id, preferredLanguage: languages.get(id) } : null,
+            findOneByEmail: async (email: string) => (accountEmails.has(email) ? { email } : null),
+          },
+        },
+        { provide: EmailService, useValue: { send: sendMail } },
+      ],
+    }).compile();
+
+    service = module.get(GuestAccessService);
+    repository = module.get(GuestAccessRepository);
+    const connection = module.get<Connection>(getConnectionToken());
+    // the unique index decides when invitations race
+    await connection.model(GuestAccessSchemaClass.name).syncIndexes();
+    await connection.collection(GUEST_ACCESS_COLLECTION).deleteMany({});
+  });
+
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    await module.close();
+  });
+
+  describe("invite", () => {
+    it("creates a pending access and sends the invitation mail", async () => {
+      const access = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: " Repairer@Example.com ",
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      expect(access.status).toEqual(GuestAccessStatus.PENDING);
+      expect(access.grantedBy).toEqual(ownerId);
+      expect(access.guestRole).toEqual(GuestRole.REPAIRER);
+      expect((await repository.findOneByIdOrFail(access.id)).toPlain()).toEqual(access.toPlain());
+      expect(sentMails).toHaveLength(1);
+      expect(sentMails[0].to).toEqual("repairer@example.com");
+      expect(sentMails[0].templateProperties).toMatchObject({
+        organizationName: "ACME GmbH",
+        guestRoleName: "Repairer",
+      });
+    });
+
+    it("links to the sign up if the address has no account yet", async () => {
+      const access = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "Repairer@Example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      const properties = sentMails[0].templateProperties as { link: string; hasAccount: boolean };
+      expect(properties.hasAccount).toBe(false);
+      expect(parseInvitationLink(properties.link)).toEqual({
+        page: "/signup",
+        email: "repairer@example.com",
+        returnUrl: expect.stringMatching(new RegExp(`/accept-guest-access/${access.id}$`)),
+      });
+    });
+
+    it("links to the sign in if the address has an account", async () => {
+      accountEmails.add("repairer@example.com");
+
+      const access = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      const properties = sentMails[0].templateProperties as { link: string; hasAccount: boolean };
+      expect(properties.hasAccount).toBe(true);
+      expect(parseInvitationLink(properties.link)).toEqual({
+        page: "/signin",
+        email: "repairer@example.com",
+        returnUrl: expect.stringMatching(new RegExp(`/accept-guest-access/${access.id}$`)),
+      });
+    });
+
+    it("lets only one of two concurrent invitations for the same email succeed", async () => {
+      const invite = () =>
+        service.invite({
+          organizationId,
+          actingUserId: ownerId,
+          email: "repairer@example.com",
+          guestRole: GuestRole.REPAIRER,
+        });
+
+      const results = await Promise.allSettled([invite(), invite()]);
+
+      expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      expect(results.find((r) => r.status === "rejected")?.reason).toBeInstanceOf(ValueError);
+      const accesses = await service.list(organizationId, ownerId);
+      expect(accesses).toHaveLength(1);
+    });
+
+    it("does not tell the owner whether the address has an account", async () => {
+      accountEmails.add("known@example.com");
+      const invite = (email: string) =>
+        service.invite({
+          organizationId,
+          actingUserId: ownerId,
+          email,
+          guestRole: GuestRole.REPAIRER,
+        });
+
+      const known = await invite("known@example.com");
+      const unknown = await invite("unknown@example.com");
+
+      expect(Object.keys(known.toPlain()).sort()).toEqual(Object.keys(unknown.toPlain()).sort());
+      expect(known.status).toEqual(unknown.status);
+    });
+
+    it("sends the English mail by default and the German one for a German-speaking owner", async () => {
+      await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "authority@example.com",
+        guestRole: GuestRole.MARKET_SURVEILLANCE,
+      });
+      languages.set(ownerId, DisplayLanguage.de);
+      await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "authority-de@example.com",
+        guestRole: GuestRole.MARKET_SURVEILLANCE,
+      });
+
+      const [english, german] = sentMails;
+      expect(english.language).toEqual("en");
+      expect(english.subject).toEqual("Invitation to access product passport data");
+      expect(english.templateProperties).toMatchObject({
+        guestRoleName: "Market surveillance authority",
+      });
+      expect(german.language).toEqual("de");
+      expect(german.subject).toEqual("Einladung zum Zugriff auf Produktpassdaten");
+      expect(german.templateProperties).toMatchObject({
+        guestRoleName: "Marktüberwachungsbehörde",
+      });
+    });
+
+    it("rejects an invitation from someone who is not an owner", async () => {
+      await expect(
+        service.invite({
+          organizationId,
+          actingUserId: "someone",
+          email: "repairer@example.com",
+          guestRole: GuestRole.REPAIRER,
+        }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it("rejects an email that belongs to a member of the organization", async () => {
+      members = [{ user: { email: "Repairer@example.com" } }, { user: null }];
+
+      await expect(
+        service.invite({
+          organizationId,
+          actingUserId: ownerId,
+          email: "repairer@example.com",
+          guestRole: GuestRole.REPAIRER,
+        }),
+      ).rejects.toThrow(ValueError);
+    });
+
+    it("rejects a second invitation while the first is not revoked, but allows one after revocation", async () => {
+      const invite = () =>
+        service.invite({
+          organizationId,
+          actingUserId: ownerId,
+          email: "repairer@example.com",
+          guestRole: GuestRole.REPAIRER,
+        });
+      const first = await invite();
+
+      await expect(invite()).rejects.toThrow(ValueError);
+
+      await service.revoke({ organizationId, guestAccessId: first.id, actingUserId: ownerId });
+      const second = await invite();
+      expect(second.id).not.toEqual(first.id);
+    });
+
+    it("keeps the pending access when the mail cannot be sent", async () => {
+      sendMail.mockRejectedValueOnce(new Error("smtp down"));
+
+      const access = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      expect((await repository.findOneByIdOrFail(access.id)).status).toEqual(
+        GuestAccessStatus.PENDING,
+      );
+    });
+  });
+
+  describe("list", () => {
+    it("returns all accesses of the organization for owners only", async () => {
+      const invited = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      expect((await service.list(organizationId, ownerId)).map((a) => a.id)).toEqual([invited.id]);
+      expect(await service.list("org-2", ownerId)).toEqual([]);
+      await expect(service.list(organizationId, "someone")).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe("accept", () => {
+    async function invitePending(email = "repairer@example.com") {
+      return await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email,
+        guestRole: GuestRole.REPAIRER,
+      });
+    }
+
+    it("binds the access to the accepting user", async () => {
+      const pending = await invitePending();
+      const user = createUser();
+
+      const accepted = await service.accept(pending.id, user);
+
+      expect(accepted.status).toEqual(GuestAccessStatus.ACCEPTED);
+      expect(accepted.isActiveFor({ userId: user.id })).toBe(true);
+      expect(await service.findGuestRole(user.id, organizationId)).toEqual(GuestRole.REPAIRER);
+    });
+
+    it("rejects another or an unverified email and keeps the invitation pending", async () => {
+      const pending = await invitePending();
+
+      await expect(service.accept(pending.id, createUser("other@example.com"))).rejects.toThrow(
+        ValueError,
+      );
+      await expect(
+        service.accept(pending.id, createUser("repairer@example.com", false)),
+      ).rejects.toThrow(ValueError);
+      expect((await repository.findOneByIdOrFail(pending.id)).status).toEqual(
+        GuestAccessStatus.PENDING,
+      );
+    });
+
+    it("rejects acceptance after revocation and for unknown invitations", async () => {
+      const pending = await invitePending();
+      await service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: ownerId });
+
+      await expect(service.accept(pending.id, createUser())).rejects.toThrow(ValueError);
+      await expect(service.accept("missing", createUser())).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
+
+    it("rejects members of the organization", async () => {
+      const pending = await invitePending();
+      const user = createUser();
+      memberOfOrganization.add(user.id);
+
+      await expect(service.accept(pending.id, user)).rejects.toThrow(ValueError);
+    });
+
+    it("keeps one active guest access per user and organization", async () => {
+      const first = await invitePending();
+      const user = createUser();
+      await service.accept(first.id, user);
+      const second = await invitePending("repairer+second@example.com");
+
+      await expect(
+        service.accept(second.id, createUserWithId(user.id, "repairer+second@example.com")),
+      ).rejects.toThrow(ValueError);
+      expect((await repository.findOneByIdOrFail(second.id)).status).toEqual(
+        GuestAccessStatus.PENDING,
+      );
+    });
+  });
+
+  describe("changeGuestRole and revoke", () => {
+    it("changes the role of an access of the organization", async () => {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      const changed = await service.changeGuestRole({
+        organizationId,
+        guestAccessId: pending.id,
+        actingUserId: ownerId,
+        guestRole: GuestRole.SUPPLIER,
+      });
+
+      expect(changed.guestRole).toEqual(GuestRole.SUPPLIER);
+      expect((await repository.findOneByIdOrFail(pending.id)).guestRole).toEqual(
+        GuestRole.SUPPLIER,
+      );
+    });
+
+    it("ends access immediately on revocation", async () => {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+      const user = createUser();
+      await service.accept(pending.id, user);
+
+      const revoked = await service.revoke({
+        organizationId,
+        guestAccessId: pending.id,
+        actingUserId: ownerId,
+      });
+
+      expect(revoked.status).toEqual(GuestAccessStatus.REVOKED);
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+    });
+
+    it("only lets owners of the same organization change or revoke an access", async () => {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+      owners.add("owner-of-org-2");
+
+      await expect(
+        service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: "someone" }),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.revoke({
+          organizationId: "org-2",
+          guestAccessId: pending.id,
+          actingUserId: "owner-of-org-2",
+        }),
+      ).rejects.toThrow(NotFoundInDatabaseException);
+      await expect(
+        service.changeGuestRole({
+          organizationId: "org-2",
+          guestAccessId: pending.id,
+          actingUserId: "owner-of-org-2",
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toThrow(NotFoundInDatabaseException);
+      expect((await repository.findOneByIdOrFail(pending.id)).status).toEqual(
+        GuestAccessStatus.PENDING,
+      );
+    });
+  });
+
+  describe("concurrent changes", () => {
+    async function inviteAccepted() {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+      const user = createUser();
+      await service.accept(pending.id, user);
+      sentMails.length = 0;
+      return { id: pending.id, user };
+    }
+
+    // The next load of the access returns the state it had before somebody else changed it
+    function readStaleOnce(stale: GuestAccess) {
+      vi.spyOn(repository, "findOneByIdOrFail").mockResolvedValueOnce(stale);
+    }
+
+    it("does not bring back a revoked access with a role change that read it before", async () => {
+      const { id, user } = await inviteAccepted();
+      const stale = await repository.findOneByIdOrFail(id);
+      await service.revoke({ organizationId, guestAccessId: id, actingUserId: ownerId });
+      sentMails.length = 0;
+      readStaleOnce(stale);
+
+      await expect(
+        service.changeGuestRole({
+          organizationId,
+          guestAccessId: id,
+          actingUserId: ownerId,
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toBeInstanceOf(ConcurrentModificationError);
+
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+      expect((await repository.findOneByIdOrFail(id)).status).toEqual(GuestAccessStatus.REVOKED);
+      expect(sentMails).toHaveLength(0);
+    });
+
+    it("does not accept an invitation which was revoked after it was read", async () => {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+      const stale = await repository.findOneByIdOrFail(pending.id);
+      await service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: ownerId });
+      const user = createUser();
+      readStaleOnce(stale);
+
+      await expect(service.accept(pending.id, user)).rejects.toBeInstanceOf(
+        ConcurrentModificationError,
+      );
+
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+    });
+
+    it("does not tell the guest about a role change which was not saved", async () => {
+      const { id } = await inviteAccepted();
+      const stale = await repository.findOneByIdOrFail(id);
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId: id,
+        actingUserId: ownerId,
+        guestRole: GuestRole.RECYCLER,
+      });
+      sentMails.length = 0;
+      readStaleOnce(stale);
+
+      await expect(
+        service.changeGuestRole({
+          organizationId,
+          guestAccessId: id,
+          actingUserId: ownerId,
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toBeInstanceOf(ConcurrentModificationError);
+
+      expect((await repository.findOneByIdOrFail(id)).guestRole).toEqual(GuestRole.RECYCLER);
+      expect(sentMails).toHaveLength(0);
+    });
+  });
+
+  describe("findGuestRole", () => {
+    it("returns nothing for pending accesses and other organizations", async () => {
+      const user = createUser();
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: user.email,
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+
+      await service.accept(pending.id, user);
+      expect(await service.findGuestRole(user.id, organizationId)).toEqual(GuestRole.REPAIRER);
+      expect(await service.findGuestRole(user.id, "org-2")).toBeUndefined();
+    });
+  });
+
+  describe("notifications about changes", () => {
+    const mailsOfType = (type: string) => sentMails.filter((mail) => mail.type === type);
+
+    async function invitePending(email = "repairer@example.com") {
+      const pending = await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email,
+        guestRole: GuestRole.REPAIRER,
+      });
+      sentMails = [];
+      return pending;
+    }
+
+    async function inviteAccepted(language?: DisplayLanguageType) {
+      const pending = await invitePending();
+      const user = createUser();
+      if (language) languages.set(user.id, language);
+      await service.accept(pending.id, user);
+      return { guestAccessId: pending.id, user };
+    }
+
+    it("tells an accepted guest about a role change in the language of the guest", async () => {
+      const { guestAccessId } = await inviteAccepted(DisplayLanguage.de);
+      languages.set(ownerId, DisplayLanguage.en);
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId,
+        actingUserId: ownerId,
+        guestRole: GuestRole.MARKET_SURVEILLANCE,
+      });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestRoleChanged);
+      expect(sentMails).toHaveLength(1);
+      expect(mail.to).toEqual("repairer@example.com");
+      expect(mail.language).toEqual("de");
+      expect(mail.templateProperties).toMatchObject({
+        organizationName: "ACME GmbH",
+        guestRoleName: "Marktüberwachungsbehörde",
+      });
+      expect(mail.templateProperties).not.toHaveProperty("link", expect.any(String));
+    });
+
+    it("tells a guest who has not accepted yet about a role change and includes the link", async () => {
+      const pending = await invitePending();
+      languages.set(ownerId, DisplayLanguage.de);
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId: pending.id,
+        actingUserId: ownerId,
+        guestRole: GuestRole.SUPPLIER,
+      });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestRoleChanged);
+      expect(mail.language).toEqual("de");
+      const properties = mail.templateProperties as { link: string; hasAccount: boolean };
+      expect(properties).toMatchObject({ guestRoleName: "Lieferant", hasAccount: false });
+      expect(parseInvitationLink(properties.link)).toEqual({
+        page: "/signup",
+        email: "repairer@example.com",
+        returnUrl: expect.stringMatching(new RegExp(`/accept-guest-access/${pending.id}$`)),
+      });
+    });
+
+    it("does not send a mail if the role stays the same", async () => {
+      const { guestAccessId } = await inviteAccepted();
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId,
+        actingUserId: ownerId,
+        guestRole: GuestRole.REPAIRER,
+      });
+
+      expect(sentMails).toHaveLength(0);
+    });
+
+    it("tells an accepted guest that the access was revoked", async () => {
+      const { guestAccessId } = await inviteAccepted(DisplayLanguage.de);
+
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestAccessRevoked);
+      expect(sentMails).toHaveLength(1);
+      expect(mail.to).toEqual("repairer@example.com");
+      expect(mail.language).toEqual("de");
+      expect(mail.subject).toEqual("Dein Gastzugriff wurde entzogen");
+      expect(mail.templateProperties).toMatchObject({
+        organizationName: "ACME GmbH",
+        accepted: true,
+      });
+    });
+
+    it("tells a guest who has not accepted yet that the invitation was withdrawn", async () => {
+      const pending = await invitePending();
+      languages.set(ownerId, DisplayLanguage.de);
+
+      await service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: ownerId });
+
+      const [mail] = mailsOfType(BaseEmailTypes.GuestAccessRevoked);
+      expect(mail.subject).toEqual("Deine Einladung wurde zurückgezogen");
+      expect(mail.templateProperties).toMatchObject({ accepted: false });
+    });
+
+    it("tells the guest only once if an access is revoked twice", async () => {
+      const { guestAccessId } = await inviteAccepted();
+
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+
+      expect(mailsOfType(BaseEmailTypes.GuestAccessRevoked)).toHaveLength(1);
+    });
+
+    it("keeps the change when the mail cannot be sent", async () => {
+      const { guestAccessId, user } = await inviteAccepted();
+      sendMail.mockRejectedValue(new Error("smtp down"));
+
+      await service.changeGuestRole({
+        organizationId,
+        guestAccessId,
+        actingUserId: ownerId,
+        guestRole: GuestRole.SUPPLIER,
+      });
+      expect(await service.findGuestRole(user.id, organizationId)).toEqual(GuestRole.SUPPLIER);
+
+      await service.revoke({ organizationId, guestAccessId, actingUserId: ownerId });
+      expect(await service.findGuestRole(user.id, organizationId)).toBeUndefined();
+    });
+
+    it("sends nothing if the owner is not allowed to change the access", async () => {
+      const { guestAccessId } = await inviteAccepted();
+
+      await expect(
+        service.revoke({ organizationId, guestAccessId, actingUserId: "someone" }),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.changeGuestRole({
+          organizationId,
+          guestAccessId,
+          actingUserId: "someone",
+          guestRole: GuestRole.SUPPLIER,
+        }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(sentMails).toHaveLength(0);
+    });
+  });
+
+  describe("getInvitation", () => {
+    async function invitePending() {
+      return await service.invite({
+        organizationId,
+        actingUserId: ownerId,
+        email: "repairer@example.com",
+        guestRole: GuestRole.REPAIRER,
+      });
+    }
+
+    it("shows the invited person the organization and the role", async () => {
+      const pending = await invitePending();
+
+      const invitation = await service.getInvitation(pending.id, createUser());
+
+      expect(invitation.organizationName).toEqual("ACME GmbH");
+      expect(invitation.guestAccess.guestRole).toEqual(GuestRole.REPAIRER);
+      expect(invitation.guestAccess.email).toEqual("repairer@example.com");
+      expect(invitation.guestAccess.status).toEqual(GuestAccessStatus.PENDING);
+    });
+
+    it("reports the invitation as missing to anybody else", async () => {
+      const pending = await invitePending();
+
+      await expect(
+        service.getInvitation(pending.id, createUser("other@example.com")),
+      ).rejects.toThrow(NotFoundInDatabaseException);
+      await expect(
+        service.getInvitation(pending.id, createUser("repairer@example.com", false)),
+      ).rejects.toThrow(NotFoundInDatabaseException);
+      await expect(service.getInvitation("missing", createUser())).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
+
+    it("still shows the invited person an accepted or revoked invitation", async () => {
+      const pending = await invitePending();
+      const user = createUser();
+      await service.accept(pending.id, user);
+      expect((await service.getInvitation(pending.id, user)).guestAccess.status).toEqual(
+        GuestAccessStatus.ACCEPTED,
+      );
+
+      await service.revoke({ organizationId, guestAccessId: pending.id, actingUserId: ownerId });
+      expect((await service.getInvitation(pending.id, user)).guestAccess.status).toEqual(
+        GuestAccessStatus.REVOKED,
+      );
+    });
+  });
+});

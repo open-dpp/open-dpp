@@ -37,6 +37,8 @@ ENV NODE_ENV=production
 ENV APP_VERSION=${APP_VERSION}
 ENV OPEN_DPP_BACKEND_MAIN=/app/dist/main.js
 ENV OPEN_DPP_FRONTEND_ROOT=/app/dist/client/dist
+# The Rspack bundle ships dist/main.js.map; map stack traces back to src/**/*.ts.
+ENV NODE_OPTIONS=--enable-source-maps
 
 COPY --chown=node:node --from=build /build/prod/main/dist /app/dist
 # Source of the reported application version when APP_VERSION is not passed in.

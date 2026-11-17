@@ -3,12 +3,10 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "rootDir": "./src",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "dist",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "noEmit": true,
     "verbatimModuleSyntax": false
   },
   "include": ["src"]

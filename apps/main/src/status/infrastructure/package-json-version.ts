@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
+import { APP_ROOT } from "../../app-root";
 
 /**
  * Walks up from `startDir` and returns the `version` of the nearest
@@ -31,15 +32,11 @@ export function findPackageVersion(startDir: string): string | undefined {
 }
 
 /**
- * Where to start looking, most precise first. `__dirname` covers the CommonJS
- * build, but is undefined once this module is loaded as ESM, so the entrypoint
- * and the working directory serve as fallbacks.
+ * Where to start looking, most precise first. `APP_ROOT` is the bundle (or
+ * source) directory; the entrypoint and the working directory are fallbacks.
  */
 function startDirectories(): string[] {
-  const directories: string[] = [];
-  if (typeof __dirname !== "undefined") {
-    directories.push(__dirname);
-  }
+  const directories: string[] = [APP_ROOT];
   const entrypoint = process.env.OPEN_DPP_BACKEND_MAIN;
   if (entrypoint) {
     directories.push(dirname(entrypoint));

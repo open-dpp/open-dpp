@@ -1,5 +1,75 @@
 # @open-dpp/client
 
+## 6.6.0
+
+### Minor Changes
+
+- [#1185](https://github.com/open-dpp/open-dpp/pull/1185) [`0f33629`](https://github.com/open-dpp/open-dpp/commit/0f33629e5d528cda9f7477c89b1eea4414a10463) Thanks [@mr42](https://github.com/mr42)! - Fix tests in main and e2e
+
+### Patch Changes
+
+- [#1149](https://github.com/open-dpp/open-dpp/pull/1149) [`0d27e45`](https://github.com/open-dpp/open-dpp/commit/0d27e45ead4375e66fbd8e3751dcc4cc8b779eba) Thanks [@mr42](https://github.com/mr42)! - Add guest access for external verified users such as repairers. Organization owners invite a person by email and assign a guest role (Repairer, Recycler, Market Surveillance Authority, Independent Operator, Supplier). The invitation is accepted explicitly after sign-in or sign-up with the invited address. A guest is not a member: they can only read, via the presentation view of a passport, and only after the owner has granted access. A guest reads everything the public reads, plus the fields that the access rules allow for their role. Admins, owners, members and guests fall back to the rule of the public for objects without a rule of their own, so existing passports need no migration and new submodels no longer get a default rule per guest role. A guest-only field needs a Read rule for the guest role first, and then the public Read rule can be removed. A role's own rules win over the public rule, on the object and on its parents. Owners manage guests (invite, change role, revoke) in the new organization guests view, and guests are notified by email about invitations, role changes and revocations. The shared subject role hierarchy now lives in `@open-dpp/permission`.
+
+## 6.5.5
+
+## 6.5.4
+
+### Patch Changes
+
+- [#1004](https://github.com/open-dpp/open-dpp/pull/1004) [`664de6e`](https://github.com/open-dpp/open-dpp/commit/664de6eb83f102ea385d93aa88d03dcaa99d839b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `jest-diff` ^30.4.1 → ^30.5.2 (dev)
+
+## 6.5.3
+
+### Patch Changes
+
+- [#1174](https://github.com/open-dpp/open-dpp/pull/1174) [`c3a790e`](https://github.com/open-dpp/open-dpp/commit/c3a790efde5a6a6d3e718dee4165f029164a6d1a) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vite` ^8.3.5 → ^8.3.8 (dev)
+
+## 6.5.2
+
+### Patch Changes
+
+- [#1138](https://github.com/open-dpp/open-dpp/pull/1138) [`884c025`](https://github.com/open-dpp/open-dpp/commit/884c0256dfebcad01022810c4e5efc8ec66667d1) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `autoprefixer` ^10.6.1 → ^10.6.2 (dev)
+
+## 6.5.1
+
+### Patch Changes
+
+- [#1139](https://github.com/open-dpp/open-dpp/pull/1139) [`3465b2a`](https://github.com/open-dpp/open-dpp/commit/3465b2afc6dc18b1bb99aeb9fb33d9c31beeef47) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `postcss` ^8.5.31 → ^8.5.32 (dev)
+
+## 6.5.0
+
+### Minor Changes
+
+- [#1163](https://github.com/open-dpp/open-dpp/pull/1163) [`c97a7c4`](https://github.com/open-dpp/open-dpp/commit/c97a7c4ae87d4f0cb0ba44eb9bf34bf7f53fda7e) Thanks [@Hentra](https://github.com/Hentra)! - Add password confirmation field
+
+## 6.4.4
+
+### Patch Changes
+
+- [#1164](https://github.com/open-dpp/open-dpp/pull/1164) [`33b32c2`](https://github.com/open-dpp/open-dpp/commit/33b32c213d84c6192c4ca69cd83226aaaad0cf8d) Thanks [@Hentra](https://github.com/Hentra)! - Remove legacy logo
+
+## 6.4.3
+
+## 6.4.2
+
+## 6.4.1
+
+## 6.4.0
+
+### Minor Changes
+
+- [#1130](https://github.com/open-dpp/open-dpp/pull/1130) [`6e81265`](https://github.com/open-dpp/open-dpp/commit/6e81265cb02deaef5f3279b971e8e57a80f2095e) Thanks [@florianBieck](https://github.com/florianBieck)! - Members can download the Carrier Export of a permalink as SVG (sized in mm) or PNG (at a chosen DPI) from `GET /permalinks/:id/carrier`, with a four-module quiet zone, a module size and an error-correction level. The api-client gains `permalinks.getCarrierExport`, and the back office shows and downloads the server-rendered Data Carrier instead of drawing its own.
+
+## 6.3.6
+
 ## 6.3.5
 
 ### Patch Changes

@@ -150,7 +150,6 @@ vi.mock("primevue/dialog", () => ({
 }));
 
 vi.mock("@vueuse/core", () => ({
-  useClipboard: () => ({ copy: vi.fn() }),
   useWindowSize: () => ({ width: ref(1024), height: ref(768) }),
 }));
 

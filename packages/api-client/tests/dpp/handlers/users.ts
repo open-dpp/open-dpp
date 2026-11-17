@@ -8,6 +8,7 @@ import {
   Language,
   type MeDto,
   RequestEmailChangeDtoSchema,
+  ResendVerificationEmailDtoSchema,
   UpdateProfileDtoSchema,
 } from "@open-dpp/dto";
 
@@ -73,6 +74,17 @@ export const userHandlers = [
       },
       { status: 202 },
     );
+  }),
+  // The body is optional: callers which send none keep working
+  http.post(`${baseURL}/users/me/resend-verification-email`, async ({ request }) => {
+    const text = await request.text();
+    const result = ResendVerificationEmailDtoSchema.optional().safeParse(
+      text.length > 0 ? JSON.parse(text) : undefined,
+    );
+    if (!result.success) {
+      return validationError(result.error.issues);
+    }
+    return HttpResponse.json(meResponse.user, { status: 200 });
   }),
   http.delete(`${baseURL}/users/me/email-change`, async () => {
     return HttpResponse.json(meResponse, { status: 200 });

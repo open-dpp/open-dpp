@@ -1,5 +1,87 @@
 # @open-dpp/main
 
+## 6.6.0
+
+### Minor Changes
+
+- [#1185](https://github.com/open-dpp/open-dpp/pull/1185) [`0f33629`](https://github.com/open-dpp/open-dpp/commit/0f33629e5d528cda9f7477c89b1eea4414a10463) Thanks [@mr42](https://github.com/mr42)! - Fix tests in main and e2e
+
+### Patch Changes
+
+- [#1149](https://github.com/open-dpp/open-dpp/pull/1149) [`0d27e45`](https://github.com/open-dpp/open-dpp/commit/0d27e45ead4375e66fbd8e3751dcc4cc8b779eba) Thanks [@mr42](https://github.com/mr42)! - Add guest access for external verified users such as repairers. Organization owners invite a person by email and assign a guest role (Repairer, Recycler, Market Surveillance Authority, Independent Operator, Supplier). The invitation is accepted explicitly after sign-in or sign-up with the invited address. A guest is not a member: they can only read, via the presentation view of a passport, and only after the owner has granted access. A guest reads everything the public reads, plus the fields that the access rules allow for their role. Admins, owners, members and guests fall back to the rule of the public for objects without a rule of their own, so existing passports need no migration and new submodels no longer get a default rule per guest role. A guest-only field needs a Read rule for the guest role first, and then the public Read rule can be removed. A role's own rules win over the public rule, on the object and on its parents. Owners manage guests (invite, change role, revoke) in the new organization guests view, and guests are notified by email about invitations, role changes and revocations. The shared subject role hierarchy now lives in `@open-dpp/permission`.
+
+## 6.5.5
+
+### Patch Changes
+
+- [#1015](https://github.com/open-dpp/open-dpp/pull/1015) [`f5a87c4`](https://github.com/open-dpp/open-dpp/commit/f5a87c4b1aa846d02795db69c585aaa8de0432ae) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/common` ^12.3.2 → ^12.5.0
+  - @open-dpp/main: `@nestjs/config` ^12.0.1 → ^12.1.1
+  - @open-dpp/main: `@nestjs/core` ^12.3.2 → ^12.5.0
+  - @open-dpp/main: `@nestjs/platform-express` ^12.3.2 → ^12.5.0
+  - @open-dpp/main: `@nestjs/platform-socket.io` ^12.3.2 → ^12.5.0
+  - @open-dpp/main: `@nestjs/websockets` ^12.3.2 → ^12.5.0
+  - @open-dpp/main: `@nestjs/cli` ^12.0.11 → ^12.0.12 (dev)
+  - @open-dpp/main: `@nestjs/schematics` ^12.0.12 → ^12.0.13 (dev)
+  - @open-dpp/main: `@nestjs/testing` ^12.3.2 → ^12.5.0 (dev)
+  - @open-dpp/env: `@nestjs/common` ^12.3.2 → ^12.5.0
+  - @open-dpp/env: `@nestjs/config` ^12.0.1 → ^12.1.1
+  - @open-dpp/env: `@nestjs/core` ^12.3.2 → ^12.5.0
+  - @open-dpp/exception: `@nestjs/common` ^12.3.2 → ^12.5.0
+  - @open-dpp/exception: `@nestjs/core` ^12.3.2 → ^12.5.0
+  - @open-dpp/exception: `@nestjs/testing` ^12.3.2 → ^12.5.0 (dev)
+  - @open-dpp/testing: `@nestjs/common` ^12.3.2 → ^12.5.0
+  - @open-dpp/testing: `@nestjs/config` ^12.0.1 → ^12.1.1
+  - @open-dpp/testing: `@nestjs/core` ^12.3.2 → ^12.5.0
+
+## 6.5.4
+
+## 6.5.3
+
+## 6.5.2
+
+## 6.5.1
+
+## 6.5.0
+
+## 6.4.4
+
+## 6.4.3
+
+### Patch Changes
+
+- [#1161](https://github.com/open-dpp/open-dpp/pull/1161) [`0f9ebbc`](https://github.com/open-dpp/open-dpp/commit/0f9ebbc2069ff1b6eb68dbd68d7ebeb8526531bf) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@rspack/core` ^2.3.0 → ^2.3.2 (dev)
+
+## 6.4.2
+
+### Patch Changes
+
+- [#1142](https://github.com/open-dpp/open-dpp/pull/1142) [`c9645c1`](https://github.com/open-dpp/open-dpp/commit/c9645c19192819d953bf1b70d09d973544110789) Thanks [@florianBieck](https://github.com/florianBieck)! - Build the project with TypeScript 6.0 instead of 5.9. TypeScript only type-checks here, so the Docker image, the web client and the published `@open-dpp/dto` and `@open-dpp/api-client` packages contain the same code as before, and nothing changes for projects that use the two packages. When you build from source, `pnpm install` installs TypeScript 6.0.3. The backend now type-checks in strict mode, so a `catch` variable is `unknown` until the code narrows it.
+
+## 6.4.1
+
+### Patch Changes
+
+- [#1141](https://github.com/open-dpp/open-dpp/pull/1141) [`a71f2bb`](https://github.com/open-dpp/open-dpp/commit/a71f2bb83caab7b471f20cbbf73ae3cd7584eacc) Thanks [@florianBieck](https://github.com/florianBieck)! - The backend now ships as a single ES module bundle (`dist/main.js`, built with Rspack) instead of one CommonJS file per source file. The container image sets `NODE_OPTIONS=--enable-source-maps`, so stack traces in the logs point to TypeScript source lines. If you override `NODE_OPTIONS` for the container, add `--enable-source-maps` to keep that.
+
+## 6.4.0
+
+### Minor Changes
+
+- [#1130](https://github.com/open-dpp/open-dpp/pull/1130) [`6e81265`](https://github.com/open-dpp/open-dpp/commit/6e81265cb02deaef5f3279b971e8e57a80f2095e) Thanks [@florianBieck](https://github.com/florianBieck)! - Members can download the Carrier Export of a permalink as SVG (sized in mm) or PNG (at a chosen DPI) from `GET /permalinks/:id/carrier`, with a four-module quiet zone, a module size and an error-correction level. The api-client gains `permalinks.getCarrierExport`, and the back office shows and downloads the server-rendered Data Carrier instead of drawing its own.
+
+## 6.3.6
+
+### Patch Changes
+
+- [#1140](https://github.com/open-dpp/open-dpp/pull/1140) [`1092700`](https://github.com/open-dpp/open-dpp/commit/1092700256473751b4950e42f0e999e156eecb68) Thanks [@florianBieck](https://github.com/florianBieck)! - Upgrade the backend to NestJS 12. Two things operators may notice:
+
+  - With `OPEN_DPP_LOG_FORMAT=json`, a log call that passes an object or an error now writes one record instead of two: the object goes into a `params` field, the error into an `error` field with `name`, `message` and `stack`.
+  - A non-`GET` request to an unknown path outside `/api` (for example `POST /does-not-exist`) now gets the Express HTML 404 page instead of a JSON 404 body. Responses under `/api` and `GET` requests are unchanged.
+
 ## 6.3.5
 
 ### Patch Changes
