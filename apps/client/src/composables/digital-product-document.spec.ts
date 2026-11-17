@@ -2,9 +2,8 @@ import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import {
   DigitalProductDocumentStatusDto,
   DigitalProductDocumentStatusModificationMethodDto,
-  PassportEditingModeDto,
 } from "@open-dpp/dto";
-import { passportsPlainFactory, templatesPlainFactory } from "@open-dpp/testing";
+import { passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { AxiosError, type AxiosResponse } from "axios";
 import { createPinia, setActivePinia } from "pinia";
@@ -28,8 +27,6 @@ const mocks = vi.hoisted(() => {
     confirm: vi.fn(),
     modifyStatus: vi.fn(),
     getActivities: vi.fn(),
-    setEditingMode: vi.fn(),
-    setPassportEditingMode: vi.fn(),
   };
 });
 
@@ -44,11 +41,8 @@ vi.mock("../lib/api-client", () => ({
         deleteById: mocks.deleteById,
         modifyStatus: mocks.modifyStatus,
         getActivities: mocks.getActivities,
-        setEditingMode: mocks.setEditingMode,
       },
-      templates: {
-        setPassportEditingMode: mocks.setPassportEditingMode,
-      },
+      templates: {},
     },
   },
 }));
@@ -152,34 +146,6 @@ describe("passports", () => {
     await restore(p2.id);
     expect(mocks.modifyStatus).toHaveBeenCalledWith(p2.id, {
       method: DigitalProductDocumentStatusModificationMethodDto.Restore,
-    });
-  });
-
-  it("should restrict passport editing to data on a template", async () => {
-    const { restrictPassportEditingToData } = mountHarness(DigitalProductDocumentType.Template);
-    const t1 = templatesPlainFactory.build();
-
-    mocks.setPassportEditingMode.mockResolvedValueOnce({
-      data: { ...t1, passportEditingMode: PassportEditingModeDto.DataOnly },
-      status: HTTPCode.OK,
-    });
-    await restrictPassportEditingToData(t1.id);
-    expect(mocks.setPassportEditingMode).toHaveBeenCalledWith(t1.id, {
-      mode: PassportEditingModeDto.DataOnly,
-    });
-  });
-
-  it("should remove editing restrictions on a passport", async () => {
-    const { removeEditingRestrictions } = mountHarness(DigitalProductDocumentType.Passport);
-    const p1 = passportsPlainFactory.build({ editingMode: PassportEditingModeDto.DataOnly });
-
-    mocks.setEditingMode.mockResolvedValueOnce({
-      data: { ...p1, editingMode: PassportEditingModeDto.Full },
-      status: HTTPCode.OK,
-    });
-    await removeEditingRestrictions(p1.id);
-    expect(mocks.setEditingMode).toHaveBeenCalledWith(p1.id, {
-      mode: PassportEditingModeDto.Full,
     });
   });
 

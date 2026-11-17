@@ -2,7 +2,6 @@ import {
   type DigitalProductDocumentDto,
   type DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentStatusModificationMethodDto,
-  PassportEditingModeDto,
 } from "@open-dpp/dto";
 import { isAxiosError } from "axios";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -63,34 +62,6 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Restore });
   }
 
-  async function restrictPassportEditingToData(id: string) {
-    const errorMessage = t("templates.errorRestrictPassportEditing");
-    try {
-      const response = await apiClient.dpp.templates.setPassportEditingMode(id, {
-        mode: PassportEditingModeDto.DataOnly,
-      });
-      if (response.status !== HTTPCode.OK) {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
-  }
-
-  async function removeEditingRestrictions(id: string) {
-    const errorMessage = t("passports.errorRemoveEditingRestrictions");
-    try {
-      const response = await apiClient.dpp.passports.setEditingMode(id, {
-        mode: PassportEditingModeDto.Full,
-      });
-      if (response.status !== HTTPCode.OK) {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
-  }
-
   async function deleteDPD(id: string, onDeleted: () => Promise<void>) {
     const errorMessage = t(`${prefix}.errorDelete`);
     const removeLabel = t("common.remove");
@@ -134,8 +105,6 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     publish,
     archive,
     restore,
-    restrictPassportEditingToData,
-    removeEditingRestrictions,
     deleteDPD,
   };
 }

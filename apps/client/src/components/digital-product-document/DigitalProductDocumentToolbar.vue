@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  DigitalProductDocumentStatusDto,
-  PassportEditingModeDto,
-  type DigitalProductDocumentDto,
-} from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 import { computed, ref } from "vue";
 import {
@@ -59,12 +55,7 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await fetchDPD(item.id);
 }
 
-const {
-  passportEditingMode,
-  editingMode,
-  onRestrictPassportEditingButtonClicked,
-  onRemoveEditingRestrictionsButtonClicked,
-} = useDigitalProductDocumentToolbar(props.type, model, fetchDPD);
+const { editingModeBadge } = useDigitalProductDocumentToolbar(props.type, model);
 
 async function navigateToActivityHistory() {
   await router.push(`${route.path}/activities`);
@@ -99,11 +90,6 @@ const permalinkActions = computed(() => [
     },
   },
 ]);
-const restrictedPassportEditMode = computed(
-  () =>
-    props.type === DigitalProductDocumentType.Passport &&
-    editingMode.value === PassportEditingModeDto.DataOnly,
-);
 </script>
 
 <template>
@@ -158,31 +144,10 @@ const restrictedPassportEditMode = computed(
             v-tooltip.bottom="t('activityHistory.label')"
             @click="navigateToActivityHistory"
           />
-          <Button
-            v-if="
-              type === DigitalProductDocumentType.Template &&
-              passportEditingMode === PassportEditingModeDto.Full
-            "
-            icon="pi pi-lock"
-            text
-            severity="secondary"
-            :aria-label="t('templates.restrictPassportEditing')"
-            v-tooltip.bottom="t('templates.restrictPassportEditingTooltip')"
-            @click="onRestrictPassportEditingButtonClicked(model)"
-          />
-          <Button
-            v-if="restrictedPassportEditMode"
-            icon="pi pi-lock"
-            text
-            severity="warn"
-            :aria-label="t('passports.removeEditingRestrictions')"
-            v-tooltip.bottom="t('passports.removeEditingRestrictionsTooltip')"
-            @click="onRemoveEditingRestrictionsButtonClicked(model)"
-          />
         </div>
       </template>
       <template #center>
-        <div v-if="type === DigitalProductDocumentType.Passport" class="flex items-center gap-2">
+        <div class="flex items-center gap-2">
           <Tag severity="contrast">{{ t(`status.${status.toLowerCase()}`) }}</Tag>
         </div>
       </template>
@@ -196,16 +161,13 @@ const restrictedPassportEditMode = computed(
             :model="permalinkActions"
             @click="qrCodeDialogVisible = true"
           />
-          <template v-if="type === DigitalProductDocumentType.Template">
-            <Tag
-              v-if="passportEditingMode === PassportEditingModeDto.DataOnly"
-              v-tooltip.bottom="t('templates.restrictPassportEditingTooltip')"
-              severity="warn"
-              icon="pi pi-lock"
-              >{{ t("templates.restrictPassportEditingTag") }}</Tag
-            >
-            <Tag severity="contrast">{{ t(`status.${status.toLowerCase()}`) }}</Tag>
-          </template>
+          <Tag
+            v-if="editingModeBadge"
+            v-tooltip.bottom="editingModeBadge.tooltip"
+            severity="warn"
+            icon="pi pi-lock"
+            >{{ editingModeBadge.label }}</Tag
+          >
         </div>
       </template>
     </Toolbar>
