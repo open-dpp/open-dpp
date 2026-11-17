@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 6.6.2
+
+### Patch Changes
+
+- [#1180](https://github.com/open-dpp/open-dpp/pull/1180) [`abf4ec1`](https://github.com/open-dpp/open-dpp/commit/abf4ec1e6136d8513fb06e9609ffc6953b36655b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `@vitejs/plugin-vue` ^6.0.10 → ^6.0.11 (dev)
+
 ## 6.6.1
 
 ## 6.6.0
