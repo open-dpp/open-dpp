@@ -37,8 +37,3 @@ export const PassportRequestCreateDtoSchema = z.xor([
 ]);
 
 export type PassportRequestCreateDto = z.input<typeof PassportRequestCreateDtoSchema>;
-
-export const RemoveEditingRestrictionsDtoSchema = z.object({
-  mode: z.literal(PassportEditingModeDto.Full),
-});
-export type RemoveEditingRestrictionsDto = z.infer<typeof RemoveEditingRestrictionsDtoSchema>;
