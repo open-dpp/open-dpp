@@ -1,4 +1,5 @@
-import { type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { type PassportIds, passportUrl } from "../helpers/passport";
 import { expectImageRenderedInside, MediaGrid } from "./media-grid";
 
 /** The media picker dialog: the organization's media, one of which gets selected. */
@@ -29,10 +30,19 @@ export class PassportProductImages {
   readonly gallery: Locator;
   readonly galleryImage: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(
+    private readonly page: Page,
+    private readonly ids: PassportIds,
+  ) {
     this.gallery = page.getByTestId("product-image-galleria");
     // an empty gallery shows a bundled placeholder, a product image is a downloaded blob
     this.galleryImage = this.gallery.locator('img[src^="blob:"]');
+  }
+
+  /** Opens the editor of the passport. */
+  async goto(): Promise<void> {
+    await this.page.goto(passportUrl(this.ids));
+    await expect(this.gallery).toBeVisible();
   }
 
   /** Opens the edit drawer of the passport and, from it, the picker for a new product image. */

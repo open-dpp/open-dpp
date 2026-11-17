@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import { test } from "@playwright/test";
 import { v4 as uuid4 } from "uuid";
-import { createBlankPassport } from "../helpers/passport";
+import { createBlankPassportViaApi } from "../helpers/passport";
 import type { UploadFile } from "./media-grid";
 import { MediaLibraryPage } from "./media-library.page";
 import { PassportProductImages } from "./passport-product-images";
@@ -32,9 +32,10 @@ test("an SVG can be uploaded in the media library and shows its preview", async 
 });
 
 test("an SVG uploaded in the media picker is shown as a product image", async ({ page }) => {
-  const productImages = new PassportProductImages(page);
   const file = uniqueSvgFile();
-  await createBlankPassport(page);
+  // Through the API: the gallery is under test here, not the dialog that creates a passport.
+  const productImages = new PassportProductImages(page, await createBlankPassportViaApi(page));
+  await productImages.goto();
 
   const picker = await productImages.openPicker();
   await picker.media.upload(file);
