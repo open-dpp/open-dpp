@@ -9,7 +9,7 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import _ from "lodash";
 import { Client as S3Client } from "minio";
 import { Media } from "../domain/media";
-import { processMediaUpload } from "./media-upload/media-upload-processor";
+import { detectMediaProcessor } from "./media-upload/media-upload-processor";
 import { MediaDoc } from "./media.schema";
 
 export const BucketDefaultPaths = {
@@ -107,7 +107,8 @@ export class MediaService {
     ownedByOrganizationId: string,
   ) {
     // Processed first: a rejected file must not remove the media it was meant to replace.
-    const processed = await processMediaUpload(buffer, MEDIA_UPLOAD_MIME_TYPES);
+    const processor = await detectMediaProcessor(buffer);
+    const processed = await processor.process(buffer, MEDIA_UPLOAD_MIME_TYPES);
     const findMedia = await this.mediaDoc.find({
       dataFieldId,
       uniqueProductIdentifier,
@@ -153,7 +154,8 @@ export class MediaService {
     ownedByOrganizationId: string,
     options: UploadMediaOptions = {},
   ) {
-    const processed = await processMediaUpload(
+    const processor = await detectMediaProcessor(buffer);
+    const processed = await processor.process(
       buffer,
       options.allowedMimeTypes ?? MEDIA_UPLOAD_MIME_TYPES,
     );

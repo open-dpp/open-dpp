@@ -11,7 +11,7 @@ export interface ProcessedMediaUpload {
   readonly fileExtension: string;
 }
 
-interface DetectedMediaType {
+export interface DetectedMediaType {
   readonly mimeType: string;
   readonly fileExtension: string;
 }
@@ -26,6 +26,67 @@ const RASTER_MIME_TYPES: ReadonlySet<string> = new Set([
 const XML_MIME_TYPE = "application/xml";
 const SVG_ELEMENT_START = /<svg[\s/>]/;
 
+/**
+ * Turns an uploaded file of one detected type into what gets stored. `process` is the template
+ * method: it owns the check all types share, a subclass only says how its type is transformed.
+ * Get the processor for a file from `detectMediaProcessor`.
+ */
+export abstract class MediaUploadProcessor {
+  constructor(protected readonly detected: DetectedMediaType) {}
+
+  /**
+   * Not to be overridden: the type is checked before any content is decoded or parsed.
+   *
+   * @throws ValueError if the detected type is not in `allowedMimeTypes`, or the content cannot
+   * be processed.
+   */
+  async process(
+    buffer: Buffer,
+    allowedMimeTypes: readonly string[],
+  ): Promise<ProcessedMediaUpload> {
+    if (!allowedMimeTypes.includes(this.detected.mimeType)) {
+      throw new ValueError(`The file type ${this.detected.mimeType} is not supported here.`);
+    }
+    return this.transform(buffer);
+  }
+
+  protected abstract transform(
+    buffer: Buffer,
+  ): ProcessedMediaUpload | Promise<ProcessedMediaUpload>;
+}
+
+/**
+ * JPEG, PNG and WebP become WebP. The EXIF orientation is baked into the pixels and all
+ * metadata (EXIF, GPS, XMP) is dropped.
+ */
+export class RasterImageProcessor extends MediaUploadProcessor {
+  protected async transform(buffer: Buffer): Promise<ProcessedMediaUpload> {
+    try {
+      return {
+        buffer: await sharp(buffer).autoOrient().webp({ quality: WEBP_QUALITY }).toBuffer(),
+        mimeType: MediaMimeType.WEBP,
+        fileExtension: "webp",
+      };
+    } catch (error) {
+      throw new ValueError("The image could not be decoded.", { cause: error });
+    }
+  }
+}
+
+/** An SVG stays a vector and is sanitized; the uploaded file itself is never stored. */
+export class SvgProcessor extends MediaUploadProcessor {
+  protected transform(buffer: Buffer): ProcessedMediaUpload {
+    return { ...this.detected, buffer: sanitizeSvg(buffer) };
+  }
+}
+
+/** Every other type (PDF) is stored unchanged. */
+export class PassthroughProcessor extends MediaUploadProcessor {
+  protected transform(buffer: Buffer): ProcessedMediaUpload {
+    return { ...this.detected, buffer };
+  }
+}
+
 /** Detects the type from the content only; the client's MIME type and file name are ignored. */
 async function detectMediaType(buffer: Buffer): Promise<DetectedMediaType | null> {
   const detected = await fileTypeFromBuffer(buffer);
@@ -39,42 +100,22 @@ async function detectMediaType(buffer: Buffer): Promise<DetectedMediaType | null
   return null;
 }
 
-/** Bakes the EXIF orientation into the pixels and drops all metadata (EXIF, GPS, XMP). */
-async function normalizeRasterImage(buffer: Buffer): Promise<Buffer> {
-  try {
-    return await sharp(buffer).autoOrient().webp({ quality: WEBP_QUALITY }).toBuffer();
-  } catch (error) {
-    throw new ValueError("The image could not be decoded.", { cause: error });
-  }
-}
-
 /**
- * Turns an uploaded file into what gets stored: raster images become WebP, SVGs are sanitized,
- * other allowed types (PDF) are kept unchanged.
+ * Sniffs the content once and returns the processor for its type. The only place that knows
+ * about file-type and the SVG fallback.
  *
- * @throws ValueError if the type cannot be detected, is not in `allowedMimeTypes`, or the
- * content cannot be processed.
+ * @throws ValueError if the type cannot be detected.
  */
-export async function processMediaUpload(
-  buffer: Buffer,
-  allowedMimeTypes: readonly string[],
-): Promise<ProcessedMediaUpload> {
+export async function detectMediaProcessor(buffer: Buffer): Promise<MediaUploadProcessor> {
   const detected = await detectMediaType(buffer);
   if (!detected) {
     throw new ValueError("The file type could not be detected or is not supported.");
   }
-  if (!allowedMimeTypes.includes(detected.mimeType)) {
-    throw new ValueError(`The file type ${detected.mimeType} is not supported here.`);
+  if (RASTER_MIME_TYPES.has(detected.mimeType)) {
+    return new RasterImageProcessor(detected);
   }
   if (detected.mimeType === MediaMimeType.SVG) {
-    return { ...detected, buffer: sanitizeSvg(buffer) };
+    return new SvgProcessor(detected);
   }
-  if (RASTER_MIME_TYPES.has(detected.mimeType)) {
-    return {
-      buffer: await normalizeRasterImage(buffer),
-      mimeType: MediaMimeType.WEBP,
-      fileExtension: "webp",
-    };
-  }
-  return { ...detected, buffer };
+  return new PassthroughProcessor(detected);
 }

@@ -8,7 +8,12 @@ import {
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import sharp from "sharp";
-import { processMediaUpload } from "./media-upload-processor";
+import {
+  detectMediaProcessor,
+  PassthroughProcessor,
+  RasterImageProcessor,
+  SvgProcessor,
+} from "./media-upload-processor";
 
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>alert(1)</script><rect width="10" height="10"/></svg>`;
 const MINIMAL_PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
@@ -26,7 +31,54 @@ function rasterImage(format: "jpeg" | "png" | "webp", width = 20, height = 10): 
     .toBuffer();
 }
 
-describe("processMediaUpload", () => {
+/** What the media service does with an upload: pick the processor from the content, then run it. */
+async function processMediaUpload(buffer: Buffer, allowedMimeTypes: readonly string[]) {
+  const processor = await detectMediaProcessor(buffer);
+  return processor.process(buffer, allowedMimeTypes);
+}
+
+describe("detectMediaProcessor", () => {
+  it.each(["jpeg", "png", "webp"] as const)("picks the raster processor for %s", async (format) => {
+    expect(await detectMediaProcessor(await rasterImage(format))).toBeInstanceOf(
+      RasterImageProcessor,
+    );
+  });
+
+  it.each([
+    ["without an XML declaration", SVG],
+    ["with an XML declaration", `<?xml version="1.0" encoding="UTF-8"?>\n${SVG}`],
+  ])("picks the SVG processor for an SVG %s", async (_, svg) => {
+    expect(await detectMediaProcessor(Buffer.from(svg))).toBeInstanceOf(SvgProcessor);
+  });
+
+  it("picks the passthrough processor for a PDF", async () => {
+    expect(await detectMediaProcessor(MINIMAL_PDF)).toBeInstanceOf(PassthroughProcessor);
+  });
+
+  it("rejects content whose type cannot be detected", async () => {
+    await expect(detectMediaProcessor(Buffer.from("just some text"))).rejects.toThrow(
+      new ValueError("The file type could not be detected or is not supported."),
+    );
+  });
+});
+
+describe("MediaUploadProcessor.process", () => {
+  it("rejects a type that is not allowed before it decodes the image", async () => {
+    const truncatedPng = (await rasterImage("png")).subarray(0, 40);
+
+    await expect(processMediaUpload(truncatedPng, [MediaMimeType.PDF])).rejects.toThrow(
+      new ValueError("The file type image/png is not supported here."),
+    );
+  });
+
+  it("rejects a type that is not allowed before it parses the SVG", async () => {
+    const svgWithDoctype = Buffer.from(`<!DOCTYPE svg>${SVG}`);
+
+    await expect(processMediaUpload(svgWithDoctype, [MediaMimeType.PDF])).rejects.toThrow(
+      new ValueError("The file type image/svg+xml is not supported here."),
+    );
+  });
+
   it.each(["jpeg", "png", "webp"] as const)("re-encodes a %s image as WebP", async (format) => {
     const result = await processMediaUpload(await rasterImage(format), MEDIA_UPLOAD_MIME_TYPES);
 

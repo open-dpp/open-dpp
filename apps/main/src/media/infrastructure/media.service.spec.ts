@@ -10,15 +10,20 @@ import { Media } from "../domain/media";
 import { MediaDoc } from "./media.schema";
 
 // `vi.mock` is hoisted above the imports, so its factories may only use what `vi.hoisted` declares.
-const { mockS3Client, mockProcessMediaUpload } = vi.hoisted(() => ({
-  mockS3Client: {
-    bucketExists: vi.fn<any>(),
-    putObject: vi.fn<any>(),
-    getObject: vi.fn<any>(),
-    removeObject: vi.fn<any>(),
-  },
-  mockProcessMediaUpload: vi.fn<any>(),
-}));
+const { mockS3Client, mockDetectMediaProcessor, mockProcess } = vi.hoisted(() => {
+  const mockProcess = vi.fn<any>();
+  return {
+    mockS3Client: {
+      bucketExists: vi.fn<any>(),
+      putObject: vi.fn<any>(),
+      getObject: vi.fn<any>(),
+      removeObject: vi.fn<any>(),
+    },
+    mockProcess,
+    // Every upload gets a processor whose `process` is `mockProcess`.
+    mockDetectMediaProcessor: vi.fn<any>(async () => ({ process: mockProcess })),
+  };
+});
 
 vi.mock("minio", () => ({
   // `new Client(...)` needs a constructible implementation, not an arrow function.
@@ -29,7 +34,7 @@ vi.mock("minio", () => ({
 
 // Detection, sanitizing and re-encoding are covered by media-upload-processor.spec.ts.
 vi.mock("./media-upload/media-upload-processor", () => ({
-  processMediaUpload: mockProcessMediaUpload,
+  detectMediaProcessor: mockDetectMediaProcessor,
 }));
 
 const processedPdf = {
@@ -152,7 +157,7 @@ describe("MediaService", () => {
   describe("uploadFileOfProductPassport", () => {
     it("should upload file and save media", async () => {
       mockMediaModel.find.mockResolvedValue([]);
-      mockProcessMediaUpload.mockResolvedValue(processedPdf);
+      mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
@@ -175,7 +180,7 @@ describe("MediaService", () => {
 
     it("should delete existing media if found", async () => {
       mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
-      mockProcessMediaUpload.mockResolvedValue(processedPdf);
+      mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
@@ -198,7 +203,7 @@ describe("MediaService", () => {
     it("stores the processed file, checked against the media upload types", async () => {
       const upload = Buffer.from("img");
       mockMediaModel.find.mockResolvedValue([]);
-      mockProcessMediaUpload.mockResolvedValue({
+      mockProcess.mockResolvedValue({
         buffer: Buffer.from("processed-image"),
         mimeType: "image/webp",
         fileExtension: "webp",
@@ -212,7 +217,8 @@ describe("MediaService", () => {
 
       await service.uploadFileOfProductPassport("img.png", upload, "fid", "upid", "uid", "oid");
 
-      expect(mockProcessMediaUpload).toHaveBeenCalledWith(upload, MEDIA_UPLOAD_MIME_TYPES);
+      expect(mockDetectMediaProcessor).toHaveBeenCalledWith(upload);
+      expect(mockProcess).toHaveBeenCalledWith(upload, MEDIA_UPLOAD_MIME_TYPES);
       expect(mockS3Client.putObject).toHaveBeenCalledWith(
         "default-bucket",
         "product-passport-files/upid/fid",
@@ -229,7 +235,7 @@ describe("MediaService", () => {
 
     it("keeps the existing media when the new file is rejected", async () => {
       mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
-      mockProcessMediaUpload.mockRejectedValue(new ValueError("unsupported"));
+      mockProcess.mockRejectedValue(new ValueError("unsupported"));
 
       await expect(
         service.uploadFileOfProductPassport("a.txt", Buffer.from("x"), "fid", "upid", "uid", "oid"),
@@ -243,14 +249,15 @@ describe("MediaService", () => {
   describe("uploadMedia", () => {
     it("should upload media", async () => {
       const upload = Buffer.from("test");
-      mockProcessMediaUpload.mockResolvedValue(processedPdf);
+      mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
 
       const result = await service.uploadMedia("file.pdf", upload, "uid", "oid");
 
-      expect(mockProcessMediaUpload).toHaveBeenCalledWith(upload, MEDIA_UPLOAD_MIME_TYPES);
+      expect(mockDetectMediaProcessor).toHaveBeenCalledWith(upload);
+      expect(mockProcess).toHaveBeenCalledWith(upload, MEDIA_UPLOAD_MIME_TYPES);
       expect(mockS3Client.putObject).toHaveBeenCalledWith(
         "default-bucket",
         expect.stringMatching(/^product-passport-files\//),
@@ -264,7 +271,7 @@ describe("MediaService", () => {
 
     it("checks the file against the given types and stores it in the given folders", async () => {
       const upload = Buffer.from("logo");
-      mockProcessMediaUpload.mockResolvedValue({
+      mockProcess.mockResolvedValue({
         buffer: Buffer.from("<svg/>"),
         mimeType: "image/svg+xml",
         fileExtension: "svg",
@@ -278,10 +285,8 @@ describe("MediaService", () => {
         remoteFolders: ["organization-profile-pictures"],
       });
 
-      expect(mockProcessMediaUpload).toHaveBeenCalledWith(
-        upload,
-        ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES,
-      );
+      expect(mockDetectMediaProcessor).toHaveBeenCalledWith(upload);
+      expect(mockProcess).toHaveBeenCalledWith(upload, ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES);
       expect(mockS3Client.putObject).toHaveBeenCalledWith(
         "default-bucket",
         expect.stringMatching(/^organization-profile-pictures\//),
