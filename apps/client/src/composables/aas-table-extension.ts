@@ -370,6 +370,7 @@ export function useAasTableExtension({
    */
   async function onClearRow(rowIndex: number) {
     const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
+    const targetIdShort = rows.value[rowIndex]?.idShort;
     const fieldsToClear = flatColumns.value
       .map((column) => column.field)
       .filter(
@@ -388,7 +389,11 @@ export function useAasTableExtension({
       });
       const success = await tableMutations.saveRows(modifications, mutationDeps, errorMessage);
       if (success) {
-        fieldsToClear.forEach((field) => setFieldValue(rows.value[rowIndex]!, field, null));
+        // Resolve the row by identity: other row actions may have shifted indexes while saving.
+        const target = rows.value.find((row) => row.idShort === targetIdShort);
+        if (target) {
+          fieldsToClear.forEach((field) => setFieldValue(target, field, null));
+        }
       } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
