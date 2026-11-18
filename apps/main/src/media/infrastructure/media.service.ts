@@ -32,6 +32,11 @@ interface StoredObject {
   readonly objectName: string;
 }
 
+/** The same for every media that points to one object. */
+function objectKey({ bucket, objectName }: StoredObject) {
+  return `${bucket}/${objectName}`;
+}
+
 export interface UploadMediaOptions {
   /** Types the file may have; detected from its content. Defaults to the media upload types. */
   readonly allowedMimeTypes?: readonly string[];
@@ -139,7 +144,7 @@ export class MediaService {
    * unused object in the bucket, while every media still points to a file that exists.
    */
   private async removeUnusedObjects(objects: readonly StoredObject[]) {
-    const unique = _.uniqBy(objects, ({ bucket, objectName }) => `${bucket}/${objectName}`);
+    const unique = _.uniqBy(objects, objectKey);
     await Promise.all(
       unique.map(async ({ bucket, objectName }) => {
         try {
@@ -168,6 +173,27 @@ export class MediaService {
     );
     if (!isReferenced) {
       await this.removeUnusedObjects([object]);
+    }
+  }
+
+  /**
+   * Removes the further media of a passport field. It runs after the replacement is saved, so a
+   * failure is only logged. Returns the media that may still exist.
+   */
+  private async removeDuplicateMedia(duplicates: readonly Media[]): Promise<readonly Media[]> {
+    if (duplicates.length === 0) {
+      return [];
+    }
+    const ids = duplicates.map((duplicate) => duplicate.id);
+    try {
+      await this.mediaDoc.deleteMany({ _id: { $in: ids } });
+      return [];
+    } catch (error) {
+      this.logger.error(
+        `Failed to remove further media ${ids.join(", ")} of a passport field, keeping their objects`,
+        error,
+      );
+      return duplicates;
     }
   }
 
@@ -220,10 +246,12 @@ export class MediaService {
       throw error;
     }
     // Nothing prevents two media for one passport field. Only the one just saved stays.
-    if (duplicates.length > 0) {
-      await this.mediaDoc.deleteMany({ _id: { $in: duplicates.map((duplicate) => duplicate.id) } });
-    }
-    await this.removeUnusedObjects(existing ? [existing, ...duplicates] : []);
+    const remaining = await this.removeDuplicateMedia(duplicates);
+    // Before each upload got its own key, all media of a field shared one object. An object stays
+    // while a media that may still exist points to it.
+    await this.removeUnusedObjects(
+      _.differenceBy(existing ? [existing, ...duplicates] : [], remaining, objectKey),
+    );
     return media;
   }
 

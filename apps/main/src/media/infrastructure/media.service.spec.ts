@@ -1,6 +1,7 @@
 import type { MediaService } from "./media.service";
 import { Buffer } from "node:buffer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Logger } from "@nestjs/common";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MEDIA_UPLOAD_MIME_TYPES, ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
@@ -504,6 +505,7 @@ describe("MediaService", () => {
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
+      mockMediaModel.deleteMany.mockResolvedValue({ deletedCount: 2 });
 
       await service.uploadFileOfProductPassport(
         "new.pdf",
@@ -535,6 +537,69 @@ describe("MediaService", () => {
         ["default-bucket", "folder/upid/field-id"],
         ["default-bucket", "folder/upid/field-id-1"],
       ]);
+    });
+
+    it("keeps a saved replacement and removes its previous object when further media cannot be removed", async () => {
+      mockMediaModel.find.mockResolvedValue([
+        { ...validMediaDoc, _id: "existing" },
+        { ...validMediaDoc, _id: "duplicate-1", objectName: "folder/upid/field-id-1" },
+      ]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      mockMediaModel.findOneAndUpdate.mockResolvedValue({ ...validMediaDoc, _id: "existing" });
+      mockMediaModel.deleteMany.mockRejectedValue(new Error("database unavailable"));
+      mockS3Client.removeObject.mockResolvedValue(undefined);
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+      const result = await service.uploadFileOfProductPassport(
+        "new.pdf",
+        Buffer.from("test"),
+        "field-id",
+        "upid",
+        "replacer",
+        "org-id",
+      );
+
+      expect(result.id).toBe("existing");
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("duplicate-1"),
+        expect.objectContaining({ message: "database unavailable" }),
+      );
+      // The further media may still exist, so the object it points to stays.
+      expect(mockS3Client.removeObject.mock.calls).toEqual([
+        ["default-bucket", "folder/upid/field-id"],
+      ]);
+      errorSpy.mockRestore();
+    });
+
+    it("keeps the previous object when a further media that points to it cannot be removed", async () => {
+      mockMediaModel.find.mockResolvedValue([
+        { ...validMediaDoc, _id: "existing" },
+        { ...validMediaDoc, _id: "duplicate-1", objectName: "folder/upid/field-id-1" },
+        // Before each upload got its own key, all media of a field shared one object.
+        { ...validMediaDoc, _id: "duplicate-2" },
+      ]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      mockMediaModel.findOneAndUpdate.mockResolvedValue({ ...validMediaDoc, _id: "existing" });
+      mockMediaModel.deleteMany.mockRejectedValue(new Error("database unavailable"));
+      mockS3Client.removeObject.mockResolvedValue(undefined);
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+      const result = await service.uploadFileOfProductPassport(
+        "new.pdf",
+        Buffer.from("test"),
+        "field-id",
+        "upid",
+        "replacer",
+        "org-id",
+      );
+
+      expect(result.id).toBe("existing");
+      expect(mockS3Client.removeObject).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
 
     it("stores the processed file, checked against the media upload types", async () => {
