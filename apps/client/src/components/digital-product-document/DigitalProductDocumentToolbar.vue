@@ -18,7 +18,8 @@ const props = defineProps<{
   type: DigitalProductDocumentTypeType;
 }>();
 const { goToParent } = useRouterUtils();
-const { publishWithConfirmation, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
+const { publishWithConfirmation, archive, restore, deleteDPD, fetchById } =
+  useDigitalProductDocument(props.type);
 const route = useRoute();
 const router = useRouter();
 
