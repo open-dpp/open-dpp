@@ -7,7 +7,7 @@ import { MEDIA_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import _ from "lodash";
-import { Client as S3Client } from "minio";
+import { S3Error, Client as S3Client } from "minio";
 import type { MediaFileProps } from "../domain/media";
 import type { ProcessedMediaUpload } from "./media-upload/media-upload-processor";
 import { Media } from "../domain/media";
@@ -18,6 +18,13 @@ export const BucketDefaultPaths = {
   PRODUCT_PASSPORT_FILES: "product-passport-files",
   ORGANIZATION_PROFILE_PICTURES: "organization-profile-pictures",
 } as const;
+
+/** S3 reports a missing object as `NoSuchKey`, or as `NotFound` when the response has no body. */
+const MISSING_OBJECT_ERROR_CODES: ReadonlySet<string> = new Set(["NoSuchKey", "NotFound"]);
+
+function isMissingObjectError(error: unknown) {
+  return error instanceof S3Error && MISSING_OBJECT_ERROR_CODES.has(error.code ?? "");
+}
 
 export interface UploadMediaOptions {
   /** Types the file may have; detected from its content. Defaults to the media upload types. */
@@ -232,21 +239,34 @@ export class MediaService {
   }
 
   async getFilestreamOfProductPassport(dataFieldId: string, uniqueProductIdentifier: string) {
-    const media = await this.findOneDppFileOrFail(dataFieldId, uniqueProductIdentifier);
-    const stream = await this.getFilestreamOfMedia(media);
-    return {
-      stream,
-      media,
-    };
+    return this.openFileOfMedia(() =>
+      this.findOneDppFileOrFail(dataFieldId, uniqueProductIdentifier),
+    );
   }
 
   async getFilestreamById(id: string) {
-    const media = await this.findOneOrFail(id);
-    const stream = await this.getFilestreamOfMedia(media);
-    return {
-      stream,
-      media,
-    };
+    return this.openFileOfMedia(() => this.findOneOrFail(id));
+  }
+
+  /**
+   * A replacement removes the previous object once it is saved, so a media read just before that
+   * points to an object that is gone. The media is then read once more and, if it points to
+   * another object now, that one is opened.
+   */
+  private async openFileOfMedia(findMedia: () => Promise<Media>) {
+    const media = await findMedia();
+    try {
+      return { stream: await this.getFilestreamOfMedia(media), media };
+    } catch (error) {
+      if (!isMissingObjectError(error)) {
+        throw error;
+      }
+      const current = await findMedia();
+      if (current.bucket === media.bucket && current.objectName === media.objectName) {
+        throw error;
+      }
+      return { stream: await this.getFilestreamOfMedia(current), media: current };
+    }
   }
 
   async getFilestreamOfMedia(media: Media) {

@@ -10,9 +10,14 @@ import { Media } from "../domain/media";
 import { MediaDoc } from "./media.schema";
 
 // `vi.mock` is hoisted above the imports, so its factories may only use what `vi.hoisted` declares.
-const { mockS3Client, mockDetectMediaProcessor, mockProcess } = vi.hoisted(() => {
+const { mockS3Client, mockDetectMediaProcessor, mockProcess, MockS3Error } = vi.hoisted(() => {
   const mockProcess = vi.fn<any>();
   return {
+    MockS3Error: class MockS3Error extends Error {
+      constructor(readonly code: string) {
+        super(code);
+      }
+    },
     mockS3Client: {
       bucketExists: vi.fn<any>(),
       putObject: vi.fn<any>(),
@@ -30,6 +35,7 @@ vi.mock("minio", () => ({
   Client: vi.fn(function () {
     return mockS3Client;
   }),
+  S3Error: MockS3Error,
 }));
 
 // Detection, sanitizing and re-encoding are covered by media-upload-processor.spec.ts.
@@ -534,6 +540,31 @@ describe("MediaService", () => {
       expect(result.stream).toBe("stream");
       expect(result.media).toBeInstanceOf(Media);
     });
+
+    it("opens the replacement when the file was replaced after the media was read", async () => {
+      const replacedMediaDoc = {
+        ...validMediaDoc,
+        objectName: "folder/upid/field-id-new",
+        eTag: "new-etag",
+      };
+      mockMediaModel.find
+        .mockResolvedValueOnce([validMediaDoc])
+        .mockResolvedValueOnce([replacedMediaDoc]);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject
+        .mockRejectedValueOnce(new MockS3Error("NoSuchKey"))
+        .mockResolvedValueOnce("new stream");
+
+      const result = await service.getFilestreamOfProductPassport("fid", "upid");
+
+      expect(mockS3Client.getObject).toHaveBeenLastCalledWith(
+        "default-bucket",
+        "folder/upid/field-id-new",
+      );
+      expect(result.stream).toBe("new stream");
+      expect(result.media.objectName).toBe("folder/upid/field-id-new");
+      expect(result.media.eTag).toBe("new-etag");
+    });
   });
 
   describe("getFilestreamById", () => {
@@ -545,6 +576,43 @@ describe("MediaService", () => {
       const result = await service.getFilestreamById("id");
       expect(result.stream).toBe("stream");
       expect(result.media).toBeInstanceOf(Media);
+    });
+
+    it("opens the replacement when the file was replaced after the media was read", async () => {
+      mockMediaModel.findById
+        .mockResolvedValueOnce(validMediaDoc)
+        .mockResolvedValueOnce({ ...validMediaDoc, objectName: "folder/upid/field-id-new" });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject
+        .mockRejectedValueOnce(new MockS3Error("NoSuchKey"))
+        .mockResolvedValueOnce("new stream");
+
+      const result = await service.getFilestreamById("id");
+
+      expect(result.stream).toBe("new stream");
+      expect(result.media.objectName).toBe("folder/upid/field-id-new");
+    });
+
+    it("reports the missing object when the media still points to it", async () => {
+      const missing = new MockS3Error("NoSuchKey");
+      mockMediaModel.findById.mockResolvedValue(validMediaDoc);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject.mockRejectedValue(missing);
+
+      await expect(service.getFilestreamById("id")).rejects.toBe(missing);
+      expect(mockMediaModel.findById).toHaveBeenCalledTimes(2);
+      expect(mockS3Client.getObject).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not read the media again when opening the file fails for another reason", async () => {
+      const denied = new MockS3Error("AccessDenied");
+      mockMediaModel.findById.mockResolvedValue(validMediaDoc);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.getObject.mockRejectedValue(denied);
+
+      await expect(service.getFilestreamById("id")).rejects.toBe(denied);
+      expect(mockMediaModel.findById).toHaveBeenCalledTimes(1);
+      expect(mockS3Client.getObject).toHaveBeenCalledTimes(1);
     });
   });
 
