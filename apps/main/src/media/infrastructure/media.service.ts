@@ -10,6 +10,7 @@ import _ from "lodash";
 import { S3Error, Client as S3Client } from "minio";
 import type { MediaFileProps } from "../domain/media";
 import type { ProcessedMediaUpload } from "./media-upload/media-upload-processor";
+import { isDuplicateKeyErrorOnField } from "../../lib/mongo-errors";
 import { Media } from "../domain/media";
 import { detectMediaProcessor } from "./media-upload/media-upload-processor";
 import { MediaDoc } from "./media.schema";
@@ -35,6 +36,27 @@ interface StoredObject {
 /** The same for every media that points to one object. */
 function objectKey({ bucket, objectName }: StoredObject) {
   return `${bucket}/${objectName}`;
+}
+
+/** A file stored in the bucket for a passport field, before a media holds it. */
+interface PassportFieldUpload {
+  readonly dataFieldId: string;
+  readonly uniqueProductIdentifier: string;
+  readonly uploadedByUserId: string;
+  readonly ownedByOrganizationId: string;
+  /** Also tells where the object is stored. */
+  readonly file: MediaFileProps;
+}
+
+/** The media that holds an upload, and the media of the field it was saved over. */
+interface SavedPassportFieldUpload {
+  readonly media: Media;
+  readonly replaced: readonly Media[];
+}
+
+/** The unique index of the passport field rejected a second media for the field. */
+function isDuplicatePassportFieldError(error: unknown) {
+  return isDuplicateKeyErrorOnField(error, "uniqueProductIdentifier");
 }
 
 export interface UploadMediaOptions {
@@ -206,7 +228,8 @@ export class MediaService {
 
   /**
    * Stores the file of a passport field. If the field already has a media, its file is replaced
-   * and the media stays the same one; the organization is only used for a new media.
+   * and the media stays the same one; the organization is only used for a new media. Concurrent
+   * first uploads to a field end with one media as well, and all of them return its id.
    */
   async uploadFileOfProductPassport(
     originalFilename: string,
@@ -219,7 +242,7 @@ export class MediaService {
     // Processed first: a rejected file must not touch the media it was meant to replace.
     const processor = await detectMediaProcessor(buffer);
     const processed = await processor.process(buffer, MEDIA_UPLOAD_MIME_TYPES);
-    const [existing, ...duplicates] = await this.findDppFiles(dataFieldId, uniqueProductIdentifier);
+    const found = await this.findDppFiles(dataFieldId, uniqueProductIdentifier);
     // Every upload gets its own object, so the file the field has now stays until the save.
     const stored = await this.uploadFile(
       this.bucketNameDefault,
@@ -229,30 +252,80 @@ export class MediaService {
       processed.buffer.length,
       processed.mimeType,
     );
-    const file = this.describeStoredFile(originalFilename, processed, stored);
-    const media = existing
-      ? existing.withReplacedFile(file, uploadedByUserId)
+    const upload: PassportFieldUpload = {
+      dataFieldId,
+      uniqueProductIdentifier,
+      uploadedByUserId,
+      ownedByOrganizationId,
+      file: this.describeStoredFile(originalFilename, processed, stored),
+    };
+    const { media, replaced } = await this.saveToPassportField(upload, found);
+    await this.removeReplacedMedia(replaced);
+    return media;
+  }
+
+  /** The first media found for the field with the uploaded file, or a new media. */
+  private withUploadedFile(upload: PassportFieldUpload, existing: Media | undefined): Media {
+    return existing
+      ? existing.withReplacedFile(upload.file, upload.uploadedByUserId)
       : Media.create({
-          ...file,
-          createdByUserId: uploadedByUserId,
-          ownedByOrganizationId,
-          uniqueProductIdentifier,
-          dataFieldId,
+          ...upload.file,
+          createdByUserId: upload.uploadedByUserId,
+          ownedByOrganizationId: upload.ownedByOrganizationId,
+          uniqueProductIdentifier: upload.uniqueProductIdentifier,
+          dataFieldId: upload.dataFieldId,
         });
+  }
+
+  /**
+   * Saves the upload into the media found for its field. Another upload can create the media of
+   * the field after it was read; the unique index then rejects this one, and the upload replaces
+   * the file of that media instead, once. The object is only removed when the upload fails.
+   */
+  private async saveToPassportField(
+    upload: PassportFieldUpload,
+    found: readonly Media[],
+    mayRetry = true,
+  ): Promise<SavedPassportFieldUpload> {
+    const media = this.withUploadedFile(upload, found[0]);
     try {
       await this.save(media);
+      return { media, replaced: found };
     } catch (error) {
-      await this.removeObjectOfFailedSave(media.id, stored.location);
+      if (mayRetry && isDuplicatePassportFieldError(error)) {
+        return this.saveToCurrentMediaOfField(upload, media.id);
+      }
+      await this.removeObjectOfFailedSave(media.id, upload.file);
       throw error;
     }
-    // Nothing prevents two media for one passport field. Only the one just saved stays.
+  }
+
+  /**
+   * Reads the field again after the index rejected the media `rejectedMediaId`, which was not
+   * written, and saves the upload into the media found now.
+   */
+  private async saveToCurrentMediaOfField(upload: PassportFieldUpload, rejectedMediaId: string) {
+    const current = await this.findDppFiles(
+      upload.dataFieldId,
+      upload.uniqueProductIdentifier,
+    ).catch(async (error: unknown) => {
+      await this.removeObjectOfFailedSave(rejectedMediaId, upload.file);
+      throw error;
+    });
+    return this.saveToPassportField(upload, current, false);
+  }
+
+  /**
+   * Removes the further media of the field and the objects of the files the upload replaced.
+   * Before each upload got its own key, all media of a field shared one object. An object stays
+   * while a media that may still exist points to it.
+   */
+  private async removeReplacedMedia(replaced: readonly Media[]) {
+    // Only the media just saved stays. The unique index allows no further media of a field; they
+    // remain only where the index could not be built.
+    const [, ...duplicates] = replaced;
     const remaining = await this.removeDuplicateMedia(duplicates);
-    // Before each upload got its own key, all media of a field shared one object. An object stays
-    // while a media that may still exist points to it.
-    await this.removeUnusedObjects(
-      _.differenceBy(existing ? [existing, ...duplicates] : [], remaining, objectKey),
-    );
-    return media;
+    await this.removeUnusedObjects(_.differenceBy(replaced, remaining, objectKey));
   }
 
   async uploadMedia(
@@ -405,8 +478,10 @@ export class MediaService {
   }
 
   /**
-   * The media of a passport field. It should be one at most, but nothing enforces that. They come
-   * sorted by id, so every upload keeps the same one of several and every download opens that one.
+   * The media of a passport field. A unique index allows one at most, but a database where it
+   * could not be built may hold several. They come sorted by id, so every upload keeps the same
+   * one of several and every download opens that one; the migration that builds the index keeps
+   * that one as well.
    */
   private async findDppFiles(dataFieldId: string, uniqueProductIdentifier: string) {
     const mediaDocuments = await this.mediaDoc.find(

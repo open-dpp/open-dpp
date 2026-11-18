@@ -1,6 +1,6 @@
 import type { MediaService } from "./media.service";
 import { Buffer } from "node:buffer";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -163,6 +163,19 @@ describe("MediaService", () => {
 
   /** The fields the first save wrote to the media. */
   const writtenByFirstSave = () => mockMediaModel.findOneAndUpdate.mock.calls[0][1] as object;
+
+  /** What MongoDB reports when an insert would give a unique index a second entry. */
+  const duplicateKeyError = (keyPattern: Record<string, number>) =>
+    Object.assign(
+      new Error(
+        `E11000 duplicate key error collection: test.media index: ${Object.keys(keyPattern)
+          .map((key) => `${key}_1`)
+          .join("_")}`,
+      ),
+      { code: 11000, keyPattern },
+    );
+  const duplicatePassportFieldError = () =>
+    duplicateKeyError({ uniqueProductIdentifier: 1, dataFieldId: 1 });
 
   describe("uploadFileOfProductPassport", () => {
     it("should upload file and save media", async () => {
@@ -345,8 +358,122 @@ describe("MediaService", () => {
       ).rejects.toBe(saveError);
 
       const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+      expect(mockMediaModel.find).toHaveBeenCalledTimes(1);
+      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
       expect(mockS3Client.removeObject).toHaveBeenCalledTimes(1);
       expect(mockS3Client.removeObject).toHaveBeenCalledWith("default-bucket", newObjectName);
+    });
+
+    describe("when another upload creates the media of the passport field first", () => {
+      const winnerDoc = {
+        ...validMediaDoc,
+        _id: "winner",
+        createdByUserId: "first-uploader",
+        ownedByOrganizationId: "first-org",
+        objectName: "product-passport-files/upid/field-id-of-winner",
+      };
+
+      beforeEach(() => {
+        mockProcess.mockResolvedValue(processedPdf);
+        mockS3Client.bucketExists.mockResolvedValue(true);
+        mockS3Client.putObject.mockResolvedValue({ etag: "new-etag", versionId: "v2" });
+        mockS3Client.removeObject.mockResolvedValue(undefined);
+      });
+
+      // `vi.clearAllMocks` keeps queued `...Once` results; a test that fails early leaves them.
+      afterEach(() => {
+        mockMediaModel.find.mockReset();
+        mockMediaModel.findOneAndUpdate.mockReset();
+        mockMediaModel.findById.mockReset();
+      });
+
+      const upload = () =>
+        service.uploadFileOfProductPassport(
+          "new.pdf",
+          Buffer.from("test"),
+          "field-id",
+          "upid",
+          "second-uploader",
+          "org-id",
+        );
+
+      it("replaces the file of that media with the stored object and returns its id", async () => {
+        // The field was empty when this upload read it; the unique index rejects a second media.
+        mockMediaModel.find.mockResolvedValueOnce([]).mockResolvedValueOnce([winnerDoc]);
+        mockMediaModel.findOneAndUpdate
+          .mockRejectedValueOnce(duplicatePassportFieldError())
+          .mockResolvedValueOnce(winnerDoc);
+
+        const result = await upload();
+
+        const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+        expect(result.id).toBe("winner");
+        expect(result.objectName).toBe(newObjectName);
+        expect(mockS3Client.putObject).toHaveBeenCalledTimes(1);
+        expect(mockMediaModel.find).toHaveBeenCalledTimes(2);
+        expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledTimes(2);
+        expect(mockMediaModel.findOneAndUpdate).toHaveBeenLastCalledWith(
+          { _id: "winner" },
+          expect.objectContaining({
+            createdByUserId: "first-uploader",
+            ownedByOrganizationId: "first-org",
+            updatedByUserId: "second-uploader",
+            objectName: newObjectName,
+            eTag: "new-etag",
+          }),
+          expect.anything(),
+        );
+        // The object of the replaced file goes, the stored one stays.
+        expect(mockS3Client.removeObject.mock.calls).toEqual([
+          ["default-bucket", winnerDoc.objectName],
+        ]);
+        expect(mockMediaModel.findById).not.toHaveBeenCalled();
+      });
+
+      it("does not retry when another unique index rejects the media", async () => {
+        const saveError = duplicateKeyError({ _id: 1 });
+        mockMediaModel.find.mockResolvedValue([]);
+        mockMediaModel.findOneAndUpdate.mockRejectedValue(saveError);
+        mockMediaModel.findById.mockResolvedValue(null);
+
+        await expect(upload()).rejects.toBe(saveError);
+
+        const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+        expect(mockMediaModel.find).toHaveBeenCalledTimes(1);
+        expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
+        expect(mockS3Client.removeObject.mock.calls).toEqual([["default-bucket", newObjectName]]);
+      });
+
+      it("retries once, then removes the new object as for any failed save", async () => {
+        const secondError = duplicatePassportFieldError();
+        mockMediaModel.find.mockResolvedValueOnce([]).mockResolvedValueOnce([winnerDoc]);
+        mockMediaModel.findOneAndUpdate
+          .mockRejectedValueOnce(duplicatePassportFieldError())
+          .mockRejectedValueOnce(secondError);
+        // The media still points to the file of the other upload.
+        mockMediaModel.findById.mockResolvedValue(winnerDoc);
+
+        await expect(upload()).rejects.toBe(secondError);
+
+        const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+        expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledTimes(2);
+        expect(mockMediaModel.findById).toHaveBeenCalledTimes(1);
+        expect(mockMediaModel.findById).toHaveBeenCalledWith("winner", expect.anything());
+        expect(mockS3Client.removeObject.mock.calls).toEqual([["default-bucket", newObjectName]]);
+      });
+
+      it("removes the new object when the passport field cannot be read again", async () => {
+        const readError = new Error("database unavailable");
+        mockMediaModel.find.mockResolvedValueOnce([]).mockRejectedValueOnce(readError);
+        mockMediaModel.findOneAndUpdate.mockRejectedValueOnce(duplicatePassportFieldError());
+        mockMediaModel.findById.mockResolvedValue(null);
+
+        await expect(upload()).rejects.toBe(readError);
+
+        const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+        expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
+        expect(mockS3Client.removeObject.mock.calls).toEqual([["default-bucket", newObjectName]]);
+      });
     });
 
     it("keeps the new object when the save fails after the media was written", async () => {
