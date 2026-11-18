@@ -6,10 +6,18 @@ import { sanitizeSvg, SVG_LIMITS } from "./svg-sanitizer";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
+const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
 function svg(body: string, rootAttributes = ""): Buffer {
   return Buffer.from(
     `<svg xmlns="${SVG_NAMESPACE}" xmlns:xlink="${XLINK_NAMESPACE}" viewBox="0 0 10 10"${rootAttributes}>${body}</svg>`,
+  );
+}
+
+/** An SVG whose root and elements carry the prefix `s`, bound to the SVG namespace. */
+function prefixedSvg(body: string, rootAttributes = ""): Buffer {
+  return Buffer.from(
+    `<s:svg xmlns:s="${SVG_NAMESPACE}" xmlns:xlink="${XLINK_NAMESPACE}" viewBox="0 0 10 10"${rootAttributes}>${body}</s:svg>`,
   );
 }
 
@@ -186,6 +194,109 @@ describe("sanitizeSvg", () => {
     expect(() => sanitizeSvg(Buffer.from(`<svg viewBox="0 0 1 1"><rect/></svg>`))).toThrow(
       ValueError,
     );
+  });
+
+  describe("namespace prefixes", () => {
+    it("keeps an SVG whose elements carry a prefix bound to the SVG namespace", () => {
+      const { text, document } = sanitizeAndParse(
+        prefixedSvg(
+          `<s:defs><s:linearGradient id="g"><s:stop offset="0" stop-color="#000"/></s:linearGradient></s:defs>` +
+            `<s:rect id="shape" width="10" height="10" fill="url(#g)"/><s:use xlink:href="#shape"/>`,
+        ),
+      );
+
+      const root = document.documentElement;
+      expect(document.getElementsByTagName("parsererror")).toHaveLength(0);
+      expect(root.localName).toBe("svg");
+      expect(root.namespaceURI).toBe(SVG_NAMESPACE);
+      expect(root.getAttribute("viewBox")).toBe("0 0 10 10");
+      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "linearGradient")).toHaveLength(1);
+      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "rect")).toHaveLength(1);
+      const use = document.getElementsByTagNameNS(SVG_NAMESPACE, "use")[0];
+      expect(use?.getAttributeNS(XLINK_NAMESPACE, "href")).toBe("#shape");
+      // Without a prefix, so a viewer that matches names instead of namespaces renders it too.
+      expect(text).not.toMatch(/<s:|xmlns:s=/);
+    });
+
+    it("sanitizes a prefixed SVG to the same output as the SVG without prefixes", () => {
+      const body = (p: string) =>
+        `<${p}style><![CDATA[.a > .b { fill: red; }]]></${p}style><${p}script>alert(1)</${p}script>` +
+        `<${p}rect id="r" class="a" width="1" height="1" onclick="alert(2)"/><${p}use xlink:href="#r"/>` +
+        `<${p}set attributeName="onclick" to="alert(3)"/><${p}iframe src="javascript:alert(4)"/>` +
+        `<${p}a href="javascript:alert(5)"><${p}text xml:space="preserve">a&#160;b</${p}text></${p}a>`;
+
+      expect(sanitizeSvg(prefixedSvg(body("s:"))).toString("utf8")).toBe(
+        sanitizeSvg(svg(body(""))).toString("utf8"),
+      );
+    });
+
+    it("removes a prefixed script element", () => {
+      const { text } = sanitizeAndParse(
+        prefixedSvg(`<s:script>alert(1)</s:script><s:rect width="1" height="1"/>`),
+      );
+
+      expect(text).not.toMatch(/script|alert/);
+      expect(text).toContain("<rect");
+    });
+
+    it("removes a prefixed foreignObject", () => {
+      const { text } = sanitizeAndParse(
+        prefixedSvg(
+          `<s:foreignObject><div xmlns="${XHTML_NAMESPACE}"><img src="x" onerror="alert(1)"/></div></s:foreignObject>`,
+        ),
+      );
+
+      expect(text).not.toMatch(/foreignObject|onerror|alert/);
+    });
+
+    it("removes event handler attributes from prefixed elements", () => {
+      const { text } = sanitizeAndParse(
+        prefixedSvg(
+          `<s:rect width="1" height="1" onclick="alert(1)" s:onmouseover="alert(2)"/>`,
+          ` onload="alert(3)"`,
+        ),
+      );
+
+      expect(text).not.toMatch(/onclick|onmouseover|onload|alert/);
+      expect(text).toContain("<rect");
+    });
+
+    it("removes elements whose prefix is bound to another namespace", () => {
+      const { text, document } = sanitizeAndParse(
+        prefixedSvg(
+          `<h:script>alert(1)</h:script><h:img src="x" onerror="alert(2)"/><svg:script>alert(3)</svg:script><s:rect width="1" height="1"/>`,
+          ` xmlns:h="${XHTML_NAMESPACE}" xmlns:svg="${XHTML_NAMESPACE}"`,
+        ),
+      );
+
+      expect(document.getElementsByTagNameNS(XHTML_NAMESPACE, "*")).toHaveLength(0);
+      expect(document.getElementsByTagNameNS("*", "script")).toHaveLength(0);
+      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "rect")).toHaveLength(1);
+      expect(text).not.toMatch(/<h:|<svg:|<img|onerror/);
+    });
+
+    it("removes a prefixed element named xmlns", () => {
+      // Its name cannot be written without a prefix; it is no SVG element either.
+      const { text } = sanitizeAndParse(prefixedSvg(`<s:xmlns/><s:rect width="1" height="1"/>`));
+
+      expect(text).not.toContain("xmlns/");
+      expect(text).toContain("<rect");
+    });
+
+    it("rejects a prefixed svg root outside the SVG namespace", () => {
+      expect(() =>
+        sanitizeSvg(Buffer.from(`<s:svg xmlns:s="${XHTML_NAMESPACE}"><s:rect/></s:svg>`)),
+      ).toThrow(ValueError);
+    });
+
+    it("accepts prefixed elements nested as deep as the limit allows", () => {
+      const levels = SVG_LIMITS.maxDepth - 1;
+      const { document } = sanitizeAndParse(
+        prefixedSvg("<s:g>".repeat(levels) + "</s:g>".repeat(levels)),
+      );
+
+      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "g")).toHaveLength(levels);
+    });
   });
 
   it("sanitizes the tree an XML parser builds, not one an HTML parser would", () => {

@@ -177,6 +177,67 @@ function replaceCdataSectionsWithText(root: Element, window: DOMWindow): void {
   }
 }
 
+/** An element named xmlns cannot be created without a prefix, and it is no SVG element either. */
+function isPrefixedSvgElement(node: Node, window: DOMWindow): node is Element {
+  if (node.nodeType !== window.Node.ELEMENT_NODE) {
+    return false;
+  }
+  const element = node as Element;
+  return (
+    element.prefix !== null &&
+    element.namespaceURI === SVG_NAMESPACE &&
+    element.localName !== "xmlns"
+  );
+}
+
+function unprefixedSvgElement(element: Element): Element {
+  const copy = element.ownerDocument.createElementNS(SVG_NAMESPACE, element.localName);
+  // Attributes keep their namespace and prefix: `s:onclick` is no event handler, and DOMPurify
+  // drops it by its name like any other attribute it does not know.
+  for (const attribute of Array.from(element.attributes)) {
+    copy.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
+  }
+  return copy;
+}
+
+/**
+ * Copies like jsdom's own deep clone: a subtree is complete before it is appended to a parent
+ * that has no parent yet, so each append takes constant time, where moving a subtree would cost
+ * its size. The recursion is as deep as the tree, which `SVG_LIMITS.maxDepth` caps.
+ */
+function copyWithoutSvgPrefixes(node: Node, window: DOMWindow): Node {
+  const copy = isPrefixedSvgElement(node, window)
+    ? unprefixedSvgElement(node)
+    : node.cloneNode(false);
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    copy.appendChild(copyWithoutSvgPrefixes(child, window));
+  }
+  return copy;
+}
+
+function containsPrefixedSvgElement(root: Element, window: DOMWindow): boolean {
+  const iterator = root.ownerDocument.createNodeIterator(root, window.NodeFilter.SHOW_ELEMENT);
+  for (let node = iterator.nextNode(); node; node = iterator.nextNode()) {
+    if (isPrefixedSvgElement(node, window)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * DOMPurify matches elements by their qualified name, so it drops `<s:rect>` and an `<s:svg>`
+ * root although `s` is bound to the SVG namespace. Returns the tree the same file without SVG
+ * prefixes parses to. Elements in other namespaces keep their prefix, so DOMPurify drops them as
+ * before.
+ */
+function withoutSvgPrefixes(root: Element, window: DOMWindow): Element {
+  if (!containsPrefixedSvgElement(root, window)) {
+    return root;
+  }
+  return copyWithoutSvgPrefixes(root, window) as Element;
+}
+
 function findSvgRoot(fragment: DocumentFragment): Element {
   const root = fragment.firstElementChild;
   if (!root || root.localName !== "svg" || root.namespaceURI !== SVG_NAMESPACE) {
@@ -199,8 +260,9 @@ export function sanitizeSvg(input: Buffer): Buffer {
   }
   assertWithinLimits(text);
   const { window, purifier } = getToolkit();
-  const root = parseStandaloneSvg(text, window);
-  replaceCdataSectionsWithText(root, window);
+  const parsed = parseStandaloneSvg(text, window);
+  replaceCdataSectionsWithText(parsed, window);
+  const root = withoutSvgPrefixes(parsed, window);
 
   // DOMPurify gets the parsed tree, not the text: it would parse text again as HTML, whose tree
   // construction can turn a few hundred well-formed tags into tens of thousands of elements.

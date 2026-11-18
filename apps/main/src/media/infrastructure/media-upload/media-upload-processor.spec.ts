@@ -16,6 +16,8 @@ import {
 } from "./media-upload-processor";
 
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>alert(1)</script><rect width="10" height="10"/></svg>`;
+const PREFIXED_SVG = `<ns:svg xmlns:ns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><ns:script>alert(1)</ns:script><ns:rect width="10" height="10"/></ns:svg>`;
+const XML_DECLARATION = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 const MINIMAL_PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
 // The ftyp box file-type uses to recognize HEIC; sharp's prebuilt libheif only decodes AVIF.
 const HEIC_HEADER = Buffer.concat([
@@ -46,9 +48,20 @@ describe("detectMediaProcessor", () => {
 
   it.each([
     ["without an XML declaration", SVG],
-    ["with an XML declaration", `<?xml version="1.0" encoding="UTF-8"?>\n${SVG}`],
+    ["with an XML declaration", `${XML_DECLARATION}${SVG}`],
+    ["with a prefixed root", PREFIXED_SVG],
+    ["with an XML declaration and a prefixed root", `${XML_DECLARATION}${PREFIXED_SVG}`],
   ])("picks the SVG processor for an SVG %s", async (_, svg) => {
     expect(await detectMediaProcessor(Buffer.from(svg))).toBeInstanceOf(SvgProcessor);
+  });
+
+  it.each([
+    ["whose name only starts with svg", `${XML_DECLARATION}<ns:svgx xmlns:ns="urn:x"/>`],
+    ["whose name only ends with svg", `${XML_DECLARATION}<ns:notsvg xmlns:ns="urn:x"/>`],
+  ])("does not take an element %s for an SVG", async (_, xml) => {
+    await expect(detectMediaProcessor(Buffer.from(xml))).rejects.toThrow(
+      new ValueError("The file type could not be detected or is not supported."),
+    );
   });
 
   it("picks the passthrough processor for a PDF", async () => {
@@ -136,11 +149,24 @@ describe("MediaUploadProcessor.process", () => {
   });
 
   it("detects an SVG that starts with an XML declaration", async () => {
-    const input = Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>\n${SVG}`);
+    const input = Buffer.from(`${XML_DECLARATION}${SVG}`);
 
     const result = await processMediaUpload(input, MEDIA_UPLOAD_MIME_TYPES);
 
     expect(result.mimeType).toBe(MediaMimeType.SVG);
+  });
+
+  it("keeps an SVG with a prefixed root and prefixed child elements as a sanitized vector", async () => {
+    const input = Buffer.from(`${XML_DECLARATION}${PREFIXED_SVG}`);
+
+    const result = await processMediaUpload(input, MEDIA_UPLOAD_MIME_TYPES);
+
+    expect(result.mimeType).toBe(MediaMimeType.SVG);
+    expect(result.fileExtension).toBe("svg");
+    const text = result.buffer.toString("utf8");
+    expect(text).toMatch(/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"[^>]* viewBox="0 0 10 10"/);
+    expect(text).toContain("<rect");
+    expect(text).not.toMatch(/script|alert|ns:/);
   });
 
   it("accepts an SVG as an organization profile picture", async () => {

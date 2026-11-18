@@ -24,7 +24,8 @@ const RASTER_MIME_TYPES: ReadonlySet<string> = new Set([
 ]);
 // file-type reports an SVG with an XML declaration as XML, and one without as nothing at all.
 const XML_MIME_TYPE = "application/xml";
-const SVG_ELEMENT_START = /<svg[\s/>]/;
+// The name is svg, with or without a namespace prefix such as `<ns:svg`, and ends there.
+const SVG_ELEMENT_START = /<(?:[A-Z_a-z][\w.-]*:)?svg[\s/>]/;
 
 /**
  * Turns an uploaded file of one detected type into what gets stored. `process` is the template
