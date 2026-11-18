@@ -7,6 +7,7 @@ import { SaxesParser } from "saxes";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
+const XMLNS_NAMESPACE = "http://www.w3.org/2000/xmlns/";
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
 // Checked on the raw text before any parser runs: jsdom's XML parser expands internal entities.
 const DOCUMENT_TYPE_DECLARATION = /<!(?:DOCTYPE|ENTITY)/i;
@@ -177,25 +178,66 @@ function replaceCdataSectionsWithText(root: Element, window: DOMWindow): void {
   }
 }
 
+/** DOMPurify keeps XLink attributes only under this prefix, the one the SVG specification uses. */
+const XLINK_PREFIX = "xlink";
+
 /** An element named xmlns cannot be created without a prefix, and it is no SVG element either. */
-function isPrefixedSvgElement(node: Node, window: DOMWindow): node is Element {
+function isSvgElement(node: Node, window: DOMWindow): node is Element {
   if (node.nodeType !== window.Node.ELEMENT_NODE) {
     return false;
   }
   const element = node as Element;
+  return element.namespaceURI === SVG_NAMESPACE && element.localName !== "xmlns";
+}
+
+function isXlinkAttributeWithOtherPrefix(attribute: Attr): boolean {
+  return attribute.namespaceURI === XLINK_NAMESPACE && attribute.prefix !== XLINK_PREFIX;
+}
+
+/**
+ * DOMPurify keeps `xmlns:xlink` whatever namespace it binds. jsdom's XML serializer can then write
+ * an attribute with the prefix of an outer declaration that a nearer one binds to another
+ * namespace: an `xlink:href` in another namespace comes out as an XLink reference the `<use>` hook
+ * never checked. Without the declaration, the serializer declares a prefix of its own for it.
+ */
+function bindsXlinkToOtherNamespace(attribute: Attr): boolean {
   return (
-    element.prefix !== null &&
-    element.namespaceURI === SVG_NAMESPACE &&
-    element.localName !== "xmlns"
+    attribute.namespaceURI === XMLNS_NAMESPACE &&
+    attribute.localName === XLINK_PREFIX &&
+    attribute.value !== XLINK_NAMESPACE
   );
 }
 
-function unprefixedSvgElement(element: Element): Element {
+function isNonCanonicalAttribute(attribute: Attr): boolean {
+  return isXlinkAttributeWithOtherPrefix(attribute) || bindsXlinkToOtherNamespace(attribute);
+}
+
+function hasNamesToCanonicalize(node: Node, window: DOMWindow): node is Element {
+  return (
+    isSvgElement(node, window) &&
+    (node.prefix !== null || Array.from(node.attributes).some(isNonCanonicalAttribute))
+  );
+}
+
+/**
+ * Picks the attribute by its namespace, not its prefix. An `xlink:href` whose prefix is bound to
+ * another namespace is no XLink attribute: it keeps its name, and the `<use>` hook ignores it.
+ */
+function canonicalAttributeName(attribute: Attr): string {
+  return attribute.namespaceURI === XLINK_NAMESPACE
+    ? `${XLINK_PREFIX}:${attribute.localName}`
+    : attribute.name;
+}
+
+function canonicalSvgElement(element: Element): Element {
   const copy = element.ownerDocument.createElementNS(SVG_NAMESPACE, element.localName);
-  // Attributes keep their namespace and prefix: `s:onclick` is no event handler, and DOMPurify
-  // drops it by its name like any other attribute it does not know.
-  for (const attribute of Array.from(element.attributes)) {
-    copy.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
+  const attributes = Array.from(element.attributes).filter(
+    (attribute) => !bindsXlinkToOtherNamespace(attribute),
+  );
+  // Other attributes keep their namespace and prefix: `s:onclick` is no event handler, and
+  // DOMPurify drops it by its name like any other attribute it does not know.
+  for (const attribute of attributes) {
+    copy.setAttributeNS(attribute.namespaceURI, canonicalAttributeName(attribute), attribute.value);
   }
   return copy;
 }
@@ -205,20 +247,20 @@ function unprefixedSvgElement(element: Element): Element {
  * that has no parent yet, so each append takes constant time, where moving a subtree would cost
  * its size. The recursion is as deep as the tree, which `SVG_LIMITS.maxDepth` caps.
  */
-function copyWithoutSvgPrefixes(node: Node, window: DOMWindow): Node {
-  const copy = isPrefixedSvgElement(node, window)
-    ? unprefixedSvgElement(node)
+function copyWithCanonicalNames(node: Node, window: DOMWindow): Node {
+  const copy = hasNamesToCanonicalize(node, window)
+    ? canonicalSvgElement(node)
     : node.cloneNode(false);
   for (let child = node.firstChild; child; child = child.nextSibling) {
-    copy.appendChild(copyWithoutSvgPrefixes(child, window));
+    copy.appendChild(copyWithCanonicalNames(child, window));
   }
   return copy;
 }
 
-function containsPrefixedSvgElement(root: Element, window: DOMWindow): boolean {
+function containsNamesToCanonicalize(root: Element, window: DOMWindow): boolean {
   const iterator = root.ownerDocument.createNodeIterator(root, window.NodeFilter.SHOW_ELEMENT);
   for (let node = iterator.nextNode(); node; node = iterator.nextNode()) {
-    if (isPrefixedSvgElement(node, window)) {
+    if (hasNamesToCanonicalize(node, window)) {
       return true;
     }
   }
@@ -226,16 +268,17 @@ function containsPrefixedSvgElement(root: Element, window: DOMWindow): boolean {
 }
 
 /**
- * DOMPurify matches elements by their qualified name, so it drops `<s:rect>` and an `<s:svg>`
- * root although `s` is bound to the SVG namespace. Returns the tree the same file without SVG
- * prefixes parses to. Elements in other namespaces keep their prefix, so DOMPurify drops them as
- * before.
+ * DOMPurify matches elements and attributes by their qualified name, so it drops `<s:rect>`, an
+ * `<s:svg>` root and `l:href`, although `s` is bound to the SVG namespace and `l` to the XLink
+ * namespace. Returns a copy in which SVG elements have no prefix, XLink attributes have the prefix
+ * xlink and no declaration binds xlink to another namespace. Elements in other namespaces are
+ * copied unchanged, so DOMPurify drops them as before.
  */
-function withoutSvgPrefixes(root: Element, window: DOMWindow): Element {
-  if (!containsPrefixedSvgElement(root, window)) {
+function withCanonicalNames(root: Element, window: DOMWindow): Element {
+  if (!containsNamesToCanonicalize(root, window)) {
     return root;
   }
-  return copyWithoutSvgPrefixes(root, window) as Element;
+  return copyWithCanonicalNames(root, window) as Element;
 }
 
 function findSvgRoot(fragment: DocumentFragment): Element {
@@ -262,7 +305,7 @@ export function sanitizeSvg(input: Buffer): Buffer {
   const { window, purifier } = getToolkit();
   const parsed = parseStandaloneSvg(text, window);
   replaceCdataSectionsWithText(parsed, window);
-  const root = withoutSvgPrefixes(parsed, window);
+  const root = withCanonicalNames(parsed, window);
 
   // DOMPurify gets the parsed tree, not the text: it would parse text again as HTML, whose tree
   // construction can turn a few hundred well-formed tags into tens of thousands of elements.

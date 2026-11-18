@@ -21,6 +21,26 @@ function prefixedSvg(body: string, rootAttributes = ""): Buffer {
   );
 }
 
+/** The markup of the elements in the root, written with the given element prefix. */
+type SvgBody = (elementPrefix: string) => string;
+
+/** Each test runs on an SVG without prefixes and on one whose elements carry the prefix `s`. */
+const SVG_SPELLINGS: [string, (body: SvgBody, rootAttributes?: string) => Buffer][] = [
+  ["without prefixes", (body, rootAttributes) => svg(body(""), rootAttributes)],
+  ["with prefixed elements", (body, rootAttributes) => prefixedSvg(body("s:"), rootAttributes)],
+];
+
+/** Binds the prefix `l` to the XLink namespace as well. */
+const OTHER_XLINK_PREFIX = ` xmlns:l="${XLINK_NAMESPACE}"`;
+
+/** The href of each use element in the output, without and with the XLink namespace. */
+function useReferences(document: Document): (string | null)[][] {
+  return Array.from(document.getElementsByTagNameNS("*", "use")).map((use) => [
+    use.getAttributeNS(null, "href"),
+    use.getAttributeNS(XLINK_NAMESPACE, "href"),
+  ]);
+}
+
 function parseOutput(output: Buffer): Document {
   const { window } = new JSDOM("");
   return new window.DOMParser().parseFromString(output.toString("utf8"), "image/svg+xml");
@@ -297,6 +317,142 @@ describe("sanitizeSvg", () => {
 
       expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "g")).toHaveLength(levels);
     });
+
+    describe.each(SVG_SPELLINGS)(
+      "XLink attributes with another prefix in an SVG %s",
+      (_, build) => {
+        it("keeps a use element whose reference has another XLink prefix", () => {
+          const { text, document } = sanitizeAndParse(
+            build(
+              (p) => `<${p}rect id="shape" width="1" height="1"/><${p}use l:href="#shape"/>`,
+              OTHER_XLINK_PREFIX,
+            ),
+          );
+
+          expect(useReferences(document)).toEqual([[null, "#shape"]]);
+          // Under the prefix the root declares for XLink, so a viewer that matches names reads it too.
+          expect(text).toContain(`<use xlink:href="#shape"/>`);
+          expect(text).not.toMatch(/\bl:|xmlns:l=/);
+        });
+
+        it("sanitizes another XLink prefix to the same output as the prefix xlink", () => {
+          const body = (xlink: string) => (p: string) =>
+            `<${p}rect id="r" width="1" height="1"/><${p}use ${xlink}:href="#r"/>` +
+            `<${p}use href="#r" ${xlink}:href="#r"/><${p}use href="#r" ${xlink}:href="https://evil.example/a.svg#r"/>` +
+            `<${p}use ${xlink}:href="https://evil.example/sprite.svg#a"/>` +
+            `<${p}a ${xlink}:href="javascript:alert(1)" ${xlink}:title="t" ${xlink}:show="new"><${p}text>a</${p}text></${p}a>`;
+
+          expect(sanitizeSvg(build(body("l"), OTHER_XLINK_PREFIX)).toString("utf8")).toBe(
+            sanitizeSvg(build(body("xlink"))).toString("utf8"),
+          );
+        });
+
+        it("removes use elements that reference another document under another XLink prefix", () => {
+          const { document } = sanitizeAndParse(
+            build(
+              (p) =>
+                `<${p}use l:href="https://evil.example/sprite.svg#a"/>` +
+                `<${p}use l:href="data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=#a"/>`,
+              OTHER_XLINK_PREFIX,
+            ),
+          );
+
+          expect(useReferences(document)).toEqual([]);
+        });
+
+        it("removes javascript: links under another XLink prefix", () => {
+          const { text } = sanitizeAndParse(
+            build(
+              (p) => `<${p}a l:href="javascript:alert(1)"><${p}rect width="1" height="1"/></${p}a>`,
+              OTHER_XLINK_PREFIX,
+            ),
+          );
+
+          expect(text).not.toMatch(/javascript|alert/);
+          expect(text).toContain("<rect");
+        });
+
+        it("keeps an unqualified href apart from a reference with another XLink prefix", () => {
+          const { document } = sanitizeAndParse(
+            build(
+              (p) =>
+                `<${p}rect id="a" width="1" height="1"/><${p}rect id="b" width="1" height="1"/>` +
+                `<${p}use href="#a" l:href="#b"/><${p}use href="#a" l:href="https://evil.example/a.svg#b"/>`,
+              OTHER_XLINK_PREFIX,
+            ),
+          );
+
+          // A viewer that knows href reads it before xlink:href; the second use is removed as with xlink.
+          expect(useReferences(document)).toEqual([["#a", "#b"]]);
+        });
+
+        it("does not take an xlink:href in another namespace for a reference", () => {
+          const { document } = sanitizeAndParse(
+            build(
+              (p) =>
+                `<${p}rect id="a" width="1" height="1"/>` +
+                `<${p}use xmlns:xlink="urn:example" xlink:href="https://evil.example/sprite.svg#a"/>` +
+                `<${p}use href="#a" xmlns:xlink="urn:example" xlink:href="https://evil.example/sprite.svg#a"/>` +
+                `<${p}use href="#a" xmlns:xlink="https://evil.example/ns" xlink:href="https://evil.example/sprite.svg#a"/>`,
+              OTHER_XLINK_PREFIX,
+            ),
+          );
+
+          // A viewer ignores an href outside the XLink namespace, and the output keeps it outside.
+          expect(useReferences(document)).toEqual([
+            ["#a", null],
+            ["#a", null],
+          ]);
+        });
+
+        it("keeps a reference with another XLink prefix next to an xlink:href in another namespace", () => {
+          const { document } = sanitizeAndParse(
+            build(
+              (p) =>
+                `<${p}rect id="a" width="1" height="1"/>` +
+                `<${p}use xmlns:xlink="urn:example" xlink:href="https://evil.example/sprite.svg#a" l:href="#a"/>` +
+                `<${p}use xmlns:xlink="https://evil.example/ns" xlink:href="https://evil.example/sprite.svg#a" l:href="#a"/>`,
+              OTHER_XLINK_PREFIX,
+            ),
+          );
+
+          expect(useReferences(document)).toEqual([
+            [null, "#a"],
+            [null, "#a"],
+          ]);
+        });
+
+        it("rejects an element with two XLink hrefs", () => {
+          expect(() =>
+            sanitizeSvg(build((p) => `<${p}use xlink:href="#a" l:href="#b"/>`, OTHER_XLINK_PREFIX)),
+          ).toThrow(new ValueError("The file is not a well-formed SVG image."));
+        });
+      },
+    );
+
+    it.each([
+      ["without prefixes", "", `xmlns="${SVG_NAMESPACE}"`],
+      ["with prefixed elements", "s:", `xmlns:s="${SVG_NAMESPACE}"`],
+    ])(
+      "does not turn an xlink:href in another namespace into a reference when DOMPurify unwraps its parent, in an SVG %s",
+      (_, p, declaration) => {
+        // DOMPurify moves the content of the unknown element into the g, where xlink is the XLink
+        // namespace, inside the root, where it is not.
+        const { document } = sanitizeAndParse(
+          Buffer.from(
+            `<${p}svg ${declaration} xmlns:xlink="https://evil.example/ns"><${p}rect id="a" width="1" height="1"/>` +
+              `<${p}g xmlns:xlink="${XLINK_NAMESPACE}"><${p}unknown xmlns:xlink="https://evil.example/ns">` +
+              `<${p}use href="#a" xlink:href="https://evil.example/sprite.svg#a"/>` +
+              `<${p}a xlink:href="https://evil.example/"><${p}rect width="1" height="1"/></${p}a>` +
+              `</${p}unknown></${p}g></${p}svg>`,
+          ),
+        );
+
+        expect(useReferences(document)).toEqual([["#a", null]]);
+        const link = document.getElementsByTagNameNS(SVG_NAMESPACE, "a")[0];
+        expect(link?.getAttributeNS(XLINK_NAMESPACE, "href")).toBeNull();
+      },
+    );
   });
 
   it("sanitizes the tree an XML parser builds, not one an HTML parser would", () => {
