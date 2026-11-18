@@ -349,6 +349,10 @@ describe("MediaController", () => {
         updatedByUserId: userId,
         createdAt: created.body.createdAt,
       });
+      const file = await download(`/media/dpp/${upi}/manual/download`).expect(200);
+      expect(file.headers["content-type"]).toBe("image/webp");
+      // The replaced PDF is removed from the bucket, not left behind.
+      expect([...objectStore.keys()].filter((key) => key.includes(`/${upi}/`))).toHaveLength(1);
     });
 
     it("keeps a passport file when the upload of its replacement to the bucket fails", async () => {

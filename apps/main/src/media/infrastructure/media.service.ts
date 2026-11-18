@@ -1,7 +1,7 @@
 import type { Model } from "mongoose";
 import type { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { MEDIA_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
@@ -33,6 +33,7 @@ export class MediaService {
   private readonly bucketNameProfilePictures: string;
   private readonly pathDelimiter = "/";
   private readonly fallbackMediaVersionId = "unversioned";
+  private readonly logger = new Logger(MediaService.name);
 
   private readonly configService: EnvService;
   private mediaDoc: Model<MediaDoc>;
@@ -121,6 +122,23 @@ export class MediaService {
   }
 
   /**
+   * Removes objects that no media points to any more. A failure is only logged: it leaves an
+   * unused object in the bucket, while every media still points to a file that exists.
+   */
+  private async removeUnusedObjects(objects: readonly { bucket: string; objectName: string }[]) {
+    const unique = _.uniqBy(objects, ({ bucket, objectName }) => `${bucket}/${objectName}`);
+    await Promise.all(
+      unique.map(async ({ bucket, objectName }) => {
+        try {
+          await this.client.removeObject(bucket, objectName);
+        } catch (error) {
+          this.logger.error(`Failed to remove unused object ${bucket}/${objectName}`, error);
+        }
+      }),
+    );
+  }
+
+  /**
    * Stores the file of a passport field. If the field already has a media, its file is replaced
    * and the media stays the same one; the organization is only used for a new media.
    */
@@ -136,11 +154,11 @@ export class MediaService {
     const processor = await detectMediaProcessor(buffer);
     const processed = await processor.process(buffer, MEDIA_UPLOAD_MIME_TYPES);
     const [existing, ...duplicates] = await this.findDppFiles(dataFieldId, uniqueProductIdentifier);
-    // Uploaded before any record changes: if the bucket fails, the field keeps its media.
+    // Every upload gets its own object, so the file the field has now stays until the save.
     const stored = await this.uploadFile(
       this.bucketNameDefault,
       processed.buffer,
-      dataFieldId,
+      `${dataFieldId}-${randomUUID()}`,
       [BucketDefaultPaths.PRODUCT_PASSPORT_FILES, uniqueProductIdentifier],
       processed.buffer.length,
       processed.mimeType,
@@ -155,11 +173,17 @@ export class MediaService {
           uniqueProductIdentifier,
           dataFieldId,
         });
-    await this.save(media);
+    try {
+      await this.save(media);
+    } catch (error) {
+      await this.removeUnusedObjects([stored.location]);
+      throw error;
+    }
     // Nothing prevents two media for one passport field. Only the one just saved stays.
     if (duplicates.length > 0) {
       await this.mediaDoc.deleteMany({ _id: { $in: duplicates.map((duplicate) => duplicate.id) } });
     }
+    await this.removeUnusedObjects(existing ? [existing, ...duplicates] : []);
     return media;
   }
 
