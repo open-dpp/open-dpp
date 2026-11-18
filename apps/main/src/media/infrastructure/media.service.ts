@@ -343,12 +343,16 @@ export class MediaService {
     return this.convertToDomain(mediaDocument);
   }
 
-  /** The media of a passport field. It should be one at most, but nothing enforces that. */
+  /**
+   * The media of a passport field. It should be one at most, but nothing enforces that. They come
+   * sorted by id, so every upload keeps the same one of several and every download opens that one.
+   */
   private async findDppFiles(dataFieldId: string, uniqueProductIdentifier: string) {
-    const mediaDocuments = await this.mediaDoc.find({
-      dataFieldId,
-      uniqueProductIdentifier,
-    });
+    const mediaDocuments = await this.mediaDoc.find(
+      { dataFieldId, uniqueProductIdentifier },
+      null,
+      { sort: { _id: 1 } },
+    );
     return mediaDocuments.map((mediaDocument) => this.convertToDomain(mediaDocument));
   }
 

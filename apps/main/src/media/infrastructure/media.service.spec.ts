@@ -400,6 +400,12 @@ describe("MediaService", () => {
         "org-id",
       );
 
+      // A fixed order, so concurrent uploads keep the same media of several.
+      expect(mockMediaModel.find).toHaveBeenCalledWith(
+        { dataFieldId: "field-id", uniqueProductIdentifier: "upid" },
+        null,
+        { sort: { _id: 1 } },
+      );
       expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledWith(
         { _id: "existing" },
         expect.anything(),
