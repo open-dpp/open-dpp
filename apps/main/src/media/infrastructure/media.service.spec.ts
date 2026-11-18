@@ -160,6 +160,9 @@ describe("MediaService", () => {
     versionId: "v1",
   };
 
+  /** The fields the first save wrote to the media. */
+  const writtenByFirstSave = () => mockMediaModel.findOneAndUpdate.mock.calls[0][1] as object;
+
   describe("uploadFileOfProductPassport", () => {
     it("should upload file and save media", async () => {
       mockMediaModel.find.mockResolvedValue([]);
@@ -297,6 +300,8 @@ describe("MediaService", () => {
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "new-etag", versionId: "v2" });
       mockMediaModel.findOneAndUpdate.mockRejectedValue(new Error("database unavailable"));
+      // The media still points to the previous object.
+      mockMediaModel.findById.mockResolvedValue({ ...validMediaDoc, _id: "existing" });
       mockS3Client.removeObject.mockResolvedValue(undefined);
 
       await expect(
@@ -311,9 +316,117 @@ describe("MediaService", () => {
       ).rejects.toThrow("database unavailable");
 
       const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+      expect(mockMediaModel.findById).toHaveBeenCalledWith("existing", expect.anything());
       expect(mockS3Client.removeObject).toHaveBeenCalledTimes(1);
       expect(mockS3Client.removeObject).toHaveBeenCalledWith("default-bucket", newObjectName);
       expect(mockMediaModel.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("removes the new object when a new media cannot be saved", async () => {
+      const saveError = new Error("database unavailable");
+      mockMediaModel.find.mockResolvedValue([]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      mockMediaModel.findOneAndUpdate.mockRejectedValue(saveError);
+      mockMediaModel.findById.mockResolvedValue(null);
+      mockS3Client.removeObject.mockResolvedValue(undefined);
+
+      await expect(
+        service.uploadFileOfProductPassport(
+          "file.pdf",
+          Buffer.from("test"),
+          "field-id",
+          "upid",
+          "user-id",
+          "org-id",
+        ),
+      ).rejects.toBe(saveError);
+
+      const newObjectName = mockS3Client.putObject.mock.calls[0][1];
+      expect(mockS3Client.removeObject).toHaveBeenCalledTimes(1);
+      expect(mockS3Client.removeObject).toHaveBeenCalledWith("default-bucket", newObjectName);
+    });
+
+    it("keeps the new object when the save fails after the media was written", async () => {
+      // The driver can report an error although the update was applied.
+      const saveError = new Error("connection reset");
+      mockMediaModel.find.mockResolvedValue([{ ...validMediaDoc, _id: "existing" }]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "new-etag", versionId: "v2" });
+      mockMediaModel.findOneAndUpdate.mockRejectedValue(saveError);
+      mockMediaModel.findById.mockImplementation(async () => ({
+        ...validMediaDoc,
+        _id: "existing",
+        ...writtenByFirstSave(),
+      }));
+      mockS3Client.removeObject.mockResolvedValue(undefined);
+
+      await expect(
+        service.uploadFileOfProductPassport(
+          "new.pdf",
+          Buffer.from("test"),
+          "field-id",
+          "upid",
+          "replacer",
+          "org-id",
+        ),
+      ).rejects.toBe(saveError);
+
+      expect(mockMediaModel.findById).toHaveBeenCalledWith("existing", expect.anything());
+      expect(mockS3Client.removeObject).not.toHaveBeenCalled();
+    });
+
+    it("keeps the new object when the written media cannot be converted", async () => {
+      mockMediaModel.find.mockResolvedValue([]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
+      // `convertToDomain` fails on what the update returns, after the media was written.
+      mockMediaModel.findOneAndUpdate.mockResolvedValue(null);
+      mockMediaModel.findById.mockImplementation(async () => ({
+        ...validMediaDoc,
+        ...writtenByFirstSave(),
+      }));
+      mockS3Client.removeObject.mockResolvedValue(undefined);
+
+      await expect(
+        service.uploadFileOfProductPassport(
+          "file.pdf",
+          Buffer.from("test"),
+          "field-id",
+          "upid",
+          "user-id",
+          "org-id",
+        ),
+      ).rejects.toThrow(TypeError);
+
+      expect(mockS3Client.removeObject).not.toHaveBeenCalled();
+    });
+
+    it("keeps the new object and reports the save error when the media cannot be read either", async () => {
+      const saveError = new Error("connection reset");
+      mockMediaModel.find.mockResolvedValue([{ ...validMediaDoc, _id: "existing" }]);
+      mockProcess.mockResolvedValue(processedPdf);
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "new-etag", versionId: "v2" });
+      mockMediaModel.findOneAndUpdate.mockRejectedValue(saveError);
+      mockMediaModel.findById.mockRejectedValue(new Error("database unavailable"));
+      mockS3Client.removeObject.mockResolvedValue(undefined);
+
+      await expect(
+        service.uploadFileOfProductPassport(
+          "new.pdf",
+          Buffer.from("test"),
+          "field-id",
+          "upid",
+          "replacer",
+          "org-id",
+        ),
+      ).rejects.toBe(saveError);
+
+      expect(mockS3Client.removeObject).not.toHaveBeenCalled();
     });
 
     it("reports the save error when the new object cannot be removed either", async () => {
@@ -322,6 +435,7 @@ describe("MediaService", () => {
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "new-etag", versionId: "v2" });
       mockMediaModel.findOneAndUpdate.mockRejectedValue(new Error("database unavailable"));
+      mockMediaModel.findById.mockResolvedValue({ ...validMediaDoc, _id: "existing" });
       mockS3Client.removeObject.mockRejectedValue(new Error("bucket unavailable"));
 
       await expect(

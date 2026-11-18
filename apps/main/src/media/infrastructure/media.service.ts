@@ -26,6 +26,12 @@ function isMissingObjectError(error: unknown) {
   return error instanceof S3Error && MISSING_OBJECT_ERROR_CODES.has(error.code ?? "");
 }
 
+/** Where an object is stored in the bucket. */
+interface StoredObject {
+  readonly bucket: string;
+  readonly objectName: string;
+}
+
 export interface UploadMediaOptions {
   /** Types the file may have; detected from its content. Defaults to the media upload types. */
   readonly allowedMimeTypes?: readonly string[];
@@ -132,7 +138,7 @@ export class MediaService {
    * Removes objects that no media points to any more. A failure is only logged: it leaves an
    * unused object in the bucket, while every media still points to a file that exists.
    */
-  private async removeUnusedObjects(objects: readonly { bucket: string; objectName: string }[]) {
+  private async removeUnusedObjects(objects: readonly StoredObject[]) {
     const unique = _.uniqBy(objects, ({ bucket, objectName }) => `${bucket}/${objectName}`);
     await Promise.all(
       unique.map(async ({ bucket, objectName }) => {
@@ -142,6 +148,33 @@ export class MediaService {
           this.logger.error(`Failed to remove unused object ${bucket}/${objectName}`, error);
         }
       }),
+    );
+  }
+
+  /**
+   * Removes the object of a media whose save failed. A save can fail after the media was written,
+   * so the object stays if the media points to it. It also stays if the media cannot be read:
+   * an unused object is better than a media that points to a missing file.
+   */
+  private async removeObjectOfFailedSave(mediaId: string, object: StoredObject) {
+    const isReferenced = await this.mediaReferencesObject(mediaId, object).catch(
+      (error: unknown) => {
+        this.logger.error(
+          `Failed to read media ${mediaId} after its save failed, keeping object ${object.bucket}/${object.objectName}`,
+          error,
+        );
+        return true;
+      },
+    );
+    if (!isReferenced) {
+      await this.removeUnusedObjects([object]);
+    }
+  }
+
+  private async mediaReferencesObject(mediaId: string, object: StoredObject) {
+    const mediaDocument = await this.mediaDoc.findById(mediaId, { bucket: true, objectName: true });
+    return (
+      mediaDocument?.bucket === object.bucket && mediaDocument.objectName === object.objectName
     );
   }
 
@@ -183,7 +216,7 @@ export class MediaService {
     try {
       await this.save(media);
     } catch (error) {
-      await this.removeUnusedObjects([stored.location]);
+      await this.removeObjectOfFailedSave(media.id, stored.location);
       throw error;
     }
     // Nothing prevents two media for one passport field. Only the one just saved stays.
