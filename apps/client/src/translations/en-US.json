@@ -748,6 +748,7 @@
     "select": "Select passport",
     "label": "Passport | Passports",
     "create": "Create passport",
+    "publishConfirm": "Publish this product passport? Once published, it becomes accessible to the public through its permanent link, not only to members of your organization. Its permalinks and product identifiers are then fixed and can no longer be changed or deleted.",
     "errorDelete": "Failed to delete the product passport",
     "errorFetch": "Failed to load the product passport",
     "errorLoading": "We couldn't load this passport. Please try again.",
@@ -781,9 +782,7 @@
     "clear": "Clear filters"
   },
   "editingMode": {
-    "readOnly": "Read only",
     "readOnlyTooltip": "Published and archived templates cannot be changed. Create a new template to make changes.",
-    "dataOnly": "Data only",
     "dataOnlyTooltip": "This passport was created from a published template. You can edit its values, but its structure, security and layout are managed by the template."
   },
   "status": {
@@ -799,6 +798,7 @@
   "templates": {
     "label": "Passport templates",
     "create": "Create passport template",
+    "publishConfirm": "Publish this passport template? Publishing marks it as final, so every passport created from it follows the same fixed structure and stays consistent. The template can then no longer be changed, and passports created from it only allow editing their data values.",
     "errorDelete": "Failed to delete the passport template",
     "errorFetch": "Failed to load the passport template",
     "errorLoading": "We couldn't load this template. Please try again.",

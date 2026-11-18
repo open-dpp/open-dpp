@@ -189,6 +189,27 @@ describe("passports", () => {
     });
   });
 
+  it("should publish only after the confirmation is accepted", async () => {
+    const { publishWithConfirmation } = mountHarness(DigitalProductDocumentType.Passport);
+    mocks.modifyStatus.mockResolvedValue({ data: {}, status: HTTPCode.OK });
+    const onPublished = vi.fn();
+    let options: ConfirmationOptions | undefined;
+    mocks.confirm.mockImplementation((data: ConfirmationOptions) => {
+      options = data;
+    });
+
+    publishWithConfirmation("p1", onPublished);
+
+    expect(options?.message).toBe("passports.publishConfirm");
+    expect(mocks.modifyStatus).not.toHaveBeenCalled();
+
+    await options!.accept!();
+    expect(mocks.modifyStatus).toHaveBeenCalledWith("p1", {
+      method: DigitalProductDocumentStatusModificationMethodDto.Publish,
+    });
+    expect(onPublished).toHaveBeenCalled();
+  });
+
   it("should delete passport", async () => {
     const { deleteDPD } = mountHarness(DigitalProductDocumentType.Passport);
 

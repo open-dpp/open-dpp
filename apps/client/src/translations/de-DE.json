@@ -779,6 +779,7 @@
     "label": "Produktpass | Produktpässe",
     "create": "Neuen Produktpass erstellen",
     "delete": "Soll der Produktpass wirklich gelöscht werden? Damit ist dieser nicht mehr verfügbar.",
+    "publishConfirm": "Diesen Produktpass veröffentlichen? Nach der Veröffentlichung ist er über seinen dauerhaften Link öffentlich zugänglich, nicht nur für Mitglieder deiner Organisation. Seine Permalinks und Produktkennungen sind dann festgelegt und können nicht mehr geändert oder gelöscht werden.",
     "errorDelete": "Löschen des Produktpasses fehlgeschlagen",
     "errorFetch": "Produktpass konnte nicht geladen werden",
     "errorLoading": "Dieser Produktpass konnte nicht geladen werden. Bitte erneut versuchen.",
@@ -811,9 +812,7 @@
     "clear": "Filter zurücksetzen"
   },
   "editingMode": {
-    "readOnly": "Nur lesen",
     "readOnlyTooltip": "Veröffentlichte und archivierte Vorlagen können nicht geändert werden. Erstellen Sie eine neue Vorlage, um Änderungen vorzunehmen.",
-    "dataOnly": "Nur Daten",
     "dataOnlyTooltip": "Dieser Produktpass wurde aus einer veröffentlichten Vorlage erstellt. Sie können seine Werte bearbeiten, Struktur, Sicherheit und Layout werden jedoch von der Vorlage verwaltet."
   },
   "status": {
@@ -830,6 +829,7 @@
     "label": "Passvorlage | Passvorlagen",
     "create": "Neue Passvorlage erstellen",
     "delete": "Soll die Passvorlage wirklich gelöscht werden? Damit ist diese nicht mehr verfügbar.",
+    "publishConfirm": "Diese Passvorlage veröffentlichen? Mit der Veröffentlichung gilt sie als final, sodass jeder daraus erstellte Produktpass derselben festen Struktur folgt und konsistent bleibt. Die Vorlage kann danach nicht mehr geändert werden, und aus ihr erstellte Produktpässe erlauben nur noch das Bearbeiten ihrer Datenwerte.",
     "errorDelete": "Löschen der Passvorlage fehlgeschlagen",
     "errorFetch": "Passvorlage konnte nicht geladen werden",
     "errorLoading": "Diese Passvorlage konnte nicht geladen werden. Bitte erneut versuchen.",

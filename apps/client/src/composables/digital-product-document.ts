@@ -62,6 +62,31 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Restore });
   }
 
+  /** Asks for confirmation (explaining what publication means for this type) before publishing. */
+  function publishWithConfirmation(id: string, onPublished: () => Promise<void>) {
+    const publishLabel = t("status.publish");
+    const cancelLabel = t("common.cancel");
+
+    confirm.require({
+      message: t(`${prefix}.publishConfirm`),
+      header: publishLabel,
+      icon: "pi pi-info-circle",
+      rejectLabel: cancelLabel,
+      rejectProps: {
+        label: cancelLabel,
+        severity: "secondary",
+        outlined: true,
+      },
+      acceptProps: {
+        label: publishLabel,
+      },
+      accept: async () => {
+        await publish(id);
+        await onPublished();
+      },
+    });
+  }
+
   async function deleteDPD(id: string, onDeleted: () => Promise<void>) {
     const errorMessage = t(`${prefix}.errorDelete`);
     const removeLabel = t("common.remove");
@@ -103,6 +128,7 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
   return {
     fetchById,
     publish,
+    publishWithConfirmation,
     archive,
     restore,
     deleteDPD,

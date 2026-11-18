@@ -7,7 +7,6 @@ import {
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
-import { useDigitalProductDocumentToolbar } from "../../composables/digital-product-document-toolbar.ts";
 import { useRouterUtils } from "../../composables/router-utils.ts";
 import { useRoute, useRouter } from "vue-router";
 
@@ -19,7 +18,7 @@ const props = defineProps<{
   type: DigitalProductDocumentTypeType;
 }>();
 const { goToParent } = useRouterUtils();
-const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
+const { publishWithConfirmation, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 const route = useRoute();
 const router = useRouter();
 
@@ -50,12 +49,9 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
   await fetchDPD(item.id);
 }
 
-async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
-  await publish(item.id);
-  await fetchDPD(item.id);
+function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  publishWithConfirmation(item.id, () => fetchDPD(item.id));
 }
-
-const { editingModeBadge } = useDigitalProductDocumentToolbar(props.type, model);
 
 async function navigateToActivityHistory() {
   await router.push(`${route.path}/activities`);
@@ -128,15 +124,6 @@ const permalinkActions = computed(() => [
             @click="onRestoreButtonClicked(model)"
           />
           <Button
-            v-if="status === DigitalProductDocumentStatusDto.Draft"
-            icon="pi pi-megaphone"
-            text
-            severity="secondary"
-            :aria-label="t('status.publish')"
-            v-tooltip.bottom="t('status.publish')"
-            @click="onPublishButtonClicked(model)"
-          />
-          <Button
             icon="pi pi-history"
             text
             severity="secondary"
@@ -153,6 +140,13 @@ const permalinkActions = computed(() => [
       </template>
       <template #end>
         <div class="flex items-center gap-2">
+          <Button
+            v-if="status === DigitalProductDocumentStatusDto.Draft"
+            icon="pi pi-megaphone"
+            severity="secondary"
+            :label="t('status.publish')"
+            @click="onPublishButtonClicked(model)"
+          />
           <SplitButton
             v-if="type === DigitalProductDocumentType.Passport"
             icon="pi pi-qrcode"
@@ -161,13 +155,6 @@ const permalinkActions = computed(() => [
             :model="permalinkActions"
             @click="qrCodeDialogVisible = true"
           />
-          <Tag
-            v-if="editingModeBadge"
-            v-tooltip.bottom="editingModeBadge.tooltip"
-            severity="warn"
-            icon="pi pi-lock"
-            >{{ editingModeBadge.label }}</Tag
-          >
         </div>
       </template>
     </Toolbar>
