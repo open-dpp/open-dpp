@@ -52,7 +52,7 @@ const { can } = useAasAbility({
 
 const disableEdit = computed(() => {
   return (
-    props.isArchived ||
+    props.isReadOnly ||
     props.isEditingRestrictedToData ||
     !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "")
   );

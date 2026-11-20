@@ -110,7 +110,7 @@ function mountTree(props: Record<string, unknown> = {}) {
     props: {
       submodels: [],
       loading: false,
-      isArchived: false,
+      isReadOnly: false,
       isEditingRestrictedToData: false,
       selectedKeys: undefined,
       selectTreeNode: vi.fn(),

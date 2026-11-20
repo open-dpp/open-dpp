@@ -7,11 +7,10 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import { ValueError } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../../database/query-options";
 import { TransactionService } from "../../../database/transaction.service";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
-import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/editing-mode";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { PassportExportable } from "../../../aas/domain/exportable/passport-exportable";
@@ -39,7 +38,6 @@ import { handleDppStatusChangeRequest } from "../../../digital-product-document/
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
 import { DigitalProductDocumentStatusChangedActivity } from "../../../activity-history/domain/activities/digital-product-document-status-changed.activity";
-import { PassportEditingModeChangedActivity } from "../../../activity-history/domain/activities/passport-editing-mode-changed.activity";
 
 @Injectable()
 export class PassportService {
@@ -137,44 +135,6 @@ export class PassportService {
     return PassportDtoSchema.parse(saved.toPlain());
   }
 
-  async removeEditingRestrictions(
-    correlationId: string,
-    organizationId: string,
-    id: string,
-    userContext: UserContext,
-  ) {
-    const passport =
-      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        userContext.subject,
-        organizationId,
-      );
-    passport.withTracking().removeEditingRestrictions();
-    const activity = PassportEditingModeChangedActivity.create({
-      correlationId,
-      userId: userContext.userId,
-      digitalProductDocumentId: id,
-      item: passport,
-    });
-
-    const saved = await this.transactionService.withTransaction(async (options) => {
-      const persisted = await this.passportRepository.save(passport, options);
-      if (!activity.isNoop()) {
-        await this.activityRepository.createMany([activity], options);
-      }
-      return persisted;
-    });
-    return PassportDtoSchema.parse(saved.toPlain());
-  }
-
-  assertFullEditingMode(passport: Passport): void {
-    if (passport.getEditingMode() !== PassportEditingMode.Full) {
-      throw new ValueError(
-        `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
-      );
-    }
-  }
-
   async createPassportFromTemplate(
     organizationId: string,
     templateId: string,
@@ -193,7 +153,7 @@ export class PassportService {
       environment,
       templateId,
       options,
-      template.getPassportEditingMode(),
+      template.isPublished() ? PassportEditingMode.DataOnly : PassportEditingMode.Full,
     );
   }
 
@@ -274,7 +234,7 @@ export class PassportService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.environmentService.deleteEnvironment(passport.getEnvironment(), session);
+        await this.environmentService.deleteEnvironment(passport.getEnvironment(), { session });
         await this.passportRepository.deleteById(passport.id, { session });
         await this.permalinkRepository.deleteGs1LinksByUpiIds(
           upis.map((upi) => upi.uuid),

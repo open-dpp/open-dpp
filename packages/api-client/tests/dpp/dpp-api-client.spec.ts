@@ -7,7 +7,6 @@ import {
   GuestRoleDto,
   InvitationStatusDto,
   MeDtoSchema,
-  PassportEditingModeDto,
   SubmodelElementSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -271,13 +270,6 @@ describe("apiClient", () => {
         DigitalProductDocumentStatusDto.Published,
       );
     });
-
-    it("should set passport editing mode of template", async () => {
-      const response = await sdk.dpp.templates.setPassportEditingMode(template1.id, {
-        mode: "DataOnly",
-      });
-      expect(response.data.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
-    });
   });
 
   describe("passports", () => {
@@ -335,13 +327,6 @@ describe("apiClient", () => {
       expect(response.data.lastStatusChange.currentStatus).toEqual(
         DigitalProductDocumentStatusDto.Published,
       );
-    });
-
-    it("should set editing mode of passport", async () => {
-      const response = await sdk.dpp.passports.setEditingMode(passport1.id, {
-        mode: "Full",
-      });
-      expect(response.data.editingMode).toEqual(PassportEditingModeDto.Full);
     });
   });
 

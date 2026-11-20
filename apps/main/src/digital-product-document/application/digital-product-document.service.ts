@@ -32,7 +32,6 @@ import {
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { Pagination } from "../../pagination/pagination";
 import archiver, { Archiver } from "archiver";
-import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { Period } from "../../time/period";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
@@ -66,7 +65,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.addSubmodelToEnvironment(
       correlationId,
       id,
@@ -91,7 +90,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.moveSubmodel(
       correlationId,
       id,
@@ -120,7 +119,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.addColumn(
       correlationId,
       id,
@@ -148,7 +147,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertDataEditable();
     return await this.environmentService.addRow(
       correlationId,
       id,
@@ -176,7 +175,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       organizationId,
     );
 
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.addSubmodelElement(
       correlationId,
       id,
@@ -202,7 +201,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.addSubmodelElement(
       correlationId,
       id,
@@ -229,7 +228,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.moveSubmodelElement(
       correlationId,
       id,
@@ -261,7 +260,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.modifyAasShell(
       correlationId,
       id,
@@ -286,7 +285,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.modifySubmodel(
       correlationId,
       id,
@@ -310,7 +309,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertDataEditable();
     const valueModificationRequests = new Map<string, ValueModificationRequest>();
     for (const [submodelId, value] of Object.entries(body)) {
       if (valueModificationRequests.has(submodelId)) {
@@ -344,7 +343,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertDataEditable();
     return await this.environmentService.modifyValueOfSubmodel(
       correlationId,
       id,
@@ -371,7 +370,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.modifyColumn(
       correlationId,
       id,
@@ -401,7 +400,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.reorderColumn(
       correlationId,
       id,
@@ -431,7 +430,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.modifySubmodelElement(
       correlationId,
       id,
@@ -455,7 +454,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     await this.environmentService.deleteSubmodelFromEnvironment(
       correlationId,
       id,
@@ -486,7 +485,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     await this.environmentService.deleteSubmodelElement(
       correlationId,
       id,
@@ -519,7 +518,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.deleteColumn(
       correlationId,
       id,
@@ -556,7 +555,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.addColumnToGroup(
       correlationId,
       id,
@@ -587,7 +586,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.modifyColumnInGroup(
       correlationId,
       id,
@@ -617,7 +616,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.deleteColumnFromGroup(
       correlationId,
       id,
@@ -661,7 +660,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.moveColumnToGroup(
       correlationId,
       id,
@@ -698,7 +697,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     return await this.environmentService.createGroupFromColumn(
       correlationId,
       id,
@@ -732,7 +731,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertStructureEditable();
     await this.environmentService.deletePolicyBySubjectAndObject(
       correlationId,
       id,
@@ -758,7 +757,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertDataEditable();
     return await this.environmentService.deleteRow(
       correlationId,
       id,
@@ -793,7 +792,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
-    this.archiveGuard(item);
+    item.assertDataEditable();
     return await this.environmentService.modifyValueOfSubmodelElement(
       correlationId,
       id,
@@ -922,12 +921,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       20,
       archive,
     );
-  }
-
-  private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {
-    if (item.isArchived()) {
-      throw new ValueError("Cannot modify an archived digital product document");
-    }
   }
 
   public saveEnvironmentCallback(item: T) {

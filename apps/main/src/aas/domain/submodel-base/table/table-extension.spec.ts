@@ -817,9 +817,61 @@ describe("tableExtension", () => {
     const expectedCol2 = col2.copy({ transformer }).value;
     expectedCol2.setParentPointer(table.rows[0].getPointer());
     expect(table.columns).toEqual([expectedCol1, expectedCol2]);
-    // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
-    table.deleteRow(table.rows[0].idShort, { ability, onDelete });
-    expect(table.columns).toEqual([]);
+  });
+
+  it("should not add a row to a table without columns", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "idShort",
+    });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodelElementList.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    expect(() => table.addRow({ ability })).toThrow(
+      new ValueError("Cannot add a row to a table without columns. Add a column first."),
+    );
+    expect(table.rows).toHaveLength(0);
+  });
+
+  it("should not delete the last row because it holds the column definitions", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "idShort",
+    });
+    const security = Security.create({});
+    security.addPolicy(member, IdShortPath.create({ path: submodelElementList.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+    table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" })), {
+      ability,
+    });
+    // adding the first column created the header row, which is the only row
+    const onlyRow = table.rows[0];
+    expect(table.rows).toHaveLength(1);
+    const onDelete = vi.fn();
+
+    expect(() => table.deleteRow(onlyRow.idShort, { ability, onDelete })).toThrow(
+      new ValueError(
+        "The last row of a table cannot be deleted because it holds the column definitions.",
+      ),
+    );
+
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(table.rows).toHaveLength(1);
+    expect(table.columns.map((c) => c.idShort)).toEqual(["col1"]);
+    // an unknown row still reports that it does not exist instead of the last-row error
+    expect(() => table.deleteRow("unknown", { ability, onDelete })).toThrow(
+      "Cannot delete submodel element with idShort unknown, since it does not exist.",
+    );
   });
 });
 

@@ -2,7 +2,6 @@ import {
   type DigitalProductDocumentDto,
   type DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentStatusModificationMethodDto,
-  PassportEditingModeDto,
 } from "@open-dpp/dto";
 import { isAxiosError } from "axios";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -63,32 +62,29 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Restore });
   }
 
-  async function restrictPassportEditingToData(id: string) {
-    const errorMessage = t("templates.errorRestrictPassportEditing");
-    try {
-      const response = await apiClient.dpp.templates.setPassportEditingMode(id, {
-        mode: PassportEditingModeDto.DataOnly,
-      });
-      if (response.status !== HTTPCode.OK) {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
-  }
+  /** Asks for confirmation (explaining what publication means for this type) before publishing. */
+  function publishWithConfirmation(id: string, onPublished: () => Promise<void>) {
+    const publishLabel = t("status.publish");
+    const cancelLabel = t("common.cancel");
 
-  async function removeEditingRestrictions(id: string) {
-    const errorMessage = t("passports.errorRemoveEditingRestrictions");
-    try {
-      const response = await apiClient.dpp.passports.setEditingMode(id, {
-        mode: PassportEditingModeDto.Full,
-      });
-      if (response.status !== HTTPCode.OK) {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
+    confirm.require({
+      message: t(`${prefix}.publishConfirm`),
+      header: publishLabel,
+      icon: "pi pi-info-circle",
+      rejectLabel: cancelLabel,
+      rejectProps: {
+        label: cancelLabel,
+        severity: "secondary",
+        outlined: true,
+      },
+      acceptProps: {
+        label: publishLabel,
+      },
+      accept: async () => {
+        await publish(id);
+        await onPublished();
+      },
+    });
   }
 
   async function deleteDPD(id: string, onDeleted: () => Promise<void>) {
@@ -132,10 +128,9 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
   return {
     fetchById,
     publish,
+    publishWithConfirmation,
     archive,
     restore,
-    restrictPassportEditingToData,
-    removeEditingRestrictions,
     deleteDPD,
   };
 }

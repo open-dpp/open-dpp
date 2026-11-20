@@ -8,8 +8,6 @@ import {
   DataTypeDef,
   type DataTypeDefType,
   type DeletePolicyDto,
-  DigitalProductDocumentStatusDto,
-  type DigitalProductDocumentStatusDtoType,
   type FileRequestDto,
   KeyTypes,
   KeyTypesEnum,
@@ -64,9 +62,10 @@ export interface AasEditorProps {
   selectedLanguage: LanguageType;
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
-  status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
-  /** Passport-only: true when the passport's editing is restricted to leaf data values by
-   * its template. Unlike `isArchived`, this does not block reaching a leaf element's editor
+  /** True when nothing may change (archived, or a locked template). */
+  isReadOnly: MaybeRefOrGetter<boolean>;
+  /** True when the passport's editing is restricted to leaf data values by
+   * its template. Unlike `isReadOnly`, this does not block reaching a leaf element's editor
    * (values stay editable) — it only blocks structural changes (create/delete) and locks
    * container/shell editors and permissions, which have no leaf value of their own. */
   isEditingRestrictedToData?: MaybeRefOrGetter<boolean>;
@@ -108,7 +107,7 @@ export function useAasEditor({
   selectedLanguage,
   translate,
   openConfirm,
-  status,
+  isReadOnly: isReadOnlyInput,
   isEditingRestrictedToData,
   onAfterMove,
 }: AasEditorProps): IAasEditor {
@@ -117,7 +116,7 @@ export function useAasEditor({
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
-  const isArchived = computed(() => toValue(status) === DigitalProductDocumentStatusDto.Archived);
+  const isReadOnly = computed(() => toValue(isReadOnlyInput));
   const isRestrictedToData = computed(() => toValue(isEditingRestrictedToData) ?? false);
 
   const onHideDrawer = () => {
@@ -134,7 +133,7 @@ export function useAasEditor({
   const drawer = useAasDrawer({
     onHideDrawer,
     can,
-    isArchived,
+    isReadOnly,
     isEditingRestrictedToData: isRestrictedToData,
   });
 
@@ -432,7 +431,7 @@ export function useAasEditor({
 
   function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
     const missingPermissionMsg = translate(`${translatePrefix}.security.missingPermission`);
-    const archivedMsg = translate(`${translatePrefix}.security.archivedTooltip`);
+    const readOnlyMsg = translate(`${translatePrefix}.security.readOnlyTooltip`);
     const labels = {
       [Permissions.Read]: "view",
       [Permissions.Edit]: "edit",
@@ -447,7 +446,7 @@ export function useAasEditor({
       (permission === Permissions.Create || permission === Permissions.Delete) &&
       toValue(isRestrictedToData);
     const visible = (permission: PermissionType) => {
-      if (toValue(isArchived) && permission !== Permissions.Read) {
+      if (toValue(isReadOnly) && permission !== Permissions.Read) {
         return false;
       }
       if (isStructurallyBlocked(permission)) {
@@ -464,7 +463,7 @@ export function useAasEditor({
     // Only Read can be both visible and archived at once (see visible() above) — every other
     // permission that's blocked (archived or structurally-blocked) is hidden entirely, so its
     // tooltip is never rendered and doesn't need a "why" message here.
-    const blockedTooltip = () => (toValue(isArchived) ? archivedMsg : undefined);
+    const blockedTooltip = () => (toValue(isReadOnly) ? readOnlyMsg : undefined);
     const actions = Object.values(Permissions).reduce(
       (
         acc: Record<string, { visible: boolean; enabled: boolean; tooltip: string }>,
@@ -473,7 +472,7 @@ export function useAasEditor({
         acc[permission.toLowerCase()] = {
           visible: visible(permission),
           enabled:
-            (!toValue(isArchived) || permission === Permissions.Read) &&
+            (!toValue(isReadOnly) || permission === Permissions.Read) &&
             !isStructurallyBlocked(permission) &&
             can(permission, idShortPathIncludingSubmodel),
           tooltip:
@@ -490,7 +489,7 @@ export function useAasEditor({
     // must be hidden while restricted to data (moving changes tree structure, it isn't a leaf
     // value edit like the drawer Edit opens), so it can't just reuse actions.edit as-is.
     const canMove = can(Permissions.Edit, idShortPathIncludingSubmodel);
-    const moveBlocked = toValue(isArchived) || toValue(isRestrictedToData);
+    const moveBlocked = toValue(isReadOnly) || toValue(isRestrictedToData);
     actions.move = {
       visible: !moveBlocked && canMove,
       enabled: !moveBlocked && canMove,

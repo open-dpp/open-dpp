@@ -412,26 +412,24 @@ export class TableExtension implements ITableExtendable {
   }
 
   addRow(options: AddOptions) {
-    let newRow: ISubmodelElement;
-    if (!this.headerRow) {
-      newRow = this.addHeaderRow(options);
-    } else {
-      newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
-      this.data.addSubmodelElement(newRow, options);
-      this.columns.forEach((column) => {
-        const columnCopy = column.copy({
-          transformer: new TableRowCopyVisitor(),
-        });
-        if (columnCopy.isAllowed) {
-          newRow.addSubmodelElement(columnCopy.value, {
-            ability: options.ability,
-          });
-        }
+    if (this.columns.length === 0) {
+      throw new ValueError("Cannot add a row to a table without columns. Add a column first.");
+    }
+    const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
+    this.data.addSubmodelElement(newRow, options);
+    this.columns.forEach((column) => {
+      const columnCopy = column.copy({
+        transformer: new TableRowCopyVisitor(),
       });
-
-      if (options?.position === 0) {
-        this.setHeaderRow();
+      if (columnCopy.isAllowed) {
+        newRow.addSubmodelElement(columnCopy.value, {
+          ability: options.ability,
+        });
       }
+    });
+
+    if (options?.position === 0) {
+      this.setHeaderRow();
     }
     this.tracker.track(
       RowAdded.create({
@@ -461,6 +459,13 @@ export class TableExtension implements ITableExtendable {
 
   deleteRow(idShort: string, options: DeleteOptions) {
     const rowIndex = this.getRowPosition(idShort);
+    // The row at index 0 is the header and carries the column definitions; deleting the only
+    // row would silently drop them. Any other row can be deleted, the next one becomes header.
+    if (rowIndex !== -1 && this.rows.length === 1) {
+      throw new ValueError(
+        "The last row of a table cannot be deleted because it holds the column definitions.",
+      );
+    }
     const row = this.data.deleteSubmodelElement(idShort, options);
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();

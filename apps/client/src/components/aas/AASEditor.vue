@@ -2,14 +2,14 @@
 import {
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
-  PassportDtoSchema,
-  PassportEditingModeDto,
+  EditingModeDto,
 } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
+import { useEditingCapabilities, useEditingMode } from "../../composables/editing-capabilities.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePresentationConfigurationStore } from "../../stores/presentation-configuration.ts";
@@ -55,14 +55,22 @@ const confirm = useConfirm();
 
 const status = computed(() => model.value.lastStatusChange?.currentStatus);
 
-const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
-
-const isEditingRestrictedToData = computed(() =>
-  props.type === DigitalProductDocumentType.Passport
-    ? PassportDtoSchema.optional().parse(model.value)?.editingMode ===
-      PassportEditingModeDto.DataOnly
-    : false,
+const editingMode = useEditingMode(props.type, model);
+const { canEditStructure, isReadOnly, isEditingRestrictedToData } = useEditingCapabilities(
+  editingMode,
+  status,
 );
+
+const editingModeMessage = computed(() => {
+  switch (editingMode.value) {
+    case EditingModeDto.ReadOnly:
+      return t("editingMode.readOnlyTooltip");
+    case EditingModeDto.DataOnly:
+      return t("editingMode.dataOnlyTooltip");
+    default:
+      return undefined;
+  }
+});
 
 const presentationConfigStore = usePresentationConfigurationStore();
 
@@ -85,7 +93,7 @@ const aasEditor = useAasEditor({
   errorHandlingStore,
   translate: t,
   openConfirm: confirm.require,
-  status: status,
+  isReadOnly,
   isEditingRestrictedToData,
   onAfterMove: fetchPresentationConfig,
 });
@@ -176,7 +184,7 @@ const editorContext = computed<AasEditorContext>(() => ({
   id: model.value.id,
   aasNamespace,
   errorHandlingStore,
-  isArchived: isArchived.value,
+  isReadOnly: isReadOnly.value,
   isEditingRestrictedToData: isEditingRestrictedToData.value,
   type: props.type,
   openDrawer: aasEditor.openDrawer,
@@ -188,6 +196,9 @@ const editorContext = computed<AasEditorContext>(() => ({
 
 <template>
   <div class="flex flex-col gap-2">
+    <Message v-if="editingModeMessage" severity="info" icon="pi pi-lock" :closable="false">{{
+      editingModeMessage
+    }}</Message>
     <Card>
       <template #content>
         <div class="flex items-start justify-between gap-2">
@@ -219,7 +230,7 @@ const editorContext = computed<AasEditorContext>(() => ({
             </div>
           </div>
           <Button
-            v-if="!isArchived && !isEditingRestrictedToData"
+            v-if="canEditStructure"
             icon="pi pi-pencil"
             severity="primary"
             :aria-label="t('common.edit')"
@@ -236,7 +247,7 @@ const editorContext = computed<AasEditorContext>(() => ({
       v-model:move-to-dialog-selected="moveToDialogSelected"
       :submodels="submodels"
       :loading="loading"
-      :is-archived="isArchived"
+      :is-read-only="isReadOnly"
       :is-editing-restricted-to-data="isEditingRestrictedToData"
       :select-tree-node="selectTreeNode"
       :create-submodel="createSubmodel"

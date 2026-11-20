@@ -25,7 +25,7 @@ export interface SharedEditorProps<Data, RequestDto> {
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
   deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
-  isArchived: boolean;
+  isReadOnly: boolean;
   isEditingRestrictedToData: boolean;
 }
 
