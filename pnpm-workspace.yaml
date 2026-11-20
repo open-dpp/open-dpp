@@ -55,3 +55,5 @@ minimumReleaseAgeExclude:
   - "@modelcontextprotocol/sdk@1.31.0"
   # Renovate security update: vite@8.3.3
   - vite@8.3.3
+  # Renovate security update: mongoose@9.11.4
+  - mongoose@9.11.4
