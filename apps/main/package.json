@@ -109,5 +109,5 @@
     "typescript": "~6.0.3",
     "webpack-node-externals": "^3.0.0"
   },
-  "packageManager": "pnpm@11.28.9"
+  "packageManager": "pnpm@11.28.13"
 }
