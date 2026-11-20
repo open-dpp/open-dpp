@@ -3,7 +3,6 @@ import type { Media } from "../domain/media";
 import {
   Controller,
   Delete,
-  FileTypeValidator,
   Get,
   MaxFileSizeValidator,
   Param,
@@ -21,8 +20,26 @@ import { AuthSession } from "../../identity/auth/presentation/decorators/auth-se
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
+import { sendMediaFile } from "./media-response";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
-import { PolicyKeyList } from "@open-dpp/dto";
+import {
+  MEDIA_UPLOAD_MAX_SIZE_BYTES,
+  ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES,
+  PolicyKeyList,
+} from "@open-dpp/dto";
+
+/**
+ * Size and virus checks. The type is detected from the content by `MediaService`, which
+ * rejects unsupported files with a 400.
+ */
+function uploadedMediaPipe(): ParseFilePipe {
+  return new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: MEDIA_UPLOAD_MAX_SIZE_BYTES }),
+      new VirusScanFileValidator({ storageType: "memory" }),
+    ],
+  });
+}
 
 @Controller("media")
 export class MediaController {
@@ -40,19 +57,7 @@ export class MediaController {
     }),
   )
   async uploadDppFile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 15 * 1024 * 1024 /* max 15MB */,
-          }),
-          new FileTypeValidator({
-            fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
-          }),
-          new VirusScanFileValidator({ storageType: "memory" }),
-        ],
-      }),
-    )
+    @UploadedFile(uploadedMediaPipe())
     file: Express.Multer.File,
     @OrganizationId() orgId: string,
     @Param("upi") upi: string,
@@ -91,19 +96,7 @@ export class MediaController {
     @Res() res: express.Response,
   ): Promise<void> {
     try {
-      const result = await this.filesService.getFilestreamOfProductPassport(dataFieldId, upi);
-      res.setHeader("Content-Type", result.media.mimeType);
-      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
-      if (result.media.updatedAt) {
-        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
-      }
-      res.setHeader("Cache-Control", "private, max-age=31536000");
-      result.stream.pipe(res);
-      result.stream.on("error", () => {
-        if (!res.headersSent) {
-          res.status(500).json({ error: "Failed to retrieve file" });
-        }
-      });
+      sendMediaFile(res, await this.filesService.getFilestreamOfProductPassport(dataFieldId, upi));
     } catch {
       res.status(404).json({ error: "File not found" });
     }
@@ -118,19 +111,7 @@ export class MediaController {
   @AllowAnonymous()
   async streamFile(@Param("id") id: string, @Res() res: express.Response): Promise<void> {
     try {
-      const result = await this.filesService.getFilestreamById(id);
-      res.setHeader("Content-Type", result.media.mimeType);
-      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
-      if (result.media.updatedAt) {
-        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
-      }
-      res.setHeader("Cache-Control", "private, max-age=31536000");
-      result.stream.pipe(res);
-      result.stream.on("error", () => {
-        if (!res.headersSent) {
-          res.status(500).json({ error: "Failed to retrieve file" });
-        }
-      });
+      sendMediaFile(res, await this.filesService.getFilestreamById(id));
     } catch {
       res.status(404).json({ error: "File not found" });
     }
@@ -155,19 +136,7 @@ export class MediaController {
     }),
   )
   async uploadFile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 15 * 1024 * 1024 /* max 15MB */,
-          }),
-          new FileTypeValidator({
-            fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
-          }),
-          new VirusScanFileValidator({ storageType: "memory" }),
-        ],
-      }),
-    )
+    @UploadedFile(uploadedMediaPipe())
     file: Express.Multer.File,
     @OrganizationId() orgId: string,
     @AuthSession() session: Session,
@@ -193,19 +162,7 @@ export class MediaController {
     }),
   )
   async uploadOrganizationProfile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 15 * 1024 * 1024 /* max 15MB */,
-          }),
-          new FileTypeValidator({
-            fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
-          }),
-          new VirusScanFileValidator({ storageType: "memory" }),
-        ],
-      }),
-    )
+    @UploadedFile(uploadedMediaPipe())
     file: Express.Multer.File,
     @OrganizationId() orgId: string,
     @AuthSession() session: Session,
@@ -217,7 +174,10 @@ export class MediaController {
       file.buffer,
       session.userId,
       orgId,
-      [BucketDefaultPaths.ORGANIZATION_PROFILE_PICTURES],
+      {
+        allowedMimeTypes: ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES,
+        remoteFolders: [BucketDefaultPaths.ORGANIZATION_PROFILE_PICTURES],
+      },
     );
     return {
       mediaId: media.id,

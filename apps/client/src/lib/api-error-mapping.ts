@@ -1,4 +1,5 @@
 import { AxiosError } from "axios";
+import { HTTPCode } from "../stores/http-codes";
 
 export class LimitError extends Error {
   constructor(
@@ -18,6 +19,11 @@ interface LimitErrorResponse {
   key: string;
   limit: number;
   used: number;
+}
+
+/** True if the API rejected the request itself (400): what was sent is unsupported or invalid. */
+export function isBadRequestError(error: unknown): boolean {
+  return error instanceof AxiosError && error.response?.status === HTTPCode.BAD_REQUEST;
 }
 
 export function handleApiError(error: unknown): Error {

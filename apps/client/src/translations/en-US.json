@@ -959,6 +959,7 @@
     "actions": "Actions",
     "uploadSuccess": "File uploaded successfully.",
     "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
+    "uploadInvalid": "This file cannot be uploaded. Its file type is not supported, the file is invalid, or it is larger than {maxSizeMb} MB.",
     "change": "Change file",
     "download": "Download file",
     "downloadError": "The file could not be loaded. Please try again.",

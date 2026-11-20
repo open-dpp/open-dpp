@@ -1,3 +1,4 @@
+import type { CreateIndexesOptions } from "mongodb";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 
@@ -7,7 +8,29 @@ export const MediaSchemaVersion = {
 
 export type MediaSchemaVersion_TYPE = (typeof MediaSchemaVersion)[keyof typeof MediaSchemaVersion];
 
-@Schema({ collection: "media" })
+export const MEDIA_COLLECTION = "media";
+
+/**
+ * A passport field holds one media at most. Only media with both a passport and a field are
+ * covered, so the media of the library, which have neither, are not. Databases that held
+ * several media of a field before get the index from migration
+ * `20261118180926-unique-passport-field-media`, which builds it with these same options.
+ */
+export const PASSPORT_FIELD_MEDIA_INDEX = {
+  fields: { uniqueProductIdentifier: 1, dataFieldId: 1 },
+  options: {
+    unique: true,
+    partialFilterExpression: {
+      uniqueProductIdentifier: { $type: "string" },
+      dataFieldId: { $type: "string" },
+    },
+  },
+} as const satisfies {
+  fields: Record<string, 1>;
+  options: CreateIndexesOptions;
+};
+
+@Schema({ collection: MEDIA_COLLECTION })
 export class MediaDoc extends Document {
   @Prop({
     default: MediaSchemaVersion.v1_0_0,
@@ -44,6 +67,10 @@ export class MediaDoc extends Document {
   @Prop({ required: true })
   createdByUserId: string;
 
+  // The user who last replaced the file. Not set on media that were never replaced.
+  @Prop({ type: "string", required: false })
+  updatedByUserId: string | null;
+
   @Prop({ type: "string", required: false })
   uniqueProductIdentifier: string | null;
 
@@ -71,3 +98,4 @@ export class MediaDoc extends Document {
 export const MediaDbSchema = SchemaFactory.createForClass(MediaDoc);
 
 MediaDbSchema.index({ organizationName: 1, sectors: 1 });
+MediaDbSchema.index(PASSPORT_FIELD_MEDIA_INDEX.fields, PASSPORT_FIELD_MEDIA_INDEX.options);

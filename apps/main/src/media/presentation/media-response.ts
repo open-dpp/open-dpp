@@ -1,0 +1,51 @@
+import type express from "express";
+import type { Readable } from "node:stream";
+import type { Media } from "../domain/media";
+import { MediaMimeType } from "@open-dpp/dto";
+
+/**
+ * An SVG opened directly is a document that can run script. Its content is sanitized on upload;
+ * this policy keeps it inert even if something slipped through: no script, no network, sandboxed.
+ * Not used for PDFs, because `sandbox` stops Chrome's built-in PDF viewer.
+ */
+export const SVG_CONTENT_SECURITY_POLICY =
+  "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox";
+
+function setMediaHeaders(res: express.Response, media: Media): void {
+  res.setHeader("Content-Type", media.mimeType);
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+  if (media.mimeType === MediaMimeType.SVG) {
+    res.setHeader("Content-Security-Policy", SVG_CONTENT_SECURITY_POLICY);
+  }
+  if (media.updatedAt) {
+    res.setHeader("Last-Modified", media.updatedAt.toUTCString());
+  }
+  // A replaced file keeps its media, so its download URLs serve new content. A cached copy is
+  // only used after the stored object's ETag confirmed that it is still the current file.
+  res.setHeader("ETag", `"${media.eTag.replaceAll('"', "")}"`);
+  res.setHeader("Cache-Control", "private, no-cache");
+}
+
+/** Streams a stored media file with the headers every media download gets. */
+export function sendMediaFile(
+  res: express.Response,
+  file: { readonly media: Media; readonly stream: Readable },
+): void {
+  setMediaHeaders(res, file.media);
+  if (res.req.fresh) {
+    // The client's cached copy is the current file.
+    file.stream.destroy();
+    res.status(304).end();
+    return;
+  }
+  file.stream.pipe(res);
+  file.stream.on("error", () => {
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to retrieve file" });
+    } else {
+      // Part of the file is already out: end the connection so the client sees a failed download.
+      res.destroy();
+    }
+  });
+}
