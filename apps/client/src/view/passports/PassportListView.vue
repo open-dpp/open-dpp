@@ -40,9 +40,8 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const { passports, loading, fetchPassports } = usePassports();
 
-const { deleteDPD, publishWithConfirmation, restore, archive } = useDigitalProductDocument(
-  DigitalProductDocumentType.Passport,
-);
+const { deleteDPD, publishWithConfirmation, restore, archive, fetchById } =
+  useDigitalProductDocument(DigitalProductDocumentType.Passport);
 
 const {
   status,
@@ -161,9 +160,15 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
 }
 
 function onPublishFromQrDialog() {
-  if (qrCodeDialogItem.value) {
-    publishWithConfirmation(qrCodeDialogItem.value.id, reloadCurrentPage);
-  }
+  const item = qrCodeDialogItem.value;
+  if (!item) return;
+  publishWithConfirmation(item.id, async () => {
+    await reloadCurrentPage();
+    // The dialog holds its own copy of the item, so refresh it to drop the draft warning.
+    try {
+      qrCodeDialogItem.value = (await fetchById(item.id)) ?? qrCodeDialogItem.value;
+    } catch {}
+  });
 }
 
 async function onFilterChange(applyChange: () => Promise<void>) {
