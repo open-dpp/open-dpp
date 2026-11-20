@@ -16,7 +16,7 @@
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.6",
     "uuid": "^13.0.2",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "packageManager": "pnpm@11.28.9"
 }
