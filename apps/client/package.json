@@ -60,7 +60,7 @@
     "fishery": "^2.4.0",
     "jest-diff": "^30.5.2",
     "jsdom": "^27.4.0",
-    "postcss": "^8.5.32",
+    "postcss": "^8.5.33",
     "resize-observer-polyfill": "^1.5.1",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
