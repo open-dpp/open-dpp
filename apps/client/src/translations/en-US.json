@@ -578,7 +578,7 @@
       "branding": "Branding"
     },
     "usage": {
-      "title": "Usage policies",
+      "title": "Usage quotas",
       "manage": "Manage usage",
       "setLimitsDialog": {
         "title": "Set usage limits",
