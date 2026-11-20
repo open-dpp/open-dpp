@@ -40,7 +40,7 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const { passports, loading, fetchPassports } = usePassports();
 
-const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
+const { deleteDPD, publishWithConfirmation, restore, archive } = useDigitalProductDocument(
   DigitalProductDocumentType.Passport,
 );
 
@@ -146,9 +146,8 @@ async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
   await deleteDPD(item.id, reloadCurrentPage);
 }
 
-async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
-  await publish(item.id);
-  await reloadCurrentPage();
+function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  publishWithConfirmation(item.id, reloadCurrentPage);
 }
 
 async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {
@@ -161,10 +160,9 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
   await reloadCurrentPage();
 }
 
-async function onPublishFromQrDialog() {
+function onPublishFromQrDialog() {
   if (qrCodeDialogItem.value) {
-    await publish(qrCodeDialogItem.value.id);
-    await reloadCurrentPage();
+    publishWithConfirmation(qrCodeDialogItem.value.id, reloadCurrentPage);
   }
 }
 
