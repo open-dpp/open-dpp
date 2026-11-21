@@ -1,52 +1,90 @@
 import { Injectable } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
-import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
-import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
+import { DbSessionOptions } from "../../../database/query-options";
+import { TransactionService } from "../../../database/transaction.service";
+import { InstanceSettings, InstanceSettingsUpdate } from "../../domain/instance-settings";
+import { MailEnabledSetting } from "../../domain/mail-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
+import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
+import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
+import { InstanceSettingsCache } from "./instance-settings.cache";
+
+export const INSTANCE_SETTINGS_CACHE_TTL_MS = 60_000;
 
 @Injectable()
 export class InstanceSettingsService {
+  private readonly cache = new InstanceSettingsCache(INSTANCE_SETTINGS_CACHE_TTL_MS);
+  // bumped by every write, so a read that was already in flight can't cache the pre-write document
+  private cacheGeneration = 0;
+  // updates on this replica run one at a time, so an older save can't land in the
+  // cache after a newer one
+  private updateQueue: Promise<unknown> = Promise.resolve();
+
   constructor(
     private readonly repository: InstanceSettingsRepository,
     private readonly envService: EnvService,
+    private readonly transactionService: TransactionService,
   ) {}
 
   async getSettings(): Promise<InstanceSettings> {
-    const existing = await this.repository.findOne();
+    return this.applyEnvOverrides(await this.loadStored());
+  }
 
-    if (existing) {
-      return this.applyEnvOverrides(existing);
-    }
+  updateSettings(updates: InstanceSettingsUpdate): Promise<InstanceSettings> {
+    const run = this.updateQueue.then(() => this.applyUpdate(updates));
+    // a failed update must not block the ones queued behind it
+    this.updateQueue = run.catch(() => undefined);
+    return run;
+  }
 
-    const defaults = InstanceSettings.create({
-      signupEnabled: {
-        value: true,
-      },
+  private async applyUpdate(updates: InstanceSettingsUpdate): Promise<InstanceSettings> {
+    // save() replaces the whole singleton document, so the read and the write share a
+    // transaction: when another replica commits in between, the write conflicts and
+    // withTransaction reruns this on that replica's document instead of undoing its change
+    const saved = await this.transactionService.withTransaction(async (options) => {
+      const stored = await this.readOrCreate(options);
+      // locks are checked on the effective settings, but the update is persisted on
+      // the stored ones so env-forced values never end up in the DB
+      const persistable = this.applyEnvOverrides(stored).persistableUpdates(updates);
+      return this.repository.save(stored.update(persistable), options);
     });
-    const saved = await this.repository.save(defaults);
+    this.cacheGeneration += 1;
+    this.cache.set(saved);
     return this.applyEnvOverrides(saved);
   }
 
-  async updateSettings(updates: Partial<InstanceSettingsDbProps>): Promise<InstanceSettings> {
-    const current = await this.getSettings();
-    const updated = current.update(updates);
-    const saved = await this.repository.save(updated);
-    return this.applyEnvOverrides(saved);
+  private async loadStored(): Promise<InstanceSettings> {
+    const cached = this.cache.get();
+    if (cached) {
+      return cached;
+    }
+    const generation = this.cacheGeneration;
+    const stored = await this.readOrCreate();
+    if (generation === this.cacheGeneration) {
+      this.cache.set(stored);
+    }
+    return stored;
+  }
+
+  private async readOrCreate(options?: DbSessionOptions): Promise<InstanceSettings> {
+    return (
+      (await this.repository.findOne(options)) ??
+      (await this.repository.save(
+        InstanceSettings.create({ signupEnabled: { value: true } }),
+        options,
+      ))
+    );
   }
 
   private applyEnvOverrides(settings: InstanceSettings): InstanceSettings {
-    const enforcedSignup = this.envService.get(SignupEnabledSetting.ENV_NAME);
-    const envOrganizationCreationEnabled = this.envService.get(
-      OrganizationCreationEnabledSetting.ENV_NAME,
-    );
-    const envPermalinkBaseUrl = this.envService.get(PermalinkBaseUrlSetting.ENV_NAME);
-
-    return settings.withEnvOverrides({
-      signupEnabled: enforcedSignup,
-      organizationCreationEnabled: envOrganizationCreationEnabled,
-      permalinkBaseUrl: envPermalinkBaseUrl,
+    const overridden = settings.withEnvOverrides({
+      signupEnabled: this.envService.get(SignupEnabledSetting.ENV_NAME),
+      organizationCreationEnabled: this.envService.get(OrganizationCreationEnabledSetting.ENV_NAME),
+      permalinkBaseUrl: this.envService.get(PermalinkBaseUrlSetting.ENV_NAME),
+      mailEnabled: this.envService.get(MailEnabledSetting.ENV_NAME),
     });
+    // no SMTP host ⇒ mail is off, whatever OPEN_DPP_INSTANCE_MAIL_ENABLED says
+    return this.envService.isMailConfigured() ? overridden : overridden.withMailNotConfigured();
   }
 }

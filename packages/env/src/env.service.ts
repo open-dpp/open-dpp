@@ -2,6 +2,7 @@ import type { Env } from "./env";
 import type { TrustedClientEnv } from "./trusted-client";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { isMailConfigured as isMailConfiguredIn } from "./mail";
 import { parseTrustedClientEnv } from "./trusted-client";
 
 @Injectable()
@@ -42,5 +43,10 @@ export class EnvService {
       );
     }
     return result.data;
+  }
+
+  /** Whether an SMTP host is configured; without one no mail is sent. */
+  isMailConfigured(): boolean {
+    return isMailConfiguredIn({ OPEN_DPP_MAIL_HOST: this.get("OPEN_DPP_MAIL_HOST") });
   }
 }

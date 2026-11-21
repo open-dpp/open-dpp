@@ -1,13 +1,10 @@
-import {
-  BooleanInstanceSetting,
-  BooleanInstanceSettingCreateProps,
-} from "./boolean-instance-setting";
+import { InstanceSetting, InstanceSettingCreateProps } from "./instance-setting";
 
-export class OrganizationCreationEnabledSetting extends BooleanInstanceSetting {
+export class OrganizationCreationEnabledSetting {
   static readonly ENV_NAME = "OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED";
 
-  public static create(data: BooleanInstanceSettingCreateProps) {
-    return new BooleanInstanceSetting(
+  public static create(data: InstanceSettingCreateProps<boolean>): InstanceSetting<boolean> {
+    return InstanceSetting.create(
       "organizationCreationEnabled",
       OrganizationCreationEnabledSetting.ENV_NAME,
       data.value ?? true,
