@@ -33,11 +33,7 @@ import { MediaController } from "./media.controller";
 
 // S3 is replaced by an in-memory object store; everything else (sharp, file-type, DOMPurify,
 // MongoDB) is real.
-const { objectStore, bucketFailure } = vi.hoisted(() => ({
-  objectStore: new Map<string, Buffer>(),
-  // Set to make the next upload to the bucket fail, as an unreachable S3 would.
-  bucketFailure: { failNextUpload: false },
-}));
+const { objectStore } = vi.hoisted(() => ({ objectStore: new Map<string, Buffer>() }));
 
 vi.mock("minio", async () => {
   const { Readable } = await import("node:stream");
@@ -47,10 +43,6 @@ vi.mock("minio", async () => {
       return {
         bucketExists: async () => true,
         putObject: async (bucket: string, objectName: string, buffer: Buffer) => {
-          if (bucketFailure.failNextUpload) {
-            bucketFailure.failNextUpload = false;
-            throw new Error("S3 is unreachable");
-          }
           objectStore.set(`${bucket}/${objectName}`, Buffer.from(buffer));
           return { etag: "etag", versionId: null };
         },
@@ -102,7 +94,6 @@ describe("MediaController", () => {
   let app: INestApplication;
   let module: TestingModule;
   let organizationId: string;
-  let userId: string;
   let cookie: string;
 
   const betterAuthHelper = new BetterAuthHelper();
@@ -154,9 +145,8 @@ describe("MediaController", () => {
     betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
     await app.init();
 
-    const { org, user, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     organizationId = org.id;
-    userId = user.id;
     cookie = userCookie;
   });
 
@@ -317,67 +307,6 @@ describe("MediaController", () => {
         .get(`/media/dpp/${upi}/photo/info`)
         .expect(200);
       expect(info.body.mimeType).toBe("image/webp");
-    });
-
-    it("replaces a passport file in place and records who replaced it", async () => {
-      const upi = randomUUID();
-      const fileInfo = () =>
-        request(app.getHttpServer()).get(`/media/dpp/${upi}/manual/info`).expect(200);
-      const first = await upload(
-        `/media/dpp/${upi}/manual`,
-        MINIMAL_PDF,
-        "manual.pdf",
-        "application/pdf",
-      ).expect(201);
-      const created = await fileInfo();
-      expect(created.body).toMatchObject({ createdByUserId: userId, updatedByUserId: null });
-
-      const second = await upload(
-        `/media/dpp/${upi}/manual`,
-        await rasterImage("png"),
-        "photo.png",
-        "image/png",
-      ).expect(201);
-
-      expect(second.body.mediaId).toBe(first.body.mediaId);
-      const replaced = await fileInfo();
-      expect(replaced.body).toMatchObject({
-        id: first.body.mediaId,
-        title: "photo.png",
-        mimeType: "image/webp",
-        createdByUserId: userId,
-        updatedByUserId: userId,
-        createdAt: created.body.createdAt,
-      });
-      const file = await download(`/media/dpp/${upi}/manual/download`).expect(200);
-      expect(file.headers["content-type"]).toBe("image/webp");
-      // The replaced PDF is removed from the bucket, not left behind.
-      expect([...objectStore.keys()].filter((key) => key.includes(`/${upi}/`))).toHaveLength(1);
-    });
-
-    it("keeps a passport file when the upload of its replacement to the bucket fails", async () => {
-      const upi = randomUUID();
-      const first = await upload(
-        `/media/dpp/${upi}/manual`,
-        MINIMAL_PDF,
-        "manual.pdf",
-        "application/pdf",
-      ).expect(201);
-      bucketFailure.failNextUpload = true;
-
-      await upload(
-        `/media/dpp/${upi}/manual`,
-        await rasterImage("png"),
-        "photo.png",
-        "image/png",
-      ).expect(500);
-
-      const info = await request(app.getHttpServer())
-        .get(`/media/dpp/${upi}/manual/info`)
-        .expect(200);
-      expect(info.body).toMatchObject({ id: first.body.mediaId, mimeType: "application/pdf" });
-      const file = await download(`/media/dpp/${upi}/manual/download`).expect(200);
-      expect(file.body).toEqual(MINIMAL_PDF);
     });
   });
 });

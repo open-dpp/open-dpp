@@ -21,10 +21,7 @@ function setMediaHeaders(res: express.Response, media: Media): void {
   if (media.updatedAt) {
     res.setHeader("Last-Modified", media.updatedAt.toUTCString());
   }
-  // A replaced file keeps its media, so its download URLs serve new content. A cached copy is
-  // only used after the stored object's ETag confirmed that it is still the current file.
-  res.setHeader("ETag", `"${media.eTag.replaceAll('"', "")}"`);
-  res.setHeader("Cache-Control", "private, no-cache");
+  res.setHeader("Cache-Control", "private, max-age=31536000");
 }
 
 /** Streams a stored media file with the headers every media download gets. */
@@ -33,12 +30,6 @@ export function sendMediaFile(
   file: { readonly media: Media; readonly stream: Readable },
 ): void {
   setMediaHeaders(res, file.media);
-  if (res.req.fresh) {
-    // The client's cached copy is the current file.
-    file.stream.destroy();
-    res.status(304).end();
-    return;
-  }
   file.stream.pipe(res);
   file.stream.on("error", () => {
     if (!res.headersSent) {
