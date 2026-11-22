@@ -89,3 +89,18 @@ describe("EnvService.getTrustedClient", () => {
     );
   });
 });
+
+describe("EnvService.isMailConfigured", () => {
+  it("is true once an SMTP host is set", () => {
+    expect(envServiceFor({ OPEN_DPP_MAIL_HOST: "smtp.example.com" }).isMailConfigured()).toBe(true);
+  });
+
+  it("is false while no SMTP host is set", () => {
+    expect(envServiceFor({}).isMailConfigured()).toBe(false);
+  });
+
+  it("treats an empty host like unset", () => {
+    // ConfigService falls back to raw process.env, where `KEY=` arrives as ""
+    expect(envServiceFor({ OPEN_DPP_MAIL_HOST: "" }).isMailConfigured()).toBe(false);
+  });
+});

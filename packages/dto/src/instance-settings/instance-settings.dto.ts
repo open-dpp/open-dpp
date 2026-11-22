@@ -20,15 +20,29 @@ export const InstanceSettingsDtoSchema = z.object({
   signupEnabled: BooleanSettingsResponseDtoSchema,
   organizationCreationEnabled: BooleanSettingsResponseDtoSchema,
   permalinkBaseUrl: StringSettingsResponseDtoSchema,
+  mailEnabled: BooleanSettingsResponseDtoSchema,
   effectiveFallback: z.string(),
 });
 
 export type InstanceSettingsDto = z.infer<typeof InstanceSettingsDtoSchema>;
 
+/** The admin DTO keys whose setting is a boolean toggle. */
+export type BooleanInstanceSettingKey = {
+  [K in keyof InstanceSettingsDto]: InstanceSettingsDto[K] extends BooleanSettingsResponseDto
+    ? K
+    : never;
+}[keyof InstanceSettingsDto];
+
+/** Every boolean setting of the admin DTO, in schema order; derived, so it never drifts. */
+export const BOOLEAN_INSTANCE_SETTING_KEYS = Object.entries(InstanceSettingsDtoSchema.shape)
+  .filter(([, schema]) => schema === BooleanSettingsResponseDtoSchema)
+  .map(([key]) => key) as BooleanInstanceSettingKey[];
+
 export const InstanceSettingsUpdateDtoSchema = z.object({
   signupEnabled: z.boolean().optional(),
   organizationCreationEnabled: z.boolean().optional(),
   permalinkBaseUrl: PermalinkBaseUrlSchema.nullable().optional(),
+  mailEnabled: z.boolean().optional(),
 });
 
 export type InstanceSettingsUpdateDto = z.infer<typeof InstanceSettingsUpdateDtoSchema>;
