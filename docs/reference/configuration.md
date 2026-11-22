@@ -96,6 +96,18 @@ open-dpp is configured through environment variables. Some settings can also be 
 | `OPEN_DPP_INSTANCE_SIGNUP_ENABLED`                | strict boolean (string) | No       | true    | Allows/disables signup; value must be `"true"` or `"false"`.                                                   |
 | `OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED` | strict boolean (string) | No       | true    | Allows/disables creation of organizations for users which are not admins; value must be `"true"` or `"false"`. |
 
+## Legal links
+
+| Variable                              | Type | Required | Default | Description                          |
+| ------------------------------------- | ---- | -------- | ------- | ------------------------------------ |
+| `OPEN_DPP_LEGAL_PRIVACY_POLICY_URL`   | URL  | No       | –       | http(s) URL of the privacy policy.   |
+| `OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL` | URL  | No       | –       | http(s) URL of the terms of service. |
+| `OPEN_DPP_LEGAL_IMPRINT_URL`          | URL  | No       | –       | http(s) URL of the imprint.          |
+
+> Each link that is set shows in the app sidebar, in the footer of the public passport view, and in the footer of pages without a sidebar, such as sign-in and sign-up. An empty value counts as unset, and a value that is not an http(s) URL stops open-dpp at startup. `GET /instance-settings/public` returns the links as `legalLinks` to everyone.
+
+> While `OPEN_DPP_LEGAL_PRIVACY_POLICY_URL` or `OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL` is set, sign-up requires consent: the sign-up form shows a checkbox, and the server rejects a sign-up request without `termsAccepted: true` (400 `TERMS_NOT_ACCEPTED`). The time of consent is stored on the user as `termsAcceptedAt`. Users created by an admin are not asked, and `OPEN_DPP_LEGAL_IMPRINT_URL` alone does not turn consent on.
+
 ## Official templates
 
 | Variable                           | Type   | Required | Default                              | Description                                                                                                                                                                                                                           |
