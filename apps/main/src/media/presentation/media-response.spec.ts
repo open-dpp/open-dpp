@@ -37,13 +37,59 @@ function failingStream({ afterFirstChunk }: { afterFirstChunk: boolean }): Reada
   });
 }
 
-function appServing(stream: Readable): express.Express {
+function appServing(stream: Readable, served: Media = media): express.Express {
   const app = express();
-  app.get("/file", (_req, res) => sendMediaFile(res, { media, stream }));
+  app.get("/file", (_req, res) => sendMediaFile(res, { media: served, stream }));
   return app;
 }
 
 describe("sendMediaFile", () => {
+  it("lets a cached copy be used only after the server confirmed it is current", async () => {
+    const response = await request(appServing(Readable.from([Buffer.from("content")]))).get(
+      "/file",
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("private, no-cache");
+    expect(response.headers.etag).toBe('"etag"');
+  });
+
+  it("answers 304 without content when the cached copy is the stored file", async () => {
+    const stream = Readable.from([Buffer.from("content")]);
+    const response = await request(appServing(stream)).get("/file").set("If-None-Match", '"etag"');
+
+    expect(response.status).toBe(304);
+    expect(response.body).toHaveLength(0);
+    expect(stream.destroyed).toBe(true);
+  });
+
+  it("sends the file again once it was replaced under the same media", async () => {
+    const replaced = media.withReplacedFile(
+      {
+        title: "manual-v2.pdf",
+        description: "manual-v2.pdf",
+        mimeType: "application/pdf",
+        fileExtension: "pdf",
+        size: 7,
+        originalFilename: "manual-v2.pdf",
+        bucket: "bucket",
+        objectName: "product-passport-files/upi/field-2",
+        eTag: "etag-2",
+        versionId: "v2",
+      },
+      "replacer",
+    );
+
+    const response = await request(appServing(Readable.from([Buffer.from("content")]), replaced))
+      .get("/file")
+      .set("If-None-Match", '"etag"')
+      .responseType("blob");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.etag).toBe('"etag-2"');
+    expect(response.body.toString("utf8")).toBe("content");
+  });
+
   it("answers 500 when the file stream fails before anything was sent", async () => {
     const response = await request(appServing(failingStream({ afterFirstChunk: false })))
       .get("/file")
