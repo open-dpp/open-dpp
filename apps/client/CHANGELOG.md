@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 7.0.1
+
+### Patch Changes
+
+- [#1195](https://github.com/open-dpp/open-dpp/pull/1195) [`ba4982b`](https://github.com/open-dpp/open-dpp/commit/ba4982b9d7e5d6f66b1613a3cbd5218dfc904d9c) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `postcss` ^8.5.32 → ^8.5.33 (dev)
+
 ## 7.0.0
 
 ### Major Changes
