@@ -287,6 +287,38 @@ const signup = handleSubmit(async (values) => {
               </Message>
             </div>
 
+            <div>
+              <label
+                for="passwordRepeat"
+                class="block text-sm/6 font-medium text-gray-900 dark:text-white"
+                >{{ t("user.passwordRepeat") }}</label
+              >
+              <div class="mt-2">
+                <Password
+                  v-model="passwordRepeat"
+                  v-bind="passwordRepeatAttrs"
+                  input-id="passwordRepeat"
+                  :feedback="false"
+                  toggle-mask
+                  fluid
+                  :disabled="loading"
+                  :invalid="showErrors && !!errors.passwordRepeat"
+                  :input-props="{
+                    name: 'passwordRepeat',
+                    autocomplete: 'new-password',
+                  }"
+                />
+              </div>
+              <Message
+                v-if="showErrors && errors.passwordRepeat"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.passwordRepeat }}
+              </Message>
+            </div>
+
             <div v-if="instanceSettingsStore.consentRequired">
               <div class="flex items-start gap-2">
                 <Checkbox
@@ -328,38 +360,6 @@ const signup = handleSubmit(async (values) => {
                 variant="simple"
               >
                 {{ t("auth.signup.consent.required") }}
-              </Message>
-            </div>
-
-            <div>
-              <label
-                for="passwordRepeat"
-                class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-                >{{ t("user.passwordRepeat") }}</label
-              >
-              <div class="mt-2">
-                <Password
-                  v-model="passwordRepeat"
-                  v-bind="passwordRepeatAttrs"
-                  input-id="passwordRepeat"
-                  :feedback="false"
-                  toggle-mask
-                  fluid
-                  :disabled="loading"
-                  :invalid="showErrors && !!errors.passwordRepeat"
-                  :input-props="{
-                    name: 'passwordRepeat',
-                    autocomplete: 'new-password',
-                  }"
-                />
-              </div>
-              <Message
-                v-if="showErrors && errors.passwordRepeat"
-                size="small"
-                severity="error"
-                variant="simple"
-              >
-                {{ errors.passwordRepeat }}
               </Message>
             </div>
 
