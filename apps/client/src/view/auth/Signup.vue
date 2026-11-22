@@ -21,6 +21,7 @@ const toast = useToast();
 
 const loading = ref<boolean>(false);
 const checkingSettings = ref<boolean>(true);
+const settingsLoaded = ref<boolean>(false);
 const instanceSettingsStore = useInstanceSettingsStore();
 
 /** Which consent sentence fits the documents the instance links. */
@@ -79,9 +80,17 @@ onMounted(async () => {
       life: 5000,
     });
   }
-  await instanceSettingsStore.fetchPublicSettings();
-  checkingSettings.value = false;
+  await loadSettings();
 });
+
+// Without the settings the form cannot know whether consent is required, and the server would
+// reject a sign-up without it, so the form only shows once they are loaded.
+async function loadSettings() {
+  checkingSettings.value = true;
+  await instanceSettingsStore.fetchPublicSettings();
+  settingsLoaded.value = instanceSettingsStore.settings !== null;
+  checkingSettings.value = false;
+}
 
 const signup = handleSubmit(async (values) => {
   loading.value = true;
@@ -145,7 +154,13 @@ const signup = handleSubmit(async (values) => {
         </p>
       </template>
       <template #content>
-        <div v-if="!instanceSettingsStore.signupEnabled" class="flex flex-col gap-5">
+        <div v-if="!settingsLoaded" class="flex flex-col gap-5">
+          <Message severity="error" :closable="false">
+            {{ t("auth.signup.settingsError") }}
+          </Message>
+          <Button :label="t('common.tryAgain')" @click="loadSettings" />
+        </div>
+        <div v-else-if="!instanceSettingsStore.signupEnabled" class="flex flex-col gap-5">
           <Message severity="warn" :closable="false">
             {{ t("auth.signup.disabled") }}
           </Message>

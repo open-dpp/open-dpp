@@ -988,6 +988,7 @@
       "error": "Sign up failed.",
       "disabled": "Signup is currently disabled. Please contact your administrator.",
       "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again.",
+      "settingsError": "The signup settings could not be loaded. Please try again.",
       "consent": {
         "termsAndPrivacy": "I accept the {terms} and have read the {privacy}.",
         "termsOnly": "I accept the {terms}.",

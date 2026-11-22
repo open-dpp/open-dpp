@@ -101,6 +101,7 @@ describe("createSignupFormSchema", () => {
     lastName: "Doe",
     email: "jane@example.com",
     password: "password123",
+    passwordRepeat: "password123",
   };
 
   it("requires the consent checkbox while consent is required", () => {
