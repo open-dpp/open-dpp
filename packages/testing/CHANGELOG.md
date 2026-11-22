@@ -1,5 +1,7 @@
 # @open-dpp/testing
 
+## 7.1.0
+
 ## 7.0.1
 
 ### Patch Changes
