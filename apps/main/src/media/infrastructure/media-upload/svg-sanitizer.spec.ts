@@ -6,39 +6,11 @@ import { sanitizeSvg, SVG_LIMITS } from "./svg-sanitizer";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
-const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
 function svg(body: string, rootAttributes = ""): Buffer {
   return Buffer.from(
     `<svg xmlns="${SVG_NAMESPACE}" xmlns:xlink="${XLINK_NAMESPACE}" viewBox="0 0 10 10"${rootAttributes}>${body}</svg>`,
   );
-}
-
-/** An SVG whose root and elements carry the prefix `s`, bound to the SVG namespace. */
-function prefixedSvg(body: string, rootAttributes = ""): Buffer {
-  return Buffer.from(
-    `<s:svg xmlns:s="${SVG_NAMESPACE}" xmlns:xlink="${XLINK_NAMESPACE}" viewBox="0 0 10 10"${rootAttributes}>${body}</s:svg>`,
-  );
-}
-
-/** The markup of the elements in the root, written with the given element prefix. */
-type SvgBody = (elementPrefix: string) => string;
-
-/** Each test runs on an SVG without prefixes and on one whose elements carry the prefix `s`. */
-const SVG_SPELLINGS: [string, (body: SvgBody, rootAttributes?: string) => Buffer][] = [
-  ["without prefixes", (body, rootAttributes) => svg(body(""), rootAttributes)],
-  ["with prefixed elements", (body, rootAttributes) => prefixedSvg(body("s:"), rootAttributes)],
-];
-
-/** Binds the prefix `l` to the XLink namespace as well. */
-const OTHER_XLINK_PREFIX = ` xmlns:l="${XLINK_NAMESPACE}"`;
-
-/** The href of each use element in the output, without and with the XLink namespace. */
-function useReferences(document: Document): (string | null)[][] {
-  return Array.from(document.getElementsByTagNameNS("*", "use")).map((use) => [
-    use.getAttributeNS(null, "href"),
-    use.getAttributeNS(XLINK_NAMESPACE, "href"),
-  ]);
 }
 
 function parseOutput(output: Buffer): Document {
@@ -216,75 +188,55 @@ describe("sanitizeSvg", () => {
     );
   });
 
-  describe("namespace prefixes", () => {
-    it("keeps an SVG whose elements carry a prefix bound to the SVG namespace", () => {
+  describe("names that do not say their namespace", () => {
+    const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+    const EVIL_USE = `<use href="#a" xlink:href="https://evil.example/sprite.svg#a"/>`;
+
+    it.each([
+      [
+        "on every element",
+        `<s:svg xmlns:s="${SVG_NAMESPACE}"><s:rect width="1" height="1"/></s:svg>`,
+      ],
+      [
+        "on one element",
+        `<svg xmlns="${SVG_NAMESPACE}" xmlns:s="${SVG_NAMESPACE}"><s:rect width="1" height="1"/></svg>`,
+      ],
+    ])("rejects SVG elements with a namespace prefix %s", (_, text) => {
+      expect(() => sanitizeSvg(Buffer.from(text))).toThrow(
+        new ValueError("SVG elements with a namespace prefix are not supported."),
+      );
+    });
+
+    it("rejects an XLink attribute under another prefix than xlink", () => {
+      const input = svg(
+        `<rect id="a" width="1" height="1"/><use l:href="#a"/>`,
+        ` xmlns:l="${XLINK_NAMESPACE}"`,
+      );
+
+      expect(() => sanitizeSvg(input)).toThrow(
+        new ValueError("XLink attributes of an SVG image must carry the prefix xlink."),
+      );
+    });
+
+    it.each([
+      ["on the root", `<svg xmlns="${SVG_NAMESPACE}" xmlns:xlink="urn:example">${EVIL_USE}</svg>`],
+      ["on an element", svg(`<g xmlns:xlink="urn:example">${EVIL_USE}</g>`).toString()],
+      [
+        // DOMPurify would move the use into the g, where xlink is the XLink namespace again.
+        "on an element DOMPurify unwraps",
+        `<svg xmlns="${SVG_NAMESPACE}" xmlns:xlink="https://evil.example/ns"><g xmlns:xlink="${XLINK_NAMESPACE}">` +
+          `<unknown xmlns:xlink="https://evil.example/ns">${EVIL_USE}</unknown></g></svg>`,
+      ],
+    ])("rejects the prefix xlink bound to another namespace %s", (_, text) => {
+      expect(() => sanitizeSvg(Buffer.from(text))).toThrow(
+        new ValueError("SVG files must bind the prefix xlink to the XLink namespace."),
+      );
+    });
+
+    it("removes elements of other namespaces, whatever their prefix", () => {
       const { text, document } = sanitizeAndParse(
-        prefixedSvg(
-          `<s:defs><s:linearGradient id="g"><s:stop offset="0" stop-color="#000"/></s:linearGradient></s:defs>` +
-            `<s:rect id="shape" width="10" height="10" fill="url(#g)"/><s:use xlink:href="#shape"/>`,
-        ),
-      );
-
-      const root = document.documentElement;
-      expect(document.getElementsByTagName("parsererror")).toHaveLength(0);
-      expect(root.localName).toBe("svg");
-      expect(root.namespaceURI).toBe(SVG_NAMESPACE);
-      expect(root.getAttribute("viewBox")).toBe("0 0 10 10");
-      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "linearGradient")).toHaveLength(1);
-      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "rect")).toHaveLength(1);
-      const use = document.getElementsByTagNameNS(SVG_NAMESPACE, "use")[0];
-      expect(use?.getAttributeNS(XLINK_NAMESPACE, "href")).toBe("#shape");
-      // Without a prefix, so a viewer that matches names instead of namespaces renders it too.
-      expect(text).not.toMatch(/<s:|xmlns:s=/);
-    });
-
-    it("sanitizes a prefixed SVG to the same output as the SVG without prefixes", () => {
-      const body = (p: string) =>
-        `<${p}style><![CDATA[.a > .b { fill: red; }]]></${p}style><${p}script>alert(1)</${p}script>` +
-        `<${p}rect id="r" class="a" width="1" height="1" onclick="alert(2)"/><${p}use xlink:href="#r"/>` +
-        `<${p}set attributeName="onclick" to="alert(3)"/><${p}iframe src="javascript:alert(4)"/>` +
-        `<${p}a href="javascript:alert(5)"><${p}text xml:space="preserve">a&#160;b</${p}text></${p}a>`;
-
-      expect(sanitizeSvg(prefixedSvg(body("s:"))).toString("utf8")).toBe(
-        sanitizeSvg(svg(body(""))).toString("utf8"),
-      );
-    });
-
-    it("removes a prefixed script element", () => {
-      const { text } = sanitizeAndParse(
-        prefixedSvg(`<s:script>alert(1)</s:script><s:rect width="1" height="1"/>`),
-      );
-
-      expect(text).not.toMatch(/script|alert/);
-      expect(text).toContain("<rect");
-    });
-
-    it("removes a prefixed foreignObject", () => {
-      const { text } = sanitizeAndParse(
-        prefixedSvg(
-          `<s:foreignObject><div xmlns="${XHTML_NAMESPACE}"><img src="x" onerror="alert(1)"/></div></s:foreignObject>`,
-        ),
-      );
-
-      expect(text).not.toMatch(/foreignObject|onerror|alert/);
-    });
-
-    it("removes event handler attributes from prefixed elements", () => {
-      const { text } = sanitizeAndParse(
-        prefixedSvg(
-          `<s:rect width="1" height="1" onclick="alert(1)" s:onmouseover="alert(2)"/>`,
-          ` onload="alert(3)"`,
-        ),
-      );
-
-      expect(text).not.toMatch(/onclick|onmouseover|onload|alert/);
-      expect(text).toContain("<rect");
-    });
-
-    it("removes elements whose prefix is bound to another namespace", () => {
-      const { text, document } = sanitizeAndParse(
-        prefixedSvg(
-          `<h:script>alert(1)</h:script><h:img src="x" onerror="alert(2)"/><svg:script>alert(3)</svg:script><s:rect width="1" height="1"/>`,
+        svg(
+          `<h:script>alert(1)</h:script><h:img src="x" onerror="alert(2)"/><svg:script>alert(3)</svg:script><rect width="1" height="1"/>`,
           ` xmlns:h="${XHTML_NAMESPACE}" xmlns:svg="${XHTML_NAMESPACE}"`,
         ),
       );
@@ -292,167 +244,9 @@ describe("sanitizeSvg", () => {
       expect(document.getElementsByTagNameNS(XHTML_NAMESPACE, "*")).toHaveLength(0);
       expect(document.getElementsByTagNameNS("*", "script")).toHaveLength(0);
       expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "rect")).toHaveLength(1);
+      // The text of the removed elements stays, as text.
       expect(text).not.toMatch(/<h:|<svg:|<img|onerror/);
     });
-
-    it("removes a prefixed element named xmlns", () => {
-      // Its name cannot be written without a prefix; it is no SVG element either.
-      const { text } = sanitizeAndParse(prefixedSvg(`<s:xmlns/><s:rect width="1" height="1"/>`));
-
-      expect(text).not.toContain("xmlns/");
-      expect(text).toContain("<rect");
-    });
-
-    it("rejects a prefixed svg root outside the SVG namespace", () => {
-      expect(() =>
-        sanitizeSvg(Buffer.from(`<s:svg xmlns:s="${XHTML_NAMESPACE}"><s:rect/></s:svg>`)),
-      ).toThrow(ValueError);
-    });
-
-    it("accepts prefixed elements nested as deep as the limit allows", () => {
-      const levels = SVG_LIMITS.maxDepth - 1;
-      const { document } = sanitizeAndParse(
-        prefixedSvg("<s:g>".repeat(levels) + "</s:g>".repeat(levels)),
-      );
-
-      expect(document.getElementsByTagNameNS(SVG_NAMESPACE, "g")).toHaveLength(levels);
-    });
-
-    describe.each(SVG_SPELLINGS)(
-      "XLink attributes with another prefix in an SVG %s",
-      (_, build) => {
-        it("keeps a use element whose reference has another XLink prefix", () => {
-          const { text, document } = sanitizeAndParse(
-            build(
-              (p) => `<${p}rect id="shape" width="1" height="1"/><${p}use l:href="#shape"/>`,
-              OTHER_XLINK_PREFIX,
-            ),
-          );
-
-          expect(useReferences(document)).toEqual([[null, "#shape"]]);
-          // Under the prefix the root declares for XLink, so a viewer that matches names reads it too.
-          expect(text).toContain(`<use xlink:href="#shape"/>`);
-          expect(text).not.toMatch(/\bl:|xmlns:l=/);
-        });
-
-        it("sanitizes another XLink prefix to the same output as the prefix xlink", () => {
-          const body = (xlink: string) => (p: string) =>
-            `<${p}rect id="r" width="1" height="1"/><${p}use ${xlink}:href="#r"/>` +
-            `<${p}use href="#r" ${xlink}:href="#r"/><${p}use href="#r" ${xlink}:href="https://evil.example/a.svg#r"/>` +
-            `<${p}use ${xlink}:href="https://evil.example/sprite.svg#a"/>` +
-            `<${p}a ${xlink}:href="javascript:alert(1)" ${xlink}:title="t" ${xlink}:show="new"><${p}text>a</${p}text></${p}a>`;
-
-          expect(sanitizeSvg(build(body("l"), OTHER_XLINK_PREFIX)).toString("utf8")).toBe(
-            sanitizeSvg(build(body("xlink"))).toString("utf8"),
-          );
-        });
-
-        it("removes use elements that reference another document under another XLink prefix", () => {
-          const { document } = sanitizeAndParse(
-            build(
-              (p) =>
-                `<${p}use l:href="https://evil.example/sprite.svg#a"/>` +
-                `<${p}use l:href="data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=#a"/>`,
-              OTHER_XLINK_PREFIX,
-            ),
-          );
-
-          expect(useReferences(document)).toEqual([]);
-        });
-
-        it("removes javascript: links under another XLink prefix", () => {
-          const { text } = sanitizeAndParse(
-            build(
-              (p) => `<${p}a l:href="javascript:alert(1)"><${p}rect width="1" height="1"/></${p}a>`,
-              OTHER_XLINK_PREFIX,
-            ),
-          );
-
-          expect(text).not.toMatch(/javascript|alert/);
-          expect(text).toContain("<rect");
-        });
-
-        it("keeps an unqualified href apart from a reference with another XLink prefix", () => {
-          const { document } = sanitizeAndParse(
-            build(
-              (p) =>
-                `<${p}rect id="a" width="1" height="1"/><${p}rect id="b" width="1" height="1"/>` +
-                `<${p}use href="#a" l:href="#b"/><${p}use href="#a" l:href="https://evil.example/a.svg#b"/>`,
-              OTHER_XLINK_PREFIX,
-            ),
-          );
-
-          // A viewer that knows href reads it before xlink:href; the second use is removed as with xlink.
-          expect(useReferences(document)).toEqual([["#a", "#b"]]);
-        });
-
-        it("does not take an xlink:href in another namespace for a reference", () => {
-          const { document } = sanitizeAndParse(
-            build(
-              (p) =>
-                `<${p}rect id="a" width="1" height="1"/>` +
-                `<${p}use xmlns:xlink="urn:example" xlink:href="https://evil.example/sprite.svg#a"/>` +
-                `<${p}use href="#a" xmlns:xlink="urn:example" xlink:href="https://evil.example/sprite.svg#a"/>` +
-                `<${p}use href="#a" xmlns:xlink="https://evil.example/ns" xlink:href="https://evil.example/sprite.svg#a"/>`,
-              OTHER_XLINK_PREFIX,
-            ),
-          );
-
-          // A viewer ignores an href outside the XLink namespace, and the output keeps it outside.
-          expect(useReferences(document)).toEqual([
-            ["#a", null],
-            ["#a", null],
-          ]);
-        });
-
-        it("keeps a reference with another XLink prefix next to an xlink:href in another namespace", () => {
-          const { document } = sanitizeAndParse(
-            build(
-              (p) =>
-                `<${p}rect id="a" width="1" height="1"/>` +
-                `<${p}use xmlns:xlink="urn:example" xlink:href="https://evil.example/sprite.svg#a" l:href="#a"/>` +
-                `<${p}use xmlns:xlink="https://evil.example/ns" xlink:href="https://evil.example/sprite.svg#a" l:href="#a"/>`,
-              OTHER_XLINK_PREFIX,
-            ),
-          );
-
-          expect(useReferences(document)).toEqual([
-            [null, "#a"],
-            [null, "#a"],
-          ]);
-        });
-
-        it("rejects an element with two XLink hrefs", () => {
-          expect(() =>
-            sanitizeSvg(build((p) => `<${p}use xlink:href="#a" l:href="#b"/>`, OTHER_XLINK_PREFIX)),
-          ).toThrow(new ValueError("The file is not a well-formed SVG image."));
-        });
-      },
-    );
-
-    it.each([
-      ["without prefixes", "", `xmlns="${SVG_NAMESPACE}"`],
-      ["with prefixed elements", "s:", `xmlns:s="${SVG_NAMESPACE}"`],
-    ])(
-      "does not turn an xlink:href in another namespace into a reference when DOMPurify unwraps its parent, in an SVG %s",
-      (_, p, declaration) => {
-        // DOMPurify moves the content of the unknown element into the g, where xlink is the XLink
-        // namespace, inside the root, where it is not.
-        const { document } = sanitizeAndParse(
-          Buffer.from(
-            `<${p}svg ${declaration} xmlns:xlink="https://evil.example/ns"><${p}rect id="a" width="1" height="1"/>` +
-              `<${p}g xmlns:xlink="${XLINK_NAMESPACE}"><${p}unknown xmlns:xlink="https://evil.example/ns">` +
-              `<${p}use href="#a" xlink:href="https://evil.example/sprite.svg#a"/>` +
-              `<${p}a xlink:href="https://evil.example/"><${p}rect width="1" height="1"/></${p}a>` +
-              `</${p}unknown></${p}g></${p}svg>`,
-          ),
-        );
-
-        expect(useReferences(document)).toEqual([["#a", null]]);
-        const link = document.getElementsByTagNameNS(SVG_NAMESPACE, "a")[0];
-        expect(link?.getAttributeNS(XLINK_NAMESPACE, "href")).toBeNull();
-      },
-    );
   });
 
   it("sanitizes the tree an XML parser builds, not one an HTML parser would", () => {
