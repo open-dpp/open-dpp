@@ -21,7 +21,7 @@ onMounted(() => instanceSettingsStore.fetchPublicSettings());
   <nav
     v-if="items.length > 0"
     :aria-label="t('legal.navigationLabel')"
-    class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-gray-500"
+    class="text-ink-muted flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs"
     data-cy="legal-links"
   >
     <a
@@ -30,7 +30,7 @@ onMounted(() => instanceSettingsStore.fetchPublicSettings());
       :href="item.url"
       target="_blank"
       rel="noopener noreferrer"
-      class="hover:text-gray-900 hover:underline"
+      class="hover:text-ink hover:underline"
     >
       {{ t(`legal.${item.key}`) }}
     </a>

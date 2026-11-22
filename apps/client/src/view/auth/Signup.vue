@@ -298,14 +298,14 @@ const signup = handleSubmit(async (values) => {
                   :invalid="showErrors && !!errors.termsAccepted"
                   data-cy="terms-accepted"
                 />
-                <label for="termsAccepted" class="block text-sm/6 text-gray-900 dark:text-white">
+                <label for="termsAccepted" class="text-ink block text-sm/6">
                   <Translation :keypath="consentMessageKey" tag="span" scope="global">
                     <template #terms>
                       <a
                         :href="instanceSettingsStore.legalLinks.termsOfServiceUrl"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        class="text-ink hover:text-ink-muted font-semibold underline"
                         >{{ t("legal.termsOfService") }}</a
                       >
                     </template>
@@ -314,7 +314,7 @@ const signup = handleSubmit(async (values) => {
                         :href="instanceSettingsStore.legalLinks.privacyPolicyUrl"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        class="text-ink hover:text-ink-muted font-semibold underline"
                         >{{ t("legal.privacyPolicy") }}</a
                       >
                     </template>
