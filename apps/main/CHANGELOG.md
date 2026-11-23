@@ -1,5 +1,15 @@
 # @open-dpp/main
 
+## 7.1.2
+
+### Patch Changes
+
+- [#1218](https://github.com/open-dpp/open-dpp/pull/1218) [`8194e5e`](https://github.com/open-dpp/open-dpp/commit/8194e5e776e02531fd26ff10ed73bcfc7aa3fee0) Thanks [@florianBieck](https://github.com/florianBieck)! - Prepare email rendering for the `mjml` 5 security update ([#814](https://github.com/open-dpp/open-dpp/issues/814)). The email service now renders emails correctly on `mjml` 4 and on `mjml` 5. The emails this release sends are unchanged.
+
+- [#814](https://github.com/open-dpp/open-dpp/pull/814) [`9f55d41`](https://github.com/open-dpp/open-dpp/commit/9f55d414e36345c00d90745ffd1a9d9759828e0c) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `mjml` ^4.18.0 → ^5.0.0
+
 ## 7.1.1
 
 ### Patch Changes
