@@ -468,8 +468,8 @@ importers:
         specifier: ^4.17.27
         version: 4.17.27
       '@types/mjml':
-        specifier: ^4.7.4
-        version: 4.7.4
+        specifier: ^5.4.2
+        version: 5.4.2
       '@types/mjml-core':
         specifier: ^4.15.2
         version: 4.15.2
@@ -3365,8 +3365,11 @@ packages:
   '@types/mjml-core@4.15.2':
     resolution: {integrity: sha512-Q7SxFXgoX979HP57DEVsRI50TV8x1V4lfCA4Up9AvfINDM5oD/X9ARgfoyX1qS987JCnDLv85JjkqAjt3hZSiQ==}
 
-  '@types/mjml@4.7.4':
-    resolution: {integrity: sha512-vyi1vzWgMzFMwZY7GSZYX0GU0dmtC8vLHwpgk+NWmwbwRSrlieVyJ9sn5elodwUfklJM7yGl0zQeet1brKTWaQ==}
+  '@types/mjml-core@5.1.1':
+    resolution: {integrity: sha512-H3ycAWAk7LCLUqX/uLVbrndU9zZ93tcjbfmrAoe2lsPw+lEpiLl0Gi6vYNXEcY7Ww/tv/oXm/9HkAGYWyY1TTw==}
+
+  '@types/mjml@5.4.2':
+    resolution: {integrity: sha512-f3Ueveyh+m1gD5jYVbUJhHAGBIhexi+N+XHqiuCyfkWixOWSiUTNSxuGt/NGlxNNePlqgV3BeJFsquGQQfXN7A==}
 
   '@types/multer@2.3.0':
     resolution: {integrity: sha512-i7STIm9V4K2MPH4ZYMtrZAwNxs3kglk2LgleaTuB9pUXgADBcQYQuYMd7+6xgTIxfoggIkFA/DkkvycdZpIARA==}
@@ -11005,9 +11008,11 @@ snapshots:
 
   '@types/mjml-core@4.15.2': {}
 
-  '@types/mjml@4.7.4':
+  '@types/mjml-core@5.1.1': {}
+
+  '@types/mjml@5.4.2':
     dependencies:
-      '@types/mjml-core': 4.15.2
+      '@types/mjml-core': 5.1.1
 
   '@types/multer@2.3.0':
     dependencies:

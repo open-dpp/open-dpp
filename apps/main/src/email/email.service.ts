@@ -43,8 +43,8 @@ export class EmailService implements OnApplicationBootstrap {
     } as SMTPTransport.Options);
   }
 
-  async compileMjml(mjml: string) {
-    const { html } = mjml2html(mjml);
+  async compileMjml(mjml: string): Promise<string> {
+    const { html } = await mjml2html(mjml);
     return html;
   }
 
