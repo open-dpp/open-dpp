@@ -40,6 +40,21 @@ const VERIFICATION_SUBJECT_BY_LANGUAGE: Record<DisplayLanguageType, string> = {
 };
 
 /**
+ * Auth cookie attributes for open-dpp shown in an iframe of an embed origin
+ * (OPEN_DPP_EMBED_ORIGINS); none, i.e. better-auth's SameSite=Lax, without embed origins.
+ * Cross-site frames get cookies only with SameSite=None, which requires Secure. Partitioned
+ * (CHIPS) keeps Chrome accepting them while third-party cookies are blocked: the browser keys
+ * them by the embedding site, so a sign-in inside an embed is separate from one at open-dpp.
+ *
+ * Exported for unit testing.
+ */
+export function embedCookieAttributes(embedOrigins: readonly string[]) {
+  return embedOrigins.length > 0
+    ? { sameSite: "none" as const, secure: true, partitioned: true }
+    : undefined;
+}
+
+/**
  * Seeds the env-configured admin (OPEN_DPP_AUTH_ADMIN_USERNAME/PASSWORD) ONLY when
  * no admin account exists yet. This makes the env admin a one-time bootstrap seed
  * instead of a value re-created on every startup: once any admin exists — including
@@ -156,6 +171,9 @@ export const AuthProvider: Provider = {
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
       disabledPaths: oauthProvider.disabledPaths,
+      advanced: {
+        defaultCookieAttributes: embedCookieAttributes(configService.get("OPEN_DPP_EMBED_ORIGINS")),
+      },
       logger: {
         disabled: false,
         log: (level, message, ...args) => {

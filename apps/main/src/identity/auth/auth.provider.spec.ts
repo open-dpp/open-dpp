@@ -2,7 +2,9 @@ import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@nestjs/common";
 import type { EnvService } from "@open-dpp/env";
 import type { Db } from "mongodb";
-import { ensureAdminSeeded } from "./auth.provider";
+import { betterAuth } from "better-auth";
+import { memoryAdapter } from "better-auth/adapters/memory";
+import { embedCookieAttributes, ensureAdminSeeded } from "./auth.provider";
 
 describe("ensureAdminSeeded", () => {
   const ADMIN_ENV = {
@@ -81,5 +83,44 @@ describe("ensureAdminSeeded", () => {
     ).resolves.toBeUndefined();
 
     expect(logger.error).toHaveBeenCalled();
+  });
+});
+
+describe("embedCookieAttributes", () => {
+  async function signUpCookies(embedOrigins: string[]) {
+    const auth = betterAuth({
+      baseURL: "http://localhost:3000",
+      secret: "a-test-secret-that-is-long-enough-for-better-auth",
+      database: memoryAdapter({ user: [], session: [], account: [], verification: [] }),
+      emailAndPassword: { enabled: true },
+      advanced: { defaultCookieAttributes: embedCookieAttributes(embedOrigins) },
+      logger: { disabled: true },
+    });
+    const { headers } = await auth.api.signUpEmail({
+      body: { name: "Embed", email: "embed@example.com", password: "a-good-password" },
+      returnHeaders: true,
+    });
+    return headers.getSetCookie();
+  }
+
+  it("makes the auth cookies usable in a cross-site iframe while embedding is allowed", async () => {
+    const cookies = await signUpCookies(["http://127.0.0.1:5173"]);
+
+    expect(cookies.length).toBeGreaterThan(0);
+    for (const cookie of cookies) {
+      expect(cookie).toMatch(/; SameSite=None/i);
+      expect(cookie).toMatch(/; Secure/i);
+      expect(cookie).toMatch(/; Partitioned/i);
+    }
+  });
+
+  it("keeps better-auth's SameSite=Lax cookies without embed origins", async () => {
+    const cookies = await signUpCookies([]);
+
+    expect(cookies.length).toBeGreaterThan(0);
+    for (const cookie of cookies) {
+      expect(cookie).toMatch(/; SameSite=Lax/i);
+      expect(cookie).not.toMatch(/Partitioned/i);
+    }
   });
 });

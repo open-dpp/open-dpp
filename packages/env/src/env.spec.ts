@@ -333,6 +333,53 @@ describe("validateEnv — OPEN_DPP_TRUST_PROXY", () => {
   );
 });
 
+describe("validateEnv — OPEN_DPP_EMBED_ORIGINS", () => {
+  it.each([undefined, ""])("is empty when unset (%p)", (value: string | undefined) => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_EMBED_ORIGINS: value }).OPEN_DPP_EMBED_ORIGINS,
+    ).toEqual([]);
+  });
+
+  it("parses a comma-separated list into bare origins", () => {
+    expect(
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_EMBED_ORIGINS: "http://127.0.0.1:5173, https://Partner.example.com/",
+      }).OPEN_DPP_EMBED_ORIGINS,
+    ).toEqual(["http://127.0.0.1:5173", "https://partner.example.com"]);
+  });
+
+  it.each([
+    "http://partner.example.com",
+    "https://partner.example.com/embed",
+    "https://partner.example.com?x=1",
+    "ftp://partner.example.com",
+    "*",
+    "'none'",
+  ])("rejects %p", (value: string) => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_EMBED_ORIGINS: value })).toThrow(
+      "OPEN_DPP_EMBED_ORIGINS",
+    );
+  });
+
+  it("requires an https OPEN_DPP_URL, because the cookies must be Secure", () => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_URL: "http://dpp.example.com",
+        OPEN_DPP_EMBED_ORIGINS: "https://partner.example.com",
+      }),
+    ).toThrow("OPEN_DPP_EMBED_ORIGINS is set but OPEN_DPP_URL is not https");
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        OPEN_DPP_URL: "http://localhost:3000",
+        OPEN_DPP_EMBED_ORIGINS: "http://127.0.0.1:5173",
+      }),
+    ).not.toThrow();
+  });
+});
+
 describe("validateEnv — AI SDK debug switches", () => {
   it.each(["MISTRAL_DEBUG", "LANGCHAIN_VERBOSE"])("accepts %s unset or empty", (name: string) => {
     expect(() => validateEnv(baseEnv)).not.toThrow();

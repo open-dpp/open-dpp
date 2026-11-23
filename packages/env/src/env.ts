@@ -38,6 +38,39 @@ const emptyAsUndefined = <T extends z.ZodType>(schema: T) =>
 const optionalHttpUrl = () => emptyAsUndefined(z.url({ protocol: /^https?$/ }).optional());
 
 /**
+ * Comma-separated origins of websites allowed to show open-dpp in an iframe, parsed into a list of
+ * bare origins (empty when unset). An origin is what CSP `frame-ancestors` matches: scheme, host
+ * and port, without path, query or fragment; https everywhere except on loopback hosts.
+ */
+const embedOriginsSchema = emptyAsUndefined(
+  z
+    .string()
+    .optional()
+    .transform((value) =>
+      (value ?? "")
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0),
+    )
+    .pipe(
+      z.array(
+        z
+          .url({ protocol: /^https?$/ })
+          .refine((value) => !URL.canParse(value) || isHttpsOrLoopbackUrl(value), {
+            message: "Embed origin must use https (http is allowed only on loopback hosts)",
+          })
+          .refine(
+            (value) => !URL.canParse(value) || new URL(value).href === `${new URL(value).origin}/`,
+            {
+              message: "Embed origin must be an origin (scheme, host and port only)",
+            },
+          )
+          .transform((value) => new URL(value).origin),
+      ),
+    ),
+);
+
+/**
  * A debug switch of an AI SDK that prints every prompt and reply to stdout. Chat content must
  * never reach the logs, so the app refuses to start while one is set. The Mistral SDK coerces
  * any non-empty value to true, so even `MISTRAL_DEBUG=false` turns it on.
@@ -88,6 +121,8 @@ export const envSchema = z
           return /^\d+$/.test(value) ? Number(value) : value;
         }),
     ),
+    // Websites allowed to embed open-dpp in an iframe; also makes the auth cookies work there
+    OPEN_DPP_EMBED_ORIGINS: embedOriginsSchema,
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
     OPEN_DPP_USAGE_MANAGEMENT_URL: optionalHttpUrl(),
     // Legal documents linked in the footer; terms or privacy also require consent at sign-up
@@ -246,6 +281,19 @@ export const envSchema = z
           path: ["OPEN_DPP_URL"],
         });
       }
+    }
+    // embedding needs SameSite=None cookies, which browsers accept only with Secure
+    if (
+      val.OPEN_DPP_EMBED_ORIGINS.length > 0 &&
+      URL.canParse(val.OPEN_DPP_URL) &&
+      !isHttpsOrLoopbackUrl(val.OPEN_DPP_URL)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "OPEN_DPP_EMBED_ORIGINS is set but OPEN_DPP_URL is not https. Embedding needs Secure auth cookies; http is allowed only on loopback hosts.",
+        path: ["OPEN_DPP_URL"],
+      });
     }
     const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;
     const hasAuthAdminPassword = !!val.OPEN_DPP_AUTH_ADMIN_PASSWORD;

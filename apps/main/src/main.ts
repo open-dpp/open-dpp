@@ -18,6 +18,7 @@ import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { LOG_LEVELS, logLevelsUpTo } from "./common/logging/log-levels";
 import { correlationIdMiddleware } from "./common/middleware/correlation-id.middleware";
+import { createFrameAncestorsMiddleware } from "./common/middleware/frame-ancestors.middleware";
 import { createLoggerMiddleware } from "./common/middleware/logger.middleware";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
 import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-dpp/dto";
@@ -70,6 +71,7 @@ async function bootstrap() {
 
   app.use(correlationIdMiddleware);
   app.use(createLoggerMiddleware(envService.get("OPEN_DPP_LOG_FORMAT")));
+  app.use(createFrameAncestorsMiddleware(envService.get("OPEN_DPP_EMBED_ORIGINS")));
 
   if (!envService.get("OPEN_DPP_CLAMAV_URL")) {
     logger.warn("OPEN_DPP_CLAMAV_URL is not set — uploaded files are not virus-scanned");
