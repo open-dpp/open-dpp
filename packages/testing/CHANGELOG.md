@@ -1,5 +1,14 @@
 # @open-dpp/testing
 
+## 7.1.1
+
+### Patch Changes
+
+- [#1211](https://github.com/open-dpp/open-dpp/pull/1211) [`11aae6b`](https://github.com/open-dpp/open-dpp/commit/11aae6b0e2731f3390bafcf520b4f94c85e79dbe) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/mongoose` ^12.0.0 → ^12.0.1
+  - @open-dpp/testing: `@nestjs/mongoose` ^12.0.0 → ^12.0.1
+
 ## 7.1.0
 
 ## 7.0.1

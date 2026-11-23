@@ -1,5 +1,26 @@
 # @open-dpp/main
 
+## 7.1.1
+
+### Patch Changes
+
+- [#1209](https://github.com/open-dpp/open-dpp/pull/1209) [`a184245`](https://github.com/open-dpp/open-dpp/commit/a184245c531825b22cd034e10517e1e4a53e38f8) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/axios` ^12.0.1 → ^12.0.2
+
+- [#1210](https://github.com/open-dpp/open-dpp/pull/1210) [`1a8b884`](https://github.com/open-dpp/open-dpp/commit/1a8b88418d463c8ae65c08d9a53523aca9bfba4d) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/event-emitter` ^12.0.1 → ^12.0.3
+
+- [#1211](https://github.com/open-dpp/open-dpp/pull/1211) [`11aae6b`](https://github.com/open-dpp/open-dpp/commit/11aae6b0e2731f3390bafcf520b4f94c85e79dbe) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/mongoose` ^12.0.0 → ^12.0.1
+  - @open-dpp/testing: `@nestjs/mongoose` ^12.0.0 → ^12.0.1
+
+- [#1213](https://github.com/open-dpp/open-dpp/pull/1213) [`76c25c6`](https://github.com/open-dpp/open-dpp/commit/76c25c67f24927b6eadec7924d46986f210f2c5f) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `semver` ^7.8.5 → ^7.8.6
+
 ## 7.1.0
 
 ### Minor Changes
