@@ -46,7 +46,7 @@
   "devDependencies": {
     "@open-dpp/testing": "workspace:*",
     "@primevue/auto-import-resolver": "^4.5.5",
-    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/postcss": "^4.3.5",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
     "@types/dompurify": "^3.2.0",
@@ -62,7 +62,7 @@
     "jsdom": "^27.4.0",
     "postcss": "^8.5.33",
     "resize-observer-polyfill": "^1.5.1",
-    "tailwindcss": "^4.3.3",
+    "tailwindcss": "^4.3.5",
     "typescript": "~6.0.3",
     "unplugin-vue-components": "^31.1.0",
     "uuid": "^13.0.2",
