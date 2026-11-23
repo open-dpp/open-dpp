@@ -23,9 +23,9 @@ function base64url(value: Buffer | string): string {
   return Buffer.from(value).toString("base64url");
 }
 
-/** An EdDSA JWS exactly as the OAuth Provider mints it: `alg` and `kid` in the header, no `typ`. */
+/** An EdDSA JWS as the OAuth Provider mints it: `typ` (RFC 9068), `alg` and `kid` in the header. */
 export function signAccessToken(key: SigningKey, payload: Record<string, unknown>): string {
-  const encodedHeader = base64url(JSON.stringify({ alg: "EdDSA", kid: key.kid }));
+  const encodedHeader = base64url(JSON.stringify({ typ: "at+jwt", alg: "EdDSA", kid: key.kid }));
   const encodedPayload = base64url(JSON.stringify(payload));
   const signingInput = `${encodedHeader}.${encodedPayload}`;
   const signature = sign(null, Buffer.from(signingInput), key.privateKey);
@@ -51,7 +51,9 @@ export function accessTokenClaims(spec: AccessTokenSpec): Record<string, unknown
     sub: userId,
     aud: [issuer, `${issuer}/oauth2/userinfo`],
     azp: clientId,
+    client_id: clientId,
     scope: "openid profile email offline_access open-dpp:api",
+    jti: randomUUID(),
     iat: now,
     exp: now + 15 * 60,
     ...rest,

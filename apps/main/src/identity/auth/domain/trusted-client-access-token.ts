@@ -4,11 +4,14 @@ export const OPEN_DPP_API_SCOPE = "open-dpp:api";
 /** OIDC scope that grants the profile claims (`name`, `given_name`, `family_name`, `locale`). */
 export const PROFILE_SCOPE = "profile";
 
+/** OIDC scope that grants the e-mail claims (`email`, `email_verified`). */
+export const EMAIL_SCOPE = "email";
+
 /** The plugin option replaces its defaults, so the standard scopes are restated. */
 export const OAUTH_PROVIDER_SCOPES = [
   "openid",
   PROFILE_SCOPE,
-  "email",
+  EMAIL_SCOPE,
   "offline_access",
   OPEN_DPP_API_SCOPE,
 ] as const;

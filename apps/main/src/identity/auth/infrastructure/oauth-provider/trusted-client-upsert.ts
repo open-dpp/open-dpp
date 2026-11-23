@@ -37,11 +37,12 @@ export async function buildTrustedClientRow(trustedClient: TrustedClientEnv) {
     clientSecret: await hashClientSecret(trustedClient.clientSecret),
     name: trustedClient.clientName ?? trustedClient.clientId,
     redirectUris: [...trustedClient.redirectUris],
-    tokenEndpointAuthMethod: "client_secret_basic",
+    // the provider refuses the secret in any other position than the registered one
+    tokenEndpointAuthMethod: trustedClient.clientAuthMethod,
     grantTypes: [...OAUTH_PROVIDER_GRANT_TYPES],
     responseTypes: ["code"],
-    type: "web",
-    public: false,
+    // a web client's redirect URIs match exactly; a native client's loopback port may vary
+    applicationType: "web",
     skipConsent: true,
     requirePKCE: true,
     scopes: [...OAUTH_PROVIDER_SCOPES],
@@ -61,10 +62,11 @@ function isDuplicateKeyError(error: unknown): boolean {
 }
 
 /**
- * The mongo adapter creates no indexes, so the uniqueness the plugin declares on
- * `clientId` has to come from the app. It is what makes two replicas booting at once
- * converge on one row (the loser's insert fails and turns into an update). Idempotent;
- * a failure is logged and the upsert still runs on a best-effort basis.
+ * The mongo adapter builds the unique index the plugin declares on `clientId` in the
+ * background and never waits for it, so the app creates it before its first write. It is
+ * what makes two replicas booting at once converge on one row (the loser's insert fails
+ * and turns into an update). Idempotent; a failure is logged and the upsert still runs on
+ * a best-effort basis.
  */
 async function ensureClientIdUniqueIndex(db: Db, logger: Logger): Promise<void> {
   try {

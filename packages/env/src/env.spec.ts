@@ -186,6 +186,16 @@ describe("validateEnv — OPEN_DPP_OAUTH_PROVIDER_* (Trusted Client)", () => {
     },
   );
 
+  it("rejects an enabled provider whose client authentication method is unknown", () => {
+    expect(() =>
+      validateEnv({
+        ...baseEnv,
+        ...trustedClientEnv,
+        OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD: "basic",
+      }),
+    ).toThrow(/OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD must be/);
+  });
+
   it("rejects an enabled provider with an empty client secret", () => {
     expect(() =>
       validateEnv({ ...baseEnv, ...trustedClientEnv, OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: "" }),

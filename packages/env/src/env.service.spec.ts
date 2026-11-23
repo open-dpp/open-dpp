@@ -35,6 +35,7 @@ describe("EnvService.getTrustedClient", () => {
       clientId: "landing-page",
       clientSecret: "landing-page-secret",
       redirectUris: ["https://landing.example.com/auth/callback"],
+      clientAuthMethod: "client_secret_basic",
       clientName: "Landing page",
     });
   });
@@ -44,6 +45,7 @@ describe("EnvService.getTrustedClient", () => {
       clientId: "landing-page",
       clientSecret: "landing-page-secret",
       redirectUris: ["https://landing.example.com/auth/callback"],
+      clientAuthMethod: "client_secret_basic",
     });
   });
 
@@ -56,7 +58,17 @@ describe("EnvService.getTrustedClient", () => {
       clientId: "landing-page",
       clientSecret: "landing-page-secret",
       redirectUris: ["https://landing.example.com/auth/callback"],
+      clientAuthMethod: "client_secret_basic",
     });
+  });
+
+  it("hands on the method the Trusted Client authenticates with", () => {
+    const service = envServiceFor({
+      ...trustedClientEnv,
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD: "client_secret_post",
+    });
+
+    expect(service.getTrustedClient()?.clientAuthMethod).toBe("client_secret_post");
   });
 
   it("parses a comma-separated redirect URI list", () => {

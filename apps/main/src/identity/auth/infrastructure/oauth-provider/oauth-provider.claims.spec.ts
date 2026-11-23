@@ -145,6 +145,7 @@ describe("OAuth Provider claims", () => {
     const claimNames = Object.keys(idToken).filter((name) => name !== "sid");
     expect(claimNames.sort()).toEqual([
       "acr",
+      "at_hash",
       "aud",
       "auth_time",
       "email",

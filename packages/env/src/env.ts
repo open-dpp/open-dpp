@@ -175,6 +175,7 @@ export const envSchema = z
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID: emptyAsUndefined(z.string().optional()),
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET: emptyAsUndefined(z.string().optional()),
     OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS: emptyAsUndefined(z.string().optional()),
+    OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD: emptyAsUndefined(z.string().optional()),
     OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME: emptyAsUndefined(z.string().optional()),
     // Instance Settings
     OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),

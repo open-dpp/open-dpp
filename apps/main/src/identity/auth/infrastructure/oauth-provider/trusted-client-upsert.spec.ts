@@ -14,6 +14,7 @@ const TRUSTED_CLIENT: TrustedClientEnv = {
   clientId: "landing-page",
   clientSecret: "landing-page-secret",
   redirectUris: ["https://landing.example.com/auth/callback"],
+  clientAuthMethod: "client_secret_basic",
   clientName: "Landing page",
 };
 
@@ -27,8 +28,7 @@ const EXPECTED_ROW = {
   tokenEndpointAuthMethod: "client_secret_basic",
   grantTypes: ["authorization_code", "refresh_token"],
   responseTypes: ["code"],
-  type: "web",
-  public: false,
+  applicationType: "web",
   skipConsent: true,
   requirePKCE: true,
   scopes: ["openid", "profile", "email", "offline_access", "open-dpp:api"],
@@ -105,6 +105,20 @@ describe("ensureTrustedClientUpserted", () => {
     });
     expect(logger.error).not.toHaveBeenCalled();
     expect(logger.log).toHaveBeenCalledWith('Trusted Client "landing-page" updated');
+  });
+
+  it("registers the method the Trusted Client authenticates with", async () => {
+    await ensureTrustedClientUpserted(
+      db,
+      adapter,
+      { ...TRUSTED_CLIENT, clientAuthMethod: "client_secret_post" },
+      logger,
+    );
+
+    expect(create).toHaveBeenCalledWith({
+      model: OAUTH_CLIENT_MODEL,
+      data: expect.objectContaining({ tokenEndpointAuthMethod: "client_secret_post" }),
+    });
   });
 
   it("guards the first-boot race with a unique index on clientId before writing", async () => {

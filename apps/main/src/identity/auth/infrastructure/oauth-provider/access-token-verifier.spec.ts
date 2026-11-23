@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   accessTokenClaims,
   createSigningKey,
@@ -10,6 +10,9 @@ import { createAccessTokenVerifier, KeySetUnavailableError } from "./access-toke
 const ISSUER = "https://dpp.example.com/api/v2/auth";
 const CLIENT_ID = "landing-page";
 const USER_ID = "user-123";
+/** How long better-auth waits for the key set, and how long it trusts a fetched one. */
+const KEY_SET_FETCH_TIMEOUT_MS = 5_000;
+const KEY_SET_CACHE_LIFETIME_MS = 5 * 60_000;
 
 describe("Trusted Client access token verifier", () => {
   const key = createSigningKey();
@@ -176,6 +179,53 @@ describe("Trusted Client access token verifier", () => {
       });
 
       await expect(empty(signAccessToken(key, claims()))).rejects.toThrow(KeySetUnavailableError);
+    });
+
+    describe("with the clock under control", () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("any token while the key set does not answer in time", async () => {
+        const hanging = createAccessTokenVerifier({
+          issuer: ISSUER,
+          clientId: CLIENT_ID,
+          jwksFetch: () => new Promise(() => undefined),
+        });
+
+        const verdict = expect(hanging(signAccessToken(key, claims()))).rejects.toThrow(
+          KeySetUnavailableError,
+        );
+        await vi.advanceTimersByTimeAsync(KEY_SET_FETCH_TIMEOUT_MS);
+
+        await verdict;
+      });
+
+      it("a token with an unseen key id right after a refetch failed, while known keys keep working", async () => {
+        const jwksFetch = vi
+          .fn<() => Promise<{ keys: Record<string, unknown>[] }>>()
+          .mockResolvedValueOnce(key.jwks)
+          .mockRejectedValue(new Error("database unavailable"));
+        const outlasting = createAccessTokenVerifier({
+          issuer: ISSUER,
+          clientId: CLIENT_ID,
+          jwksFetch,
+        });
+        await outlasting(signAccessToken(key, claims()));
+        await vi.advanceTimersByTimeAsync(KEY_SET_CACHE_LIFETIME_MS + 1);
+
+        // the cached key set outlives a failed refetch for a while: Users keep working
+        const known = await outlasting(signAccessToken(key, claims()));
+        expect(known.status).toBe("verified");
+        // a key that set does not hold may be a rotated one: no verdict without the key set
+        await expect(outlasting(signAccessToken(createSigningKey(), claims()))).rejects.toThrow(
+          KeySetUnavailableError,
+        );
+      });
     });
   });
 });
