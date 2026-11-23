@@ -1,5 +1,18 @@
 # @open-dpp/client
 
+## 7.1.1
+
+### Patch Changes
+
+- [#1208](https://github.com/open-dpp/open-dpp/pull/1208) [`34f29a6`](https://github.com/open-dpp/open-dpp/commit/34f29a6e0b8c0f3259db2dd39e8628c9988bffc4) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `@tailwindcss/postcss` ^4.3.3 → ^4.3.5 (dev)
+  - @open-dpp/client: `tailwindcss` ^4.3.3 → ^4.3.5 (dev)
+
+- [#1212](https://github.com/open-dpp/open-dpp/pull/1212) [`421a97f`](https://github.com/open-dpp/open-dpp/commit/421a97f7457090ddd8cffbf8a33876ed4b14e0c7) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `dompurify` ^3.4.17 → ^3.4.18
+
 ## 7.1.0
 
 ### Minor Changes
