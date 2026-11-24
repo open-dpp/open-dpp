@@ -1,5 +1,21 @@
 # @open-dpp/client
 
+## 7.2.0
+
+### Patch Changes
+
+- [#1221](https://github.com/open-dpp/open-dpp/pull/1221) [`af4b219`](https://github.com/open-dpp/open-dpp/commit/af4b219a149bcea32383ab0ddc089c032338f5cf) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vue` ^3.5.44 → ^3.5.46
+
+- [#1222](https://github.com/open-dpp/open-dpp/pull/1222) [`e2748cd`](https://github.com/open-dpp/open-dpp/commit/e2748cd472857a16623e64208df4a9f82485caa8) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vue-chartjs` ^5.3.4 → ^5.3.7
+
+- [#1223](https://github.com/open-dpp/open-dpp/pull/1223) [`18891e3`](https://github.com/open-dpp/open-dpp/commit/18891e34a748dc5280f1ffb7bdbaa1e8048d465c) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vue-i18n` ^11.4.14 → ^11.4.23
+
 ## 7.1.2
 
 ## 7.1.1
