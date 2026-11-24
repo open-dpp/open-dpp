@@ -5,6 +5,7 @@ import MediaPreview from "./MediaPreview.vue";
 import { useMediaStore } from "../../stores/media";
 import { useConfirm } from "primevue";
 import { useNotificationStore } from "../../stores/notification";
+import { formatFileSize } from "../../lib/file-size";
 
 const { media } = defineProps<{
   media?: MediaInfo;
@@ -12,7 +13,7 @@ const { media } = defineProps<{
 
 const open = defineModel<boolean>({ required: true });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { deleteMedia, fetchMediaByOrganizationId } = useMediaStore();
 const notificationStore = useNotificationStore();
 const confirm = useConfirm();
@@ -77,7 +78,7 @@ const deleteFile = async () => {
           {{ t("file.size") }}
         </dt>
         <dd class="mt-1 text-sm/6 text-gray-900 dark:text-white">
-          {{ (media.size / 1024 / 1024).toFixed(1) }} MB
+          {{ formatFileSize(media.size, locale) }}
         </dd>
       </div>
       <div class="flex-auto">
