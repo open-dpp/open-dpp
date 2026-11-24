@@ -84,6 +84,16 @@ export const useMediaStore = defineStore("media", () => {
     return media;
   };
 
+  /**
+   * Adds one file to the loaded media of the organization. The others are neither requested
+   * again nor replaced, so their previews stay as they are.
+   */
+  const addToOrganizationMedia = async (id: string): Promise<MediaInfo> => {
+    const media = await getMediaInfo(id);
+    organizationMedia.value = [...organizationMedia.value.filter((m) => m.id !== id), media];
+    return media;
+  };
+
   const deleteMedia = async (id: string) => {
     return await apiClient.media.media.deleteFile(id);
   };
@@ -93,6 +103,7 @@ export const useMediaStore = defineStore("media", () => {
     downloadDppMedia,
     fetchDppMedia,
     fetchMediaByOrganizationId,
+    addToOrganizationMedia,
     downloadMedia,
     getMediaInfo,
     fetchMedia,

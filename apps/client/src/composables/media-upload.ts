@@ -42,9 +42,9 @@ export function useMediaUpload() {
       return;
     }
     try {
-      await mediaStore.uploadMedia(file);
+      const mediaId = await mediaStore.uploadMedia(file);
       notificationStore.addSuccessNotification(t("file.uploadSuccess"));
-      await mediaStore.fetchMediaByOrganizationId();
+      await mediaStore.addToOrganizationMedia(mediaId);
     } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(uploadErrorMessage(error), error);
     }
