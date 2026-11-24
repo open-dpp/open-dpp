@@ -71,3 +71,5 @@ export class MediaDoc extends Document {
 export const MediaDbSchema = SchemaFactory.createForClass(MediaDoc);
 
 MediaDbSchema.index({ organizationName: 1, sectors: 1 });
+// Serves the paged list of an organization's media, which is sorted newest first
+MediaDbSchema.index({ ownedByOrganizationId: 1, createdAt: -1, _id: -1 });

@@ -1,9 +1,28 @@
+import type { PagingParamsDto } from "@open-dpp/dto";
 import type { MediaInfo, MediaResult } from "../components/media/MediaInfo.interface";
+import { isEqual } from "lodash";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { usePagination } from "../composables/pagination.ts";
 import apiClient from "../lib/api-client.ts";
 
+/** How many media of the organization the media library and the media picker show at a time. */
+export const ORGANIZATION_MEDIA_PAGE_SIZE = 6;
+
+/**
+ * The fetched media, with the object that is already loaded for each one whose info is unchanged.
+ * An entry that stays the same object gives its preview no reason to request the file again.
+ */
+function keepLoadedMedia(loaded: Array<MediaInfo>, fetched: Array<MediaInfo>): Array<MediaInfo> {
+  const loadedById = new Map(loaded.map((media) => [media.id, media]));
+  return fetched.map((media) => {
+    const known = loadedById.get(media.id);
+    return known && isEqual(known, media) ? known : media;
+  });
+}
+
 export const useMediaStore = defineStore("media", () => {
+  /** The page of the organization's media that is shown, newest first. */
   const organizationMedia = ref<Array<MediaInfo>>([]);
 
   const getDppMediaInfo = async (
@@ -61,21 +80,40 @@ export const useMediaStore = defineStore("media", () => {
     return { blob, mediaInfo: info };
   };
 
-  const fetchMediaByOrganizationId = async (): Promise<Array<MediaInfo>> => {
-    const response = await apiClient.media.media.getMediaInfoByOrganization();
-    const media = response.data as Array<MediaInfo>;
-    organizationMedia.value = media;
-    return media;
+  const fetchOrganizationMediaPage = async (pagingParams: PagingParamsDto) => {
+    const response = await apiClient.media.media.getMediaInfoByOrganization(pagingParams);
+    organizationMedia.value = keepLoadedMedia(organizationMedia.value, response.data.result);
+    return response.data;
+  };
+
+  const organizationMediaPaging = usePagination({
+    limit: ORGANIZATION_MEDIA_PAGE_SIZE,
+    fetchCallback: fetchOrganizationMediaPage,
+    // The page is not part of the URL: the media picker opens on top of other pages
+    changeQueryParams: () => {},
+  });
+
+  /**
+   * Shows the first page in a grid that opens. The files of a later page that an earlier grid
+   * was left on are dropped first, so the new grid neither shows them nor requests their previews
+   * while the first page is on its way.
+   */
+  const openOrganizationMedia = async () => {
+    if (organizationMediaPaging.hasPrevious.value) {
+      organizationMedia.value = [];
+    }
+    await organizationMediaPaging.resetCursor();
   };
 
   /**
-   * Adds one file to the loaded media of the organization. The others are neither requested
-   * again nor replaced, so their previews stay as they are.
+   * Loads the shown page again, for example after one of its files was deleted. When the page
+   * has no file left, the page before it is shown.
    */
-  const addToOrganizationMedia = async (id: string): Promise<MediaInfo> => {
-    const media = await getMediaInfo(id);
-    organizationMedia.value = [...organizationMedia.value.filter((m) => m.id !== id), media];
-    return media;
+  const reloadOrganizationMediaPage = async () => {
+    await organizationMediaPaging.reloadCurrentPage();
+    if (organizationMedia.value.length === 0 && organizationMediaPaging.hasPrevious.value) {
+      await organizationMediaPaging.previousPage();
+    }
   };
 
   const deleteMedia = async (id: string) => {
@@ -86,8 +124,15 @@ export const useMediaStore = defineStore("media", () => {
     getDppMediaInfo,
     downloadDppMedia,
     fetchDppMedia,
-    fetchMediaByOrganizationId,
-    addToOrganizationMedia,
+    openOrganizationMedia,
+    showFirstOrganizationMediaPage: organizationMediaPaging.resetCursor,
+    showNextOrganizationMediaPage: organizationMediaPaging.nextPage,
+    showPreviousOrganizationMediaPage: organizationMediaPaging.previousPage,
+    reloadOrganizationMediaPage,
+    organizationMediaPage: organizationMediaPaging.currentPage,
+    organizationMediaTotal: organizationMediaPaging.totalCount,
+    hasNextOrganizationMediaPage: organizationMediaPaging.hasNext,
+    hasPreviousOrganizationMediaPage: organizationMediaPaging.hasPrevious,
     downloadMedia,
     getMediaInfo,
     fetchMedia,

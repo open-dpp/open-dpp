@@ -33,8 +33,17 @@ const rangeTo = computed(() =>
     class="border-primary flex w-full items-center justify-between gap-4 rounded-full border bg-transparent px-2 py-1"
   >
     <div class="g-1">
-      <Button icon="pi pi-home" rounded text @click="emits('resetCursor')" />
       <Button
+        v-tooltip.top="t('pagination.firstPage')"
+        :aria-label="t('pagination.firstPage')"
+        icon="pi pi-home"
+        rounded
+        text
+        @click="emits('resetCursor')"
+      />
+      <Button
+        v-tooltip.top="t('pagination.previousPage')"
+        :aria-label="t('pagination.previousPage')"
         :disabled="!props.hasPrevious"
         icon="pi pi-chevron-left"
         rounded
@@ -59,6 +68,8 @@ const rangeTo = computed(() =>
       }}</span>
     </div>
     <Button
+      v-tooltip.top="t('pagination.nextPage')"
+      :aria-label="t('pagination.nextPage')"
       icon="pi pi-chevron-right"
       rounded
       text

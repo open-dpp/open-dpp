@@ -43,9 +43,10 @@ export function useMediaUpload() {
       return;
     }
     try {
-      const mediaId = await apiClient.media.media.uploadGeneralMedia(file);
+      await apiClient.media.media.uploadGeneralMedia(file);
       notificationStore.addSuccessNotification(t("file.uploadSuccess"));
-      await mediaStore.addToOrganizationMedia(mediaId);
+      // The newest file comes first, so the first page is the one that shows the upload
+      await mediaStore.showFirstOrganizationMediaPage();
     } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(uploadErrorMessage(error), error);
     }

@@ -123,4 +123,26 @@ export class Media {
       data.updatedAt,
     );
   }
+
+  toPlain() {
+    return {
+      id: this.id,
+      ownedByOrganizationId: this.ownedByOrganizationId,
+      createdByUserId: this.createdByUserId,
+      title: this.title,
+      description: this.description,
+      mimeType: this.mimeType,
+      fileExtension: this.fileExtension,
+      size: this.size,
+      originalFilename: this.originalFilename,
+      uniqueProductIdentifier: this.uniqueProductIdentifier,
+      dataFieldId: this.dataFieldId,
+      bucket: this.bucket,
+      objectName: this.objectName,
+      eTag: this.eTag,
+      versionId: this.versionId,
+      createdAt: this.createdAt?.toISOString(),
+      updatedAt: this.updatedAt?.toISOString(),
+    };
+  }
 }

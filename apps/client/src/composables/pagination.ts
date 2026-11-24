@@ -85,11 +85,6 @@ export function usePagination({
     return pages.value.find((page) => page.cursor === cursor);
   };
 
-  const findNextPage = (page: Page): Page | undefined => {
-    const pageIndex = pages.value.findIndex((p) => p === page);
-    return pages.value[pageIndex + 1];
-  };
-
   const addPage = (cursor: Cursor) => {
     const fromIndex = lastPage().to + 1;
     pages.value.push({
@@ -134,9 +129,15 @@ export function usePagination({
   const reloadPage = async (page: Page) => {
     const response = await fetchPage(page.cursor);
     page.itemCount = response.result.length;
-    const nextPage = findNextPage(page);
-    if (nextPage && response.paging_metadata.cursor !== null) {
-      nextPage.cursor = response.paging_metadata.cursor;
+    const pageIndex = pages.value.findIndex((p) => p === page);
+    if (pageIndex === -1) {
+      return;
+    }
+    // The items behind the page may have moved since the pages after it were found: their
+    // cursors and positions are stale. They are dropped and found again from this page on.
+    pages.value = pages.value.slice(0, pageIndex + 1);
+    if (response.paging_metadata.cursor !== null) {
+      addPage(response.paging_metadata.cursor);
     }
   };
 
