@@ -17,17 +17,20 @@ export class OrganizationsRepository {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
-  async create(
-    organization: Organization,
-    headers: BetterAuthHeaders,
-  ): Promise<Organization | null> {
+  /**
+   * Creates the organization with `ownerId` as its Owner. The caller passes the user that
+   * AuthGuard already authenticated (never a user id from the request body). Better Auth
+   * gets no request headers, so it does not authenticate the request a second time: that
+   * would only accept its own session credentials, not api keys or OAuth access tokens.
+   */
+  async create(organization: Organization, ownerId: string): Promise<Organization | null> {
     const result = await (this.auth.api as any).createOrganization({
-      headers,
       body: {
         name: organization.name,
         slug: organization.slug,
         logo: organization.logo ?? undefined,
         metadata: organization.metadata || {},
+        userId: ownerId,
       },
     });
     if (!result) {
