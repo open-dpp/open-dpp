@@ -1,5 +1,7 @@
 # @open-dpp/exception
 
+## 7.3.0
+
 ## 7.2.0
 
 ### Patch Changes
