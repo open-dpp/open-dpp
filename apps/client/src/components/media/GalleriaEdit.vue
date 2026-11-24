@@ -71,6 +71,7 @@ function onMoveImageDown(image: MediaInfo) {
           <h3 class="text-xl font-bold">{{ props.title ?? t("media.media") }}</h3>
           <Button
             data-cy="add-image"
+            data-testid="galleria-add-image"
             :aria-label="t('common.add')"
             icon="pi pi-plus"
             rounded

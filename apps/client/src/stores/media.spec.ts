@@ -124,6 +124,46 @@ describe("media store", () => {
     });
   });
 
+  describe("addToOrganizationMedia", () => {
+    const older: MediaInfo = { id: "older", title: "older.png", size: 7, mimeType: "image/png" };
+    const added: MediaInfo = { id: "added", title: "new.svg", size: 42, mimeType: "image/svg+xml" };
+
+    it("adds the file after the loaded ones and requests only its own info", async () => {
+      const store = useMediaStore();
+      store.organizationMedia = [older];
+      const loadedBefore = store.organizationMedia[0];
+      getMock.mockResolvedValueOnce({ data: added });
+
+      await store.addToOrganizationMedia(added.id);
+
+      expect(store.organizationMedia).toEqual([older, added]);
+      // an entry that stays the same object gives its preview no reason to load the file again
+      expect(store.organizationMedia[0]).toBe(loadedBefore);
+      expect(getMock.mock.calls).toEqual([[expect.stringMatching(/\/media\/added\/info$/)]]);
+    });
+
+    it("replaces an entry with the same id instead of listing the file twice", async () => {
+      const store = useMediaStore();
+      store.organizationMedia = [added, older];
+      const renamed = { ...added, title: "renamed.svg" };
+      getMock.mockResolvedValueOnce({ data: renamed });
+
+      await store.addToOrganizationMedia(added.id);
+
+      expect(store.organizationMedia).toEqual([older, renamed]);
+    });
+
+    it("leaves the loaded media as they are when the info cannot be loaded", async () => {
+      const store = useMediaStore();
+      store.organizationMedia = [older];
+      getMock.mockRejectedValueOnce(new Error("offline"));
+
+      await expect(store.addToOrganizationMedia(added.id)).rejects.toThrow("offline");
+
+      expect(store.organizationMedia).toEqual([older]);
+    });
+  });
+
   describe("downloadDppMedia", () => {
     it("throws if no uuid provided", async () => {
       const store = useMediaStore();

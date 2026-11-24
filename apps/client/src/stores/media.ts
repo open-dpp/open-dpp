@@ -6,22 +6,6 @@ import apiClient from "../lib/api-client.ts";
 export const useMediaStore = defineStore("media", () => {
   const organizationMedia = ref<Array<MediaInfo>>([]);
 
-  const uploadMedia = async (
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> => {
-    return apiClient.media.media.uploadGeneralMedia(file, onUploadProgress);
-  };
-
-  const uploadDppMedia = async (
-    uuid: string,
-    dataFieldId: string,
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> => {
-    return apiClient.media.media.uploadDppMedia(uuid, dataFieldId, file, onUploadProgress);
-  };
-
   const getDppMediaInfo = async (
     uuid: string | undefined,
     dataFieldId: string,
@@ -84,6 +68,16 @@ export const useMediaStore = defineStore("media", () => {
     return media;
   };
 
+  /**
+   * Adds one file to the loaded media of the organization. The others are neither requested
+   * again nor replaced, so their previews stay as they are.
+   */
+  const addToOrganizationMedia = async (id: string): Promise<MediaInfo> => {
+    const media = await getMediaInfo(id);
+    organizationMedia.value = [...organizationMedia.value.filter((m) => m.id !== id), media];
+    return media;
+  };
+
   const deleteMedia = async (id: string) => {
     return await apiClient.media.media.deleteFile(id);
   };
@@ -93,12 +87,11 @@ export const useMediaStore = defineStore("media", () => {
     downloadDppMedia,
     fetchDppMedia,
     fetchMediaByOrganizationId,
+    addToOrganizationMedia,
     downloadMedia,
     getMediaInfo,
     fetchMedia,
-    uploadMedia,
     deleteMedia,
-    uploadDppMedia,
     organizationMedia,
   };
 });

@@ -36,6 +36,17 @@ const OpenDppPreset = definePreset(Aura, {
   },
 });
 
+/**
+ * The full-screen view of an `Image` centers the image in a box that takes its size from the
+ * image. An SVG with only a `viewBox` has no size of its own, so in that box it collapses to
+ * nothing. In a box of the size of the overlay it scales to fit, and an image that has a size
+ * keeps it. The box is a grid because WebKit gives an SVG with neither a `viewBox` nor a size no
+ * width in a flex box.
+ */
+const imagePassThrough = {
+  originalContainer: { class: "grid h-full w-full place-items-center" },
+};
+
 async function startApp() {
   const app = createApp(App).use(pinia);
   app.use(i18n);
@@ -46,6 +57,7 @@ async function startApp() {
         darkModeSelector: false,
       },
     },
+    pt: { image: imagePassThrough },
   });
   app.directive("tooltip", Tooltip);
 
