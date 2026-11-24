@@ -145,8 +145,8 @@ importers:
         specifier: ^3.5.46
         version: 3.5.46(typescript@6.0.3)
       vue-chartjs:
-        specifier: ^5.3.4
-        version: 5.3.4(chart.js@4.5.1)(vue@3.5.46(typescript@6.0.3))
+        specifier: ^5.3.7
+        version: 5.3.7(chart.js@4.5.1)(vue@3.5.46(typescript@6.0.3))
       vue-i18n:
         specifier: ^11.4.23
         version: 11.4.23(vue@3.5.46(typescript@6.0.3))
@@ -8739,8 +8739,8 @@ packages:
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
 
-  vue-chartjs@5.3.4:
-    resolution: {integrity: sha512-x3Fqob8RQvrTdssfi9ecsCzEkFOd8JPmNwSkSQzdfKj/uBsRJs/Y88cZcZIEcPsTVfMGwMo4MOoihoDG2DoE/g==}
+  vue-chartjs@5.3.7:
+    resolution: {integrity: sha512-WzE556j2uKfJVlCDwfQIgTfrC9MDRCC+tlmY+VNA1nNIt0quomxJUBpVd0raT4e/ti9AfZH4u6VtSC76OKLUHg==}
     peerDependencies:
       chart.js: ^4.1.1
       vue: ^3.0.0-0 || ^2.7.0
@@ -17634,7 +17634,7 @@ snapshots:
 
   vscode-uri@3.1.0: {}
 
-  vue-chartjs@5.3.4(chart.js@4.5.1)(vue@3.5.46(typescript@6.0.3)):
+  vue-chartjs@5.3.7(chart.js@4.5.1)(vue@3.5.46(typescript@6.0.3)):
     dependencies:
       chart.js: 4.5.1
       vue: 3.5.46(typescript@6.0.3)
