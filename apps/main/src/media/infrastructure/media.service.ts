@@ -1,7 +1,7 @@
 import type { Model } from "mongoose";
 import type { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { MEDIA_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
@@ -26,6 +26,7 @@ export interface UploadMediaOptions {
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
   private readonly client: S3Client;
   private readonly bucketNameDefault: string;
   private readonly bucketNameProfilePictures: string;
@@ -91,7 +92,7 @@ export class MediaService {
     try {
       await this.client.removeObject(object.bucket, object.objectName);
     } catch (error) {
-      console.error(error);
+      this.logger.error(`Failed to remove the stored file of media ${id}`, error);
       return new Error("failed to delete media object");
     }
 
