@@ -55,6 +55,11 @@ export class PassportProductImages {
     return new MediaPickerDialog(this.page);
   }
 
+  /** The row of the product image with this title in the edit drawer. */
+  listedImage(title: string): Locator {
+    return this.page.getByRole("row").filter({ hasText: title });
+  }
+
   /** Saves the edit drawer. */
   async save(): Promise<void> {
     await this.page.getByRole("button", { name: /^(Speichern|Save)$/ }).click();
