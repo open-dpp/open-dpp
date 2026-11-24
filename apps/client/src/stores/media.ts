@@ -6,22 +6,6 @@ import apiClient from "../lib/api-client.ts";
 export const useMediaStore = defineStore("media", () => {
   const organizationMedia = ref<Array<MediaInfo>>([]);
 
-  const uploadMedia = async (
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> => {
-    return apiClient.media.media.uploadGeneralMedia(file, onUploadProgress);
-  };
-
-  const uploadDppMedia = async (
-    uuid: string,
-    dataFieldId: string,
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> => {
-    return apiClient.media.media.uploadDppMedia(uuid, dataFieldId, file, onUploadProgress);
-  };
-
   const getDppMediaInfo = async (
     uuid: string | undefined,
     dataFieldId: string,
@@ -107,9 +91,7 @@ export const useMediaStore = defineStore("media", () => {
     downloadMedia,
     getMediaInfo,
     fetchMedia,
-    uploadMedia,
     deleteMedia,
-    uploadDppMedia,
     organizationMedia,
   };
 });
