@@ -1,8 +1,8 @@
 ---
-"@open-dpp/main": major
-"@open-dpp/api-client": major
-"@open-dpp/dto": major
-"@open-dpp/client": major
+"@open-dpp/main": minor
+"@open-dpp/api-client": minor
+"@open-dpp/dto": minor
+"@open-dpp/client": minor
 ---
 
 The media library and the media picker load the media of the organization one page at a time: six files, newest first. Before, they loaded the info of every file the organization has. An upload shows the first page, where the new file comes first. After a delete the shown page is loaded again, and the previews of the files that stay do not request their files again. The grid has the previous/next bar of the other lists, with the number of all files.
