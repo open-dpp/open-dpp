@@ -1,5 +1,40 @@
 # @open-dpp/main
 
+## 7.2.0
+
+### Minor Changes
+
+- [#1186](https://github.com/open-dpp/open-dpp/pull/1186) [`e56c9f3`](https://github.com/open-dpp/open-dpp/commit/e56c9f329e9e6d698937e2b3186b136a4b78fe0d) Thanks [@Hentra](https://github.com/Hentra)! - Allow creating organizations with an API key or an OAuth/OIDC access token, not only with a Better Auth browser session. The authenticated user becomes the owner of the new organization.
+
+### Patch Changes
+
+- [#1220](https://github.com/open-dpp/open-dpp/pull/1220) [`d42c4f9`](https://github.com/open-dpp/open-dpp/commit/d42c4f9b1417f86b9aeab80c08ffc87cd2a6982a) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `mjml` ^5.0.0 → ^5.4.1
+
+- [#1224](https://github.com/open-dpp/open-dpp/pull/1224) [`ab5f0ee`](https://github.com/open-dpp/open-dpp/commit/ab5f0eef744337e579525879cba6aea3237e9a2e) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-express` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-socket.io` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/websockets` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/cli` ^12.0.13 → ^12.0.15 (dev)
+  - @open-dpp/main: `@nestjs/schematics` ^12.0.13 → ^12.0.16 (dev)
+  - @open-dpp/main: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/env: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/env: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/testing: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/testing: `@nestjs/core` ^12.5.1 → ^12.6.0
+
+- [#864](https://github.com/open-dpp/open-dpp/pull/864) [`4734957`](https://github.com/open-dpp/open-dpp/commit/47349579671df44692402b0e504ed27ce544470b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `cpx` ^1.5.0 → (removed)
+  - @open-dpp/main: `cpx2` (added) → ^2.0.0
+
 ## 7.1.2
 
 ### Patch Changes

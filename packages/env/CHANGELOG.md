@@ -1,5 +1,27 @@
 # @open-dpp/env
 
+## 7.2.0
+
+### Patch Changes
+
+- [#1224](https://github.com/open-dpp/open-dpp/pull/1224) [`ab5f0ee`](https://github.com/open-dpp/open-dpp/commit/ab5f0eef744337e579525879cba6aea3237e9a2e) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-express` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-socket.io` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/websockets` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/cli` ^12.0.13 → ^12.0.15 (dev)
+  - @open-dpp/main: `@nestjs/schematics` ^12.0.13 → ^12.0.16 (dev)
+  - @open-dpp/main: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/env: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/env: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/testing: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/testing: `@nestjs/core` ^12.5.1 → ^12.6.0
+
 ## 7.1.2
 
 ## 7.1.1
