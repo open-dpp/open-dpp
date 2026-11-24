@@ -128,9 +128,7 @@ describe("OrganizationsController", () => {
     expect(response.status).toEqual(201);
     const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
     const members = await membersRepository.findByOrganizationId(response.body.id);
-    expect(members).toEqual([
-      expect.objectContaining({ userId: user.id, role: MemberRole.OWNER }),
-    ]);
+    expect(members).toEqual([expect.objectContaining({ userId: user.id, role: MemberRole.OWNER })]);
   });
 
   it("ignores a slug provided by the caller", async () => {

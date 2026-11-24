@@ -21,8 +21,7 @@ describe("OrganizationsService", () => {
   let service: OrganizationsService;
 
   const mockOrganizationsRepository = {
-    create:
-      vi.fn<(organization: Organization, ownerId: string) => Promise<Organization | null>>(),
+    create: vi.fn<(organization: Organization, ownerId: string) => Promise<Organization | null>>(),
     findOneById: vi.fn(),
     findManyByIds: vi.fn<(ids: string[]) => Promise<Organization[]>>(),
     update: vi.fn(),
@@ -136,9 +135,7 @@ describe("OrganizationsService", () => {
     mockOrganizationsRepository.create.mockResolvedValue(organization);
 
     const userRole = UserRole.USER;
-    await expect(
-      service.createOrganization(organization, session, userRole),
-    ).rejects.toThrow(
+    await expect(service.createOrganization(organization, session, userRole)).rejects.toThrow(
       new ForbiddenException("Organization creation is not enabled for this instance."),
     );
 
