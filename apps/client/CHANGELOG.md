@@ -1,5 +1,11 @@
 # @open-dpp/client
 
+## 7.3.1
+
+### Patch Changes
+
+- [#1234](https://github.com/open-dpp/open-dpp/pull/1234) [`ad119e4`](https://github.com/open-dpp/open-dpp/commit/ad119e4233f26dc5f278f9a914608e1f59e7c78b) Thanks [@florianBieck](https://github.com/florianBieck)! - The media library and the media picker show the size of a file in the unit that fits it ("209 B", "33.2 KB", "1.5 MB"), with the decimal separator of the selected language. The tile and the details panel show the same text for the same file. Before, a small file read as "0.0 MB" in the details panel and as "0.00 MB" on the tile.
+
 ## 7.3.0
 
 ### Minor Changes
