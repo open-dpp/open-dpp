@@ -21,5 +21,5 @@ const layout = computed(() => {
   <SafelistTailwindCss key="safelist" />
   <component :is="layout" key="layout" />
   <Toast />
-  <ConfirmDialog />
+  <ConfirmDialog class="w-11/12 md:w-1/2" />
 </template>

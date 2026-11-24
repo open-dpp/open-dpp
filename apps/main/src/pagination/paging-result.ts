@@ -18,6 +18,15 @@ export class PagingResult<T extends IConvertableToPlain> {
   }
 
   toPlain(options?: ConvertToPlainOptions) {
+    return this.buildPlain((item) => item.toPlain(options));
+  }
+
+  /** Like `toPlain`, but lets the caller decide how each item is converted (e.g. to a DTO). */
+  toPlainWith(toItemPlain: (item: T) => Record<string, any>) {
+    return this.buildPlain(toItemPlain);
+  }
+
+  private buildPlain(toItemPlain: (item: T) => Record<string, any>) {
     return {
       paging_metadata: {
         cursor: this.pagination.cursor,
@@ -25,7 +34,7 @@ export class PagingResult<T extends IConvertableToPlain> {
         // omitted otherwise so unrelated paginated endpoints keep their existing shape.
         ...(this.totalCount !== undefined ? { total_count: this.totalCount } : {}),
       },
-      result: removeEmptyItems(this.items.map((item) => item.toPlain(options))),
+      result: removeEmptyItems(this.items.map(toItemPlain)),
     };
   }
 }

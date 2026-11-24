@@ -12,10 +12,11 @@ import {
 } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import {
-  PassportEditingMode,
-  PassportEditingModeEnum,
-  PassportEditingModeType,
-} from "../../digital-product-document/domain/passport-editing-mode";
+  assertModeAllowsDataEdit,
+  assertModeAllowsStructureEdit,
+  EditingMode,
+  EditingModeType,
+} from "../../digital-product-document/domain/editing-mode";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import {
@@ -24,13 +25,7 @@ import {
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
-import { PassportEditingModeChanged } from "../../activity-history/domain/change-events/passport-editing-mode-changed";
 import { DigitalProductDocumentTypes, DigitalProductDocumentTypesType } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
-
-const TemplateSchema = DigitalProductDocumentSchema.extend({
-  passportEditingMode: PassportEditingModeEnum.default(PassportEditingMode.Full),
-});
 
 export class Template
   implements
@@ -49,7 +44,6 @@ export class Template
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     private lastStatusChange: DigitalProductDocumentStatusChange,
-    private passportEditingMode: PassportEditingModeType,
   ) {}
 
   static create(data: {
@@ -59,7 +53,6 @@ export class Template
     createdAt?: Date;
     updatedAt?: Date;
     lastStatusChange?: DigitalProductDocumentStatusChange;
-    passportEditingMode?: PassportEditingModeType;
   }) {
     const now = DateTime.now();
     return new Template(
@@ -69,12 +62,11 @@ export class Template
       data.createdAt ?? now,
       data.updatedAt ?? now,
       data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
-      data.passportEditingMode ?? PassportEditingMode.Full,
     );
   }
 
   static fromPlain(data: unknown) {
-    const parsed = TemplateSchema.parse(data);
+    const parsed = DigitalProductDocumentSchema.parse(data);
     return new Template(
       parsed.id,
       parsed.organizationId,
@@ -82,7 +74,6 @@ export class Template
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
       DigitalProductDocumentStatusChange.fromPlain(parsed.lastStatusChange),
-      parsed.passportEditingMode,
     );
   }
 
@@ -100,28 +91,23 @@ export class Template
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       lastStatusChange: this.lastStatusChange.toPlain(),
-      passportEditingMode: this.passportEditingMode,
     };
   }
   getLastStatusChange() {
     return this.lastStatusChange;
   }
 
-  getPassportEditingMode(): PassportEditingModeType {
-    return this.passportEditingMode;
+  /** Derived, never stored: a template is editable only while it is a draft. */
+  getEditingMode(): EditingModeType {
+    return this.isDraft() ? EditingMode.Full : EditingMode.ReadOnly;
   }
 
-  restrictPassportEditingToData(): void {
-    if (this.passportEditingMode === PassportEditingMode.DataOnly) {
-      throw new ValueError("Passport editing is already restricted to data for this template.");
-    }
-    this.tracker.track(
-      PassportEditingModeChanged.create({
-        oldValue: this.passportEditingMode,
-        newValue: PassportEditingMode.DataOnly,
-      }),
-    );
-    this.passportEditingMode = PassportEditingMode.DataOnly;
+  assertStructureEditable(): void {
+    assertModeAllowsStructureEdit(this.getEditingMode(), `Template ${this.id}`);
+  }
+
+  assertDataEditable(): void {
+    assertModeAllowsDataEdit(this.getEditingMode(), `Template ${this.id}`);
   }
 
   getEnvironment(): Environment {

@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/exception",
-  "version": "6.6.0",
+  "version": "7.2.0",
   "private": true,
   "description": "",
   "keywords": [],
@@ -22,14 +22,14 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@nestjs/common": "^12.5.0",
-    "@nestjs/core": "^12.5.0"
+    "@nestjs/common": "^12.6.0",
+    "@nestjs/core": "^12.6.0"
   },
   "devDependencies": {
-    "@nestjs/testing": "^12.5.0",
+    "@nestjs/testing": "^12.6.0",
     "@tsconfig/node-lts": "^24.0.1",
-    "@tsconfig/node-ts": "^23.6.4",
+    "@tsconfig/node-ts": "^23.6.5",
     "typescript": "~6.0.3"
   },
-  "packageManager": "pnpm@11.28.9"
+  "packageManager": "pnpm@11.28.13"
 }

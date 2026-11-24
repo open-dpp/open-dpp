@@ -16,9 +16,11 @@ import {
   restoreDpp,
 } from "../../digital-product-document/domain/digital-product-document-status";
 import {
+  assertModeAllowsDataEdit,
+  assertModeAllowsStructureEdit,
   PassportEditingMode,
   PassportEditingModeType,
-} from "../../digital-product-document/domain/passport-editing-mode";
+} from "../../digital-product-document/domain/editing-mode";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
@@ -28,7 +30,6 @@ import {
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
-import { PassportEditingModeChanged } from "../../activity-history/domain/change-events/passport-editing-mode-changed";
 import { ValueError } from "@open-dpp/exception";
 
 export class Passport
@@ -135,17 +136,20 @@ export class Passport
     return this.editingMode;
   }
 
-  removeEditingRestrictions(): void {
-    if (this.editingMode === PassportEditingMode.Full) {
-      throw new ValueError("This passport's editing is not restricted.");
+  assertStructureEditable(): void {
+    this.assertNotArchived();
+    assertModeAllowsStructureEdit(this.editingMode, `Passport ${this.id}`);
+  }
+
+  assertDataEditable(): void {
+    this.assertNotArchived();
+    assertModeAllowsDataEdit(this.editingMode, `Passport ${this.id}`);
+  }
+
+  private assertNotArchived(): void {
+    if (this.isArchived()) {
+      throw new ValueError("Cannot modify an archived digital product document");
     }
-    this.tracker.track(
-      PassportEditingModeChanged.create({
-        oldValue: this.editingMode,
-        newValue: PassportEditingMode.Full,
-      }),
-    );
-    this.editingMode = PassportEditingMode.Full;
   }
 
   publish() {

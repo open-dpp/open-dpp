@@ -22,8 +22,8 @@ import { SubjectAttributes } from "../../../aas/domain/security/subject-attribut
 import { generateMongoConfig } from "../../../database/config";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
-import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/editing-mode";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
@@ -94,7 +94,7 @@ describe("PresentationConfigurationService", () => {
       id: passport.id,
       organizationId: passport.organizationId,
       referenceType: DigitalProductDocumentTypes.Passport,
-      editingMode: passport.getEditingMode(),
+      assertStructureEditable: () => passport.assertStructureEditable(),
     };
   }
 
@@ -103,6 +103,7 @@ describe("PresentationConfigurationService", () => {
       id: template.id,
       organizationId: template.organizationId,
       referenceType: DigitalProductDocumentTypes.Template,
+      assertStructureEditable: () => template.assertStructureEditable(),
     };
   }
 
@@ -172,10 +173,9 @@ describe("PresentationConfigurationService", () => {
     it("rejects deleting a config for a passport whose editing is restricted to data", async () => {
       const passport = makePassport({ editingMode: PassportEditingMode.Full });
       const created = await service.create(passportHolder(passport), { label: "v1" });
-      const restrictedHolder = {
-        ...passportHolder(passport),
-        editingMode: PassportEditingMode.DataOnly,
-      };
+      const restrictedHolder = passportHolder(
+        makePassport({ editingMode: PassportEditingMode.DataOnly }),
+      );
 
       await expect(service.delete(restrictedHolder, created.id)).rejects.toThrow(ValueError);
 
@@ -701,6 +701,53 @@ describe("PresentationConfigurationService", () => {
 
       const [after] = await service.list(passportHolder(passport));
       expect(after.elementDesign.has("Submodel1.Prop")).toBe(true);
+    });
+  });
+
+  describe("a locked (published) template", () => {
+    async function createPublishedTemplate() {
+      const template = makeTemplate();
+      const [defaultConfig] = await service.list(templateHolder(template));
+      const created = await service.create(templateHolder(template), { label: "v1" });
+      template.publish();
+      return { template, defaultConfig, created };
+    }
+
+    it("rejects creating a config", async () => {
+      const { template } = await createPublishedTemplate();
+
+      await expect(service.create(templateHolder(template), { label: "v2" })).rejects.toThrow(
+        `Template ${template.id} is read-only; changes are not allowed`,
+      );
+    });
+
+    it("rejects patching a config", async () => {
+      const { template, defaultConfig } = await createPublishedTemplate();
+
+      await expect(
+        service.applyPatch(templateHolder(template), defaultConfig.id, {
+          elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
+        }),
+      ).rejects.toThrow(ValueError);
+
+      const [persisted] = await service.list(templateHolder(template));
+      expect(persisted.elementDesign.size).toBe(0);
+    });
+
+    it("rejects deleting a config", async () => {
+      const { template, created } = await createPublishedTemplate();
+
+      await expect(service.delete(templateHolder(template), created.id)).rejects.toThrow(
+        ValueError,
+      );
+
+      expect((await service.getById(templateHolder(template), created.id)).id).toBe(created.id);
+    });
+
+    it("still allows reading its configs", async () => {
+      const { template, created } = await createPublishedTemplate();
+
+      expect((await service.getById(templateHolder(template), created.id)).id).toBe(created.id);
     });
   });
 });

@@ -56,6 +56,18 @@ import { PresentationConfigurationService } from "../../presentation-configurati
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { TransactionService } from "../../database/transaction.service";
 import { EmailService } from "../../email/email.service";
+import { Template } from "../../templates/domain/template";
+import { TemplateRepository } from "../../templates/infrastructure/template.repository";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
+import { SubmodelRepository } from "../../aas/infrastructure/submodel.repository";
+import { SubmodelElementList } from "../../aas/domain/submodel-base/submodel-element-list";
+import { Property } from "../../aas/domain/submodel-base/property";
+import { EditingMode } from "../domain/editing-mode";
+import {
+  AasSubmodelElements,
+  DigitalProductDocumentTypes,
+  PresentationComponentName,
+} from "@open-dpp/dto";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -63,6 +75,10 @@ describe("DigitalProductDocumentService", () => {
   let passportRepository: PassportRepository;
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
+  let templateRepository: TemplateRepository;
+  let templateService: DigitalProductDocumentService<Template>;
+  let submodelRepository: SubmodelRepository;
+  let presentationConfigurationService: PresentationConfigurationService;
   const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
@@ -79,6 +95,7 @@ describe("DigitalProductDocumentService", () => {
         }),
         MongooseModule.forFeature([
           { name: PassportDoc.name, schema: PassportSchema },
+          { name: TemplateDoc.name, schema: TemplateSchema },
           { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
           { name: SubmodelDoc.name, schema: SubmodelSchema },
           { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
@@ -94,6 +111,7 @@ describe("DigitalProductDocumentService", () => {
         TransactionService,
         EnvironmentService,
         PassportRepository,
+        TemplateRepository,
         UniqueProductIdentifierRepository,
         ConceptDescriptionRepository,
         PresentationConfigurationService,
@@ -107,7 +125,7 @@ describe("DigitalProductDocumentService", () => {
     await module.init();
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
-    const presentationConfigurationService = module.get<PresentationConfigurationService>(
+    presentationConfigurationService = module.get<PresentationConfigurationService>(
       PresentationConfigurationService,
     );
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
@@ -116,6 +134,14 @@ describe("DigitalProductDocumentService", () => {
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
+      activityRepository,
+      presentationConfigurationService,
+    );
+    templateRepository = module.get<TemplateRepository>(TemplateRepository);
+    submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
+    templateService = new DigitalProductDocumentService(
+      environmentService,
+      templateRepository,
       activityRepository,
       presentationConfigurationService,
     );
@@ -559,6 +585,517 @@ describe("DigitalProductDocumentService", () => {
     );
     resultForAdmin.result.every((e) => {
       expect(e.payload.changes).not.toEqual([]);
+    });
+  });
+
+  describe("editing mode", () => {
+    const lockedMessage = /restricted to data|read-only/;
+    const userContext = {
+      subject: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      userId: randomUUID(),
+    };
+
+    type Operation = (
+      svc: DigitalProductDocumentService<any>,
+      organizationId: string,
+      id: string,
+    ) => Promise<unknown>;
+
+    const correlationId = randomUUID();
+    const path = IdShortPath.create({ path: "list" });
+    const elementBody: any = { idShort: "e", modelType: KeyTypes.Property };
+
+    const structureOperations: Record<string, Operation> = {
+      createSubmodel: (s, o, id) =>
+        s.createSubmodel(correlationId, o, id, { idShort: "s" } as any, userContext, latestVersion),
+      moveSubmodel: (s, o, id) =>
+        s.moveSubmodel(
+          correlationId,
+          o,
+          id,
+          "sm",
+          { position: 0 } as any,
+          userContext,
+          latestVersion,
+        ),
+      addColumnToSubmodelElementList: (s, o, id) =>
+        s.addColumnToSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          elementBody,
+          undefined,
+          userContext,
+          latestVersion,
+        ),
+      createSubmodelElement: (s, o, id) =>
+        s.createSubmodelElement(
+          correlationId,
+          o,
+          id,
+          "sm",
+          elementBody,
+          userContext,
+          latestVersion,
+        ),
+      createSubmodelElementAtIdShortPath: (s, o, id) =>
+        s.createSubmodelElementAtIdShortPath(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          elementBody,
+          userContext,
+          latestVersion,
+        ),
+      moveSubmodelElement: (s, o, id) =>
+        s.moveSubmodelElement(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          { position: 0 } as any,
+          userContext,
+          latestVersion,
+        ),
+      modifyShell: (s, o, id) => s.modifyShell(correlationId, o, id, "aas", {}, userContext),
+      modifySubmodel: (s, o, id) =>
+        s.modifySubmodel(correlationId, o, id, "sm", { idShort: "s" }, userContext, latestVersion),
+      modifyColumnOfSubmodelElementList: (s, o, id) =>
+        s.modifyColumnOfSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "col",
+          { idShort: "col" },
+          userContext,
+          latestVersion,
+        ),
+      reorderColumn: (s, o, id) =>
+        s.reorderColumn(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "col",
+          undefined,
+          { position: 0 } as any,
+          userContext,
+          latestVersion,
+        ),
+      modifySubmodelElement: (s, o, id) =>
+        s.modifySubmodelElement(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          { idShort: "e" } as any,
+          userContext,
+          latestVersion,
+        ),
+      deleteSubmodel: (s, o, id) => s.deleteSubmodel(correlationId, o, id, "sm", userContext),
+      deleteSubmodelElement: (s, o, id) =>
+        s.deleteSubmodelElement(correlationId, o, id, "sm", path, userContext),
+      deleteColumnFromSubmodelElementList: (s, o, id) =>
+        s.deleteColumnFromSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "col",
+          userContext,
+          latestVersion,
+        ),
+      addColumnToGroupInSubmodelElementList: (s, o, id) =>
+        s.addColumnToGroupInSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "group",
+          elementBody,
+          undefined,
+          userContext,
+          latestVersion,
+        ),
+      modifyColumnInGroupOfSubmodelElementList: (s, o, id) =>
+        s.modifyColumnInGroupOfSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "group",
+          "col",
+          { idShort: "col" },
+          userContext,
+          latestVersion,
+        ),
+      deleteColumnFromGroupInSubmodelElementList: (s, o, id) =>
+        s.deleteColumnFromGroupInSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "group",
+          "col",
+          userContext,
+          latestVersion,
+        ),
+      moveColumnToGroupInSubmodelElementList: (s, o, id) =>
+        s.moveColumnToGroupInSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "group",
+          "col",
+          userContext,
+          latestVersion,
+        ),
+      createGroupFromColumnInSubmodelElementList: (s, o, id) =>
+        s.createGroupFromColumnInSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "col",
+          elementBody,
+          userContext,
+          latestVersion,
+        ),
+      deletePolicyBySubjectAndObject: (s, o, id) =>
+        s.deletePolicyBySubjectAndObject(
+          correlationId,
+          o,
+          id,
+          { subject: userContext.subject, object: "policy" } as any,
+          userContext,
+        ),
+    };
+
+    const dataOperations: Record<string, Operation> = {
+      modifyValueOfSubmodel: (s, o, id) =>
+        s.modifyValueOfSubmodel(correlationId, o, id, "sm", {}, userContext, latestVersion),
+      modifySubmodelElementValue: (s, o, id) =>
+        s.modifySubmodelElementValue(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          {},
+          userContext,
+          latestVersion,
+        ),
+      addRowToSubmodelElementList: (s, o, id) =>
+        s.addRowToSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          undefined,
+          userContext,
+          latestVersion,
+        ),
+      deleteRowFromSubmodelElementList: (s, o, id) =>
+        s.deleteRowFromSubmodelElementList(
+          correlationId,
+          o,
+          id,
+          "sm",
+          path,
+          "row",
+          userContext,
+          latestVersion,
+        ),
+    };
+
+    async function failureOf(operation: () => Promise<unknown>): Promise<Error> {
+      try {
+        await operation();
+      } catch (error) {
+        return error as Error;
+      }
+      throw new Error("expected the operation to fail");
+    }
+
+    async function createPublishedTemplate() {
+      const template = Template.create({
+        organizationId: randomUUID(),
+        environment: Environment.create({}),
+      });
+      template.publish();
+      await templateRepository.save(template);
+      return template;
+    }
+
+    async function createDraftTemplate() {
+      const template = Template.create({
+        organizationId: randomUUID(),
+        environment: Environment.create({}),
+      });
+      await templateRepository.save(template);
+      return template;
+    }
+
+    async function createPassport(
+      editingMode: typeof EditingMode.Full | typeof EditingMode.DataOnly,
+    ) {
+      const passport = Passport.create({
+        organizationId: randomUUID(),
+        environment: Environment.create({}),
+        editingMode,
+      });
+      await passportRepository.save(passport);
+      return passport;
+    }
+
+    describe.each(Object.entries({ ...structureOperations, ...dataOperations }))(
+      "published template: %s",
+      (_name, operation) => {
+        it("is rejected because a published template is read-only", async () => {
+          const template = await createPublishedTemplate();
+
+          const error = await failureOf(
+            async () => await operation(templateService, template.organizationId, template.id),
+          );
+
+          expect(error.message).toEqual(
+            `Template ${template.id} is read-only; changes are not allowed`,
+          );
+        });
+      },
+    );
+
+    describe.each(Object.entries(structureOperations))(
+      "data-only passport: %s",
+      (_name, operation) => {
+        it("is rejected because structure is frozen", async () => {
+          const passport = await createPassport(EditingMode.DataOnly);
+
+          const error = await failureOf(
+            async () => await operation(service, passport.organizationId, passport.id),
+          );
+
+          expect(error.message).toEqual(
+            `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+          );
+        });
+      },
+    );
+
+    describe.each(Object.entries(dataOperations))("data-only passport: %s", (_name, operation) => {
+      it("passes the editing mode guard", async () => {
+        const passport = await createPassport(EditingMode.DataOnly);
+
+        const error = await failureOf(
+          async () => await operation(service, passport.organizationId, passport.id),
+        );
+
+        expect(error.message).not.toMatch(lockedMessage);
+      });
+    });
+
+    describe.each(Object.entries({ ...structureOperations, ...dataOperations }))(
+      "draft template: %s",
+      (_name, operation) => {
+        it("passes the editing mode guard", async () => {
+          const template = await createDraftTemplate();
+
+          const error = await failureOf(
+            async () => await operation(templateService, template.organizationId, template.id),
+          );
+
+          expect(error.message).not.toMatch(lockedMessage);
+        });
+      },
+    );
+
+    it("rejects edits of an archived template because it is read-only", async () => {
+      const template = await createDraftTemplate();
+      template.archive();
+      await templateRepository.save(template);
+
+      const error = await failureOf(
+        async () =>
+          await structureOperations.modifySubmodel(
+            templateService,
+            template.organizationId,
+            template.id,
+          ),
+      );
+
+      expect(error.message).toEqual(
+        `Template ${template.id} is read-only; changes are not allowed`,
+      );
+    });
+
+    describe("rows of a data-only passport", () => {
+      const adminContext = {
+        subject: SubjectAttributes.create({
+          userRole: UserRole.ADMIN,
+          memberRole: MemberRole.MEMBER,
+        }),
+        userId: randomUUID(),
+      };
+
+      async function createPassportWithTable(options: { withColumn: boolean }) {
+        const security = Security.create({});
+        security.addPolicy(adminContext.subject, IdShortPath.create({ path: "section1" }), [
+          Permission.create({
+            permission: Permissions.Read,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+          Permission.create({
+            permission: Permissions.Edit,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+          Permission.create({
+            permission: Permissions.Delete,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+          Permission.create({
+            permission: Permissions.Create,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+        ]);
+        const ability = security.defineAbilityForSubject(adminContext.subject, adminContext.userId);
+        const submodel = Submodel.create({ idShort: "section1" });
+        const list = SubmodelElementList.create({
+          idShort: "list",
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+        });
+        submodel.addSubmodelElement(list, { ability });
+        const listPath = IdShortPath.create({ path: "list" });
+        if (options.withColumn) {
+          submodel.addColumn(
+            listPath,
+            Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+            { ability },
+          ); // the first column also creates the header row, the table's only row
+        }
+        await submodelRepository.save(submodel);
+        const aas = AssetAdministrationShell.create({ security });
+        aas.addSubmodel(submodel);
+        await assetAdministrationShellRepository.save(aas);
+        const passport = Passport.create({
+          organizationId: randomUUID(),
+          environment: Environment.create({
+            assetAdministrationShells: [aas.id],
+            submodels: [submodel.id],
+          }),
+          editingMode: EditingMode.DataOnly,
+        });
+        await passportRepository.save(passport);
+        return { passport, submodel, listPath, aas };
+      }
+
+      it("can add and delete rows, keeping the last one, and clean up its presentation entry and policy", async () => {
+        const { passport, submodel, listPath, aas } = await createPassportWithTable({
+          withColumn: true,
+        });
+        const added: any = await service.addRowToSubmodelElementList(
+          correlationId,
+          passport.organizationId,
+          passport.id,
+          submodel.id,
+          listPath,
+          undefined,
+          adminContext,
+          latestVersion,
+        );
+        const [headerRow, addedRow] = added.value;
+        expect(added.value).toHaveLength(2);
+
+        const holder = {
+          id: passport.id,
+          organizationId: passport.organizationId,
+          referenceType: DigitalProductDocumentTypes.Passport,
+        };
+        const [config] = await presentationConfigurationService.list(holder);
+        await presentationConfigurationService.applyPatch(holder, config.id, {
+          elementDesign: {
+            [`section1.list.${addedRow.idShort}`]: PresentationComponentName.BigNumber,
+          },
+        });
+
+        const rowPath = IdShortPath.create({ path: `section1.list.${addedRow.idShort}` });
+        const rowPermissions = [
+          Permissions.Read,
+          Permissions.Edit,
+          Permissions.Create,
+          Permissions.Delete,
+        ].map((permission) =>
+          Permission.create({ permission, kindOfPermission: PermissionKind.Allow }),
+        );
+        aas.security.addPolicy(adminContext.subject, rowPath, rowPermissions);
+        await assetAdministrationShellRepository.save(aas);
+
+        const afterDelete: any = await service.deleteRowFromSubmodelElementList(
+          correlationId,
+          passport.organizationId,
+          passport.id,
+          submodel.id,
+          listPath,
+          addedRow.idShort,
+          adminContext,
+          latestVersion,
+        );
+        expect(afterDelete.value.map((row: any) => row.idShort)).toEqual([headerRow.idShort]);
+        const [configAfter] = await presentationConfigurationService.list(holder);
+        expect(Object.fromEntries(configAfter.elementDesign)).toEqual({});
+        const aasAfter = await assetAdministrationShellRepository.findOneOrFail(aas.id);
+        expect(aasAfter.security.hasPolicy(adminContext.subject, rowPath, rowPermissions)).toBe(
+          false,
+        );
+
+        await expect(
+          service.deleteRowFromSubmodelElementList(
+            correlationId,
+            passport.organizationId,
+            passport.id,
+            submodel.id,
+            listPath,
+            headerRow.idShort,
+            adminContext,
+            latestVersion,
+          ),
+        ).rejects.toThrow("The last row of a table cannot be deleted");
+      });
+
+      it("cannot add a row to a table without columns", async () => {
+        const { passport, submodel, listPath } = await createPassportWithTable({
+          withColumn: false,
+        });
+
+        await expect(
+          service.addRowToSubmodelElementList(
+            correlationId,
+            passport.organizationId,
+            passport.id,
+            submodel.id,
+            listPath,
+            undefined,
+            adminContext,
+            latestVersion,
+          ),
+        ).rejects.toThrow("Cannot add a row to a table without columns");
+      });
     });
   });
 

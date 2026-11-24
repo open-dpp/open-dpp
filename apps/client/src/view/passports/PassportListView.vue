@@ -40,9 +40,8 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const { passports, loading, fetchPassports } = usePassports();
 
-const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
-  DigitalProductDocumentType.Passport,
-);
+const { deleteDPD, publishWithConfirmation, restore, archive, fetchById } =
+  useDigitalProductDocument(DigitalProductDocumentType.Passport);
 
 const {
   status,
@@ -146,9 +145,8 @@ async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
   await deleteDPD(item.id, reloadCurrentPage);
 }
 
-async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
-  await publish(item.id);
-  await reloadCurrentPage();
+function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  publishWithConfirmation(item.id, reloadCurrentPage);
 }
 
 async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {
@@ -161,11 +159,16 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
   await reloadCurrentPage();
 }
 
-async function onPublishFromQrDialog() {
-  if (qrCodeDialogItem.value) {
-    await publish(qrCodeDialogItem.value.id);
+function onPublishFromQrDialog() {
+  const item = qrCodeDialogItem.value;
+  if (!item) return;
+  publishWithConfirmation(item.id, async () => {
     await reloadCurrentPage();
-  }
+    // The dialog holds its own copy of the item, so refresh it to drop the draft warning.
+    try {
+      qrCodeDialogItem.value = (await fetchById(item.id)) ?? qrCodeDialogItem.value;
+    } catch {}
+  });
 }
 
 async function onFilterChange(applyChange: () => Promise<void>) {

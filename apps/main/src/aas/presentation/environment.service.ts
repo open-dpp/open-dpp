@@ -1,4 +1,4 @@
-import type { ClientSession, Connection } from "mongoose";
+import type { Connection } from "mongoose";
 
 import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
@@ -1422,15 +1422,15 @@ export class EnvironmentService {
     });
   }
 
-  async deleteEnvironment(environment: Environment, session: ClientSession): Promise<void> {
+  async deleteEnvironment(environment: Environment, options: DbSessionOptions): Promise<void> {
     for (const aasId of environment.assetAdministrationShells) {
-      await this.aasRepository.deleteById(aasId, { session });
+      await this.aasRepository.deleteById(aasId, options);
     }
     for (const submodelId of environment.submodels) {
-      await this.submodelRepository.deleteById(submodelId, { session });
+      await this.submodelRepository.deleteById(submodelId, options);
     }
     for (const conceptDescriptionId of environment.conceptDescriptions) {
-      await this.conceptDescriptionRepository.deleteById(conceptDescriptionId, { session });
+      await this.conceptDescriptionRepository.deleteById(conceptDescriptionId, options);
     }
   }
 

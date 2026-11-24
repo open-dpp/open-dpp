@@ -21,8 +21,14 @@ In the draft mode you can do the following operations on the {{ typeLowerSingula
 
 When published, you can do the following operations on the {{ typeLowerSingular }}:
 
-- Edit it
+- Edit it (see below for restrictions)
 - Archive it
+
+Published templates are read-only: their structure and values can no longer be changed.
+Passports created from a published template keep the template's structure. You can still
+overwrite their data values and add or delete table rows, but you cannot add, remove or
+change submodels, elements or table columns. Passports created from a draft template or
+without a template stay fully editable.
 
 ## Archived
 

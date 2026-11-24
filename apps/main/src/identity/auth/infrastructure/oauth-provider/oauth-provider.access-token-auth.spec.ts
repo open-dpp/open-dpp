@@ -13,6 +13,7 @@ import { obtainTokens, TEST_PASSWORD } from "./oauth-flow.test-helpers";
 import { API_PATH, createAuthTestContext } from "./auth.test.context";
 import { AUTH_BASE_PATH } from "../../auth-base-path";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import { InstanceSettingsService } from "../../../../instance-settings/application/services/instance-settings.service";
 
 interface TestUser {
   id: string;
@@ -25,6 +26,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
   let organization: BetterAuthOrganization;
   let accessToken: string;
   let betterAuthHelper: BetterAuthHelper;
+  let instanceSettings: InstanceSettingsService;
 
   const bearer = (token: string) => `Bearer ${token}`;
 
@@ -45,6 +47,7 @@ describe("AuthGuard with Trusted Client access tokens", () => {
     });
     app = testApp.app;
     betterAuthHelper = testApp.betterAuthHelper;
+    instanceSettings = testApp.moduleRef.get(InstanceSettingsService);
     user = (await betterAuthHelper.createUser()).user;
     organization = await betterAuthHelper.createOrganization(user.id);
     await testApp.moduleRef
@@ -61,6 +64,79 @@ describe("AuthGuard with Trusted Client access tokens", () => {
   });
 
   describe("acts as the User", () => {
+    it("creates the first organization as its Owner using only the OAuth token", async () => {
+      const { user: creator } = await betterAuthHelper.createUser();
+      const tokens = await obtainTokens(app, {
+        email: creator.email,
+        password: TEST_PASSWORD,
+      });
+      const authorization = bearer(tokens.access_token);
+      const before = await request(app.getHttpServer())
+        .get(`${API_PATH}/organizations/member`)
+        .set("Authorization", authorization);
+      expect(before.status).toBe(200);
+      expect(before.body).toEqual([]);
+
+      const response = await request(app.getHttpServer())
+        .post(`${API_PATH}/organizations`)
+        .set("Authorization", authorization)
+        // Ownership comes from the verified token, never from caller-supplied fields.
+        .send({ name: "  Portal organization  ", userId: user.id, ownerId: user.id });
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(expect.objectContaining({ name: "Portal organization" }));
+
+      const members = await request(app.getHttpServer())
+        .get(`${API_PATH}/organizations/${response.body.id}/members`)
+        .set("Authorization", authorization);
+      expect(members.status).toBe(200);
+      expect(members.body).toEqual([
+        expect.objectContaining({ userId: creator.id, role: MemberRole.OWNER }),
+      ]);
+
+      const organizations = await request(app.getHttpServer())
+        .get(`${API_PATH}/organizations/member`)
+        .set("Authorization", authorization);
+      expect(organizations.status).toBe(200);
+      expect(organizations.body).toEqual([expect.objectContaining({ id: response.body.id })]);
+
+      const quotas = await request(app.getHttpServer())
+        .get(`${API_PATH}/policies/organizations/${response.body.id}`)
+        .set("Authorization", authorization)
+        .set(ORGANIZATION_ID_HEADER, response.body.id);
+      expect(quotas.status).toBe(200);
+      expect(quotas.body.ORGANIZATION_MEMBER_LIMIT.used).toBe(1);
+    });
+
+    it("does not use another browser session to choose the creator of an OAuth request", async () => {
+      const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      const response = await request(app.getHttpServer())
+        .post(`${API_PATH}/organizations`)
+        .set("Authorization", bearer(accessToken))
+        .set("Cookie", userCookie)
+        .send({ name: "OAuth owner, not cookie owner" });
+      expect(response.status).toBe(201);
+      const members = await request(app.getHttpServer())
+        .get(`${API_PATH}/organizations/${response.body.id}/members`)
+        .set("Authorization", bearer(accessToken));
+      expect(members.status).toBe(200);
+      expect(members.body).toEqual([
+        expect.objectContaining({ userId: user.id, role: MemberRole.OWNER }),
+      ]);
+    });
+
+    it("still enforces the instance's organization-creation setting for OAuth", async () => {
+      await instanceSettings.updateSettings({ organizationCreationEnabled: false });
+      try {
+        const response = await request(app.getHttpServer())
+          .post(`${API_PATH}/organizations`)
+          .set("Authorization", bearer(accessToken))
+          .send({ name: "Creation disabled" });
+        expect(response.status).toBe(403);
+      } finally {
+        await instanceSettings.updateSettings({ organizationCreationEnabled: true });
+      }
+    });
+
     it("lists the User's organizations", async () => {
       const response = await request(app.getHttpServer())
         .get(`${API_PATH}/organizations/member`)
@@ -154,6 +230,14 @@ describe("AuthGuard with Trusted Client access tokens", () => {
   });
 
   describe("refuses", () => {
+    it("creation with a tampered token", async () => {
+      const response = await request(app.getHttpServer())
+        .post(`${API_PATH}/organizations`)
+        .set("Authorization", bearer(tampered(accessToken)))
+        .send({ name: "Must not be created" });
+      expect(response.status).toBe(401);
+    });
+
     it("a token without the open-dpp:api scope with 401", async () => {
       const tokens = await obtainTokens(
         app,

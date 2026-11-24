@@ -287,9 +287,11 @@ describe("submodel", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
     submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
-      ability,
-    });
+    submodel.addColumn(
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      Property.create({ idShort: "col1", valueType: DataTypeDef.String }),
+      { ability },
+    );
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
       ability,
     });
@@ -316,9 +318,11 @@ describe("submodel", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
     submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
-      ability,
-    });
+    submodel.addColumn(
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      Property.create({ idShort: "col1", valueType: DataTypeDef.String }),
+      { ability },
+    );
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
       ability,
     });

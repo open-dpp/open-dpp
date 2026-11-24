@@ -8,7 +8,6 @@ import type {
   PassportRegistryExportRequestDto,
   PassportRequestCreateDto,
   PermalinkPaginationDto,
-  RemoveEditingRestrictionsDto,
   UniqueProductIdentifierPaginationDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
@@ -83,16 +82,6 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     data: DigitalProductDocumentStatusModificationDto,
   ): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.put<PassportDto>(`${this.passportEndpoint}/${id}/status`, data);
-  }
-
-  public async setEditingMode(
-    id: string,
-    data: RemoveEditingRestrictionsDto,
-  ): Promise<AxiosResponse<PassportDto>> {
-    return await this.axiosInstance.put<PassportDto>(
-      `${this.passportEndpoint}/${id}/editing-mode`,
-      data,
-    );
   }
 
   async getActivities(

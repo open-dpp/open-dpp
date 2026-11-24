@@ -1,5 +1,73 @@
 # @open-dpp/client
 
+## 7.2.0
+
+### Patch Changes
+
+- [#1221](https://github.com/open-dpp/open-dpp/pull/1221) [`af4b219`](https://github.com/open-dpp/open-dpp/commit/af4b219a149bcea32383ab0ddc089c032338f5cf) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vue` ^3.5.44 → ^3.5.46
+
+- [#1222](https://github.com/open-dpp/open-dpp/pull/1222) [`e2748cd`](https://github.com/open-dpp/open-dpp/commit/e2748cd472857a16623e64208df4a9f82485caa8) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vue-chartjs` ^5.3.4 → ^5.3.7
+
+- [#1223](https://github.com/open-dpp/open-dpp/pull/1223) [`18891e3`](https://github.com/open-dpp/open-dpp/commit/18891e34a748dc5280f1ffb7bdbaa1e8048d465c) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `vue-i18n` ^11.4.14 → ^11.4.23
+
+## 7.1.2
+
+## 7.1.1
+
+### Patch Changes
+
+- [#1208](https://github.com/open-dpp/open-dpp/pull/1208) [`34f29a6`](https://github.com/open-dpp/open-dpp/commit/34f29a6e0b8c0f3259db2dd39e8628c9988bffc4) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `@tailwindcss/postcss` ^4.3.3 → ^4.3.5 (dev)
+  - @open-dpp/client: `tailwindcss` ^4.3.3 → ^4.3.5 (dev)
+
+- [#1212](https://github.com/open-dpp/open-dpp/pull/1212) [`421a97f`](https://github.com/open-dpp/open-dpp/commit/421a97f7457090ddd8cffbf8a33876ed4b14e0c7) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `dompurify` ^3.4.17 → ^3.4.18
+
+## 7.1.0
+
+### Minor Changes
+
+- [#1158](https://github.com/open-dpp/open-dpp/pull/1158) [`2bb9f5c`](https://github.com/open-dpp/open-dpp/commit/2bb9f5c6cc5d6f4a8a3e9805e4609eb1ff642000) Thanks [@Hentra](https://github.com/Hentra)! - Operators can link their privacy policy, terms of service and imprint through `OPEN_DPP_LEGAL_PRIVACY_POLICY_URL`, `OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL` and `OPEN_DPP_LEGAL_IMPRINT_URL`. The links show in a footer in the app sidebar, on the presentation view and on every sign-in and sign-up page, and `GET /instance-settings/public` returns them as `legalLinks` to everyone. While terms or a privacy policy are linked, sign-up requires a consent checkbox; the server rejects a sign-up without `termsAccepted: true` and records `termsAcceptedAt` on the user. Users created by an admin are not asked.
+
+## 7.0.1
+
+### Patch Changes
+
+- [#1195](https://github.com/open-dpp/open-dpp/pull/1195) [`ba4982b`](https://github.com/open-dpp/open-dpp/commit/ba4982b9d7e5d6f66b1613a3cbd5218dfc904d9c) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `postcss` ^8.5.32 → ^8.5.33 (dev)
+
+## 7.0.0
+
+### Major Changes
+
+- [#1192](https://github.com/open-dpp/open-dpp/pull/1192) [`fb90dc4`](https://github.com/open-dpp/open-dpp/commit/fb90dc4a259fb5bd653a6a60e3b7ca56b27e8280) Thanks [@mr42](https://github.com/mr42)! - - A template that is no longer a draft is read-only. A passport created from a published template after this change only allows overwriting data values (table rows can still be added and deleted). Existing passports keep their stored `Full` editing mode. Passports from draft templates or without a template stay fully editable.
+  - The last remaining row of a table (its header row) cannot be deleted; deleting a row while others remain is allowed, and the next row becomes the header. Rows cannot be added to a table without columns.
+  - Breaking: removed `PUT /templates/:id/passport-editing-mode` and `PUT /passports/:id/editing-mode`, the related DTOs and the api-client methods `setEditingMode` / `setPassportEditingMode`. The template field `passportEditingMode` is replaced by the derived `editingMode`.
+  - Client: published templates open in a read-only editor, restricted passports hide column actions, and table rows get a "Clear row values" action.
+
+### Patch Changes
+
+- [#1193](https://github.com/open-dpp/open-dpp/pull/1193) [`1db2735`](https://github.com/open-dpp/open-dpp/commit/1db2735e8b79488341957c20b9891cdfcb46385e) Thanks [@Hentra](https://github.com/Hentra)! - Rename usage page title to Nutzungskontingente / Usage quotas
+
+## 6.6.2
+
+### Patch Changes
+
+- [#1180](https://github.com/open-dpp/open-dpp/pull/1180) [`abf4ec1`](https://github.com/open-dpp/open-dpp/commit/abf4ec1e6136d8513fb06e9609ffc6953b36655b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `@vitejs/plugin-vue` ^6.0.10 → ^6.0.11 (dev)
+
+## 6.6.1
+
 ## 6.6.0
 
 ### Minor Changes

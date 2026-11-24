@@ -42,7 +42,7 @@ const i18n = createI18n({
   legacy: false,
   messages: {
     en: {
-      organizations: { usage: { title: "Usage policies", manage: "Manage usage" } },
+      organizations: { usage: { title: "Usage quotas", manage: "Manage usage" } },
     },
   },
 });

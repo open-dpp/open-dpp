@@ -6,12 +6,10 @@ import {
   DigitalProductDocumentTypes,
   DigitalProductDocumentTypesType,
 } from "@open-dpp/dto";
-import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { AasAbility } from "../../../aas/domain/security/aas-ability";
 import type { DbSessionOptions } from "../../../database/query-options";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
-import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import {
@@ -22,16 +20,16 @@ import {
 /**
  * Minimal shape required by the service to identify a passport/template reference.
  * Both `Passport` and `Template` expose `id` and `organizationId` as public readonly fields,
- * so instances of either class satisfy this interface directly. `editingMode` is only
- * meaningful (and should only be set) for a Passport reference — the caller already has the
- * loaded `Passport` at hand wherever a holder is built, so `applyPatch` can enforce the
- * editing-mode guard without a repository lookup of its own.
+ * so instances of either class satisfy this interface directly. `assertStructureEditable` is the
+ * one of the loaded passport or template — the caller already has it at hand wherever a holder is
+ * built, so the service reuses the document's own guard without a repository lookup. Holders
+ * built without it (e.g. seeding on creation or import) are not guarded.
  */
 export interface PresentationReferenceHolder {
   readonly id: string;
   readonly organizationId: string;
   readonly referenceType: DigitalProductDocumentTypesType;
-  readonly editingMode?: PassportEditingModeType;
+  readonly assertStructureEditable?: () => void;
 }
 
 @Injectable()
@@ -68,7 +66,7 @@ export class PresentationConfigurationService {
     holder: PresentationReferenceHolder,
     body: { label: string | null },
   ): Promise<PresentationConfiguration> {
-    this.assertPassportEditingNotRestricted(holder);
+    holder.assertStructureEditable?.();
     const config = PresentationConfiguration.create({
       organizationId: holder.organizationId,
       referenceId: holder.id,
@@ -84,7 +82,7 @@ export class PresentationConfigurationService {
     patch: PresentationConfigurationPatchDto,
     ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
-    this.assertPassportEditingNotRestricted(holder);
+    holder.assertStructureEditable?.();
     const config = await this.requireOwned(configId, {
       referenceType: holder.referenceType,
       referenceId: holder.id,
@@ -93,20 +91,9 @@ export class PresentationConfigurationService {
   }
 
   async delete(holder: PresentationReferenceHolder, configId: string): Promise<void> {
-    this.assertPassportEditingNotRestricted(holder);
+    holder.assertStructureEditable?.();
     await this.getById(holder, configId);
     await this.presentationConfigurationRepository.deleteById(configId);
-  }
-
-  private assertPassportEditingNotRestricted(holder: PresentationReferenceHolder): void {
-    if (
-      holder.referenceType === DigitalProductDocumentTypes.Passport &&
-      holder.editingMode === PassportEditingMode.DataOnly
-    ) {
-      throw new ValueError(
-        `Passport ${holder.id} editing is restricted to data; presentation configuration is not editable`,
-      );
-    }
   }
 
   async getEffective(
@@ -214,6 +201,10 @@ export class PresentationConfigurationService {
    * Removes all `elementDesign` entries from every config belonging to the given reference
    * whose key is exactly `idShortPath` or starts with `idShortPath.` (child paths).
    * Only configs that actually changed are saved. Runs inside the provided session when given.
+   *
+   * Deliberately has no editing-mode guard: this is follow-up cleanup for a deletion the document
+   * service has already authorized (e.g. a row deleted on a data-only passport), not an edit of
+   * the presentation. Only call it downstream of such a guarded change.
    */
   async deleteElementDesignEntriesForPath(
     referenceType: DigitalProductDocumentTypesType,
@@ -238,6 +229,9 @@ export class PresentationConfigurationService {
    * Moves all `elementDesign` entries from every config belonging to the given reference
    * from `oldPath` to `newPath`, including all child paths.
    * Only configs that actually changed are saved. Runs inside the provided session when given.
+   *
+   * Like `deleteElementDesignEntriesForPath`, this has no editing-mode guard on purpose: call it
+   * only downstream of a move the document service has already authorized.
    */
   async moveElementDesignEntries(
     referenceType: DigitalProductDocumentTypesType,

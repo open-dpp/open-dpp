@@ -56,7 +56,6 @@ export class OrganizationsController {
   @Post()
   async createOrganization(
     @Body(new ZodValidationPipe(OrganizationCreateDtoSchema)) body: OrganizationCreateDto,
-    @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
     @UserRoleDecorator() userRole: UserRoleType,
   ): Promise<OrganizationDto> {
@@ -66,7 +65,6 @@ export class OrganizationsController {
         metadata: {},
       },
       session,
-      extractBetterAuthHeaders(headers),
       userRole,
     );
     return toOrganizationDto(organization);

@@ -368,17 +368,17 @@ describe("NestedTableExtension", () => {
 
   it("should delete row from table3", () => {
     const { submodel, ability } = createSubmodelWithNestedTable();
-    submodel.deleteRow(
-      IdShortPath.create({
-        path: "table1.row1.table2.row11.table3",
+    const table3Path = IdShortPath.create({ path: "table1.row1.table2.row11.table3" });
+    submodel.addRow(table3Path, { ability });
+    submodel.deleteRow(table3Path, "row111", { ability, onDelete: () => {} });
+    const table3OfRow11 = submodel.findSubmodelElementOrFail(table3Path);
+    expect(table3OfRow11.getSubmodelElements()).toHaveLength(1);
+    expect(() =>
+      submodel.deleteRow(table3Path, table3OfRow11.getSubmodelElements()[0].idShort, {
+        ability,
+        onDelete: () => {},
       }),
-      "row111",
-      { ability, onDelete: () => {} },
-    );
-    const table3OfRow11 = submodel.findSubmodelElementOrFail(
-      IdShortPath.create({ path: "table1.row1.table2.row11.table3" }),
-    );
-    expect(table3OfRow11.getSubmodelElements()).toHaveLength(0);
+    ).toThrow("The last row of a table cannot be deleted");
     const table3OfRow21 = submodel.findSubmodelElementOrFail(
       IdShortPath.create({ path: "table1.row2.table2.row21.table3" }),
     );

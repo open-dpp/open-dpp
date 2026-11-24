@@ -309,7 +309,7 @@ function toPassportHolder(passport: Passport): PresentationReferenceHolder {
     id: passport.id,
     organizationId: passport.organizationId,
     referenceType: DigitalProductDocumentTypes.Passport,
-    editingMode: passport.getEditingMode(),
+    assertStructureEditable: () => passport.assertStructureEditable(),
   };
 }
 
@@ -318,5 +318,6 @@ function toTemplateHolder(template: Template): PresentationReferenceHolder {
     id: template.id,
     organizationId: template.organizationId,
     referenceType: DigitalProductDocumentTypes.Template,
+    assertStructureEditable: () => template.assertStructureEditable(),
   };
 }

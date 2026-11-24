@@ -74,7 +74,7 @@ function makeEditorContext(overrides: Partial<AasEditorContext> = {}): AasEditor
     id: "shell-1",
     aasNamespace: {} as any,
     errorHandlingStore: { logErrorWithNotification: vi.fn() },
-    isArchived: false,
+    isReadOnly: false,
     isEditingRestrictedToData: false,
     type: DigitalProductDocumentType.Passport,
     openDrawer: vi.fn(),

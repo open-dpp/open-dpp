@@ -5,7 +5,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../digital-product-document/domain/editing-mode";
 import { Passport } from "./passport";
 
 describe("passport", () => {
@@ -43,26 +43,39 @@ describe("passport", () => {
     expect(passport.isDraft()).toBeTruthy();
   });
 
-  it("should remove editing restrictions", () => {
+  it("should only allow data edits when editing is restricted to data", () => {
     const passport = Passport.create({
       organizationId: randomUUID(),
       templateId: randomUUID(),
       environment: Environment.create({}),
       editingMode: PassportEditingMode.DataOnly,
     });
-    expect(passport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
-    passport.removeEditingRestrictions();
-    expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
+    expect(() => passport.assertStructureEditable()).toThrow(
+      `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+    );
+    expect(() => passport.assertDataEditable()).not.toThrow();
   });
 
-  it("should not remove editing restrictions from a fully-editable passport", () => {
+  it("should allow structure and data edits when fully editable", () => {
     const passport = Passport.create({
       organizationId: randomUUID(),
-      templateId: randomUUID(),
       environment: Environment.create({}),
     });
-    expect(() => passport.removeEditingRestrictions()).toThrow(
-      "This passport's editing is not restricted.",
-    );
+    expect(() => passport.assertStructureEditable()).not.toThrow();
+    expect(() => passport.assertDataEditable()).not.toThrow();
+  });
+
+  it("should not allow any edit of an archived passport", () => {
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      }),
+    });
+    const message = "Cannot modify an archived digital product document";
+    expect(() => passport.assertStructureEditable()).toThrow(message);
+    expect(() => passport.assertDataEditable()).toThrow(message);
   });
 });
