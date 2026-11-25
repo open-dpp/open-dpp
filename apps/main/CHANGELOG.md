@@ -1,5 +1,13 @@
 # @open-dpp/main
 
+## 7.3.2
+
+### Patch Changes
+
+- [#1243](https://github.com/open-dpp/open-dpp/pull/1243) [`e9128ea`](https://github.com/open-dpp/open-dpp/commit/e9128eacbb75e11b3cd24829c3a27ae39537a1ac) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `fork-ts-checker-webpack-plugin` ^9.1.0 → ^9.2.0 (dev)
+
 ## 7.3.1
 
 ## 7.3.0
