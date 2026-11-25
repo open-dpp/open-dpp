@@ -1,5 +1,7 @@
 # @open-dpp/client
 
+## 7.3.3
+
 ## 7.3.2
 
 ### Patch Changes
