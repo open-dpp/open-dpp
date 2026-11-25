@@ -1,5 +1,13 @@
 # @open-dpp/main
 
+## 7.3.3
+
+### Patch Changes
+
+- [#1244](https://github.com/open-dpp/open-dpp/pull/1244) [`573bb13`](https://github.com/open-dpp/open-dpp/commit/573bb1388b6ebb4c9db0925f2e8d40498c06ce23) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `mongodb-memory-server` ^11.3.0 → ^11.4.0 (dev)
+
 ## 7.3.2
 
 ### Patch Changes
