@@ -107,7 +107,7 @@
     "fishery": "^2.4.0",
     "fork-ts-checker-webpack-plugin": "^9.2.0",
     "jsqr": "^1.4.0",
-    "mongodb-memory-server": "^11.3.0",
+    "mongodb-memory-server": "^11.4.0",
     "supertest": "^7.2.2",
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "typescript": "~6.0.3",
