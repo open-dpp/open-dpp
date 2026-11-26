@@ -86,6 +86,15 @@ jobs:
           chmod 0400 docker/mongo_keyfile
           sudo chown 999:999 docker/mongo_keyfile
 
+      - name: Install Docker Compose plugin
+        run: |
+          sudo mkdir -p /usr/local/lib/docker/cli-plugins
+          sudo curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+            "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)"
+          sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          docker compose version
+          docker info
+
       # Started early so image pulls overlap with the install and build steps.
       - name: Start infrastructure
         run: docker compose -f docker-compose.dev.yml up -d
