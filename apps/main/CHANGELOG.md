@@ -1,5 +1,166 @@
 # @open-dpp/main
 
+## 7.3.4
+
+### Patch Changes
+
+- [#1253](https://github.com/open-dpp/open-dpp/pull/1253) [`e348ad3`](https://github.com/open-dpp/open-dpp/commit/e348ad36c1cbab1cdf7f11e5edfe6b7a9d3a4310) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@langchain/core` ^1.1.48 → ^1.5.0
+
+- [#1254](https://github.com/open-dpp/open-dpp/pull/1254) [`d05937a`](https://github.com/open-dpp/open-dpp/commit/d05937abf20b60976fc77a1a5cdfa7158fbced8b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/swagger` ^12.0.5 → ^12.1.2
+
+## 7.3.3
+
+### Patch Changes
+
+- [#1244](https://github.com/open-dpp/open-dpp/pull/1244) [`573bb13`](https://github.com/open-dpp/open-dpp/commit/573bb1388b6ebb4c9db0925f2e8d40498c06ce23) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `mongodb-memory-server` ^11.3.0 → ^11.4.0 (dev)
+
+## 7.3.2
+
+### Patch Changes
+
+- [#1243](https://github.com/open-dpp/open-dpp/pull/1243) [`e9128ea`](https://github.com/open-dpp/open-dpp/commit/e9128eacbb75e11b3cd24829c3a27ae39537a1ac) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `fork-ts-checker-webpack-plugin` ^9.1.0 → ^9.2.0 (dev)
+
+## 7.3.1
+
+## 7.3.0
+
+### Minor Changes
+
+- [#1154](https://github.com/open-dpp/open-dpp/pull/1154) [`dce00c0`](https://github.com/open-dpp/open-dpp/commit/dce00c037c6ce5089cd1013cb15133d87d0e3588) Thanks [@florianBieck](https://github.com/florianBieck)! - The media upload API accepts SVG images and detects every file's type from its content instead of the client's MIME type. SVGs stay vector images: scripts, event handlers and references to other files are removed on upload, and SVG downloads carry a sandboxing Content-Security-Policy. Photos are stored upright, and all image metadata, the GPS position included, is removed. HEIC uploads, which could never be decoded, and other unsupported or broken files are now rejected with a 400 instead of failing with a 500.
+
+  The media library and the media picker now offer WebP and SVG files in the file dialog. When a file is rejected because its type is not supported, it is invalid or it is larger than 15 MB, both say so instead of showing a generic error, and the media picker shows its messages in the selected language. An SVG that only defines a `viewBox` is shown at the size of its container in previews, the product image gallery and the branding logo, and at the size of the screen in the full-screen view of an image.
+
+  After the product images of a passport or template are saved, the gallery in the editor shows the saved images, whichever image it was on. Before, it kept the old images or stayed empty when it was not on its first image.
+
+## 7.2.0
+
+### Minor Changes
+
+- [#1186](https://github.com/open-dpp/open-dpp/pull/1186) [`e56c9f3`](https://github.com/open-dpp/open-dpp/commit/e56c9f329e9e6d698937e2b3186b136a4b78fe0d) Thanks [@Hentra](https://github.com/Hentra)! - Allow creating organizations with an API key or an OAuth/OIDC access token, not only with a Better Auth browser session. The authenticated user becomes the owner of the new organization.
+
+### Patch Changes
+
+- [#1220](https://github.com/open-dpp/open-dpp/pull/1220) [`d42c4f9`](https://github.com/open-dpp/open-dpp/commit/d42c4f9b1417f86b9aeab80c08ffc87cd2a6982a) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `mjml` ^5.0.0 → ^5.4.1
+
+- [#1224](https://github.com/open-dpp/open-dpp/pull/1224) [`ab5f0ee`](https://github.com/open-dpp/open-dpp/commit/ab5f0eef744337e579525879cba6aea3237e9a2e) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-express` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-socket.io` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/websockets` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/cli` ^12.0.13 → ^12.0.15 (dev)
+  - @open-dpp/main: `@nestjs/schematics` ^12.0.13 → ^12.0.16 (dev)
+  - @open-dpp/main: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/env: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/env: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/testing: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/testing: `@nestjs/core` ^12.5.1 → ^12.6.0
+
+- [#864](https://github.com/open-dpp/open-dpp/pull/864) [`4734957`](https://github.com/open-dpp/open-dpp/commit/47349579671df44692402b0e504ed27ce544470b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `cpx` ^1.5.0 → (removed)
+  - @open-dpp/main: `cpx2` (added) → ^2.0.0
+
+## 7.1.2
+
+### Patch Changes
+
+- [#1218](https://github.com/open-dpp/open-dpp/pull/1218) [`8194e5e`](https://github.com/open-dpp/open-dpp/commit/8194e5e776e02531fd26ff10ed73bcfc7aa3fee0) Thanks [@florianBieck](https://github.com/florianBieck)! - Prepare email rendering for the `mjml` 5 security update ([#814](https://github.com/open-dpp/open-dpp/issues/814)). The email service now renders emails correctly on `mjml` 4 and on `mjml` 5. The emails this release sends are unchanged.
+
+- [#814](https://github.com/open-dpp/open-dpp/pull/814) [`9f55d41`](https://github.com/open-dpp/open-dpp/commit/9f55d414e36345c00d90745ffd1a9d9759828e0c) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `mjml` ^4.18.0 → ^5.0.0
+
+## 7.1.1
+
+### Patch Changes
+
+- [#1209](https://github.com/open-dpp/open-dpp/pull/1209) [`a184245`](https://github.com/open-dpp/open-dpp/commit/a184245c531825b22cd034e10517e1e4a53e38f8) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/axios` ^12.0.1 → ^12.0.2
+
+- [#1210](https://github.com/open-dpp/open-dpp/pull/1210) [`1a8b884`](https://github.com/open-dpp/open-dpp/commit/1a8b88418d463c8ae65c08d9a53523aca9bfba4d) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/event-emitter` ^12.0.1 → ^12.0.3
+
+- [#1211](https://github.com/open-dpp/open-dpp/pull/1211) [`11aae6b`](https://github.com/open-dpp/open-dpp/commit/11aae6b0e2731f3390bafcf520b4f94c85e79dbe) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/mongoose` ^12.0.0 → ^12.0.1
+  - @open-dpp/testing: `@nestjs/mongoose` ^12.0.0 → ^12.0.1
+
+- [#1213](https://github.com/open-dpp/open-dpp/pull/1213) [`76c25c6`](https://github.com/open-dpp/open-dpp/commit/76c25c67f24927b6eadec7924d46986f210f2c5f) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `semver` ^7.8.5 → ^7.8.6
+
+## 7.1.0
+
+### Minor Changes
+
+- [#1158](https://github.com/open-dpp/open-dpp/pull/1158) [`2bb9f5c`](https://github.com/open-dpp/open-dpp/commit/2bb9f5c6cc5d6f4a8a3e9805e4609eb1ff642000) Thanks [@Hentra](https://github.com/Hentra)! - Operators can link their privacy policy, terms of service and imprint through `OPEN_DPP_LEGAL_PRIVACY_POLICY_URL`, `OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL` and `OPEN_DPP_LEGAL_IMPRINT_URL`. The links show in a footer in the app sidebar, on the presentation view and on every sign-in and sign-up page, and `GET /instance-settings/public` returns them as `legalLinks` to everyone. While terms or a privacy policy are linked, sign-up requires a consent checkbox; the server rejects a sign-up without `termsAccepted: true` and records `termsAcceptedAt` on the user. Users created by an admin are not asked.
+
+## 7.0.1
+
+### Patch Changes
+
+- [#1194](https://github.com/open-dpp/open-dpp/pull/1194) [`04de404`](https://github.com/open-dpp/open-dpp/commit/04de4046fe49091bb938f18c24d364b6398548c9) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/common` ^12.5.0 → ^12.5.1
+  - @open-dpp/main: `@nestjs/core` ^12.5.0 → ^12.5.1
+  - @open-dpp/main: `@nestjs/platform-express` ^12.5.0 → ^12.5.1
+  - @open-dpp/main: `@nestjs/platform-socket.io` ^12.5.0 → ^12.5.1
+  - @open-dpp/main: `@nestjs/websockets` ^12.5.0 → ^12.5.1
+  - @open-dpp/main: `@nestjs/cli` ^12.0.12 → ^12.0.13 (dev)
+  - @open-dpp/main: `@nestjs/testing` ^12.5.0 → ^12.5.1 (dev)
+  - @open-dpp/env: `@nestjs/common` ^12.5.0 → ^12.5.1
+  - @open-dpp/env: `@nestjs/core` ^12.5.0 → ^12.5.1
+  - @open-dpp/exception: `@nestjs/common` ^12.5.0 → ^12.5.1
+  - @open-dpp/exception: `@nestjs/core` ^12.5.0 → ^12.5.1
+  - @open-dpp/exception: `@nestjs/testing` ^12.5.0 → ^12.5.1 (dev)
+  - @open-dpp/testing: `@nestjs/common` ^12.5.0 → ^12.5.1
+  - @open-dpp/testing: `@nestjs/core` ^12.5.0 → ^12.5.1
+
+- [#1202](https://github.com/open-dpp/open-dpp/pull/1202) [`41b1416`](https://github.com/open-dpp/open-dpp/commit/41b141616f1d49edc62ff957ab07192fd7dbdb76) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@rspack/core` ^2.3.2 → ^2.3.3 (dev)
+
+## 7.0.0
+
+### Major Changes
+
+- [#1192](https://github.com/open-dpp/open-dpp/pull/1192) [`fb90dc4`](https://github.com/open-dpp/open-dpp/commit/fb90dc4a259fb5bd653a6a60e3b7ca56b27e8280) Thanks [@mr42](https://github.com/mr42)! - - A template that is no longer a draft is read-only. A passport created from a published template after this change only allows overwriting data values (table rows can still be added and deleted). Existing passports keep their stored `Full` editing mode. Passports from draft templates or without a template stay fully editable.
+  - The last remaining row of a table (its header row) cannot be deleted; deleting a row while others remain is allowed, and the next row becomes the header. Rows cannot be added to a table without columns.
+  - Breaking: removed `PUT /templates/:id/passport-editing-mode` and `PUT /passports/:id/editing-mode`, the related DTOs and the api-client methods `setEditingMode` / `setPassportEditingMode`. The template field `passportEditingMode` is replaced by the derived `editingMode`.
+  - Client: published templates open in a read-only editor, restricted passports hide column actions, and table rows get a "Clear row values" action.
+
+## 6.6.2
+
+## 6.6.1
+
+### Patch Changes
+
+- [#1179](https://github.com/open-dpp/open-dpp/pull/1179) [`ffbc851`](https://github.com/open-dpp/open-dpp/commit/ffbc85125b709a4603a84e7e6a2910a29615dc99) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/dto: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/env: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/exception: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/permission: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/testing: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+
 ## 6.6.0
 
 ### Minor Changes

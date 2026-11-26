@@ -40,21 +40,21 @@
     "@shadcn/lint": "^0.2.5",
     "@swc/core": "^1.16.22",
     "@types/node": "^26.6.6",
-    "@typescript-eslint/parser": "^8.72.2",
+    "@typescript-eslint/parser": "^8.73.0",
     "@vitest/coverage-v8": "^4.1.12",
-    "eslint": "^10.13.0",
+    "eslint": "^10.15.0",
     "oxfmt": "^0.45.0",
-    "oxlint": "^1.86.0",
+    "oxlint": "^1.94.0",
     "tsx": "^4.23.15",
-    "turbo": "^2.11.10",
+    "turbo": "^2.11.13",
     "typescript": "~6.0.3",
     "unplugin-swc": "^2.0.0",
     "vitest": "^4.1.12",
-    "vue-eslint-parser": "^10.4.1",
+    "vue-eslint-parser": "^10.4.2",
     "zod": "^4.3.6"
   },
   "engines": {
-    "node": ">=26.13.0"
+    "node": ">=26.13.1"
   },
-  "packageManager": "pnpm@11.28.9"
+  "packageManager": "pnpm@11.29.0"
 }

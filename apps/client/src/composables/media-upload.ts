@@ -1,6 +1,7 @@
 import type { FileUploadSelectEvent } from "primevue";
 import { MEDIA_UPLOAD_MAX_SIZE_BYTES, MEDIA_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
+import apiClient from "../lib/api-client";
 import { handleApiError, isBadRequestError, LimitError } from "../lib/api-error-mapping";
 import { useErrorHandlingStore } from "../stores/error.handling";
 import { useMediaStore } from "../stores/media";
@@ -42,9 +43,9 @@ export function useMediaUpload() {
       return;
     }
     try {
-      await mediaStore.uploadMedia(file);
+      const mediaId = await apiClient.media.media.uploadGeneralMedia(file);
       notificationStore.addSuccessNotification(t("file.uploadSuccess"));
-      await mediaStore.fetchMediaByOrganizationId();
+      await mediaStore.addToOrganizationMedia(mediaId);
     } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(uploadErrorMessage(error), error);
     }

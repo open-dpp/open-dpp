@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 import MediaModal from "../components/media/MediaModal.vue";
+import { useMediaStore } from "../stores/media";
 import { NotificationType, useNotificationStore } from "../stores/notification";
 import deDE from "../translations/de-DE.json";
 import enUS from "../translations/en-US.json";
@@ -14,6 +15,7 @@ import MediaView from "../view/media/MediaView.vue";
 
 const mocks = vi.hoisted(() => ({
   uploadGeneralMedia: vi.fn(),
+  getMediaInfo: vi.fn(),
   getMediaInfoByOrganization: vi.fn(),
 }));
 
@@ -103,9 +105,12 @@ describe.each(entryPoints)("uploading in the $name", ({ mountEntryPoint }) => {
     type: "image/svg+xml",
   });
 
+  const uploaded = { id: "media-id", title: "logo.svg", mimeType: "image/svg+xml", size: 42 };
+
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.getMediaInfoByOrganization.mockResolvedValue({ data: [] });
+    mocks.getMediaInfo.mockResolvedValue({ data: uploaded });
     // the error handling store logs every failed upload
     vi.spyOn(console, "error").mockImplementation(() => {});
     pinia = createPinia();
@@ -125,9 +130,9 @@ describe.each(entryPoints)("uploading in the $name", ({ mountEntryPoint }) => {
     );
   });
 
-  it.each(LOCALES)("confirms an upload in %s and reloads the media", async (locale) => {
+  it.each(LOCALES)("confirms an upload in %s", async (locale) => {
     i18n.global.locale.value = locale;
-    mocks.uploadGeneralMedia.mockResolvedValue("media-id");
+    mocks.uploadGeneralMedia.mockResolvedValue(uploaded.id);
     const wrapper = mountEntryPoint();
 
     await selectFile(wrapper, [svg]);
@@ -135,7 +140,20 @@ describe.each(entryPoints)("uploading in the $name", ({ mountEntryPoint }) => {
     expect(mocks.uploadGeneralMedia.mock.calls.map(([file]) => file)).toEqual([svg]);
     expect(shownMessages(NotificationType.SUCCESS)).toEqual([i18n.global.t("file.uploadSuccess")]);
     expect(shownMessages(NotificationType.ERROR)).toEqual([]);
-    expect(mocks.getMediaInfoByOrganization).toHaveBeenCalledTimes(1);
+  });
+
+  it("adds the uploaded file to the loaded media without loading the others again", async () => {
+    const alreadyLoaded = { id: "older-id", title: "older.png", mimeType: "image/png", size: 7 };
+    const mediaStore = useMediaStore();
+    mediaStore.organizationMedia = [alreadyLoaded];
+    mocks.uploadGeneralMedia.mockResolvedValue(uploaded.id);
+    const wrapper = mountEntryPoint();
+
+    await selectFile(wrapper, [svg]);
+
+    expect(mediaStore.organizationMedia).toEqual([alreadyLoaded, uploaded]);
+    expect(mocks.getMediaInfo.mock.calls).toEqual([[uploaded.id]]);
+    expect(mocks.getMediaInfoByOrganization).not.toHaveBeenCalled();
   });
 
   it.each(LOCALES)(

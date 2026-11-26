@@ -33,10 +33,20 @@ export const InstanceSettingsUpdateDtoSchema = z.object({
 
 export type InstanceSettingsUpdateDto = z.infer<typeof InstanceSettingsUpdateDtoSchema>;
 
+/** Operator-configured legal documents; a link is absent when its URL is not configured. */
+export const LegalLinksDtoSchema = z.object({
+  privacyPolicyUrl: z.string().optional(),
+  termsOfServiceUrl: z.string().optional(),
+  imprintUrl: z.string().optional(),
+});
+
+export type LegalLinksDto = z.infer<typeof LegalLinksDtoSchema>;
+
 export const PublicInstanceSettingsDtoSchema = z.object({
   signupEnabled: z.boolean(),
   organizationCreationEnabled: z.boolean().optional(),
   usageManagementUrl: z.string().optional(),
+  legalLinks: LegalLinksDtoSchema,
 });
 
 export type PublicInstanceSettingsDto = z.infer<typeof PublicInstanceSettingsDtoSchema>;

@@ -660,6 +660,120 @@ describe("aasTableExtension composable", () => {
     );
   });
 
+  it("should clear the values of a row through the value endpoint", async () => {
+    const { openDrawer } = useAasDrawer({ onHideDrawer: vi.fn(), can: vi.fn() });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { rows, rowMenu, buildRowMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: vi.fn(),
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({
+      data: submodelElementList,
+      status: HTTPCode.OK,
+    });
+    buildRowMenu({ position: 1 });
+
+    const clearRowButton = rowMenu.value.find((e) => e.label === "aasEditor.table.clearRowValues")!;
+    clearRowButton.command!({} as MenuItemCommandEvent);
+
+    await waitFor(() =>
+      expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+        aasId,
+        pathToList.submodelId,
+        pathToList.idShortPath,
+        [
+          {
+            Column1: null,
+            Column2: null,
+            Column3: { contentType: "application/octet-stream", value: null },
+            Column4: null,
+          },
+          {
+            Column1: null,
+            Column2: null,
+            Column3: { contentType: "text/plain", value: null },
+            Column4: null,
+          },
+        ],
+      ),
+    );
+    await waitFor(() =>
+      expect(rows.value[1]).toEqual({
+        idShort: "row1",
+        Column1: null,
+        Column2: null,
+        Column3: null,
+        Column4: null,
+      }),
+    );
+  });
+
+  it("should keep the values of the other rows when clearing a row", async () => {
+    const { openDrawer } = useAasDrawer({ onHideDrawer: vi.fn(), can: vi.fn() });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { rows, rowMenu, buildRowMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: vi.fn(),
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({
+      data: submodelElementList,
+      status: HTTPCode.OK,
+    });
+    const rowBefore = { ...rows.value[1]! };
+    expect(rowBefore.Column1).toBe("Wood");
+    buildRowMenu({ position: 0 });
+
+    const clearRowButton = rowMenu.value.find((e) => e.label === "aasEditor.table.clearRowValues")!;
+    clearRowButton.command!({} as MenuItemCommandEvent);
+
+    await waitFor(() =>
+      expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+        aasId,
+        pathToList.submodelId,
+        pathToList.idShortPath,
+        [
+          {
+            Column1: null,
+            Column2: null,
+            Column3: { contentType: "application/octet-stream", value: null },
+            Column4: null,
+          },
+          {
+            Column1: "Wood",
+            Column2: "50",
+            Column3: { contentType: "text/plain", value: "pathToFile" },
+            Column4: "https://example.com/my-link",
+          },
+        ],
+      ),
+    );
+    expect(rows.value[1]).toEqual(rowBefore);
+  });
+
   it("should modify column", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();

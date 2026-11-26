@@ -23,6 +23,7 @@ import { findActiveOrganizationIdForUser } from "../organizations/infrastructure
 import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
 import { fillMissingDisplayName } from "../users/infrastructure/user-display-name-hook";
 import { recordLastLogin } from "../users/infrastructure/user-last-login-hook";
+import { applyLegalConsent } from "../users/infrastructure/user-legal-consent-hook";
 import { oauthProviderAuthOptions } from "./infrastructure/oauth-provider/oauth-provider-plugins";
 import { AUTH_BASE_PATH } from "./auth-base-path";
 import { bootstrapTrustedClient } from "./infrastructure/oauth-provider/trusted-client-upsert";
@@ -144,6 +145,11 @@ export const AuthProvider: Provider = {
     // OAuth Provider: plugins and lockdown only while enabled
     const oauthProvider = oauthProviderAuthOptions(configService);
 
+    // Linked terms or privacy policy make self sign-up require consent (see applyLegalConsent)
+    const legalConsentRequired =
+      !!configService.get("OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL") ||
+      !!configService.get("OPEN_DPP_LEGAL_PRIVACY_POLICY_URL");
+
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
       basePath: AUTH_BASE_PATH,
@@ -196,6 +202,11 @@ export const AuthProvider: Provider = {
             validator: { input: DisplayLanguageEnum },
           },
           lastLoginAt: {
+            type: "date",
+            required: false,
+            input: false,
+          },
+          termsAcceptedAt: {
             type: "date",
             required: false,
             input: false,
@@ -293,7 +304,8 @@ export const AuthProvider: Provider = {
         },
         user: {
           create: {
-            before: async (user) => fillMissingDisplayName(user),
+            before: async (user, context) =>
+              fillMissingDisplayName(applyLegalConsent(user, context, legalConsentRequired).data),
           },
           update: {
             before: async (data, context) => guardEmailChangeUpdate(db, logger, data, context),

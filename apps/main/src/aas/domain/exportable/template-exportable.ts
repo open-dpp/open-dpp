@@ -1,6 +1,5 @@
 import { DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { DigitalProductDocumentStatusChange } from "../../../digital-product-document/domain/digital-product-document-status";
-import { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { Template } from "../../../templates/domain/template";
 import { ExpandedEnvironment } from "../expanded-environment";
@@ -15,7 +14,6 @@ export class TemplateExportable extends BaseAasExportable {
     updatedAt: Date,
     lastStatusChange: DigitalProductDocumentStatusChange,
     presentationConfiguration: PresentationConfiguration | null,
-    public readonly passportEditingMode: PassportEditingModeType,
   ) {
     super(
       id,
@@ -42,11 +40,10 @@ export class TemplateExportable extends BaseAasExportable {
       data.updatedAt,
       data.getLastStatusChange(),
       presentationConfiguration,
-      data.getPassportEditingMode(),
     );
   }
 
   protected exportSpecificFields(): Record<string, unknown> {
-    return { passportEditingMode: this.passportEditingMode };
+    return {};
   }
 }

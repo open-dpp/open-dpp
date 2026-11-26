@@ -45,7 +45,6 @@ export class OrganizationsService {
   async createOrganization(
     data: OrganizationCreateProps,
     session: Session,
-    headers: BetterAuthHeaders,
     userRole: UserRoleType,
   ): Promise<Organization> {
     const settings = await this.instanceSettingsService.getSettings();
@@ -54,7 +53,10 @@ export class OrganizationsService {
     }
 
     const organization = Organization.create(data);
-    const createdOrganization = await this.organizationsRepository.create(organization, headers);
+    const createdOrganization = await this.organizationsRepository.create(
+      organization,
+      session.userId,
+    );
     if (!createdOrganization) {
       throw new BadRequestException();
     }
@@ -75,7 +77,7 @@ export class OrganizationsService {
       OrganizationCreatedEvent.create({ organizationId: createdOrganization.id }),
     );
 
-    // BetterAuth's createOrganization already adds the authenticated user as owner; do not add again.
+    // BetterAuth's createOrganization already adds the session's user as owner; do not add again.
     return createdOrganization;
   }
 

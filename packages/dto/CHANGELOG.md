@@ -1,5 +1,61 @@
 # @open-dpp/dto
 
+## 7.3.4
+
+## 7.3.3
+
+## 7.3.2
+
+## 7.3.1
+
+## 7.3.0
+
+### Minor Changes
+
+- [#1154](https://github.com/open-dpp/open-dpp/pull/1154) [`dce00c0`](https://github.com/open-dpp/open-dpp/commit/dce00c037c6ce5089cd1013cb15133d87d0e3588) Thanks [@florianBieck](https://github.com/florianBieck)! - The media upload API accepts SVG images and detects every file's type from its content instead of the client's MIME type. SVGs stay vector images: scripts, event handlers and references to other files are removed on upload, and SVG downloads carry a sandboxing Content-Security-Policy. Photos are stored upright, and all image metadata, the GPS position included, is removed. HEIC uploads, which could never be decoded, and other unsupported or broken files are now rejected with a 400 instead of failing with a 500.
+
+  The media library and the media picker now offer WebP and SVG files in the file dialog. When a file is rejected because its type is not supported, it is invalid or it is larger than 15 MB, both say so instead of showing a generic error, and the media picker shows its messages in the selected language. An SVG that only defines a `viewBox` is shown at the size of its container in previews, the product image gallery and the branding logo, and at the size of the screen in the full-screen view of an image.
+
+  After the product images of a passport or template are saved, the gallery in the editor shows the saved images, whichever image it was on. Before, it kept the old images or stayed empty when it was not on its first image.
+
+## 7.2.0
+
+## 7.1.2
+
+## 7.1.1
+
+## 7.1.0
+
+### Minor Changes
+
+- [#1158](https://github.com/open-dpp/open-dpp/pull/1158) [`2bb9f5c`](https://github.com/open-dpp/open-dpp/commit/2bb9f5c6cc5d6f4a8a3e9805e4609eb1ff642000) Thanks [@Hentra](https://github.com/Hentra)! - Operators can link their privacy policy, terms of service and imprint through `OPEN_DPP_LEGAL_PRIVACY_POLICY_URL`, `OPEN_DPP_LEGAL_TERMS_OF_SERVICE_URL` and `OPEN_DPP_LEGAL_IMPRINT_URL`. The links show in a footer in the app sidebar, on the presentation view and on every sign-in and sign-up page, and `GET /instance-settings/public` returns them as `legalLinks` to everyone. While terms or a privacy policy are linked, sign-up requires a consent checkbox; the server rejects a sign-up without `termsAccepted: true` and records `termsAcceptedAt` on the user. Users created by an admin are not asked.
+
+## 7.0.1
+
+## 7.0.0
+
+### Major Changes
+
+- [#1192](https://github.com/open-dpp/open-dpp/pull/1192) [`fb90dc4`](https://github.com/open-dpp/open-dpp/commit/fb90dc4a259fb5bd653a6a60e3b7ca56b27e8280) Thanks [@mr42](https://github.com/mr42)! - - A template that is no longer a draft is read-only. A passport created from a published template after this change only allows overwriting data values (table rows can still be added and deleted). Existing passports keep their stored `Full` editing mode. Passports from draft templates or without a template stay fully editable.
+  - The last remaining row of a table (its header row) cannot be deleted; deleting a row while others remain is allowed, and the next row becomes the header. Rows cannot be added to a table without columns.
+  - Breaking: removed `PUT /templates/:id/passport-editing-mode` and `PUT /passports/:id/editing-mode`, the related DTOs and the api-client methods `setEditingMode` / `setPassportEditingMode`. The template field `passportEditingMode` is replaced by the derived `editingMode`.
+  - Client: published templates open in a read-only editor, restricted passports hide column actions, and table rows get a "Clear row values" action.
+
+## 6.6.2
+
+## 6.6.1
+
+### Patch Changes
+
+- [#1179](https://github.com/open-dpp/open-dpp/pull/1179) [`ffbc851`](https://github.com/open-dpp/open-dpp/commit/ffbc85125b709a4603a84e7e6a2910a29615dc99) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/dto: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/env: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/exception: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/permission: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+  - @open-dpp/testing: `@tsconfig/node-ts` ^23.6.4 → ^23.6.5 (dev)
+
 ## 6.6.0
 
 ### Minor Changes

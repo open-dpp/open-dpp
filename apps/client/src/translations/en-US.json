@@ -100,7 +100,7 @@
     "security": {
       "unknownRole": "Unknown role",
       "missingPermission": "Missing permissions",
-      "archivedTooltip": "This document is archived and cannot be modified.",
+      "readOnlyTooltip": "This document is read-only and cannot be modified.",
       "editingRestrictedTooltip": "This passport allows data changes only. Its template controls the structure.",
       "inheritedPermission": "Inherited permissions",
       "overriddenPermission": "Overridden permissions",
@@ -138,6 +138,7 @@
       "addColumnEnd": "@:common.add @:aasEditor.table.column to the end",
       "addRowAbove": "@:common.add @:aasEditor.table.row above",
       "addRowBelow": "@:common.add @:aasEditor.table.row below",
+      "clearRowValues": "Clear row values",
       "editColumn": "@:common.edit @:aasEditor.table.column",
       "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column",
       "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
@@ -577,7 +578,7 @@
       "branding": "Branding"
     },
     "usage": {
-      "title": "Usage policies",
+      "title": "Usage quotas",
       "manage": "Manage usage",
       "setLimitsDialog": {
         "title": "Set usage limits",
@@ -747,6 +748,7 @@
     "select": "Select passport",
     "label": "Passport | Passports",
     "create": "Create passport",
+    "publishConfirm": "Publish this product passport? Once published, it becomes accessible to the public through its permanent link, not only to members of your organization. Its permalinks and product identifiers are then fixed and can no longer be changed or deleted.",
     "errorDelete": "Failed to delete the product passport",
     "errorFetch": "Failed to load the product passport",
     "errorLoading": "We couldn't load this passport. Please try again.",
@@ -755,12 +757,6 @@
     "loading": "Loading passport…",
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport status",
-    "errorRemoveEditingRestrictions": "Failed to remove editing restrictions",
-    "removeEditingRestrictions": "Remove Editing Restrictions",
-    "removeEditingRestrictionsTooltip": "This passport's structure, security, and layout are currently managed by its template. Do you want to remove the editing restriction?",
-    "removeEditingRestrictionsConfirmHeader": "Remove Editing Restrictions",
-    "removeEditingRestrictionsConfirmMessage": "This passport will no longer be controlled by its template — future template changes will not reach it. This cannot be undone.",
-    "removeEditingRestrictionsConfirmAccept": "Remove Restrictions",
     "restrictedEditingTag": "Restricted editing",
     "blank": "Blank",
     "fromTemplate": "From template",
@@ -785,6 +781,10 @@
     "selectPeriod": "Select period",
     "clear": "Clear filters"
   },
+  "editingMode": {
+    "readOnlyTooltip": "Published and archived templates cannot be changed. Create a new template to make changes.",
+    "dataOnlyTooltip": "This passport was created from a published template. You can edit its values, but its structure, security and layout are managed by the template."
+  },
   "status": {
     "withStatus": "with status",
     "selectStatus": "Select status",
@@ -798,6 +798,7 @@
   "templates": {
     "label": "Passport templates",
     "create": "Create passport template",
+    "publishConfirm": "Publish this passport template? Publishing marks it as final, so every passport created from it follows the same fixed structure and stays consistent. The template can then no longer be changed, and passports created from it only allow editing their data values.",
     "errorDelete": "Failed to delete the passport template",
     "errorFetch": "Failed to load the passport template",
     "errorLoading": "We couldn't load this template. Please try again.",
@@ -806,13 +807,6 @@
     "loading": "Loading template…",
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport template status",
-    "errorRestrictPassportEditing": "Failed to restrict passport editing",
-    "restrictPassportEditing": "Restrict Passport Editing",
-    "restrictPassportEditingTooltip": "Passports created from this template will only allow editing of field content — structure, security, and layout will be managed by the template.",
-    "restrictPassportEditingConfirmHeader": "Restrict Passport Editing",
-    "restrictPassportEditingConfirmMessage": "Passports created from this template will only allow editing of field content from now on. This cannot be undone.",
-    "restrictPassportEditingConfirmAccept": "Restrict Editing",
-    "restrictPassportEditingTag": "Limited Editing for Passports",
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",
@@ -994,7 +988,14 @@
       "ctaSignIn": "Sign in now",
       "error": "Sign up failed.",
       "disabled": "Signup is currently disabled. Please contact your administrator.",
-      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again."
+      "oauthContinueError": "Could not continue to the application that sent you here. Please sign up or sign in again.",
+      "settingsError": "The signup settings could not be loaded. Please try again.",
+      "consent": {
+        "termsAndPrivacy": "I accept the {terms} and have read the {privacy}.",
+        "termsOnly": "I accept the {terms}.",
+        "privacyOnly": "I have read the {privacy}.",
+        "required": "Please confirm to sign up."
+      }
     },
     "passwordResetRequest": {
       "title": "Request password reset",
@@ -1305,5 +1306,11 @@
     "loadError": "The data carrier could not be loaded.",
     "downloadError": "The data carrier could not be downloaded.",
     "copyError": "The link could not be copied to the clipboard."
+  },
+  "legal": {
+    "navigationLabel": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "imprint": "Imprint"
   }
 }

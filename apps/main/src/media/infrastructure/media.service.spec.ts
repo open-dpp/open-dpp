@@ -102,6 +102,11 @@ describe("MediaService", () => {
     service = module.get(MediaServiceClass);
   });
 
+  afterEach(() => {
+    // Puts back what `vi.spyOn` replaced; the `vi.fn` mocks above are untouched.
+    vi.restoreAllMocks();
+  });
+
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
@@ -1012,6 +1017,21 @@ describe("MediaService", () => {
         validMediaDoc.objectName,
       );
       expect(mockMediaModel.deleteOne).toHaveBeenCalledWith({ _id: "media-id" });
+    });
+
+    it("should log a failed storage delete through the Logger and keep the record", async () => {
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const storageError = new Error("storage unavailable");
+      mockMediaModel.findById.mockResolvedValue(validMediaDoc);
+      mockS3Client.removeObject.mockRejectedValue(storageError);
+
+      await service.deleteFileById("media-id");
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("media-id"), storageError);
+      expect(consoleSpy).not.toHaveBeenCalled();
+      expect(mockMediaModel.deleteOne).not.toHaveBeenCalled();
     });
   });
 

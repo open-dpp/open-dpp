@@ -22,6 +22,7 @@ function makeDeps(overrides: Partial<TableMenuDeps> = {}): TableMenuDeps {
     onCreateGroupFromColumn: vi.fn(),
     onAddRow: vi.fn(),
     onRemoveRow: vi.fn(),
+    onClearRow: vi.fn(),
     ...overrides,
   };
 }
@@ -466,7 +467,7 @@ describe("column menu commands delegate to the injected callbacks", () => {
 describe("buildRowMenu", () => {
   it("adding a row above/below calls onAddRow with the right position", async () => {
     const deps = makeDeps();
-    const menu = buildRowMenu({ position: 2 }, 5, deps);
+    const menu = buildRowMenu({ position: 2 }, 5, 2, deps);
     await (menu[0]!.command as any)();
     expect(deps.onAddRow).toHaveBeenCalledWith({ position: 2 });
     await (menu[1]!.command as any)();
@@ -475,7 +476,7 @@ describe("buildRowMenu", () => {
 
   it("defaults 'add row below' position to rowsLength when position is undefined", async () => {
     const deps = makeDeps();
-    const menu = buildRowMenu({}, 5, deps);
+    const menu = buildRowMenu({}, 5, 2, deps);
     await (menu[1]!.command as any)();
     expect(deps.onAddRow).toHaveBeenCalledWith({ position: 5 });
   });
@@ -484,8 +485,41 @@ describe("buildRowMenu", () => {
     const deps = makeDeps({
       openConfirm: vi.fn((options: any) => options.accept()),
     });
-    const menu = buildRowMenu({ position: 3 }, 5, deps);
+    const menu = buildRowMenu({ position: 3 }, 5, 2, deps);
     await (menu[2]!.command as any)();
     expect(deps.onRemoveRow).toHaveBeenCalledWith(3);
+  });
+  it("disables adding rows while the table has no columns", () => {
+    const menu = buildRowMenu({ position: 0 }, 1, 0, makeDeps());
+    expect(menu[0]!.disabled).toBe(true);
+    expect(menu[1]!.disabled).toBe(true);
+  });
+
+  it("keeps adding rows enabled once the table has a column", () => {
+    const menu = buildRowMenu({ position: 0 }, 1, 1, makeDeps());
+    expect(menu[0]!.disabled).toBeFalsy();
+    expect(menu[1]!.disabled).toBeFalsy();
+  });
+
+  it("disables removing the last remaining row", () => {
+    const menu = buildRowMenu({ position: 0 }, 1, 1, makeDeps());
+    expect(menu[2]!.disabled).toBe(true);
+  });
+
+  it("allows removing a row while others remain", () => {
+    const menu = buildRowMenu({ position: 0 }, 2, 1, makeDeps());
+    expect(menu[2]!.disabled).toBeFalsy();
+  });
+
+  it("clearing row values calls onClearRow with the row position", async () => {
+    const deps = makeDeps();
+    const menu = buildRowMenu({ position: 1 }, 3, 2, deps);
+    await (menu[3]!.command as any)();
+    expect(deps.onClearRow).toHaveBeenCalledWith(1);
+  });
+
+  it("disables clearing row values without permission to edit values", () => {
+    const menu = buildRowMenu({ position: 1 }, 3, 2, makeDeps({ disableRowValueEditing: true }));
+    expect(menu[3]!.disabled).toBe(true);
   });
 });

@@ -40,7 +40,7 @@ const {
   importOfficialTemplates,
 } = useTemplates();
 
-const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
+const { deleteDPD, publishWithConfirmation, restore, archive } = useDigitalProductDocument(
   DigitalProductDocumentType.Template,
 );
 
@@ -92,9 +92,8 @@ async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
   await deleteDPD(item.id, reloadCurrentPage);
 }
 
-async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
-  await publish(item.id);
-  await reloadCurrentPage();
+function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  publishWithConfirmation(item.id, reloadCurrentPage);
 }
 
 async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {

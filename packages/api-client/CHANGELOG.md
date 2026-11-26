@@ -1,5 +1,48 @@
 # @open-dpp/api-client
 
+## 7.3.4
+
+### Patch Changes
+
+- [#1249](https://github.com/open-dpp/open-dpp/pull/1249) [`8216bf6`](https://github.com/open-dpp/open-dpp/commit/8216bf6bc70e5e69149ee39f628a78bd188dd023) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/api-client: `rollup` ^4.65.0 → ^4.68.8 (dev)
+
+- [#1250](https://github.com/open-dpp/open-dpp/pull/1250) [`54e1556`](https://github.com/open-dpp/open-dpp/commit/54e1556cdf6a3f6f83176e2c79603c12a29cca92) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/api-client: `tslib` ^2.8.1 → ^2.9.1 (dev)
+
+## 7.3.3
+
+## 7.3.2
+
+## 7.3.1
+
+## 7.3.0
+
+## 7.2.0
+
+## 7.1.2
+
+## 7.1.1
+
+## 7.1.0
+
+## 7.0.1
+
+## 7.0.0
+
+### Major Changes
+
+- [#1192](https://github.com/open-dpp/open-dpp/pull/1192) [`fb90dc4`](https://github.com/open-dpp/open-dpp/commit/fb90dc4a259fb5bd653a6a60e3b7ca56b27e8280) Thanks [@mr42](https://github.com/mr42)! - - A template that is no longer a draft is read-only. A passport created from a published template after this change only allows overwriting data values (table rows can still be added and deleted). Existing passports keep their stored `Full` editing mode. Passports from draft templates or without a template stay fully editable.
+  - The last remaining row of a table (its header row) cannot be deleted; deleting a row while others remain is allowed, and the next row becomes the header. Rows cannot be added to a table without columns.
+  - Breaking: removed `PUT /templates/:id/passport-editing-mode` and `PUT /passports/:id/editing-mode`, the related DTOs and the api-client methods `setEditingMode` / `setPassportEditingMode`. The template field `passportEditingMode` is replaced by the derived `editingMode`.
+  - Client: published templates open in a read-only editor, restricted passports hide column actions, and table rows get a "Clear row values" action.
+
+## 6.6.2
+
+## 6.6.1
+
 ## 6.6.0
 
 ### Minor Changes

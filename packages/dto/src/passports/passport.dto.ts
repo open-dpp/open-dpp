@@ -4,7 +4,7 @@ import { DigitalProductDocumentDtoSchema } from "../digital-product-document/dig
 import {
   PassportEditingModeDto,
   PassportEditingModeDtoEnum,
-} from "../digital-product-document/passport-editing-mode.dto";
+} from "../digital-product-document/editing-mode.dto";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 export const PassportDtoSchema = DigitalProductDocumentDtoSchema.extend({
@@ -37,8 +37,3 @@ export const PassportRequestCreateDtoSchema = z.xor([
 ]);
 
 export type PassportRequestCreateDto = z.input<typeof PassportRequestCreateDtoSchema>;
-
-export const RemoveEditingRestrictionsDtoSchema = z.object({
-  mode: z.literal(PassportEditingModeDto.Full),
-});
-export type RemoveEditingRestrictionsDto = z.infer<typeof RemoveEditingRestrictionsDtoSchema>;

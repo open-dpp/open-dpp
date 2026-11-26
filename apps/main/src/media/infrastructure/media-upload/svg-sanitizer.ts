@@ -1,4 +1,5 @@
 import type { DOMWindow } from "jsdom";
+import type { SaxesTagNS } from "saxes";
 import { Buffer } from "node:buffer";
 import { ValueError } from "@open-dpp/exception";
 import createDOMPurify from "dompurify";
@@ -7,7 +8,8 @@ import { SaxesParser } from "saxes";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
-const XMLNS_NAMESPACE = "http://www.w3.org/2000/xmlns/";
+/** DOMPurify keeps XLink attributes only under this prefix, the one the SVG specification uses. */
+const XLINK_PREFIX = "xlink";
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
 // Checked on the raw text before any parser runs: jsdom's XML parser expands internal entities.
 const DOCUMENT_TYPE_DECLARATION = /<!(?:DOCTYPE|ENTITY)/i;
@@ -102,11 +104,35 @@ function limitedAttributesOfElement(): (amount?: number) => void {
 }
 
 /**
- * Streams the text through saxes, which builds no DOM, and stops at the first limit exceeded,
- * before saxes reads any further. Counts what the parser reports, so markup inside a comment or a
- * CDATA section is text, and an element is counted however its name is spelled.
+ * DOMPurify matches elements and attributes by their qualified name; the XML parser and the
+ * browser go by their namespace. A file is accepted only if both read it the same way: SVG
+ * elements carry no prefix, and xlink is the prefix of the XLink namespace and of no other.
+ * Otherwise DOMPurify would drop `<s:rect>` and `l:href`, and it would keep an `xlink:href` of
+ * another namespace that the `<use>` hook does not see, and that the serializer can write as an
+ * XLink reference once DOMPurify moved its element.
  */
-function assertWithinLimits(text: string): void {
+function assertNamesSayTheirNamespace({ uri, prefix, attributes, ns }: SaxesTagNS): void {
+  if (uri === SVG_NAMESPACE && prefix !== "") {
+    throw new ValueError("SVG elements with a namespace prefix are not supported.");
+  }
+  // The namespaces this element declares.
+  if (XLINK_PREFIX in ns && ns[XLINK_PREFIX] !== XLINK_NAMESPACE) {
+    throw new ValueError("SVG files must bind the prefix xlink to the XLink namespace.");
+  }
+  const hasOtherXlinkPrefix = Object.values(attributes).some(
+    (attribute) => attribute.uri === XLINK_NAMESPACE && attribute.prefix !== XLINK_PREFIX,
+  );
+  if (hasOtherXlinkPrefix) {
+    throw new ValueError("XLink attributes of an SVG image must carry the prefix xlink.");
+  }
+}
+
+/**
+ * Streams the text through saxes, which builds no DOM, and stops at the first limit exceeded or
+ * the first name DOMPurify would misread, before saxes reads any further. Counts what the parser
+ * reports, so markup inside a comment or a CDATA section is text.
+ */
+function scanBeforeParsing(text: string): void {
   const { maxNodes, maxDepth, maxAttributes, maxStyleLength, maxNamespaceLength } = SVG_LIMITS;
   const countNode = limitedCount(maxNodes, `The SVG image has more than ${maxNodes} elements.`);
   const countDepth = limitedCount(
@@ -144,6 +170,8 @@ function assertWithinLimits(text: string): void {
       countStyle(value.length);
     }
   });
+  // Called when the start tag ends, with its namespaces resolved and its attributes within limits.
+  parser.on("opentag", assertNamesSayTheirNamespace);
   parser.on("closetag", () => countDepth(-1));
   parser.on("comment", () => countNode());
   parser.on("cdata", () => countNode());
@@ -178,109 +206,6 @@ function replaceCdataSectionsWithText(root: Element, window: DOMWindow): void {
   }
 }
 
-/** DOMPurify keeps XLink attributes only under this prefix, the one the SVG specification uses. */
-const XLINK_PREFIX = "xlink";
-
-/** An element named xmlns cannot be created without a prefix, and it is no SVG element either. */
-function isSvgElement(node: Node, window: DOMWindow): node is Element {
-  if (node.nodeType !== window.Node.ELEMENT_NODE) {
-    return false;
-  }
-  const element = node as Element;
-  return element.namespaceURI === SVG_NAMESPACE && element.localName !== "xmlns";
-}
-
-function isXlinkAttributeWithOtherPrefix(attribute: Attr): boolean {
-  return attribute.namespaceURI === XLINK_NAMESPACE && attribute.prefix !== XLINK_PREFIX;
-}
-
-/**
- * DOMPurify keeps `xmlns:xlink` whatever namespace it binds. jsdom's XML serializer can then write
- * an attribute with the prefix of an outer declaration that a nearer one binds to another
- * namespace: an `xlink:href` in another namespace comes out as an XLink reference the `<use>` hook
- * never checked. Without the declaration, the serializer declares a prefix of its own for it.
- */
-function bindsXlinkToOtherNamespace(attribute: Attr): boolean {
-  return (
-    attribute.namespaceURI === XMLNS_NAMESPACE &&
-    attribute.localName === XLINK_PREFIX &&
-    attribute.value !== XLINK_NAMESPACE
-  );
-}
-
-function isNonCanonicalAttribute(attribute: Attr): boolean {
-  return isXlinkAttributeWithOtherPrefix(attribute) || bindsXlinkToOtherNamespace(attribute);
-}
-
-function hasNamesToCanonicalize(node: Node, window: DOMWindow): node is Element {
-  return (
-    isSvgElement(node, window) &&
-    (node.prefix !== null || Array.from(node.attributes).some(isNonCanonicalAttribute))
-  );
-}
-
-/**
- * Picks the attribute by its namespace, not its prefix. An `xlink:href` whose prefix is bound to
- * another namespace is no XLink attribute: it keeps its name, and the `<use>` hook ignores it.
- */
-function canonicalAttributeName(attribute: Attr): string {
-  return attribute.namespaceURI === XLINK_NAMESPACE
-    ? `${XLINK_PREFIX}:${attribute.localName}`
-    : attribute.name;
-}
-
-function canonicalSvgElement(element: Element): Element {
-  const copy = element.ownerDocument.createElementNS(SVG_NAMESPACE, element.localName);
-  const attributes = Array.from(element.attributes).filter(
-    (attribute) => !bindsXlinkToOtherNamespace(attribute),
-  );
-  // Other attributes keep their namespace and prefix: `s:onclick` is no event handler, and
-  // DOMPurify drops it by its name like any other attribute it does not know.
-  for (const attribute of attributes) {
-    copy.setAttributeNS(attribute.namespaceURI, canonicalAttributeName(attribute), attribute.value);
-  }
-  return copy;
-}
-
-/**
- * Copies like jsdom's own deep clone: a subtree is complete before it is appended to a parent
- * that has no parent yet, so each append takes constant time, where moving a subtree would cost
- * its size. The recursion is as deep as the tree, which `SVG_LIMITS.maxDepth` caps.
- */
-function copyWithCanonicalNames(node: Node, window: DOMWindow): Node {
-  const copy = hasNamesToCanonicalize(node, window)
-    ? canonicalSvgElement(node)
-    : node.cloneNode(false);
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    copy.appendChild(copyWithCanonicalNames(child, window));
-  }
-  return copy;
-}
-
-function containsNamesToCanonicalize(root: Element, window: DOMWindow): boolean {
-  const iterator = root.ownerDocument.createNodeIterator(root, window.NodeFilter.SHOW_ELEMENT);
-  for (let node = iterator.nextNode(); node; node = iterator.nextNode()) {
-    if (hasNamesToCanonicalize(node, window)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * DOMPurify matches elements and attributes by their qualified name, so it drops `<s:rect>`, an
- * `<s:svg>` root and `l:href`, although `s` is bound to the SVG namespace and `l` to the XLink
- * namespace. Returns a copy in which SVG elements have no prefix, XLink attributes have the prefix
- * xlink and no declaration binds xlink to another namespace. Elements in other namespaces are
- * copied unchanged, so DOMPurify drops them as before.
- */
-function withCanonicalNames(root: Element, window: DOMWindow): Element {
-  if (!containsNamesToCanonicalize(root, window)) {
-    return root;
-  }
-  return copyWithCanonicalNames(root, window) as Element;
-}
-
 function findSvgRoot(fragment: DocumentFragment): Element {
   const root = fragment.firstElementChild;
   if (!root || root.localName !== "svg" || root.namespaceURI !== SVG_NAMESPACE) {
@@ -294,18 +219,18 @@ function findSvgRoot(fragment: DocumentFragment): Element {
  * documents and editor-specific markup. Returns the cleaned SVG; the input is never stored.
  *
  * @throws ValueError if the file is not a UTF-8, well-formed SVG, declares a DOCTYPE or ENTITY,
- * or exceeds one of the `SVG_LIMITS`.
+ * exceeds one of the `SVG_LIMITS`, gives SVG elements a namespace prefix, or uses another prefix
+ * than xlink for the XLink namespace.
  */
 export function sanitizeSvg(input: Buffer): Buffer {
   const text = decodeUtf8(input);
   if (DOCUMENT_TYPE_DECLARATION.test(text)) {
     throw new ValueError("SVG files must not contain DOCTYPE or ENTITY declarations.");
   }
-  assertWithinLimits(text);
+  scanBeforeParsing(text);
   const { window, purifier } = getToolkit();
-  const parsed = parseStandaloneSvg(text, window);
-  replaceCdataSectionsWithText(parsed, window);
-  const root = withCanonicalNames(parsed, window);
+  const root = parseStandaloneSvg(text, window);
+  replaceCdataSectionsWithText(root, window);
 
   // DOMPurify gets the parsed tree, not the text: it would parse text again as HTML, whose tree
   // construction can turn a few hundred well-formed tags into tens of thousands of elements.

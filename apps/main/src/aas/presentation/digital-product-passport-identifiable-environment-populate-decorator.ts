@@ -1,3 +1,4 @@
+import type { EditingModeType } from "../../digital-product-document/domain/editing-mode";
 import { Passport } from "../../passports/domain/passport";
 import { Template } from "../../templates/domain/template";
 import { AasAbility } from "../domain/security/aas-ability";
@@ -13,6 +14,10 @@ export class DigitalProductPassportIdentifiableEnvironmentPopulateDecorator exte
     ability: AasAbility,
   ) {
     super(convertable.environment, aasRepository, submodelRepository, ability);
+  }
+
+  getEditingMode(): EditingModeType {
+    return this.convertable.getEditingMode();
   }
 
   toPlain(): Record<string, any> {

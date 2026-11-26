@@ -3,6 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -12,12 +13,9 @@ import {
 } from "../../aas/infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../../aas/infrastructure/schemas/submodel.schema";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { ActivityTypes } from "../../activity-history/domain/activities/activity-types";
 import { BulkImportConfigService } from "../../bulk-import/application/services/bulk-import-config.service";
 import { generateMongoConfig } from "../../database/config";
 import { DatabaseModule } from "../../database/database.module";
-import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import { EmailService } from "../../email/email.service";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
@@ -33,7 +31,6 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 describe("templateService", () => {
   let service: TemplateService;
   let templateRepository: TemplateRepository;
-  let activityRepository: ActivityRepository;
   let module: TestingModule;
 
   beforeAll(async () => {
@@ -78,14 +75,13 @@ describe("templateService", () => {
 
     service = module.get<TemplateService>(TemplateService);
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
-    activityRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
   afterAll(async () => {
     await module.close();
   });
 
-  it("restrictPassportEditingToData restricts the template and records an activity", async () => {
+  it("modifyTemplateStatus publishes a template", async () => {
     const organizationId = randomUUID();
     const subject = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -94,38 +90,14 @@ describe("templateService", () => {
     const template = Template.create({ organizationId, environment: Environment.create({}) });
     await templateRepository.save(template);
 
-    const result = await service.restrictPassportEditingToData(
+    await service.modifyTemplateStatus(
       randomUUID(),
       organizationId,
       template.id,
+      { method: DigitalProductDocumentStatusModificationMethodDto.Publish },
       { subject, userId: randomUUID() },
     );
-    expect(result.passportEditingMode).toEqual(PassportEditingMode.DataOnly);
 
-    const persisted = await templateRepository.findOneOrFail(template.id);
-    expect(persisted.getPassportEditingMode()).toEqual(PassportEditingMode.DataOnly);
-
-    const activities = await activityRepository.findByAggregateId(template.id, {
-      filter: { activityType: ActivityTypes.PassportEditingModeChanged },
-    });
-    expect(activities.items).toHaveLength(1);
-  });
-
-  it("restrictPassportEditingToData throws when already restricted", async () => {
-    const organizationId = randomUUID();
-    const subject = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-    const template = Template.create({ organizationId, environment: Environment.create({}) });
-    template.restrictPassportEditingToData();
-    await templateRepository.save(template);
-
-    await expect(
-      service.restrictPassportEditingToData(randomUUID(), organizationId, template.id, {
-        subject,
-        userId: randomUUID(),
-      }),
-    ).rejects.toThrow("Passport editing is already restricted to data for this template.");
+    expect((await templateRepository.findOneOrFail(template.id)).isPublished()).toBeTruthy();
   });
 });

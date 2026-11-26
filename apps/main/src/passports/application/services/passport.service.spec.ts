@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { ApiVersionsDto, KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Model } from "mongoose";
@@ -43,9 +43,7 @@ import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
-import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
-import { ActivityTypes } from "../../../activity-history/domain/activities/activity-types";
-import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import { PassportEditingMode } from "../../../digital-product-document/domain/editing-mode";
 import { EmailService } from "../../../email/email.service";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Template } from "../../../templates/domain/template";
@@ -59,7 +57,6 @@ describe("passportService", () => {
   let templateRepository: TemplateRepository;
   let module: TestingModule;
   let environmentService: EnvironmentService;
-  let activityRepository: ActivityRepository;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -109,7 +106,6 @@ describe("passportService", () => {
     );
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
     environmentService = module.get<EnvironmentService>(EnvironmentService);
-    activityRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
   afterAll(async () => {
@@ -120,51 +116,109 @@ describe("passportService", () => {
     expect(service).toBeDefined();
   });
 
-  it("createPassportFromTemplate copies the template's environment and passportEditingMode, and links it to the passport", async () => {
+  describe("createPassportFromTemplate", () => {
     const organizationId = randomUUID();
     const subject = SubjectAttributes.create({
       userRole: UserRole.USER,
       memberRole: MemberRole.MEMBER,
     });
-    const environment = await environmentService.createEnvironment(
-      { assetAdministrationShells: [{}] },
-      true,
-    );
-    const template = Template.create({
-      organizationId,
-      environment,
+
+    async function saveTemplate(options: { published: boolean }) {
+      const template = Template.create({
+        organizationId,
+        environment: await environmentService.createEnvironment(
+          { assetAdministrationShells: [{}] },
+          true,
+        ),
+      });
+      if (options.published) {
+        template.publish();
+      }
+      await templateRepository.save(template);
+      return template;
+    }
+
+    it("copies the template's environment, and links it to the passport", async () => {
+      const template = await saveTemplate({ published: false });
+
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+
+      expect(passport.templateId).toEqual(template.id);
+      expect(passport.organizationId).toEqual(organizationId);
+      expect(await passportRepository.findOne(passport.id)).toBeDefined();
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: DigitalProductDocumentTypes.Passport,
+          referenceId: passport.id,
+        }),
+      ).toBeDefined();
     });
-    await templateRepository.save(template);
 
-    const passport = await service.createPassportFromTemplate(organizationId, template.id, subject);
+    it("stores full editing mode for a passport of a draft template", async () => {
+      const template = await saveTemplate({ published: false });
 
-    expect(passport.templateId).toEqual(template.id);
-    expect(passport.organizationId).toEqual(organizationId);
-    expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
-    expect(await passportRepository.findOne(passport.id)).toBeDefined();
-    expect(
-      await presentationConfigurationRepository.findByReference({
-        referenceType: DigitalProductDocumentTypes.Passport,
-        referenceId: passport.id,
-      }),
-    ).toBeDefined();
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
 
-    const restrictedTemplate = Template.create({
-      organizationId,
-      environment: await environmentService.createEnvironment(
-        { assetAdministrationShells: [{}] },
-        true,
-      ),
+      expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
+      const persisted = await passportRepository.findOneOrFail(passport.id);
+      expect(persisted.getEditingMode()).toEqual(PassportEditingMode.Full);
     });
-    restrictedTemplate.restrictPassportEditingToData();
-    await templateRepository.save(restrictedTemplate);
 
-    const restrictedPassport = await service.createPassportFromTemplate(
-      organizationId,
-      restrictedTemplate.id,
-      subject,
-    );
-    expect(restrictedPassport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+    it("stores data-only editing mode for a passport of a published template", async () => {
+      const template = await saveTemplate({ published: true });
+
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+
+      expect(passport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+      const persisted = await passportRepository.findOneOrFail(passport.id);
+      expect(persisted.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+    });
+
+    it("keeps the stored editing mode when the template is archived later", async () => {
+      const template = await saveTemplate({ published: true });
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+      template.archive();
+      await templateRepository.save(template);
+
+      const persisted = await passportRepository.findOneOrFail(passport.id);
+      expect(persisted.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
+    });
+
+    it("accepts value writes on the data-only passport of a published template, as bulk import does", async () => {
+      const template = await saveTemplate({ published: true });
+      const passport = await service.createPassportFromTemplate(
+        organizationId,
+        template.id,
+        subject,
+      );
+
+      await expect(
+        service.digitalProductDocumentService.modifyValueOfMultipleSubmodels(
+          randomUUID(),
+          organizationId,
+          passport.id,
+          {},
+          { subject, userId: randomUUID() },
+          ApiVersionsDto.v2,
+        ),
+      ).resolves.not.toThrow();
+    });
   });
 
   it("createPassportFromTemplate rejects an archived template", async () => {
@@ -274,72 +328,6 @@ describe("passportService", () => {
 
     const stillDynamic = await permalinkRepository.findOneOrFail(permalink.id);
     expect(stillDynamic.publishedUrl).toBeNull();
-  });
-
-  it("removeEditingRestrictions restores full editing and records an activity", async () => {
-    const organizationId = randomUUID();
-    const subject = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-    const passport = Passport.create({
-      organizationId,
-      templateId: randomUUID(),
-      environment: Environment.create({}),
-      editingMode: PassportEditingMode.DataOnly,
-    });
-    await passportRepository.save(passport);
-
-    await service.removeEditingRestrictions(randomUUID(), organizationId, passport.id, {
-      subject,
-      userId: randomUUID(),
-    });
-
-    const persisted = await passportRepository.findOneOrFail(passport.id);
-    expect(persisted.getEditingMode()).toEqual(PassportEditingMode.Full);
-
-    const activities = await activityRepository.findByAggregateId(passport.id, {
-      filter: { activityType: ActivityTypes.PassportEditingModeChanged },
-    });
-    expect(activities.items).toHaveLength(1);
-  });
-
-  it("removeEditingRestrictions throws when the passport is already fully editable", async () => {
-    const organizationId = randomUUID();
-    const subject = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-    const passport = Passport.create({ organizationId, environment: Environment.create({}) });
-    await passportRepository.save(passport);
-
-    await expect(
-      service.removeEditingRestrictions(randomUUID(), organizationId, passport.id, {
-        subject,
-        userId: randomUUID(),
-      }),
-    ).rejects.toThrow("This passport's editing is not restricted.");
-  });
-
-  it("assertFullEditingMode does not throw for a fully editable passport", async () => {
-    const passport = Passport.create({
-      organizationId: randomUUID(),
-      environment: Environment.create({}),
-    });
-
-    expect(() => service.assertFullEditingMode(passport)).not.toThrow();
-  });
-
-  it("assertFullEditingMode throws when the passport's editing is restricted to data", async () => {
-    const passport = Passport.create({
-      organizationId: randomUUID(),
-      environment: Environment.create({}),
-      editingMode: PassportEditingMode.DataOnly,
-    });
-
-    expect(() => service.assertFullEditingMode(passport)).toThrow(
-      `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
-    );
   });
 
   it("threads the stored presentationConfiguration into the exported passport", async () => {

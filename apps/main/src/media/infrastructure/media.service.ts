@@ -68,6 +68,7 @@ export interface UploadMediaOptions {
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
   private readonly client: S3Client;
   private readonly bucketNameDefault: string;
   private readonly bucketNameProfilePictures: string;
@@ -134,7 +135,7 @@ export class MediaService {
     try {
       await this.client.removeObject(object.bucket, object.objectName);
     } catch (error) {
-      console.error(error);
+      this.logger.error(`Failed to remove the stored file of media ${id}`, error);
       return new Error("failed to delete media object");
     }
 

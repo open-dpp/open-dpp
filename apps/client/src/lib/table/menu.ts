@@ -42,6 +42,8 @@ export interface TableMenuDeps {
   errorHandlingStore: IErrorHandlingStore;
   disableRowCreation?: boolean;
   disableRowDeletion?: boolean;
+  /** Clearing a row's values is a data edit, independent of structural permissions. */
+  disableRowValueEditing?: boolean;
   disableColumnCreation?: boolean;
   disableColumnDeletion?: boolean;
   disableColumnEditing?: boolean;
@@ -73,6 +75,7 @@ export interface TableMenuDeps {
   ) => Promise<void>;
   onAddRow: (options: RowMenuOptions) => Promise<void>;
   onRemoveRow: (rowIndex: number) => Promise<void>;
+  onClearRow: (rowIndex: number) => Promise<void>;
 }
 
 function getColumnAtIndexOrFail(columns: Column[], index: number): Column {
@@ -587,14 +590,15 @@ export function buildColumnMenu(
   return buildTopLevelColumnMenu(options, columns, deps);
 }
 
-function removeRowMenuItem(rowIndex: number, deps: TableMenuDeps) {
+/** The last row holds the column definitions, so it can never be removed. */
+function removeRowMenuItem(rowIndex: number, rowsLength: number, deps: TableMenuDeps) {
   const { translate, openConfirm, disableRowDeletion } = deps;
   const removeLabel = translate("common.remove");
   const cancelLabel = translate("common.cancel");
   return {
     label: removeLabel,
     icon: "pi pi-trash",
-    disabled: disableRowDeletion,
+    disabled: disableRowDeletion || rowsLength <= 1,
     command: async () => {
       openConfirm({
         message: translate(`${translateTablePrefix}.removeRow`),
@@ -621,9 +625,12 @@ function removeRowMenuItem(rowIndex: number, deps: TableMenuDeps) {
 export function buildRowMenu(
   options: RowMenuOptions,
   rowsLength: number,
+  columnsLength: number,
   deps: TableMenuDeps,
 ): MenuItem[] {
-  const { translate, disableRowCreation } = deps;
+  const { translate } = deps;
+  // A row without columns holds no data, so rows can only be added once a column exists.
+  const disableRowCreation = deps.disableRowCreation || columnsLength === 0;
   return [
     {
       label: translate(`${translateTablePrefix}.addRowAbove`),
@@ -643,6 +650,14 @@ export function buildRowMenu(
       },
       disabled: disableRowCreation,
     },
-    removeRowMenuItem(options.position ?? 0, deps),
+    removeRowMenuItem(options.position ?? 0, rowsLength, deps),
+    {
+      label: translate(`${translateTablePrefix}.clearRowValues`),
+      icon: "pi pi-eraser",
+      disabled: deps.disableRowValueEditing,
+      command: async () => {
+        await deps.onClearRow(options.position ?? 0);
+      },
+    },
   ];
 }
