@@ -7,13 +7,14 @@ import {
   useDataCarrier,
 } from "./data-carrier.ts";
 
-const { getCarrierExport, downloadBlob, logErrorWithNotification, addSuccessNotification } =
-  vi.hoisted(() => ({
+const { getCarrierExport, downloadBlob, logErrorWithNotification, copyToClipboard } = vi.hoisted(
+  () => ({
     getCarrierExport: vi.fn(),
     downloadBlob: vi.fn(),
     logErrorWithNotification: vi.fn(),
-    addSuccessNotification: vi.fn(),
-  }));
+    copyToClipboard: vi.fn(),
+  }),
+);
 
 vi.mock("../lib/api-client", () => ({
   default: { dpp: { permalinks: { getCarrierExport } } },
@@ -25,8 +26,8 @@ vi.mock("../lib/download", async (importOriginal) => ({
 vi.mock("../stores/error.handling", () => ({
   useErrorHandlingStore: () => ({ logErrorWithNotification }),
 }));
-vi.mock("../stores/notification", () => ({
-  useNotificationStore: () => ({ addSuccessNotification }),
+vi.mock("./copy-to-clipboard.ts", () => ({
+  useCopyToClipboard: () => ({ copyToClipboard }),
 }));
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -58,15 +59,6 @@ function setup(
 describe("useDataCarrier", () => {
   const createObjectURL = vi.fn();
   const revokeObjectURL = vi.fn();
-  const writeText = vi.fn();
-
-  function setClipboard(clipboard: { writeText: typeof writeText } | undefined) {
-    Object.defineProperty(globalThis.navigator, "clipboard", {
-      value: clipboard,
-      configurable: true,
-    });
-  }
-
   beforeEach(() => {
     vi.resetAllMocks();
     let objectUrls = 0;
@@ -79,8 +71,6 @@ describe("useDataCarrier", () => {
         "content-disposition": `attachment; filename="data-carrier-${id}.${params.format}"`,
       },
     }));
-    writeText.mockResolvedValue(undefined);
-    setClipboard({ writeText });
   });
 
   describe("the shown Data Carrier", () => {
@@ -267,14 +257,12 @@ describe("useDataCarrier", () => {
   });
 
   describe("copyUrl", () => {
-    it("copies the public URL and confirms it", async () => {
+    it("copies the public URL", async () => {
       const { carrier } = setup();
 
       await carrier.copyUrl();
 
-      expect(writeText).toHaveBeenCalledWith(openDppPermalink.publicUrl);
-      expect(addSuccessNotification).toHaveBeenCalledWith("common.clipboardSuccess");
-      expect(logErrorWithNotification).not.toHaveBeenCalled();
+      expect(copyToClipboard).toHaveBeenCalledExactlyOnceWith(openDppPermalink.publicUrl);
     });
 
     it("does nothing without a public URL", async () => {
@@ -282,32 +270,7 @@ describe("useDataCarrier", () => {
 
       await carrier.copyUrl();
 
-      expect(writeText).not.toHaveBeenCalled();
-      expect(addSuccessNotification).not.toHaveBeenCalled();
-    });
-
-    it("reports an error instead of success when the clipboard is unavailable", async () => {
-      setClipboard(undefined);
-      const { carrier } = setup();
-
-      await carrier.copyUrl();
-
-      expect(addSuccessNotification).not.toHaveBeenCalled();
-      expect(logErrorWithNotification).toHaveBeenCalledWith(
-        "dataCarrier.copyError",
-        expect.any(Error),
-      );
-    });
-
-    it("reports an error instead of success when the clipboard write is rejected", async () => {
-      const error = new DOMException("Write permission denied", "NotAllowedError");
-      writeText.mockRejectedValue(error);
-      const { carrier } = setup();
-
-      await carrier.copyUrl();
-
-      expect(addSuccessNotification).not.toHaveBeenCalled();
-      expect(logErrorWithNotification).toHaveBeenCalledWith("dataCarrier.copyError", error);
+      expect(copyToClipboard).not.toHaveBeenCalled();
     });
   });
 
