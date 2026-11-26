@@ -16,6 +16,7 @@
     "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
+    "clipboardError": "Could not copy to the clipboard.",
     "edit": "Edit",
     "qrCode": "QR code",
     "add": "Add",
@@ -336,6 +337,7 @@
       "label": "Bulk Import",
       "newConfig": "New configuration",
       "editConfig": "Edit configuration",
+      "configId": "Config ID",
       "template": "Template",
       "idField": "ID field",
       "runHistory": "Run history",
@@ -919,7 +921,6 @@
       "revokeSuccess": "API key revoked",
       "revokeError": "Could not revoke the API key",
       "createError": "Could not create the API key",
-      "copyError": "Could not copy the key to the clipboard",
       "loadError": "Could not load your API keys",
       "empty": "No API keys yet"
     }
@@ -959,6 +960,7 @@
     "actions": "Actions",
     "uploadSuccess": "File uploaded successfully.",
     "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
+    "uploadInvalid": "This file cannot be uploaded. Its file type is not supported, the file is invalid, or it is larger than {maxSizeMb} MB.",
     "change": "Change file",
     "download": "Download file",
     "downloadError": "The file could not be loaded. Please try again.",
@@ -1303,8 +1305,7 @@
       "png": "Download PNG"
     },
     "loadError": "The data carrier could not be loaded.",
-    "downloadError": "The data carrier could not be downloaded.",
-    "copyError": "The link could not be copied to the clipboard."
+    "downloadError": "The data carrier could not be downloaded."
   },
   "legal": {
     "navigationLabel": "Legal",

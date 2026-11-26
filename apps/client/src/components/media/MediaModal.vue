@@ -1,11 +1,8 @@
 <script lang="ts" setup>
-import type { FileUploadSelectEvent } from "primevue";
 import type { MediaInfo } from "./MediaInfo.interface";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useMediaStore } from "../../stores/media";
-
-import { useNotificationStore } from "../../stores/notification";
+import { useMediaUpload } from "../../composables/media-upload";
 import MediaGrid from "./MediaGrid.vue";
 
 const emits = defineEmits<{
@@ -13,52 +10,15 @@ const emits = defineEmits<{
 }>();
 const open = defineModel<boolean>();
 const { t } = useI18n();
-const mediaStore = useMediaStore();
-const notificationStore = useNotificationStore();
+const { accept, onFileSelect } = useMediaUpload();
 
 const selected = ref<Array<MediaInfo>>([]);
-const selectedLocalFile = ref<File | null>(null);
-const selectedFile = ref<MediaInfo | null>(null);
-const uploadProgress = ref<number>(0);
-
-async function uploadFile() {
-  if (!selectedLocalFile.value) {
-    return;
-  }
-  try {
-    await mediaStore.uploadMedia(
-      selectedLocalFile.value,
-      (progress) => (uploadProgress.value = progress),
-    );
-    notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
-    await mediaStore.fetchMediaByOrganizationId();
-  } catch (error: unknown) {
-    console.error("Fehler beim Hochladen der Datei:", error);
-    notificationStore.addErrorNotification(
-      "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-    );
-    selectedFile.value = null;
-  } finally {
-    uploadProgress.value = 0;
-  }
-}
-
-async function onFileSelect(event: FileUploadSelectEvent) {
-  if (event.files && event.files.length > 0) {
-    selectedLocalFile.value = event.files[0] as File;
-    await uploadFile();
-  } else {
-    selectedLocalFile.value = null;
-  }
-}
 
 watch(
   () => open.value,
   (newVal) => {
     if (newVal) {
       selected.value = [];
-      selectedFile.value = null;
-      uploadProgress.value = 0;
     }
   },
 );
@@ -71,7 +31,7 @@ watch(
       <FileUpload
         mode="basic"
         :auto="true"
-        accept="image/jpeg, image/png, application/pdf"
+        :accept="accept"
         :choose-label="t('file.upload')"
         custom-upload
         @select="onFileSelect"

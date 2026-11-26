@@ -1,22 +1,30 @@
 import type { MediaService } from "./media.service";
 import { Buffer } from "node:buffer";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Logger } from "@nestjs/common";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { MEDIA_UPLOAD_MIME_TYPES, ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
+import { ValueError } from "@open-dpp/exception";
 import { Media } from "../domain/media";
 import { MediaDoc } from "./media.schema";
 
 // `vi.mock` is hoisted above the imports, so its factories may only use what `vi.hoisted` declares.
-const { mockS3Client, mockFileTypeFromBuffer } = vi.hoisted(() => ({
-  mockS3Client: {
-    bucketExists: vi.fn<any>(),
-    putObject: vi.fn<any>(),
-    getObject: vi.fn<any>(),
-    removeObject: vi.fn<any>(),
-  },
-  mockFileTypeFromBuffer: vi.fn<any>(),
-}));
+const { mockS3Client, mockDetectMediaProcessor, mockProcess } = vi.hoisted(() => {
+  const mockProcess = vi.fn<any>();
+  return {
+    mockS3Client: {
+      bucketExists: vi.fn<any>(),
+      putObject: vi.fn<any>(),
+      getObject: vi.fn<any>(),
+      removeObject: vi.fn<any>(),
+    },
+    mockProcess,
+    // Every upload gets a processor whose `process` is `mockProcess`.
+    mockDetectMediaProcessor: vi.fn<any>(async () => ({ process: mockProcess })),
+  };
+});
 
 vi.mock("minio", () => ({
   // `new Client(...)` needs a constructible implementation, not an arrow function.
@@ -25,17 +33,16 @@ vi.mock("minio", () => ({
   }),
 }));
 
-vi.mock("sharp", () => ({
-  default: vi.fn(() => ({
-    webp: vi.fn(() => ({
-      toBuffer: vi.fn<any>().mockResolvedValue(Buffer.from("processed-image")),
-    })),
-  })),
+// Detection, sanitizing and re-encoding are covered by media-upload-processor.spec.ts.
+vi.mock("./media-upload/media-upload-processor", () => ({
+  detectMediaProcessor: mockDetectMediaProcessor,
 }));
 
-vi.mock("./file-type-util", () => ({
-  fileTypeFromBuffer: mockFileTypeFromBuffer,
-}));
+const processedPdf = {
+  buffer: Buffer.from("processed"),
+  mimeType: "application/pdf",
+  fileExtension: "pdf",
+};
 
 describe("MediaService", () => {
   let service: MediaService;
@@ -89,6 +96,11 @@ describe("MediaService", () => {
     service = module.get(MediaServiceClass);
   });
 
+  afterEach(() => {
+    // Puts back what `vi.spyOn` replaced; the `vi.fn` mocks above are untouched.
+    vi.restoreAllMocks();
+  });
+
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
@@ -128,14 +140,6 @@ describe("MediaService", () => {
     });
   });
 
-  describe("processImageBuffer", () => {
-    it("should process image using sharp", async () => {
-      const buffer = Buffer.from("raw");
-      const processed = await service.processImageBuffer(buffer);
-      expect(processed.toString()).toBe("processed-image");
-    });
-  });
-
   const validMediaDoc = {
     _id: "media-id",
     ownedByOrganizationId: "org-id",
@@ -159,7 +163,7 @@ describe("MediaService", () => {
   describe("uploadFileOfProductPassport", () => {
     it("should upload file and save media", async () => {
       mockMediaModel.find.mockResolvedValue([]);
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
+      mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
@@ -182,7 +186,7 @@ describe("MediaService", () => {
 
     it("should delete existing media if found", async () => {
       mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
+      mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
@@ -202,9 +206,14 @@ describe("MediaService", () => {
       });
     });
 
-    it("should process image if mimetype starts with image/", async () => {
+    it("stores the processed file, checked against the media upload types", async () => {
+      const upload = Buffer.from("img");
       mockMediaModel.find.mockResolvedValue([]);
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "image/png", ext: "png" });
+      mockProcess.mockResolvedValue({
+        buffer: Buffer.from("processed-image"),
+        mimeType: "image/webp",
+        fileExtension: "webp",
+      });
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue({
@@ -212,36 +221,85 @@ describe("MediaService", () => {
         mimeType: "image/webp",
       });
 
-      await service.uploadFileOfProductPassport(
-        "img.png",
-        Buffer.from("img"),
-        "fid",
-        "upid",
-        "uid",
-        "oid",
-      );
+      await service.uploadFileOfProductPassport("img.png", upload, "fid", "upid", "uid", "oid");
 
+      expect(mockDetectMediaProcessor).toHaveBeenCalledWith(upload);
+      expect(mockProcess).toHaveBeenCalledWith(upload, MEDIA_UPLOAD_MIME_TYPES);
       expect(mockS3Client.putObject).toHaveBeenCalledWith(
+        "default-bucket",
+        "product-passport-files/upid/fid",
+        Buffer.from("processed-image"),
+        15, // "processed-image".length
+        { "Content-Type": "image/webp" },
+      );
+      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalledWith(
         expect.anything(),
-        expect.anything(),
-        expect.objectContaining({ length: 15 }), // "processed-image".length
-        expect.anything(),
+        expect.objectContaining({ mimeType: "image/webp", fileExtension: "webp", size: 15 }),
         expect.anything(),
       );
+    });
+
+    it("keeps the existing media when the new file is rejected", async () => {
+      mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
+      mockProcess.mockRejectedValue(new ValueError("unsupported"));
+
+      await expect(
+        service.uploadFileOfProductPassport("a.txt", Buffer.from("x"), "fid", "upid", "uid", "oid"),
+      ).rejects.toThrow(ValueError);
+
+      expect(mockMediaModel.deleteMany).not.toHaveBeenCalled();
+      expect(mockS3Client.putObject).not.toHaveBeenCalled();
     });
   });
 
   describe("uploadMedia", () => {
     it("should upload media", async () => {
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
+      const upload = Buffer.from("test");
+      mockProcess.mockResolvedValue(processedPdf);
       mockS3Client.bucketExists.mockResolvedValue(true);
       mockS3Client.putObject.mockResolvedValue({ etag: "etag" });
       mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
 
-      const result = await service.uploadMedia("file.pdf", Buffer.from("test"), "uid", "oid");
-      expect(mockS3Client.putObject).toHaveBeenCalled();
+      const result = await service.uploadMedia("file.pdf", upload, "uid", "oid");
+
+      expect(mockDetectMediaProcessor).toHaveBeenCalledWith(upload);
+      expect(mockProcess).toHaveBeenCalledWith(upload, MEDIA_UPLOAD_MIME_TYPES);
+      expect(mockS3Client.putObject).toHaveBeenCalledWith(
+        "default-bucket",
+        expect.stringMatching(/^product-passport-files\//),
+        processedPdf.buffer,
+        processedPdf.buffer.length,
+        { "Content-Type": "application/pdf" },
+      );
       expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalled();
       expect(result).toBeInstanceOf(Media);
+    });
+
+    it("checks the file against the given types and stores it in the given folders", async () => {
+      const upload = Buffer.from("logo");
+      mockProcess.mockResolvedValue({
+        buffer: Buffer.from("<svg/>"),
+        mimeType: "image/svg+xml",
+        fileExtension: "svg",
+      });
+      mockS3Client.bucketExists.mockResolvedValue(true);
+      mockS3Client.putObject.mockResolvedValue({ etag: "etag" });
+      mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
+
+      await service.uploadMedia("logo.svg", upload, "uid", "oid", {
+        allowedMimeTypes: ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES,
+        remoteFolders: ["organization-profile-pictures"],
+      });
+
+      expect(mockDetectMediaProcessor).toHaveBeenCalledWith(upload);
+      expect(mockProcess).toHaveBeenCalledWith(upload, ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES);
+      expect(mockS3Client.putObject).toHaveBeenCalledWith(
+        "default-bucket",
+        expect.stringMatching(/^organization-profile-pictures\//),
+        Buffer.from("<svg/>"),
+        6,
+        { "Content-Type": "image/svg+xml" },
+      );
     });
   });
 
@@ -369,6 +427,21 @@ describe("MediaService", () => {
         validMediaDoc.objectName,
       );
       expect(mockMediaModel.deleteOne).toHaveBeenCalledWith({ _id: "media-id" });
+    });
+
+    it("should log a failed storage delete through the Logger and keep the record", async () => {
+      const errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const storageError = new Error("storage unavailable");
+      mockMediaModel.findById.mockResolvedValue(validMediaDoc);
+      mockS3Client.removeObject.mockRejectedValue(storageError);
+
+      await service.deleteFileById("media-id");
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("media-id"), storageError);
+      expect(consoleSpy).not.toHaveBeenCalled();
+      expect(mockMediaModel.deleteOne).not.toHaveBeenCalled();
     });
   });
 

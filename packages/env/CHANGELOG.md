@@ -1,5 +1,47 @@
 # @open-dpp/env
 
+## 7.4.0
+
+### Minor Changes
+
+- [#1259](https://github.com/open-dpp/open-dpp/pull/1259) [`cbe2287`](https://github.com/open-dpp/open-dpp/commit/cbe22870a52602914fa3d7b2ffcaa2218244cb33) Thanks [@mr42](https://github.com/mr42)! - The bulk import overview shows each config ID, which is copied on click. The template ID links to the template and opens in a new tab. All copy actions now confirm success and report failures.
+
+## 7.3.4
+
+## 7.3.3
+
+## 7.3.2
+
+## 7.3.1
+
+## 7.3.0
+
+## 7.2.0
+
+### Patch Changes
+
+- [#1224](https://github.com/open-dpp/open-dpp/pull/1224) [`ab5f0ee`](https://github.com/open-dpp/open-dpp/commit/ab5f0eef744337e579525879cba6aea3237e9a2e) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-express` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/platform-socket.io` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/websockets` ^12.5.1 → ^12.6.0
+  - @open-dpp/main: `@nestjs/cli` ^12.0.13 → ^12.0.15 (dev)
+  - @open-dpp/main: `@nestjs/schematics` ^12.0.13 → ^12.0.16 (dev)
+  - @open-dpp/main: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/env: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/env: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/core` ^12.5.1 → ^12.6.0
+  - @open-dpp/exception: `@nestjs/testing` ^12.5.1 → ^12.6.0 (dev)
+  - @open-dpp/testing: `@nestjs/common` ^12.5.1 → ^12.6.0
+  - @open-dpp/testing: `@nestjs/core` ^12.5.1 → ^12.6.0
+
+## 7.1.2
+
+## 7.1.1
+
 ## 7.1.0
 
 ### Minor Changes

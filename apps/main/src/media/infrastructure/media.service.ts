@@ -1,15 +1,15 @@
 import type { Model } from "mongoose";
 import type { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { MEDIA_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import _ from "lodash";
 import { Client as S3Client } from "minio";
-import sharp from "sharp";
 import { Media } from "../domain/media";
-import { fileTypeFromBuffer } from "./file-type-util";
+import { detectMediaProcessor } from "./media-upload/media-upload-processor";
 import { MediaDoc } from "./media.schema";
 
 export const BucketDefaultPaths = {
@@ -17,8 +17,16 @@ export const BucketDefaultPaths = {
   ORGANIZATION_PROFILE_PICTURES: "organization-profile-pictures",
 } as const;
 
+export interface UploadMediaOptions {
+  /** Types the file may have; detected from its content. Defaults to the media upload types. */
+  readonly allowedMimeTypes?: readonly string[];
+  /** Folders inside the bucket. Defaults to the product passport files folder. */
+  readonly remoteFolders?: string[];
+}
+
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
   private readonly client: S3Client;
   private readonly bucketNameDefault: string;
   private readonly bucketNameProfilePictures: string;
@@ -84,15 +92,11 @@ export class MediaService {
     try {
       await this.client.removeObject(object.bucket, object.objectName);
     } catch (error) {
-      console.error(error);
+      this.logger.error(`Failed to remove the stored file of media ${id}`, error);
       return new Error("failed to delete media object");
     }
 
     return this.removeById(id);
-  }
-
-  async processImageBuffer(buffer: Buffer) {
-    return await sharp(buffer).webp({ quality: 85 }).toBuffer();
   }
 
   async uploadFileOfProductPassport(
@@ -103,6 +107,9 @@ export class MediaService {
     createdByUserId: string,
     ownedByOrganizationId: string,
   ) {
+    // Processed first: a rejected file must not remove the media it was meant to replace.
+    const processor = await detectMediaProcessor(buffer);
+    const processed = await processor.process(buffer, MEDIA_UPLOAD_MIME_TYPES);
     const findMedia = await this.mediaDoc.find({
       dataFieldId,
       uniqueProductIdentifier,
@@ -113,32 +120,22 @@ export class MediaService {
         uniqueProductIdentifier,
       });
     }
-    const fileType = await fileTypeFromBuffer(buffer);
-    if (!fileType) {
-      throw new Error("File type not recognized");
-    }
-    let fileTypeMime = fileType.mime;
-    let uploadBuffer: Buffer = buffer;
-    if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await this.processImageBuffer(uploadBuffer);
-      fileTypeMime = "image/webp";
-    }
     const uploadInfo = await this.uploadFile(
       this.bucketNameDefault,
-      uploadBuffer,
+      processed.buffer,
       dataFieldId,
       [BucketDefaultPaths.PRODUCT_PASSPORT_FILES, uniqueProductIdentifier],
-      uploadBuffer.length,
-      fileTypeMime,
+      processed.buffer.length,
+      processed.mimeType,
     );
     const media = Media.create({
       createdByUserId,
       ownedByOrganizationId,
       title: originalFilename,
       description: originalFilename,
-      mimeType: fileTypeMime,
-      fileExtension: fileType.ext,
-      size: uploadBuffer.length,
+      mimeType: processed.mimeType,
+      fileExtension: processed.fileExtension,
+      size: processed.buffer.length,
       originalFilename,
       uniqueProductIdentifier,
       dataFieldId,
@@ -156,35 +153,30 @@ export class MediaService {
     buffer: Buffer,
     createdByUserId: string,
     ownedByOrganizationId: string,
-    remoteFolders?: string[],
+    options: UploadMediaOptions = {},
   ) {
-    const fileType = await fileTypeFromBuffer(buffer);
-    if (!fileType) {
-      throw new Error("File type not recognized");
-    }
-    let fileTypeMime = fileType.mime;
-    let uploadBuffer: Buffer = buffer;
-    if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await this.processImageBuffer(uploadBuffer);
-      fileTypeMime = "image/webp";
-    }
+    const processor = await detectMediaProcessor(buffer);
+    const processed = await processor.process(
+      buffer,
+      options.allowedMimeTypes ?? MEDIA_UPLOAD_MIME_TYPES,
+    );
     const uuid = randomUUID();
     const uploadInfo = await this.uploadFile(
       this.bucketNameDefault,
-      uploadBuffer,
+      processed.buffer,
       uuid,
-      remoteFolders ?? [BucketDefaultPaths.PRODUCT_PASSPORT_FILES],
-      uploadBuffer.length,
-      fileTypeMime,
+      options.remoteFolders ?? [BucketDefaultPaths.PRODUCT_PASSPORT_FILES],
+      processed.buffer.length,
+      processed.mimeType,
     );
     const media = Media.create({
       createdByUserId,
       ownedByOrganizationId,
       title: originalFilename,
       description: originalFilename,
-      mimeType: fileTypeMime,
-      fileExtension: fileType.ext,
-      size: uploadBuffer.length,
+      mimeType: processed.mimeType,
+      fileExtension: processed.fileExtension,
+      size: processed.buffer.length,
       originalFilename,
       uniqueProductIdentifier: null,
       dataFieldId: null,

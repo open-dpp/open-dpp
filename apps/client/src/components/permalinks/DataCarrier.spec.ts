@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 
-const { getCarrierExport, downloadBlob, logErrorWithNotification, addSuccessNotification } =
-  vi.hoisted(() => ({
+const { getCarrierExport, downloadBlob, logErrorWithNotification, copyToClipboard } = vi.hoisted(
+  () => ({
     getCarrierExport: vi.fn(),
     downloadBlob: vi.fn(),
     logErrorWithNotification: vi.fn(),
-    addSuccessNotification: vi.fn(),
-  }));
+    copyToClipboard: vi.fn(),
+  }),
+);
 
 vi.mock("../../lib/api-client", () => ({
   default: { dpp: { permalinks: { getCarrierExport } } },
@@ -21,8 +22,8 @@ vi.mock("../../lib/download", async (importOriginal) => ({
 vi.mock("../../stores/error.handling", () => ({
   useErrorHandlingStore: () => ({ logErrorWithNotification }),
 }));
-vi.mock("../../stores/notification", () => ({
-  useNotificationStore: () => ({ addSuccessNotification }),
+vi.mock("../../composables/copy-to-clipboard.ts", () => ({
+  useCopyToClipboard: () => ({ copyToClipboard }),
 }));
 
 // PrimeVue's Button is auto-imported in the app but not under vitest
@@ -45,7 +46,7 @@ const i18n = createI18n({
   legacy: false,
   messages: {
     en: {
-      common: { copy: "Copy", clipboardSuccess: "Copied" },
+      common: { copy: "Copy" },
       permalink: { list: { publicUrl: "Public URL" } },
       dataCarrier: {
         image: { alt: "Data carrier for {url}" },
@@ -54,7 +55,6 @@ const i18n = createI18n({
         download: { svg: "Download SVG", png: "Download PNG" },
         loadError: "The data carrier could not be loaded.",
         downloadError: "The data carrier could not be downloaded.",
-        copyError: "The link could not be copied.",
       },
     },
   },
@@ -80,7 +80,6 @@ function mountDataCarrier(props: Record<string, unknown> = {}) {
 describe("DataCarrier", () => {
   const createObjectURL = vi.fn();
   const revokeObjectURL = vi.fn();
-  const writeText = vi.fn();
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -94,11 +93,6 @@ describe("DataCarrier", () => {
         "content-disposition": `attachment; filename="data-carrier-${id}.${params.format}"`,
       },
     }));
-    writeText.mockResolvedValue(undefined);
-    Object.defineProperty(globalThis.navigator, "clipboard", {
-      value: { writeText },
-      configurable: true,
-    });
   });
 
   it("shows the server-rendered SVG of the permalink", async () => {
@@ -171,8 +165,7 @@ describe("DataCarrier", () => {
     await wrapper.get("[data-testid='data-carrier-copy-btn']").trigger("click");
     await flushPromises();
 
-    expect(writeText).toHaveBeenCalledWith(openDppPermalink.publicUrl);
-    expect(addSuccessNotification).toHaveBeenCalledWith("Copied");
+    expect(copyToClipboard).toHaveBeenCalledExactlyOnceWith(openDppPermalink.publicUrl);
   });
 
   it("shows the GS1 element string next to a GS1 Digital Link", async () => {

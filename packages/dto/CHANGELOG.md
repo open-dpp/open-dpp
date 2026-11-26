@@ -1,5 +1,35 @@
 # @open-dpp/dto
 
+## 7.4.0
+
+### Minor Changes
+
+- [#1259](https://github.com/open-dpp/open-dpp/pull/1259) [`cbe2287`](https://github.com/open-dpp/open-dpp/commit/cbe22870a52602914fa3d7b2ffcaa2218244cb33) Thanks [@mr42](https://github.com/mr42)! - The bulk import overview shows each config ID, which is copied on click. The template ID links to the template and opens in a new tab. All copy actions now confirm success and report failures.
+
+## 7.3.4
+
+## 7.3.3
+
+## 7.3.2
+
+## 7.3.1
+
+## 7.3.0
+
+### Minor Changes
+
+- [#1154](https://github.com/open-dpp/open-dpp/pull/1154) [`dce00c0`](https://github.com/open-dpp/open-dpp/commit/dce00c037c6ce5089cd1013cb15133d87d0e3588) Thanks [@florianBieck](https://github.com/florianBieck)! - The media upload API accepts SVG images and detects every file's type from its content instead of the client's MIME type. SVGs stay vector images: scripts, event handlers and references to other files are removed on upload, and SVG downloads carry a sandboxing Content-Security-Policy. Photos are stored upright, and all image metadata, the GPS position included, is removed. HEIC uploads, which could never be decoded, and other unsupported or broken files are now rejected with a 400 instead of failing with a 500.
+
+  The media library and the media picker now offer WebP and SVG files in the file dialog. When a file is rejected because its type is not supported, it is invalid or it is larger than 15 MB, both say so instead of showing a generic error, and the media picker shows its messages in the selected language. An SVG that only defines a `viewBox` is shown at the size of its container in previews, the product image gallery and the branding logo, and at the size of the screen in the full-screen view of an image.
+
+  After the product images of a passport or template are saved, the gallery in the editor shows the saved images, whichever image it was on. Before, it kept the old images or stayed empty when it was not on its first image.
+
+## 7.2.0
+
+## 7.1.2
+
+## 7.1.1
+
 ## 7.1.0
 
 ### Minor Changes

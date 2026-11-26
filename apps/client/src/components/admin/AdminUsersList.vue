@@ -4,6 +4,7 @@ import type { MenuItem } from "primevue/menuitem";
 import { Button, Column, DataTable, InputGroup, InputGroupAddon, InputText, Menu } from "primevue";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useCopyToClipboard } from "../../composables/copy-to-clipboard.ts";
 
 const props = defineProps<{
   users: (UserWithRole & {
@@ -25,6 +26,7 @@ const emits = defineEmits<{
 }>();
 
 const { t, locale } = useI18n();
+const { copyToClipboard } = useCopyToClipboard();
 
 const roleLabels: Record<string, string> = {
   admin: "organizations.admin.changeRoleDialog.roleAdmin",
@@ -52,7 +54,7 @@ const rows = computed(() => {
 });
 
 function copyId() {
-  navigator.clipboard.writeText(activeRowId.value);
+  void copyToClipboard(activeRowId.value);
 }
 
 function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {

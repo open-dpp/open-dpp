@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
+import { useCopyToClipboard } from "../../composables/copy-to-clipboard.ts";
 import { AI_INTEGRATION_ID } from "../../const";
 import { useIndexStore } from "../../stores";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
@@ -12,6 +13,7 @@ const notificationStore = useNotificationStore();
 const aiIntegrationStore = useAiIntegrationStore();
 
 const { t } = useI18n();
+const { copyToClipboard } = useCopyToClipboard();
 const apiKey = ref<string>("");
 
 const rows = computed(() => [
@@ -49,7 +51,7 @@ async function createApiKey() {
 }
 
 function copyApiKeyToClipboard() {
-  navigator.clipboard.writeText(apiKey.value);
+  void copyToClipboard(apiKey.value);
 }
 
 onMounted(async () => {
