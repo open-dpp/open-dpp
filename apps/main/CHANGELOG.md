@@ -1,5 +1,11 @@
 # @open-dpp/main
 
+## 7.4.0
+
+### Minor Changes
+
+- [#1259](https://github.com/open-dpp/open-dpp/pull/1259) [`cbe2287`](https://github.com/open-dpp/open-dpp/commit/cbe22870a52602914fa3d7b2ffcaa2218244cb33) Thanks [@mr42](https://github.com/mr42)! - The bulk import overview shows each config ID, which is copied on click. The template ID links to the template and opens in a new tab. All copy actions now confirm success and report failures.
+
 ## 7.3.4
 
 ### Patch Changes

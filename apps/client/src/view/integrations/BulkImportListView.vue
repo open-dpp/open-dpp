@@ -7,11 +7,13 @@ import BulkImportWizard from "../../components/bulk-import/BulkImportWizard.vue"
 import EditConfigDialog from "../../components/bulk-import/EditConfigDialog.vue";
 import { useBulkImportConfigRepo } from "../../composables/bulk-import/bulk-import-config.repo.ts";
 import { useBulkImportRunRepo } from "../../composables/bulk-import/bulk-import-run.repo.ts";
+import { useCopyToClipboard } from "../../composables/copy-to-clipboard.ts";
 
 const { t } = useI18n();
 const router = useRouter();
 const configRepo = useBulkImportConfigRepo();
 const runRepo = useBulkImportRunRepo();
+const { copyToClipboard } = useCopyToClipboard();
 const wizard = useTemplateRef<InstanceType<typeof BulkImportWizard> | null>("wizard");
 const editDialog = useTemplateRef<InstanceType<typeof EditConfigDialog> | null>("editDialog");
 
@@ -126,7 +128,33 @@ onMounted(async () => {
     </template>
     <Column expander style="width: 3rem" />
     <Column field="name" :header="t('common.name')" />
-    <Column field="templateId" :header="t('integrations.bulkImport.template')" />
+    <Column field="id" :header="t('integrations.bulkImport.configId')">
+      <template #body="{ data }">
+        <button
+          type="button"
+          class="hover:bg-surface-recessed cursor-copy rounded text-left"
+          :title="t('common.copy')"
+          :aria-label="`${t('common.copy')} ${data.id}`"
+          :data-testid="`bulk-import-config-id-${data.id}`"
+          @click="copyToClipboard(data.id)"
+        >
+          {{ data.id }}
+        </button>
+      </template>
+    </Column>
+    <Column field="templateId" :header="t('integrations.bulkImport.template')">
+      <template #body="{ data }">
+        <router-link
+          :to="{ name: 'template', params: { templateId: data.templateId } }"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary-600 hover:text-primary-500 hover:underline"
+          :data-testid="`bulk-import-template-link-${data.id}`"
+        >
+          {{ data.templateId }}
+        </router-link>
+      </template>
+    </Column>
     <Column field="idField" :header="t('integrations.bulkImport.idField')" />
     <Column :header="t('common.actions')">
       <template #body="{ data }">

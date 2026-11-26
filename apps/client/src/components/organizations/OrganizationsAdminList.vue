@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { Button, Column, DataTable, InputGroup, InputGroupAddon, InputText, Menu } from "primevue";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useCopyToClipboard } from "../../composables/copy-to-clipboard.ts";
 
 const props = defineProps<{
   organizations: Organization[];
@@ -15,6 +16,7 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { copyToClipboard } = useCopyToClipboard();
 
 const activeRowId = ref("");
 const rowMenuRef = ref();
@@ -36,7 +38,7 @@ const rows = computed(() => {
 });
 
 function copyId() {
-  navigator.clipboard.writeText(activeRowId.value);
+  void copyToClipboard(activeRowId.value);
 }
 
 function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {

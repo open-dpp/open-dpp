@@ -20,6 +20,7 @@
     "send": "Senden",
     "actions": "Aktionen",
     "clipboardSuccess": "In die Zwischenablage kopiert.",
+    "clipboardError": "Kopieren in die Zwischenablage fehlgeschlagen.",
     "edit": "Editieren",
     "qrCode": "QR-Code",
     "add": "Hinzufügen",
@@ -336,6 +337,7 @@
       "label": "Massenimport",
       "newConfig": "Neue Konfiguration",
       "editConfig": "Konfiguration bearbeiten",
+      "configId": "Konfigurations-ID",
       "template": "Vorlage",
       "idField": "ID-Feld",
       "runHistory": "Durchlaufverlauf",
@@ -950,7 +952,6 @@
       "revokeSuccess": "API-Schlüssel widerrufen",
       "revokeError": "Der API-Schlüssel konnte nicht widerrufen werden",
       "createError": "Der API-Schlüssel konnte nicht erstellt werden",
-      "copyError": "Der Schlüssel konnte nicht in die Zwischenablage kopiert werden",
       "loadError": "Deine API-Schlüssel konnten nicht geladen werden",
       "empty": "Noch keine API-Schlüssel"
     }
@@ -1304,8 +1305,7 @@
       "png": "PNG herunterladen"
     },
     "loadError": "Der Datenträger konnte nicht geladen werden.",
-    "downloadError": "Der Datenträger konnte nicht heruntergeladen werden.",
-    "copyError": "Der Link konnte nicht in die Zwischenablage kopiert werden."
+    "downloadError": "Der Datenträger konnte nicht heruntergeladen werden."
   },
   "legal": {
     "navigationLabel": "Rechtliches",
