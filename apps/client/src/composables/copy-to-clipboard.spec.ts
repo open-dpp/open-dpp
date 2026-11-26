@@ -1,17 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ref } from "vue";
 import { useCopyToClipboard } from "./copy-to-clipboard.ts";
 
-const { copy, clipboard, logErrorWithNotification, addSuccessNotification } = vi.hoisted(() => ({
-  copy: vi.fn(),
-  clipboard: { supported: true },
+const { logErrorWithNotification, addSuccessNotification } = vi.hoisted(() => ({
   logErrorWithNotification: vi.fn(),
   addSuccessNotification: vi.fn(),
 }));
 
-vi.mock("@vueuse/core", () => ({
-  useClipboard: () => ({ copy, isSupported: ref(clipboard.supported) }),
-}));
 vi.mock("../stores/error.handling", () => ({
   useErrorHandlingStore: () => ({ logErrorWithNotification }),
 }));
@@ -23,10 +17,24 @@ vi.mock("vue-i18n", () => ({
 }));
 
 describe("useCopyToClipboard", () => {
+  const writeText = vi.fn();
+  const execCommand = vi.fn();
+
+  function setClipboard(clipboard: { writeText: typeof writeText } | undefined) {
+    Object.defineProperty(globalThis.navigator, "clipboard", {
+      value: clipboard,
+      configurable: true,
+    });
+  }
+
   beforeEach(() => {
     vi.resetAllMocks();
-    copy.mockResolvedValue(undefined);
-    clipboard.supported = true;
+    writeText.mockResolvedValue(undefined);
+    setClipboard({ writeText });
+    Object.defineProperty(globalThis.document, "execCommand", {
+      value: execCommand,
+      configurable: true,
+    });
   });
 
   it("copies the text and confirms it", async () => {
@@ -34,19 +42,17 @@ describe("useCopyToClipboard", () => {
 
     await copyToClipboard("some-id");
 
-    expect(copy).toHaveBeenCalledWith("some-id");
+    expect(writeText).toHaveBeenCalledWith("some-id");
     expect(addSuccessNotification).toHaveBeenCalledWith("common.clipboardSuccess");
     expect(logErrorWithNotification).not.toHaveBeenCalled();
   });
 
-  // useClipboard resolves without copying anything in this case
-  it("reports an error instead of success when the clipboard is unsupported", async () => {
-    clipboard.supported = false;
+  it("reports an error instead of success when the clipboard is unavailable", async () => {
+    setClipboard(undefined);
     const { copyToClipboard } = useCopyToClipboard();
 
     await copyToClipboard("some-id");
 
-    expect(copy).not.toHaveBeenCalled();
     expect(addSuccessNotification).not.toHaveBeenCalled();
     expect(logErrorWithNotification).toHaveBeenCalledWith(
       "common.clipboardError",
@@ -54,9 +60,10 @@ describe("useCopyToClipboard", () => {
     );
   });
 
-  it("reports an error instead of success when copying throws", async () => {
-    const error = new Error("copy failed");
-    copy.mockRejectedValue(error);
+  it("reports an error when the write is rejected and a fallback would return false", async () => {
+    const error = new DOMException("Write permission denied", "NotAllowedError");
+    writeText.mockRejectedValue(error);
+    execCommand.mockReturnValue(false);
     const { copyToClipboard } = useCopyToClipboard();
 
     await copyToClipboard("some-id");
