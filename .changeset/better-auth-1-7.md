@@ -4,7 +4,7 @@
 "@open-dpp/client": minor
 ---
 
-Update the better-auth packages to 1.7.27, which closes their open security advisories. What changes for an instance:
+Update the better-auth packages to 1.7.28, which closes their open security advisories. What changes for an instance:
 
 - **OAuth Provider, action needed for some Trusted Clients:** the provider now accepts the Trusted Client's secret in one position only. The new optional `OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD` names it: `client_secret_basic` (HTTP Basic header, the default) or `client_secret_post` (form body). Set it to `client_secret_post` if the Trusted Client sends its secret in the form body, otherwise its token requests fail with `invalid_client`. Discovery advertises the registered method only.
 - OAuth Provider, token endpoint: a replayed authorization code is answered with `400 invalid_grant` (was `401 invalid_grant`) and also revokes the refresh token it yielded. A wrong `code_verifier` is answered with `400 invalid_grant` (was `401 invalid_request`). A `resource` other than the issuer is `400 invalid_target`. Revoking a JWT access token is refused with `400 unsupported_token_type` (was accepted without effect). A `code_challenge_method` other than `S256` comes back on the redirect URI as `invalid_request`.
@@ -17,9 +17,9 @@ Update the better-auth packages to 1.7.27, which closes their open security advi
 
 Update dependencies:
 
-- @open-dpp/client: `@better-auth/api-key` ^1.6.17 → ^1.7.27
-- @open-dpp/client: `better-auth` ^1.6.17 → ^1.7.27
-- @open-dpp/main: `@better-auth/api-key` ^1.6.17 → ^1.7.27
-- @open-dpp/main: `@better-auth/core` ^1.6.17 → ^1.7.27
-- @open-dpp/main: `@better-auth/oauth-provider` ^1.6.17 → ^1.7.27
-- @open-dpp/main: `better-auth` ^1.6.17 → ^1.7.27
+- @open-dpp/client: `@better-auth/api-key` ^1.6.17 → ^1.7.28
+- @open-dpp/client: `better-auth` ^1.6.17 → ^1.7.28
+- @open-dpp/main: `@better-auth/api-key` ^1.6.17 → ^1.7.28
+- @open-dpp/main: `@better-auth/core` ^1.6.17 → ^1.7.28
+- @open-dpp/main: `@better-auth/oauth-provider` ^1.6.17 → ^1.7.28
+- @open-dpp/main: `better-auth` ^1.6.17 → ^1.7.28

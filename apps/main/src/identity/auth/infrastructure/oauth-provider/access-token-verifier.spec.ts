@@ -10,9 +10,13 @@ import { createAccessTokenVerifier, KeySetUnavailableError } from "./access-toke
 const ISSUER = "https://dpp.example.com/api/v2/auth";
 const CLIENT_ID = "landing-page";
 const USER_ID = "user-123";
-/** How long better-auth waits for the key set, and how long it trusts a fetched one. */
+/**
+ * How long better-auth waits for the key set, how long it trusts a fetched one, and how long
+ * it waits after a refetch for an unseen key id before it asks again.
+ */
 const KEY_SET_FETCH_TIMEOUT_MS = 5_000;
 const KEY_SET_CACHE_LIFETIME_MS = 5 * 60_000;
+const KEY_SET_REFETCH_COOLDOWN_MS = 30_000;
 
 describe("Trusted Client access token verifier", () => {
   const key = createSigningKey();
@@ -225,6 +229,36 @@ describe("Trusted Client access token verifier", () => {
         await expect(outlasting(signAccessToken(createSigningKey(), claims()))).rejects.toThrow(
           KeySetUnavailableError,
         );
+      });
+
+      it("a token with an unseen key id against a fresh key set, but only on the call that refetches", async () => {
+        const jwksFetch = vi
+          .fn<() => Promise<{ keys: Record<string, unknown>[] }>>()
+          .mockResolvedValueOnce(key.jwks)
+          .mockRejectedValue(new Error("database unavailable"));
+        const cooling = createAccessTokenVerifier({
+          issuer: ISSUER,
+          clientId: CLIENT_ID,
+          jwksFetch,
+        });
+        await cooling(signAccessToken(key, claims()));
+        const unseen = createSigningKey();
+
+        // the refetch for the unseen key id fails: no verdict without the key set
+        await expect(cooling(signAccessToken(unseen, claims()))).rejects.toThrow(
+          KeySetUnavailableError,
+        );
+        // better-auth does not ask again yet and judges by the set it holds: an unknown key
+        const duringCooldown = await cooling(signAccessToken(unseen, claims()));
+        expect(duringCooldown.status).toBe("rejected");
+        expect(jwksFetch).toHaveBeenCalledTimes(2);
+
+        // the next refetch is due and fails as well
+        await vi.advanceTimersByTimeAsync(KEY_SET_REFETCH_COOLDOWN_MS);
+        await expect(cooling(signAccessToken(unseen, claims()))).rejects.toThrow(
+          KeySetUnavailableError,
+        );
+        expect(jwksFetch).toHaveBeenCalledTimes(3);
       });
     });
   });

@@ -45,6 +45,10 @@ const KEY_SET_REFETCH_REFUSED_MESSAGE = "JWKS fetch failed";
  * `guardedKeySetFetch`. better-auth adds two verdicts of its own that carry no such tag:
  * the fetch did not answer in time, or a refetch failed moments ago and it does not try
  * again yet.
+ *
+ * One case stays a rejection: an unseen key id while the cached key set is still fresh and
+ * a refetch was tried within the last 30 seconds. better-auth then judges by the set it
+ * holds and reports an unknown key, which cannot be told apart from a forged key id.
  */
 function isKeySetOutage(error: unknown): boolean {
   if (error instanceof KeySetUnavailableError) {
