@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/docs",
-  "version": "7.3.1",
+  "version": "7.3.4",
   "private": true,
   "description": "",
   "keywords": [],
@@ -16,5 +16,5 @@
   "devDependencies": {
     "vitepress": "2.0.0-alpha.21"
   },
-  "packageManager": "pnpm@11.28.13"
+  "packageManager": "pnpm@11.29.0"
 }

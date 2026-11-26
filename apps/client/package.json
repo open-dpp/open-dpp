@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "7.3.1",
+  "version": "7.3.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -54,9 +54,9 @@
     "@types/lodash": "^4.17.27",
     "@vitejs/plugin-vue": "^6.0.11",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
-    "@vue/test-utils": "^2.5.1",
+    "@vue/test-utils": "^2.6.0",
     "@vue/tsconfig": "^0.9.1",
-    "autoprefixer": "^10.6.2",
+    "autoprefixer": "^10.7.0",
     "fishery": "^2.4.0",
     "jest-diff": "^30.5.2",
     "jsdom": "^27.4.0",
@@ -70,5 +70,5 @@
     "vitest": "^4.1.12",
     "vue-tsc": "^3.3.11"
   },
-  "packageManager": "pnpm@11.28.13"
+  "packageManager": "pnpm@11.29.0"
 }

@@ -1,5 +1,21 @@
 # @open-dpp/client
 
+## 7.3.4
+
+## 7.3.3
+
+## 7.3.2
+
+### Patch Changes
+
+- [#1240](https://github.com/open-dpp/open-dpp/pull/1240) [`0982bf1`](https://github.com/open-dpp/open-dpp/commit/0982bf1e28f68f2bc6bb172d0dda9b5dda37a8fe) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `@vue/test-utils` ^2.5.1 → ^2.6.0 (dev)
+
+- [#1241](https://github.com/open-dpp/open-dpp/pull/1241) [`8d99c5c`](https://github.com/open-dpp/open-dpp/commit/8d99c5c37b5e2cca546a9e06e658199c8e970c10) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `autoprefixer` ^10.6.2 → ^10.7.0 (dev)
+
 ## 7.3.1
 
 ### Patch Changes
