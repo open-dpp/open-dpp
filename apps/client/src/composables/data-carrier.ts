@@ -19,7 +19,7 @@ import { useI18n } from "vue-i18n";
 import apiClient from "../lib/api-client.ts";
 import { downloadBlob, fileNameFromContentDisposition } from "../lib/download.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
-import { useNotificationStore } from "../stores/notification.ts";
+import { useCopyToClipboard } from "./copy-to-clipboard.ts";
 
 export interface DataCarrierPermalink {
   id: string;
@@ -54,7 +54,7 @@ export function useDataCarrier(
   identity: MaybeRefOrGetter<DataCarrierIdentity | null | undefined> = null,
 ) {
   const { t } = useI18n();
-  const notificationStore = useNotificationStore();
+  const { copyToClipboard } = useCopyToClipboard();
   const { logErrorWithNotification } = useErrorHandlingStore();
 
   const imageUrl = ref<string | null>(null);
@@ -133,13 +133,7 @@ export function useDataCarrier(
 
   async function copyUrl() {
     if (!url.value) return;
-    try {
-      // Throws when the Clipboard API is missing and rejects when the write is denied
-      await navigator.clipboard.writeText(url.value);
-      notificationStore.addSuccessNotification(t("common.clipboardSuccess"));
-    } catch (error) {
-      logErrorWithNotification(t("dataCarrier.copyError"), error);
-    }
+    await copyToClipboard(url.value);
   }
 
   return {

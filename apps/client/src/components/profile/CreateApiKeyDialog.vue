@@ -3,9 +3,9 @@ import type { CreateApiKeyDto, CreatedApiKeyDto } from "@open-dpp/dto";
 import { ApiKeyExpiryPresetDays } from "@open-dpp/dto";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { useCopyToClipboard } from "../../composables/copy-to-clipboard";
 import apiClient from "../../lib/api-client";
 import { useErrorHandlingStore } from "../../stores/error.handling";
-import { useNotificationStore } from "../../stores/notification";
 
 const model = defineModel<boolean>("visible");
 
@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
-const notificationStore = useNotificationStore();
+const { copyToClipboard } = useCopyToClipboard();
 
 const DEFAULT_EXPIRY_DAYS: CreateApiKeyDto["expiresInDays"] = 90;
 
@@ -61,12 +61,7 @@ async function submit() {
 
 async function copyKey() {
   if (!createdKey.value) return;
-  try {
-    await navigator.clipboard.writeText(createdKey.value.key);
-    notificationStore.addSuccessNotification(t("common.clipboardSuccess"));
-  } catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("user.apiKeys.copyError"), e);
-  }
+  await copyToClipboard(createdKey.value.key);
 }
 
 function close() {
