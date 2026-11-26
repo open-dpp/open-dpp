@@ -29,7 +29,7 @@ jobs:
       github.event.pull_request.user.login == 'renovate[bot]'
       && github.event.pull_request.head.repo.full_name == github.repository
       && vars.CHANGESET_BOT_CLIENT_ID != ''
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
       # An App token, not GITHUB_TOKEN: a push made with GITHUB_TOKEN starts no
       # workflow runs, which would leave the PR's new head commit without CI.
