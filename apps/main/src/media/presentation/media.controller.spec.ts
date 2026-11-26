@@ -242,18 +242,28 @@ describe("MediaController", () => {
       await storeMedia(organizationId, "fourth.png", "2026-01-03T00:00:00.000Z");
       await storeMedia(organizationId, "fifth.png", "2026-01-04T00:00:00.000Z");
 
+      // One file per page, so that a page ends between the twins
       const pages: string[][] = [];
       let cursor: string | undefined;
       do {
-        const response = await list({ limit: 2, cursor }).expect(200);
+        const response = await list({ limit: 1, cursor }).expect(200);
         pages.push(response.body.result.map((media: { title: string }) => media.title));
         cursor = response.body.paging_metadata.cursor ?? undefined;
       } while (cursor && pages.length < 5);
 
-      expect(pages.map((titles) => titles.toSorted())).toEqual([
-        ["fifth.png", "fourth.png"],
-        ["twin-a.png", "twin-b.png"],
-        ["first.png"],
+      const titles = pages.flat();
+      expect(titles.toSorted()).toEqual([
+        "fifth.png",
+        "first.png",
+        "fourth.png",
+        "twin-a.png",
+        "twin-b.png",
+      ]);
+      // Which twin comes first is up to their ids, so only the order of the others is fixed
+      expect(titles.filter((title) => !title.startsWith("twin-"))).toEqual([
+        "fifth.png",
+        "fourth.png",
+        "first.png",
       ]);
     });
 

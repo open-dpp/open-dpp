@@ -95,13 +95,34 @@ export function usePagination({
     });
   };
 
-  const nextPage = async (): Promise<Page> => {
-    let nextPage = pages.value[currentPageIndex.value + 1];
-    if (nextPage) {
-      currentPageIndex.value++;
-    } else {
-      nextPage = pages.value[currentPageIndex.value]!;
-    }
+  // The fetch callback of a list keeps the items of every answer. Two navigations that ran at
+  // once could be answered in the other order, and the items of the first would end up under
+  // the page of the second. So a navigation waits for the one that is still on its way, and
+  // starts right away when there is none.
+  let navigationOnItsWay: Promise<void> | undefined;
+  const inTurn = <T>(navigate: () => Promise<T>): Promise<T> => {
+    const navigation = navigationOnItsWay ? navigationOnItsWay.then(navigate) : navigate();
+    const settle = () => {
+      if (navigationOnItsWay === settled) {
+        navigationOnItsWay = undefined;
+      }
+    };
+    const settled: Promise<void> = navigation.then(settle, settle);
+    navigationOnItsWay = settled;
+    return navigation;
+  };
+
+  // The page at the given distance from the shown one, or the shown one when there is none
+  const pageIndexAt = (distance: number): number => {
+    const pageIndex = currentPageIndex.value + distance;
+    return pages.value[pageIndex] ? pageIndex : currentPageIndex.value;
+  };
+
+  // The index moves only once the page was fetched: after a failed request the shown page is
+  // still the one a navigation starts from.
+  const showNextPage = async (): Promise<Page> => {
+    const nextPageIndex = pageIndexAt(1);
+    const nextPage = pages.value[nextPageIndex]!;
 
     const response = await fetchPage(nextPage.cursor);
     nextPage.itemCount = response.result.length;
@@ -109,19 +130,17 @@ export function usePagination({
     if (nextCursor !== null && !findPageByCursor(nextCursor)) {
       addPage(nextCursor);
     }
+    currentPageIndex.value = nextPageIndex;
     await updateCurrentPage();
 
     return nextPage;
   };
 
-  const previousPage = async (): Promise<Page> => {
-    let previousPage = pages.value[currentPageIndex.value - 1];
-    if (previousPage) {
-      currentPageIndex.value--;
-    } else {
-      previousPage = currentPage.value;
-    }
+  const showPreviousPage = async (): Promise<Page> => {
+    const previousPageIndex = pageIndexAt(-1);
+    const previousPage = pages.value[previousPageIndex] ?? currentPage.value;
     await fetchPage(previousPage.cursor);
+    currentPageIndex.value = previousPageIndex;
     await updateCurrentPage();
     return previousPage;
   };
@@ -141,27 +160,23 @@ export function usePagination({
     }
   };
 
-  const resetCursor = async () => {
+  const showFirstPage = async () => {
     startCursor.value = null;
     pages.value = [{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }];
     currentPageIndex.value = 0;
     await updateCurrentPage();
-    await nextPage();
+    await showNextPage();
     changeQueryParams({ cursor: undefined });
   };
 
-  const reloadCurrentPage = async () => {
-    await reloadPage(currentPage.value);
-  };
-
   return {
-    resetCursor,
+    resetCursor: () => inTurn(showFirstPage),
     hasPrevious,
     hasNext,
-    nextPage,
-    previousPage,
+    nextPage: () => inTurn(showNextPage),
+    previousPage: () => inTurn(showPreviousPage),
     currentPage,
-    reloadCurrentPage,
+    reloadCurrentPage: () => inTurn(() => reloadPage(currentPage.value)),
     totalCount,
   };
 }

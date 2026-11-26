@@ -44,11 +44,17 @@ export function useMediaUpload() {
     }
     try {
       await apiClient.media.media.uploadGeneralMedia(file);
-      notificationStore.addSuccessNotification(t("file.uploadSuccess"));
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(uploadErrorMessage(error), error);
+      return;
+    }
+    notificationStore.addSuccessNotification(t("file.uploadSuccess"));
+    try {
       // The newest file comes first, so the first page is the one that shows the upload
       await mediaStore.showFirstOrganizationMediaPage();
     } catch (error: unknown) {
-      errorHandlingStore.logErrorWithNotification(uploadErrorMessage(error), error);
+      // The file is saved by now: what failed is loading the list, not the upload
+      errorHandlingStore.logErrorWithNotification(t("media.loadFailure"), error);
     }
   }
 

@@ -184,6 +184,24 @@ describe.each(entryPoints)("uploading in the $name", ({ mountEntryPoint }) => {
   });
 
   it.each(LOCALES)(
+    "keeps the upload confirmed in %s when the list cannot be loaded afterwards",
+    async (locale) => {
+      i18n.global.locale.value = locale;
+      mocks.uploadGeneralMedia.mockResolvedValue(uploaded.id);
+      mocks.getMediaInfoByOrganization.mockRejectedValue(apiError(500));
+      const wrapper = mountEntryPoint();
+
+      await selectFile(wrapper, [svg]);
+
+      expect(i18n.global.te("media.loadFailure", locale)).toBe(true);
+      expect(shownMessages(NotificationType.SUCCESS)).toEqual([
+        i18n.global.t("file.uploadSuccess"),
+      ]);
+      expect(shownMessages(NotificationType.ERROR)).toEqual([i18n.global.t("media.loadFailure")]);
+    },
+  );
+
+  it.each(LOCALES)(
     "says in %s that the file is unsupported or invalid when the upload answers 400",
     async (locale) => {
       i18n.global.locale.value = locale;
