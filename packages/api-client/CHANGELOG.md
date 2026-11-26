@@ -1,5 +1,17 @@
 # @open-dpp/api-client
 
+## 7.3.4
+
+### Patch Changes
+
+- [#1249](https://github.com/open-dpp/open-dpp/pull/1249) [`8216bf6`](https://github.com/open-dpp/open-dpp/commit/8216bf6bc70e5e69149ee39f628a78bd188dd023) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/api-client: `rollup` ^4.65.0 → ^4.68.8 (dev)
+
+- [#1250](https://github.com/open-dpp/open-dpp/pull/1250) [`54e1556`](https://github.com/open-dpp/open-dpp/commit/54e1556cdf6a3f6f83176e2c79603c12a29cca92) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/api-client: `tslib` ^2.8.1 → ^2.9.1 (dev)
+
 ## 7.3.3
 
 ## 7.3.2

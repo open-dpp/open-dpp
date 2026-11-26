@@ -1,5 +1,17 @@
 # @open-dpp/main
 
+## 7.3.4
+
+### Patch Changes
+
+- [#1253](https://github.com/open-dpp/open-dpp/pull/1253) [`e348ad3`](https://github.com/open-dpp/open-dpp/commit/e348ad36c1cbab1cdf7f11e5edfe6b7a9d3a4310) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@langchain/core` ^1.1.48 → ^1.5.0
+
+- [#1254](https://github.com/open-dpp/open-dpp/pull/1254) [`d05937a`](https://github.com/open-dpp/open-dpp/commit/d05937abf20b60976fc77a1a5cdfa7158fbced8b) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/swagger` ^12.0.5 → ^12.1.2
+
 ## 7.3.3
 
 ### Patch Changes
