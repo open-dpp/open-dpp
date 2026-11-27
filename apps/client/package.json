@@ -24,7 +24,7 @@
     "@vueuse/core": "^14.4.0",
     "axios": "^1.21.1",
     "better-auth": "^1.6.17",
-    "chart.js": "^4.5.1",
+    "chart.js": "^4.6.2",
     "dayjs": "^1.11.23",
     "dompurify": "^3.4.18",
     "lodash": "^4.18.1",
