@@ -10,6 +10,9 @@ export const ISSUER = "http://localhost:3000/api/v2/auth";
 
 export const TEST_REDIRECT_URI = TEST_TRUSTED_CLIENT.redirectUris[0];
 
+/** The Trusted Client's callback on a developer machine: plain http, on a loopback host. */
+export const TEST_LOOPBACK_REDIRECT_URI = TEST_TRUSTED_CLIENT.redirectUris[1];
+
 /** BetterAuthHelper's default password, for sign-ins through the HTTP seam. */
 export const TEST_PASSWORD = "password1234";
 
@@ -88,28 +91,50 @@ export function clientBasicAuth(secret = TEST_TRUSTED_CLIENT.clientSecret): stri
   return `Basic ${Buffer.from(`${TEST_TRUSTED_CLIENT.clientId}:${secret}`).toString("base64")}`;
 }
 
+/** The form of a code exchange, without the client's credentials. */
+function codeExchangeForm({ code, verifier, resource }: CodeExchange): Record<string, string> {
+  return {
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: TEST_REDIRECT_URI,
+    code_verifier: verifier,
+    ...(resource ? { resource } : {}),
+  };
+}
+
 /** POST /oauth2/token with client_secret_basic, as the Trusted Client's server does. */
-export function exchangeCode(
-  app: INestApplication,
-  { code, verifier, resource }: CodeExchange,
-  secret?: string,
-) {
+export function exchangeCode(app: INestApplication, exchange: CodeExchange, secret?: string) {
   return request(app.getHttpServer())
     .post(`${AUTH_BASE_PATH}/oauth2/token`)
     .set("Authorization", clientBasicAuth(secret))
     .type("form")
+    .send(codeExchangeForm(exchange));
+}
+
+/** A form POST to a provider endpoint with client_secret_post: the Trusted Client's credentials in the form body. */
+export function postWithBodySecret(
+  app: INestApplication,
+  path: string,
+  form: Record<string, string>,
+) {
+  return request(app.getHttpServer())
+    .post(`${AUTH_BASE_PATH}${path}`)
+    .type("form")
     .send({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: TEST_REDIRECT_URI,
-      code_verifier: verifier,
-      ...(resource ? { resource } : {}),
+      ...form,
+      client_id: TEST_TRUSTED_CLIENT.clientId,
+      client_secret: TEST_TRUSTED_CLIENT.clientSecret,
     });
+}
+
+/** POST /oauth2/token with client_secret_post. */
+export function exchangeCodeWithBodySecret(app: INestApplication, exchange: CodeExchange) {
+  return postWithBodySecret(app, "/oauth2/token", codeExchangeForm(exchange));
 }
 
 export interface RefreshRequest {
   refreshToken: string;
-  /** Sent on every refresh to obtain a JWT access token again (otherwise the token is opaque). */
+  /** Optional on a refresh: the provider keeps the resource of the code exchange. */
   resource?: string;
 }
 

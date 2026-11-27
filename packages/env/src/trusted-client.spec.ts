@@ -37,6 +37,7 @@ describe("parseTrustedClientEnv", () => {
           "https://landing.example.com/auth/callback",
           "https://landing.example.com/auth/callback-2",
         ],
+        clientAuthMethod: "client_secret_basic",
       },
     });
     expect(result.success && "clientName" in result.data).toBe(false);
@@ -55,6 +56,45 @@ describe("parseTrustedClientEnv", () => {
     });
 
     expect(result.success && result.data.clientName).toBe("Landing page");
+  });
+
+  it("has the Trusted Client authenticate with HTTP Basic unless told otherwise", () => {
+    const result = parseTrustedClientEnv(complete);
+
+    expect(result.success && result.data.clientAuthMethod).toBe("client_secret_basic");
+  });
+
+  it("registers the form-body method when the Trusted Client sends its secret that way", () => {
+    const result = parseTrustedClientEnv({
+      ...complete,
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD: "client_secret_post",
+    });
+
+    expect(result.success && result.data.clientAuthMethod).toBe("client_secret_post");
+  });
+
+  it("treats an empty authentication method as unset", () => {
+    const result = parseTrustedClientEnv({
+      ...complete,
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD: "",
+    });
+
+    expect(result.success && result.data.clientAuthMethod).toBe("client_secret_basic");
+  });
+
+  it("reports an authentication method the OAuth Provider does not offer the Trusted Client", () => {
+    const result = parseTrustedClientEnv({
+      ...complete,
+      OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD: "private_key_jwt",
+    });
+
+    expect(result.success ? [] : result.issues).toEqual([
+      {
+        path: ["OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD"],
+        message:
+          'OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD must be "client_secret_basic" or "client_secret_post".',
+      },
+    ]);
   });
 
   it("reports every missing variable under its env key", () => {

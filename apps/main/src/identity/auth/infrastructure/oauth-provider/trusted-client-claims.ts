@@ -1,10 +1,11 @@
 import { isNonBlankString } from "../../../../lib/non-blank-string";
-import { PROFILE_SCOPE } from "../../domain/trusted-client-access-token";
+import { EMAIL_SCOPE, PROFILE_SCOPE } from "../../domain/trusted-client-access-token";
 
 /**
- * Claims the Trusted Client may find in id tokens and at `/oauth2/userinfo`. The plugin
- * derives `sub`, `name`, `picture`, `email` and `email_verified` itself; this instance adds
- * the profile claims below. Standard OIDC claims only: no organization or role claims.
+ * Claims the Trusted Client may find in id tokens and at `/oauth2/userinfo`. At userinfo
+ * the plugin derives `sub`, `name`, `picture`, `email` and `email_verified` itself and this
+ * instance adds the profile claims below; in id tokens this instance supplies both (see
+ * `idTokenClaims`). Standard OIDC claims only: no organization or role claims.
  * Replaces the plugin's advertised list, so the built-in claims are restated.
  */
 export const OAUTH_PROVIDER_CLAIMS_SUPPORTED = [
@@ -44,12 +45,49 @@ export function profileClaims(
   if (!scopes.includes(PROFILE_SCOPE)) {
     return {};
   }
-  const candidates: Array<[string, unknown]> = [
+  return nonBlankClaims([
     ["given_name", user.firstName],
     ["family_name", user.lastName],
     ["locale", user.preferredLanguage],
-  ];
+  ]);
+}
+
+/** The candidates that have a value: a missing source omits the claim. */
+function nonBlankClaims(candidates: ReadonlyArray<[string, unknown]>): Record<string, string> {
   return Object.fromEntries(
     candidates.filter((entry): entry is [string, string] => isNonBlankString(entry[1])),
   );
+}
+
+/**
+ * The plugin's built-in claims beyond `sub`: display name and picture with the `profile`
+ * scope, the e-mail address and whether it is verified with the `email` scope. The plugin
+ * serves them at `/oauth2/userinfo` and, since better-auth 1.7, no longer writes them into
+ * id tokens.
+ */
+function builtInClaims(
+  user: ProfileClaimSource,
+  scopes: readonly string[],
+): Record<string, string | boolean> {
+  const profile = scopes.includes(PROFILE_SCOPE)
+    ? nonBlankClaims([
+        ["name", user.name],
+        ["picture", user.image],
+      ])
+    : {};
+  const email = scopes.includes(EMAIL_SCOPE)
+    ? { ...nonBlankClaims([["email", user.email]]), email_verified: user.emailVerified === true }
+    : {};
+  return { ...profile, ...email };
+}
+
+/**
+ * Everything an id token says about the User beyond `sub`: the same scope-gated claim set
+ * `/oauth2/userinfo` answers with, so a Trusted Client can read either.
+ */
+export function idTokenClaims(
+  user: ProfileClaimSource,
+  scopes: readonly string[],
+): Record<string, string | boolean> {
+  return { ...builtInClaims(user, scopes), ...profileClaims(user, scopes) };
 }

@@ -9,8 +9,20 @@ export interface TrustedClientEnv {
   readonly clientId: string;
   readonly clientSecret: string;
   readonly redirectUris: readonly string[];
+  readonly clientAuthMethod: TrustedClientAuthMethod;
   readonly clientName?: string;
 }
+
+/**
+ * How the Trusted Client presents its secret at the token, revoke and introspect endpoints:
+ * as an HTTP Basic header or in the form body. The OAuth Provider accepts only the one
+ * registered for the client.
+ */
+export const TRUSTED_CLIENT_AUTH_METHODS = ["client_secret_basic", "client_secret_post"] as const;
+export type TrustedClientAuthMethod = (typeof TRUSTED_CLIENT_AUTH_METHODS)[number];
+
+/** RFC 7591's default for a client that names no method. */
+const DEFAULT_TRUSTED_CLIENT_AUTH_METHOD: TrustedClientAuthMethod = "client_secret_basic";
 
 // RFC 6761 loopback names plus the IPv4 loopback block and IPv6 loopback, as the
 // OAuth Provider plugin allows them (`isLoopbackHost` in @better-auth/core).
@@ -73,6 +85,7 @@ export const TRUSTED_CLIENT_ENV_KEYS = {
   clientId: "OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID",
   clientSecret: "OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET",
   redirectUris: "OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS",
+  clientAuthMethod: "OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD",
   clientName: "OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME",
 } as const;
 
@@ -97,11 +110,23 @@ function requiredWhileEnabled(field: TrustedClientField) {
   return z.string({ error: message }).min(1, { error: message });
 }
 
+/** Optional: unset and `""` mean the default; anything else has to be one of the methods. */
+const trustedClientAuthMethodSchema = z
+  .string()
+  .optional()
+  .transform((value) => value || DEFAULT_TRUSTED_CLIENT_AUTH_METHOD)
+  .pipe(
+    z.enum(TRUSTED_CLIENT_AUTH_METHODS, {
+      error: `${TRUSTED_CLIENT_ENV_KEYS.clientAuthMethod} must be ${TRUSTED_CLIENT_AUTH_METHODS.map((method) => `"${method}"`).join(" or ")}.`,
+    }),
+  );
+
 const trustedClientEnvSchema = z
   .object({
     clientId: requiredWhileEnabled("clientId"),
     clientSecret: requiredWhileEnabled("clientSecret"),
     redirectUris: requiredWhileEnabled("redirectUris").pipe(trustedClientRedirectUrisSchema),
+    clientAuthMethod: trustedClientAuthMethodSchema,
     clientName: z.string().optional(),
   })
   .transform(({ clientName, ...client }): TrustedClientEnv =>
@@ -118,6 +143,7 @@ export function parseTrustedClientEnv(raw: RawTrustedClientEnv): TrustedClientEn
     clientId: raw.OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID,
     clientSecret: raw.OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET,
     redirectUris: raw.OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS,
+    clientAuthMethod: raw.OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD,
     clientName: raw.OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME,
   });
   if (result.success) {

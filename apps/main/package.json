@@ -20,9 +20,9 @@
     "check-ts": "tsc --noEmit && tsc --project tsconfig.build.json --noEmit"
   },
   "dependencies": {
-    "@better-auth/api-key": "^1.6.17",
-    "@better-auth/core": "^1.6.17",
-    "@better-auth/oauth-provider": "^1.6.17",
+    "@better-auth/api-key": "^1.7.28",
+    "@better-auth/core": "^1.7.28",
+    "@better-auth/oauth-provider": "^1.7.28",
     "@langchain/core": "^1.5.0",
     "@langchain/langgraph": "^0.4.10",
     "@langchain/mistralai": "^0.2.3",
@@ -40,7 +40,7 @@
     "@nestjs/websockets": "^12.6.0",
     "archiver": "^7.0.1",
     "axios": "^1.21.1",
-    "better-auth": "^1.6.17",
+    "better-auth": "^1.7.28",
     "body-parser": "^2.4.0",
     "cpx2": "^2.0.0",
     "dayjs": "^1.11.23",

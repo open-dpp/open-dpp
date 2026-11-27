@@ -150,15 +150,16 @@ open-dpp can act as an OpenID Connect provider and OAuth 2.1 authorization serve
 
 The feature is **off by default**. While `OPEN_DPP_OAUTH_PROVIDER_ENABLED` is unset or `"false"`, open-dpp is nobody's identity provider: the OAuth endpoints do not exist (`404`), no OAuth collections are created, and rows left over from an earlier enabled phase are ignored. Two related changes apply whatever the flag says: a User created without a usable display name gets one (their first and last name, or `User` when both are blank), and `GET /api/v2/organizations/member` reads a User's Organizations from the database, so API keys can call it as well.
 
-| Variable                                | Description                                                                                                                                                                                                           |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPEN_DPP_OAUTH_PROVIDER_ENABLED`       | `"true"` or `"false"` (default `"false"`). While `"true"`, the three client variables below are required.                                                                                                             |
-| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`     | The Trusted Client's `client_id`, chosen by you.                                                                                                                                                                      |
-| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET` | The Trusted Client's `client_secret`, chosen by you. Hand it to the Trusted Client's server only; open-dpp stores only a salted hash.                                                                                 |
-| `OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS` | Comma-separated list of the Trusted Client's callback URLs. Each entry is an absolute `https` URL without a fragment; `http` is accepted only on loopback hosts (`localhost`, `*.localhost`, `127.0.0.0/8`, `[::1]`). |
-| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME`   | Optional display name of the Trusted Client. Defaults to the client id.                                                                                                                                               |
+| Variable                                     | Description                                                                                                                                                                                                                               |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_OAUTH_PROVIDER_ENABLED`            | `"true"` or `"false"` (default `"false"`). While `"true"`, the three client variables below are required.                                                                                                                                 |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`          | The Trusted Client's `client_id`, chosen by you.                                                                                                                                                                                          |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET`      | The Trusted Client's `client_secret`, chosen by you. Hand it to the Trusted Client's server only; open-dpp stores only a salted hash.                                                                                                     |
+| `OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS`      | Comma-separated list of the Trusted Client's callback URLs. Each entry is an absolute `https` URL without a fragment; `http` is accepted only on loopback hosts (`localhost`, `*.localhost`, `127.0.0.0/8`, `[::1]`).                     |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD` | Optional. How the Trusted Client sends its secret: `client_secret_basic` (HTTP Basic header, the default) or `client_secret_post` (form body). open-dpp accepts only this one, so set it to what the Trusted Client's OAuth library does. |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME`        | Optional display name of the Trusted Client. Defaults to the client id.                                                                                                                                                                   |
 
-An empty value (`KEY=""`) counts as unset. Enabling the provider without one of the required variables stops the startup with `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but <KEY> is not set.`; an invalid redirect URI stops it too, so a typo never surfaces later as an `invalid_redirect` error. While enabled, `OPEN_DPP_URL` must be an `https` origin as well (`http` only on loopback hosts): the issuer and every OAuth endpoint derive from it, and client credentials, authorization codes and tokens must never travel in cleartext. Generate the client secret rather than choosing it, for example with `openssl rand -base64 32`; open-dpp enforces no minimum length.
+An empty value (`KEY=""`) counts as unset. Enabling the provider without one of the required variables stops the startup with `OPEN_DPP_OAUTH_PROVIDER_ENABLED is set to true but <KEY> is not set.`; an invalid redirect URI or an unknown authentication method stops it too, so a typo never surfaces later as an `invalid_redirect` or `invalid_client` error. While enabled, `OPEN_DPP_URL` must be an `https` origin as well (`http` only on loopback hosts): the issuer and every OAuth endpoint derive from it, and client credentials, authorization codes and tokens must never travel in cleartext. Generate the client secret rather than choosing it, for example with `openssl rand -base64 32`; open-dpp enforces no minimum length.
 
 ```dotenv
 OPEN_DPP_OAUTH_PROVIDER_ENABLED=true
@@ -170,7 +171,7 @@ OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME=Landing page
 
 ### How the Trusted Client is stored
 
-- On every startup with the provider enabled, open-dpp writes the Trusted Client from these variables into the `oauthClient` collection (created on the first boot, updated afterwards). A changed secret, redirect list or name takes effect **after a restart**; the row's identity and creation date are preserved. A row flipped to `disabled` in the database is re-enabled on the next boot.
+- On every startup with the provider enabled, open-dpp writes the Trusted Client from these variables into the `oauthClient` collection (created on the first boot, updated afterwards). A changed secret, redirect list, authentication method or name takes effect **after a restart**; the row's identity and creation date are preserved. A row flipped to `disabled` in the database is re-enabled on the next boot.
 - open-dpp creates a unique index on `oauthClient.clientId`, so several replicas booting at once converge on one row.
 - A failed write is logged at error level and stops the startup, so the OAuth Provider never serves a stale secret or redirect list; fix the database problem and restart.
 - Disabling the provider deletes nothing; the row stays inert until the provider is enabled again.
@@ -192,15 +193,15 @@ Everything lives under the **issuer** `https://<your host>/api/v2/auth` (the `OP
 | `POST {issuer}/oauth2/introspect`                     | Token introspection (RFC 7662)                                                                                                      |
 | `POST {issuer}/oauth2/continue`                       | Resumes a pending authorization after a sign-up (open-dpp's sign-up page reaches it through `POST /api/v2/oauth-provider/continue`) |
 
-Everything else the underlying library offers is switched off and answers `404 Not Found` for every HTTP method: dynamic client registration and client management (`/oauth2/register`, `/oauth2/create-client`, `/oauth2/update-client`, `/oauth2/delete-client`, `/oauth2/get-client`, `/oauth2/get-clients`, `/oauth2/public-client`, `/oauth2/public-client-prelogin`, `/oauth2/client/rotate-secret`), consent management (`/oauth2/consent`, `/oauth2/get-consent`, `/oauth2/get-consents`, `/oauth2/update-consent`, `/oauth2/delete-consent`), RP-initiated logout (`/oauth2/end-session`; the discovery document still advertises an `end_session_endpoint`, a known cosmetic quirk) and the session-to-JWT endpoint `/token`. The provider exists only on the latest API version: `/api/v1/auth/oauth2/...` is `404`.
+Everything else the underlying library offers is switched off and answers `404 Not Found` for every HTTP method: dynamic client registration and client management (`/oauth2/register`, `/oauth2/create-client`, `/oauth2/update-client`, `/oauth2/delete-client`, `/oauth2/get-client`, `/oauth2/get-clients`, `/oauth2/public-client`, `/oauth2/public-client-prelogin`, `/oauth2/client/rotate-secret`, `/oauth2/client/rotate-keys`), consent management (`/oauth2/consent`, `/oauth2/get-consent`, `/oauth2/get-consents`, `/oauth2/update-consent`, `/oauth2/delete-consent`), RP-initiated logout (`/oauth2/end-session` and its confirmation step `/oauth2/end-session/confirm`; the discovery document still advertises an `end_session_endpoint`, a known cosmetic quirk) and the session-to-JWT endpoint `/token`. The provider exists only on the latest API version: `/api/v1/auth/oauth2/...` is `404`.
 
-Rate limits are the library's defaults, enforced in production mode only and per process: token 20 requests per minute, authorize 30, revoke 30, userinfo 60, introspect 100.
+Rate limits are the library's defaults, enforced in production mode only and per process: token 20 requests per minute, authorize 30, revoke 30, userinfo 60, introspect 100. They are counted per client IP address, under the rule the [configuration reference](/reference/configuration#common) describes for the sign-in limits.
 
 ### Storage, keys and secrets
 
-- The provider uses five MongoDB collections: `oauthClient`, `oauthAccessToken` (opaque access tokens only; JWTs are not stored), `oauthRefreshToken`, `oauthConsent` (unused, consent is skipped) and `jwks`. The only index open-dpp creates is the unique one on `oauthClient.clientId`; the library never deletes expired token rows.
+- The provider uses these MongoDB collections: `oauthClient`, `oauthResource` (one row: the issuer, the `resource` the Trusted Client requests), `oauthAccessToken` (opaque access tokens only; JWTs are not stored), `oauthRefreshToken`, `jwks`, and `oauthConsent`, `oauthClientResource` and `oauthClientAssertion`, which stay empty (consent is skipped, the Trusted Client may use the one resource, and it authenticates with its secret). open-dpp creates the unique index on `oauthClient.clientId`; the library creates the lookup indexes its schema declares in the background at startup. It never deletes expired token rows.
 - Tokens are signed with one Ed25519 key, generated on first use and stored in `jwks` with its private half encrypted with `OPEN_DPP_AUTH_SECRET`. **Changing `OPEN_DPP_AUTH_SECRET` breaks token signing** until the documents in `jwks` are deleted; open-dpp then generates a new key, and every access token signed with the old one becomes invalid. Plan the change as a forced re-login of the Trusted Client's users.
-- Access tokens are verified in process against the keys in `jwks`, cached for five minutes and refetched on an unknown key id, so a key rotation needs no restart. If the key set cannot be read, API calls carrying an access token fail with `500` rather than `401`, so an outage is never mistaken for a bad token.
+- Access tokens are verified in process against the keys in `jwks`, cached for five minutes and refetched on an unknown key id (at most every 30 seconds), so a key rotation needs no restart. While the key set cannot be read, the cached keys keep verifying for up to ten minutes after they were fetched. After that, API calls carrying an access token fail with `500` rather than `401`, so an outage is not mistaken for a bad token. A token whose key id the cached set does not hold gets the same `500`, with one exception: while the cached set is younger than five minutes, only the call that tries the refetch fails with `500`. Until the next refetch is due 30 seconds later, such a token is rejected with `401`, like any token signed with an unknown key.
 
 ### Token lifetimes
 
@@ -213,7 +214,7 @@ All lifetimes are fixed; none is configurable.
 | Id token           | 10 hours            |                                                                          |
 | Refresh token      | **7 days, sliding** | rotated on every use; every rotation restarts the 7-day window           |
 
-Worth knowing as an operator: after a User signs out of open-dpp (or their session is revoked), the Trusted Client can still act for them for at most the remaining lifetime of an access token (15 minutes), and, if the User never logs out of the Trusted Client, keep refreshing for up to seven idle days. Both are accepted for a first-party client.
+Worth knowing as an operator: after a User signs out of open-dpp (or their session is revoked), the Trusted Client can still call the API for them for at most the remaining lifetime of an access token (15 minutes), and, if the User never logs out of the Trusted Client, keep refreshing for up to seven idle days. Both are accepted for a first-party client. `userinfo` and introspection stop answering for an access token as soon as the session it was issued in has ended; a refreshed token works there again.
 
 ### Login pages
 
@@ -223,7 +224,7 @@ The provider reuses open-dpp's own `/signin` and `/signup` pages; there is no se
 
 This is the contract the Trusted Client's developers implement. `{issuer}` stands for `https://<your host>/api/v2/auth`.
 
-**Client.** A confidential web client authenticating with `client_secret_basic` (HTTP Basic `client_id:client_secret`, used in the examples below) or `client_secret_post` (`client_id` and `client_secret` in the form body) on the token, revoke and introspect endpoints, so every one of those calls happens **server side**. PKCE with `S256` is mandatory (`plain` is refused). Consent is skipped, so no consent page ever appears.
+**Client.** A confidential web client. On the token, revoke and introspect endpoints it authenticates with the one method the operator registered in `OPEN_DPP_OAUTH_PROVIDER_CLIENT_AUTH_METHOD`: `client_secret_basic` (HTTP Basic `client_id:client_secret`, the default, used in the examples below) or `client_secret_post` (`client_id` and `client_secret` in the form body). The other method is refused with `invalid_client`, and discovery lists the registered one in `token_endpoint_auth_methods_supported`. Every one of those calls happens **server side**. PKCE with `S256` is mandatory (`plain` is refused). Consent is skipped, so no consent page ever appears.
 
 **Discovery.** `GET {issuer}/.well-known/openid-configuration`. The `issuer` in that document is `{issuer}`: it is the `iss` of every token and the `resource` value below. The JWKS at `{issuer}/jwks` holds EdDSA (Ed25519) keys, so the Trusted Client's JOSE library must support EdDSA to validate id tokens.
 
@@ -243,14 +244,14 @@ GET {issuer}/oauth2/authorize
   &code_challenge_method=S256
 ```
 
-Optional `prompt`: `login` forces re-authentication, `create` sends the User to the sign-up page, `none` fails with `login_required` when no session exists. **Never send `prompt=select_account`**; open-dpp has no account chooser. `resource` is not an authorize parameter (see the token endpoint).
+Optional `prompt`: `login` forces re-authentication, `create` sends the User to the sign-up page, `none` fails with `login_required` when no session exists. **Never send `prompt=select_account`**; open-dpp has no account chooser. Send `resource` at the token endpoint, not here.
 
 - A User with an open-dpp session in the browser is redirected straight to `<redirect_uri>?code=…&state=…&iss={issuer}`.
-- Otherwise the provider redirects to open-dpp's sign-in page on the same host (`/signin?…`, or `/signup?…` for `prompt=create`), carrying the complete pending request as a signed query (`…&exp=<unix seconds>&ba_iat=<ms>&sig=<HMAC>`; `sig` is the last parameter, standard base64, percent-encoded). The pending request expires after 10 minutes. No cookie is set; the signed URL _is_ the pending request.
+- Otherwise the provider redirects to open-dpp's sign-in page on the same host (`/signin?…`, or `/signup?…` for `prompt=create`), carrying the complete pending request as a signed query (`…&exp=<unix seconds>&ba_iat=<ms>&ba_param=<name>&…&sig=<HMAC>`; one `ba_param` entry names each signed parameter, and `sig` is the last parameter, standard base64, percent-encoded). The pending request expires after 10 minutes. No cookie is set; the signed URL _is_ the pending request.
 - After the User signs in or signs up, open-dpp redirects the browser to `<redirect_uri>?code=…&state=…&iss={issuer}`. The Trusted Client never handles the sign-in pages; it only receives the callback.
 - Tokens issued right after a sign-up carry `email_verified: false`; e-mail verification never resumes a flow.
 
-Errors that need no User come back on the redirect URI (`error`, `error_description`, `state`): `invalid_scope` for an unknown scope, `invalid_request` for a missing `code_challenge`, `login_required` for `prompt=none` without a session. An unregistered `redirect_uri` is never redirected to; the browser lands on the provider's error page `{issuer}/error?error=invalid_redirect` instead.
+Errors that need no User come back on the redirect URI (`error`, `error_description`, `state`): `invalid_scope` for an unknown scope, `invalid_request` for a missing `code_challenge` or a `code_challenge_method` other than `S256`, `login_required` for `prompt=none` without a session. An unregistered `redirect_uri` is never redirected to; the browser lands on the provider's error page `{issuer}/error?error=invalid_redirect` instead.
 
 #### 2. Code exchange
 
@@ -266,7 +267,7 @@ grant_type=authorization_code
 &resource={issuer}
 ```
 
-**Always send `resource={issuer}`** on the exchange _and on every refresh_. With it, the access token is a signed JWT that the open-dpp API accepts. Without it, the provider issues an opaque token that only `{issuer}/oauth2/userinfo` and `{issuer}/oauth2/introspect` understand and that the API refuses with `401`.
+**Always send `resource={issuer}`** on the exchange. With it, the access token is a signed JWT that the open-dpp API accepts. Without it, the provider issues an opaque token that only `{issuer}/oauth2/userinfo` and `{issuer}/oauth2/introspect` understand and that the API refuses with `401`. A refresh keeps the resource of the exchange; sending `resource={issuer}` again, as the example in step 4 does, is fine.
 
 The response (`Cache-Control: no-store`, `Pragma: no-cache`):
 
@@ -282,11 +283,11 @@ The response (`Cache-Control: no-store`, `Pragma: no-cache`):
 }
 ```
 
-The authorization code is single use: a second exchange fails with `401 invalid_grant`. Other refusals: a wrong `code_verifier` → `401 invalid_request` (`code verification failed`); a wrong client secret → `401 invalid_client`; a `resource` other than `{issuer}` → `400 invalid_request` (`requested resource invalid`).
+The authorization code is single use: a second exchange fails with `400 invalid_grant` and revokes the refresh token the first exchange returned, so never send a code twice. Other refusals: a wrong `code_verifier` → `400 invalid_grant` (`code verification failed`); a wrong client secret → `invalid_client` (`401` with HTTP Basic, `400` with the form body); a `resource` other than `{issuer}` → `400 invalid_target`.
 
 #### 3. Tokens and claims
 
-The **access token** is a JWT with header `{ "alg": "EdDSA", "kid": "…" }` (no `typ`) and this payload:
+The **access token** is a JWT with header `{ "typ": "at+jwt", "alg": "EdDSA", "kid": "…" }` and this payload:
 
 | Claim        | Value                                                                   |
 | ------------ | ----------------------------------------------------------------------- |
@@ -294,13 +295,15 @@ The **access token** is a JWT with header `{ "alg": "EdDSA", "kid": "…" }` (no
 | `sub`        | the User's id (stable, public)                                          |
 | `aud`        | `["{issuer}", "{issuer}/oauth2/userinfo"]`                              |
 | `azp`        | the client id                                                           |
+| `client_id`  | the client id again (RFC 9068)                                          |
 | `scope`      | the granted scopes, space separated                                     |
 | `iat`, `exp` | issued at and expiry, `exp − iat` = 900 s                               |
 | `sid`        | _may_ be present (an open-dpp session id); do not rely on it either way |
+| `jti`        | a unique id per token                                                   |
 
-There is no `jti`: two tokens minted in the same second for the same User can be byte-identical, so never use token equality as a "refresh happened" signal. The API validates the access token itself; the Trusted Client only stores it and sends it along.
+The API validates the access token itself; the Trusted Client only stores it and sends it along.
 
-The **id token** (`aud` = client id) carries `iss`, `sub`, `nonce`, `iat`, `exp`, `auth_time` and `acr`; with the `profile` scope also `name`, `given_name` (first name), `family_name` (last name) and `locale` (the User's preferred language, `en` or `de`), plus `picture` only when the User has an image; with the `email` scope also `email` and `email_verified`. There are **no organization or role claims**; the Trusted Client learns a User's Organizations and roles through the API (step 5).
+The **id token** (`aud` = client id) carries `iss`, `sub`, `nonce`, `iat`, `exp`, `auth_time`, `acr` and `at_hash`; with the `profile` scope also `name`, `given_name` (first name), `family_name` (last name) and `locale` (the User's preferred language, `en` or `de`), plus `picture` only when the User has an image; with the `email` scope also `email` and `email_verified`. There are **no organization or role claims**; the Trusted Client learns a User's Organizations and roles through the API (step 5).
 
 `GET {issuer}/oauth2/userinfo` with `Authorization: Bearer <access token>` returns `sub` and the same scope-gated claims: with `profile` `name`, `given_name`, `family_name` and `locale` (and `picture` when set), with `email` `email` and `email_verified`.
 
@@ -326,7 +329,7 @@ grant_type=refresh_token&refresh_token=<refresh token>&resource={issuer}
   token=<refresh token>&token_type_hint=refresh_token
   ```
 
-  then drop the access, id and refresh tokens from the Trusted Client's session. Revoking a refresh token stops all further refreshing; revoking an access token is accepted (`200`) but changes nothing, because a JWT lives until its `exp` (at most 15 minutes). open-dpp's own sign-out never touches the Trusted Client's tokens, and there is no single logout in either direction.
+  then drop the access, id and refresh tokens from the Trusted Client's session. Revoking a refresh token stops all further refreshing; revoking a JWT access token is refused with `400 unsupported_token_type`, because a JWT lives until its `exp` (at most 15 minutes). open-dpp's own sign-out does not end the Trusted Client's session (see [Token lifetimes](#token-lifetimes)), and there is no single logout in either direction.
 
 - `POST {issuer}/oauth2/introspect` (`token=…`, optional `token_type_hint`, client credentials) is available for opaque and refresh tokens; JWT access tokens need no introspection.
 

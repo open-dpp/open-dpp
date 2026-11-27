@@ -27,11 +27,13 @@ const LOCKED_DOWN_ENDPOINTS = [
   ["get", "/oauth2/public-client"],
   ["post", "/oauth2/public-client-prelogin"],
   ["post", "/oauth2/client/rotate-secret"],
+  ["post", "/oauth2/client/rotate-keys"],
   ["get", "/oauth2/get-consent"],
   ["get", "/oauth2/get-consents"],
   ["post", "/oauth2/update-consent"],
   ["post", "/oauth2/delete-consent"],
   ["get", "/oauth2/end-session"],
+  ["post", "/oauth2/end-session/confirm"],
   ["post", "/oauth2/consent"],
 ] as const;
 
@@ -80,6 +82,8 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
         scopes_supported: ["openid", "profile", "email", "offline_access", "open-dpp:api"],
         grant_types_supported: ["authorization_code", "refresh_token"],
         code_challenge_methods_supported: ["S256"],
+        // the one method the Trusted Client is registered for; the provider refuses any other
+        token_endpoint_auth_methods_supported: ["client_secret_basic"],
       }),
     );
     expect(response.body.registration_endpoint).toBeUndefined();
@@ -119,6 +123,7 @@ describe("OAuth Provider enabled for one Trusted Client", () => {
   it.each([
     ["post", "/token"],
     ["get", "/oauth2/register"],
+    ["post", "/oauth2/end-session"],
   ] as const)("locks down %s %s whatever the method", async (method, path) => {
     const response = await request(app.getHttpServer())[method](`${AUTH_BASE_PATH}${path}`);
 

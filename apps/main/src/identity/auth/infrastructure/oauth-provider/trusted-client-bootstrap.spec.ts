@@ -20,12 +20,17 @@ const EXPECTED_ROW = {
   tokenEndpointAuthMethod: "client_secret_basic",
   grantTypes: ["authorization_code", "refresh_token"],
   responseTypes: ["code"],
-  type: "web",
-  public: false,
+  applicationType: "web",
   skipConsent: true,
   requirePKCE: true,
   scopes: ["openid", "profile", "email", "offline_access", "open-dpp:api"],
   disabled: false,
+};
+
+/** What the plugin's schema fills in on insert; open-dpp sets neither. */
+const PLUGIN_DEFAULTS = {
+  clientCredentialsScopes: [],
+  dpopBoundAccessTokens: false,
 };
 
 function oauthClients(connection: Connection) {
@@ -60,6 +65,7 @@ describe("Trusted Client bootstrap", () => {
     expect(rows).toEqual([
       {
         ...EXPECTED_ROW,
+        ...PLUGIN_DEFAULTS,
         _id: expect.any(ObjectId),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),

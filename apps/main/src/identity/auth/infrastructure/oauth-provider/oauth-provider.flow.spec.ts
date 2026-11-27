@@ -15,6 +15,7 @@ import {
   decodeJwtHeader,
   decodeJwtPayload,
   exchangeCode,
+  exchangeCodeWithBodySecret,
   introspectToken,
   ISSUER,
   obtainTokens,
@@ -22,6 +23,7 @@ import {
   refreshTokens,
   revokeToken,
   TEST_PASSWORD,
+  TEST_LOOPBACK_REDIRECT_URI,
   TEST_REDIRECT_URI,
   type Tokens,
 } from "./oauth-flow.test-helpers";
@@ -132,6 +134,7 @@ describe("OAuth Provider flow for the Trusted Client", () => {
 
     it("the access token carries the claims the guard checks", async () => {
       expect(decodeJwtHeader(tokens.access_token)).toEqual({
+        typ: "at+jwt",
         alg: "EdDSA",
         kid: expect.any(String),
       });
@@ -142,9 +145,11 @@ describe("OAuth Provider flow for the Trusted Client", () => {
         // the requested resource, plus userinfo because openid was granted
         aud: [ISSUER, `${ISSUER}/oauth2/userinfo`],
         azp: TEST_TRUSTED_CLIENT.clientId,
+        client_id: TEST_TRUSTED_CLIENT.clientId,
         scope: FULL_SCOPE,
         // present here because authorize ran against the browser session
         sid: expect.any(String),
+        jti: expect.any(String),
         iat: expect.any(Number),
         exp: expect.any(Number),
       });
@@ -201,12 +206,32 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       expect(policies.status).toBe(200);
     });
 
-    it("the authorization code is single-use", async () => {
+    it("the authorization code is single-use, and a replay revokes the refresh token it yielded", async () => {
       const response = await exchangeCode(app, { code, verifier: pkce.verifier, resource: ISSUER });
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: "invalid_grant", error_description: "invalid code" });
+      // RFC 6749 §4.1.2: a replayed code takes the tokens issued from it down
+      const refresh = await refreshTokens(app, {
+        refreshToken: tokens.refresh_token ?? "",
+        resource: ISSUER,
+      });
+      expect(refresh.status).toBe(400);
+      expect(refresh.body.error).toBe("invalid_grant");
     });
+  });
+
+  it("accepts the registered http redirect URI on a loopback host, for local development", async () => {
+    const response = await authorize(
+      app,
+      authorizeQuery(createPkcePair(), { redirect_uri: TEST_LOOPBACK_REDIRECT_URI }),
+      cookie,
+    );
+
+    expect(response.status).toBe(200);
+    const redirect = new URL(response.body.url);
+    expect(`${redirect.origin}${redirect.pathname}`).toBe(TEST_LOOPBACK_REDIRECT_URI);
+    expect(redirect.searchParams.get("code")).toEqual(expect.any(String));
   });
 
   describe("refresh", () => {
@@ -253,15 +278,18 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       expect(rotated.body.exp).toBeGreaterThanOrEqual(issued.body.exp);
     });
 
-    it("issues an opaque access token when the refresh omits resource", async () => {
+    it("keeps the resource of the code exchange when the refresh omits it", async () => {
       const tokens = await freshUserTokens();
 
       const response = await refreshTokens(app, { refreshToken: tokens.refresh_token ?? "" });
 
       expect(response.status).toBe(200);
       const refreshed: Tokens = response.body;
-      expect(refreshed.access_token.split(".")).not.toHaveLength(3);
-      expect((await callApi(refreshed.access_token)).status).toBe(401);
+      expect(decodeJwtPayload(refreshed.access_token).aud).toEqual([
+        ISSUER,
+        `${ISSUER}/oauth2/userinfo`,
+      ]);
+      expect((await callApi(refreshed.access_token)).status).toBe(200);
     });
 
     it("refuses a replayed refresh token and tears down the whole family", async () => {
@@ -325,11 +353,12 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       expect((await callApi(tokens.access_token)).status).toBe(200);
     });
 
-    it("revoking the JWT access token itself is accepted and changes nothing", async () => {
+    it("revoking the JWT access token itself is refused and changes nothing", async () => {
       const tokens = await freshUserTokens();
 
       const revoke = await revokeToken(app, tokens.access_token, "access_token");
-      expect(revoke.status).toBe(200);
+      expect(revoke.status).toBe(400);
+      expect(revoke.body.error).toBe("unsupported_token_type");
 
       expect((await callApi(tokens.access_token)).status).toBe(200);
       const refresh = await refreshTokens(app, {
@@ -337,6 +366,32 @@ describe("OAuth Provider flow for the Trusted Client", () => {
         resource: ISSUER,
       });
       expect(refresh.status).toBe(200);
+    });
+  });
+
+  describe("after the User's open-dpp sessions have ended", () => {
+    it("userinfo and introspection refuse the access token, while the API and the refresh token carry on", async () => {
+      const who = (await betterAuthHelper.createUser()).user;
+      const tokens = await obtainTokens(app, { email: who.email, password: TEST_PASSWORD });
+      const userinfo = (accessToken: string) =>
+        request(app.getHttpServer())
+          .get(`${AUTH_BASE_PATH}/oauth2/userinfo`)
+          .set("Authorization", bearer(accessToken));
+
+      const revoked = await request(app.getHttpServer())
+        .post(`${AUTH_BASE_PATH}/revoke-sessions`)
+        .set("Cookie", await betterAuthHelper.signAsUser(who.id))
+        .send({});
+      expect(revoked.status).toBe(200);
+
+      expect((await userinfo(tokens.access_token)).status).toBe(401);
+      expect((await introspectToken(app, tokens.access_token)).body).toEqual({ active: false });
+      // the API checks the JWT on its own: it stays good until it expires
+      expect((await callApi(tokens.access_token)).status).toBe(200);
+
+      const refresh = await refreshTokens(app, { refreshToken: tokens.refresh_token ?? "" });
+      expect(refresh.status).toBe(200);
+      expect((await userinfo(refresh.body.access_token)).status).toBe(200);
     });
   });
 
@@ -396,6 +451,18 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       });
     });
 
+    it("the loopback redirect_uri on another port: a web client's redirect URIs match exactly", async () => {
+      const { at, params } = await rejection(
+        authorizeQuery(createPkcePair(), { redirect_uri: "http://localhost:4040/auth/callback" }),
+      );
+
+      expect(at).toBe(`${ISSUER}/error`);
+      expect(params).toEqual({
+        error: "invalid_redirect",
+        error_description: "invalid redirect uri",
+      });
+    });
+
     it("an unknown scope: back to the Trusted Client with invalid_scope", async () => {
       const { at, params } = await rejection(
         authorizeQuery(createPkcePair(), { scope: "openid open-dpp:api admin" }),
@@ -424,14 +491,18 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       expect(params.error_description).toMatch(/^pkce is required/);
     });
 
-    it("a plain code challenge: only S256 is accepted (a 400 before the handler runs)", async () => {
-      const response = await authorize(
-        app,
+    it("a plain code challenge: only S256 is accepted", async () => {
+      const { at, params } = await rejection(
         authorizeQuery(createPkcePair(), { code_challenge_method: "plain" }),
-        cookie,
       );
 
-      expect(response.status).toBe(400);
+      expect(at).toBe(TEST_REDIRECT_URI);
+      expect(params).toEqual({
+        error: "invalid_request",
+        error_description: "code_challenge_method must be one of: S256",
+        state: "state-123",
+        iss: ISSUER,
+      });
     });
 
     it("prompt=none without a session: login_required instead of the sign-in page", async () => {
@@ -462,9 +533,9 @@ describe("OAuth Provider flow for the Trusted Client", () => {
         resource: ISSUER,
       });
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(400);
       expect(response.body).toEqual({
-        error: "invalid_request",
+        error: "invalid_grant",
         error_description: "code verification failed",
       });
     });
@@ -486,6 +557,24 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       });
     });
 
+    it("the client secret in the form body: only the registered method, HTTP Basic, is accepted", async () => {
+      const pkce = createPkcePair();
+      const code = await freshCode(pkce);
+
+      const response = await exchangeCodeWithBodySecret(app, {
+        code,
+        verifier: pkce.verifier,
+        resource: ISSUER,
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        error: "invalid_client",
+        error_description:
+          "client registered for client_secret_basic cannot use client_secret_post",
+      });
+    });
+
     it("a resource outside the issuer", async () => {
       const pkce = createPkcePair();
       const code = await freshCode(pkce);
@@ -497,7 +586,7 @@ describe("OAuth Provider flow for the Trusted Client", () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe("invalid_request");
+      expect(response.body.error).toBe("invalid_target");
     });
   });
 

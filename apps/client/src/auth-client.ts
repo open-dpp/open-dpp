@@ -1,10 +1,5 @@
 import { apiKeyClient } from "@better-auth/api-key/client";
-import {
-  adminClient,
-  genericOAuthClient,
-  inferAdditionalFields,
-  organizationClient,
-} from "better-auth/client/plugins";
+import { adminClient, inferAdditionalFields, organizationClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/vue";
 import { API_URL } from "./const.ts";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
@@ -44,7 +39,6 @@ export const authClient = createAuthClient({
         },
       },
     }),
-    genericOAuthClient(),
     organizationClient(),
     apiKeyClient(),
     adminClient(),

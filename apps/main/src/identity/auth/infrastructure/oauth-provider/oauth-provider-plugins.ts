@@ -1,3 +1,4 @@
+import { isLoopbackHost } from "@better-auth/core/utils/host";
 import { oauthProvider } from "@better-auth/oauth-provider";
 import type { EnvService, TrustedClientEnv } from "@open-dpp/env";
 import { jwt } from "better-auth/plugins";
@@ -9,7 +10,11 @@ import {
 } from "../../domain/trusted-client-access-token";
 import { hashClientSecret, verifyClientSecret } from "./client-secret";
 import { oauthProviderIssuer } from "./oauth-provider-issuer";
-import { OAUTH_PROVIDER_CLAIMS_SUPPORTED, profileClaims } from "./trusted-client-claims";
+import {
+  idTokenClaims,
+  OAUTH_PROVIDER_CLAIMS_SUPPORTED,
+  profileClaims,
+} from "./trusted-client-claims";
 
 export const OAUTH_PROVIDER_LOGIN_PAGE = "/signin";
 export const OAUTH_PROVIDER_SIGNUP_PAGE = "/signup";
@@ -33,11 +38,13 @@ export const OAUTH_PROVIDER_DISABLED_PATHS = [
   "/oauth2/public-client",
   "/oauth2/public-client-prelogin",
   "/oauth2/client/rotate-secret",
+  "/oauth2/client/rotate-keys",
   "/oauth2/get-consent",
   "/oauth2/get-consents",
   "/oauth2/update-consent",
   "/oauth2/delete-consent",
   "/oauth2/end-session",
+  "/oauth2/end-session/confirm",
   "/oauth2/consent",
 ] as const;
 
@@ -62,15 +69,25 @@ export function createOAuthProviderPlugins(trustedClient: TrustedClientEnv, issu
       grantTypes: [...OAUTH_PROVIDER_GRANT_TYPES],
       accessTokenExpiresIn: ACCESS_TOKEN_LIFETIME_SECONDS,
       refreshTokenExpiresIn: REFRESH_TOKEN_LIFETIME_SECONDS,
+      // the open-dpp API is the one protected resource: `resource=<issuer>` yields a JWT access token
+      resources: [issuer],
+      // the Trusted Client is the only client, so a per-client link table would only restate it
+      enforcePerClientResources: false,
+      // a web client may use http only where this allows it: on loopback hosts, as env validation does
+      allowInsecureRedirectUri: (url) => isLoopbackHost(url.host),
       // freezes the Trusted Client against the (already disabled) CRUD endpoints
       cachedTrustedClients: new Set([trustedClient.clientId]),
       storeClientSecret: { hash: hashClientSecret, verify: verifyClientSecret },
-      // standard profile claims from the User's own fields; both hooks run scope-agnostic
-      customIdTokenClaims: ({ user, scopes }) => profileClaims(user, scopes),
+      // both hooks run scope-agnostic. Userinfo gets the profile claims from the User's own
+      // fields on top of the plugin's; the id token gets the whole set, which the plugin
+      // itself stopped writing there in 1.7
+      customIdTokenClaims: ({ user, scopes }) => idTokenClaims(user, scopes),
       customUserInfoClaims: ({ user, scopes }) => profileClaims(user, scopes),
-      advertisedMetadata: { claims_supported: [...OAUTH_PROVIDER_CLAIMS_SUPPORTED] },
-      // the RFC 8414 root alias sits outside the /api prefix and is deliberately unserved
-      silenceWarnings: { oauthAuthServerConfig: true },
+      advertisedMetadata: {
+        claims_supported: [...OAUTH_PROVIDER_CLAIMS_SUPPORTED],
+        // the provider refuses every method but the one the Trusted Client is registered for
+        token_endpoint_auth_methods_supported: [trustedClient.clientAuthMethod],
+      },
     }),
   ];
 }

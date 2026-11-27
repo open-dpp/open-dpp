@@ -17,6 +17,7 @@ const TRUSTED_CLIENT: TrustedClientEnv = {
   clientId: "landing-page",
   clientSecret: "secret",
   redirectUris: ["https://landing.example.com/callback"],
+  clientAuthMethod: "client_secret_basic",
 };
 
 describe("SessionsService", () => {

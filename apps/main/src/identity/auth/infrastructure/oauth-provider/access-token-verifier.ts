@@ -34,6 +34,35 @@ export class KeySetUnavailableError extends Error {
   }
 }
 
+/** The code of jose's error for a key set that did not arrive in time (better-auth waits five seconds). */
+const KEY_SET_TIMEOUT_CODE = "ERR_JWKS_TIMEOUT";
+
+/** The message of better-auth's plain error for a key set it does not ask for again yet. */
+const KEY_SET_REFETCH_REFUSED_MESSAGE = "JWKS fetch failed";
+
+/**
+ * Whether verification gave up for want of the key set. A failing fetch is tagged by
+ * `guardedKeySetFetch`. better-auth adds two verdicts of its own that carry no such tag:
+ * the fetch did not answer in time, or a refetch failed moments ago and it does not try
+ * again yet.
+ *
+ * One case stays a rejection: an unseen key id while the cached key set is still fresh and
+ * a refetch was tried within the last 30 seconds. better-auth then judges by the set it
+ * holds and reports an unknown key, which cannot be told apart from a forged key id.
+ */
+function isKeySetOutage(error: unknown): boolean {
+  if (error instanceof KeySetUnavailableError) {
+    return true;
+  }
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return (
+    (error as { code?: unknown }).code === KEY_SET_TIMEOUT_CODE ||
+    error.message === KEY_SET_REFETCH_REFUSED_MESSAGE
+  );
+}
+
 /** Tags every key-set failure so it can be told apart from the token errors around it. */
 function guardedKeySetFetch(jwksFetch: JwksFetch): JwksFetch {
   return async () => {
@@ -59,7 +88,8 @@ function guardedKeySetFetch(jwksFetch: JwksFetch): JwksFetch {
 export function createAccessTokenVerifier(
   options: AccessTokenVerifierOptions,
 ): AccessTokenVerifier {
-  // stable per verifier: the key set is cached for five minutes and refetched on an unknown key id
+  // stable per verifier: the key set is cached for five minutes, refetched on an unknown key id
+  // (at most every 30 seconds) and trusted for ten minutes while a refetch fails
   const jwksCacheKey = {};
   const jwksFetch = guardedKeySetFetch(options.jwksFetch);
   const verifyOptions = {
@@ -72,8 +102,8 @@ export function createAccessTokenVerifier(
       const payload = await verifyJwsAccessToken(token, { jwksFetch, jwksCacheKey, verifyOptions });
       return checkTrustedClientClaims(payload, options.clientId);
     } catch (error) {
-      if (error instanceof KeySetUnavailableError) {
-        throw error;
+      if (isKeySetOutage(error)) {
+        throw error instanceof KeySetUnavailableError ? error : new KeySetUnavailableError(error);
       }
       return rejected(describeError(error));
     }

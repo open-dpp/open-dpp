@@ -82,6 +82,8 @@ describe("OAuth Provider login and signup continuation", () => {
         code_challenge_method: "S256",
         exp: expect.stringMatching(/^\d+$/),
         ba_iat: expect.stringMatching(/^\d+$/),
+        // repeated, one entry per signed parameter name; `fromEntries` keeps the last
+        ba_param: expect.any(String),
         // standard base64 (not base64url): `+`, `/` and `=` travel percent-encoded in the URL
         sig: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
       });
