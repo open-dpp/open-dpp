@@ -1,9 +1,6 @@
 dev:
 	dotenvx run -f .env.dev -- docker compose -f docker-compose.dev.yml up -d
 
-test:
-	docker compose -f docker-compose.test.yml up -d
-
 # first-time setup of this stack (creates .env): ./scripts/setup.sh
 full:
 	docker compose up -d
@@ -22,4 +19,4 @@ clean-turbo:
 clean-dist:
 	find . -name "dist" -type d -prune -exec rm -rf '{}' +
 
-.PHONY: dev test full clean-pnpm clean-turbo clean-dist clean-nodemodules
+.PHONY: dev full clean-pnpm clean-turbo clean-dist clean-nodemodules

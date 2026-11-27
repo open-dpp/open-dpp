@@ -25,11 +25,11 @@ pnpm run dev:main             # backend only
 pnpm run lint
 pnpm run check-ts             # tsc / vue-tsc in every workspace (CI gate)
 
-# Test (requires: make test to start test Docker services)
+# Test (the Vitest suites need no Docker services)
 pnpm run test                 # all tests
 pnpm run test:main            # backend (Vitest)
 pnpm run test:client          # frontend (Vitest)
-pnpm run test:e2e             # Playwright E2E
+pnpm run test:e2e             # Playwright E2E (needs make dev and the running app)
 
 # Run a single backend test
 cd apps/main && pnpm exec vitest run path/to/file.spec.ts
