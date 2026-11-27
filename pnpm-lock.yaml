@@ -28,7 +28,7 @@ importers:
         specifier: ^26.6.6
         version: 26.6.6
       '@typescript-eslint/parser':
-        specifier: ^8.73.0
+        specifier: ^8.74.0
         version: 8.74.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
       '@vitest/coverage-v8':
         specifier: ^4.1.12
