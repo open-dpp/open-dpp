@@ -62,9 +62,38 @@ describe("property", () => {
       ).not.toThrow();
     });
 
+    // Seconds are optional.
+    const withoutSeconds = ["2020-01-01T06:15Z", "2020-01-01T06:15+02:00"];
+
+    it.each(withoutSeconds)("accepts ISO-8601 DateTime without seconds: %s", (value) => {
+      const created = Property.create({ idShort: "b1", value, valueType: DataTypeDef.DateTime });
+      expect(created.value).toBe(value);
+    });
+
+    // zod accepted minute precision up to 4.4, so values stored back then may
+    // lack seconds and still have to load.
+    it.each(withoutSeconds)("loads a stored DateTime without seconds: %s", (value) => {
+      const loaded = Property.fromPlain(
+        propertyInputPlainFactory.build({ value, valueType: DataTypeDef.DateTime }),
+      );
+      expect(loaded.toPlain()).toMatchObject({ value, valueType: DataTypeDef.DateTime });
+    });
+
+    it("rejects a stored DateTime without an explicit offset", () => {
+      expect(() =>
+        Property.fromPlain(
+          propertyInputPlainFactory.build({
+            value: "2020-01-01T06:15",
+            valueType: DataTypeDef.DateTime,
+          }),
+        ),
+      ).toThrow(new ValueError("Invalid value for valueType DateTime: Invalid ISO datetime"));
+    });
+
     it.each([
       // No timezone offset — ambiguous floating time.
       "2026-04-10T14:00:00",
+      "2026-04-10T14:00",
       // Date-only — not a DateTime.
       "2026-04-10",
       // Free-form string.

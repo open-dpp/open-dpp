@@ -5,22 +5,26 @@ import { isValidGs1DataAttributeValue } from "./gs1-digital-link";
 /** Cap on how much of an unknown AI key is echoed back in an error message. */
 const MAX_ECHOED_KEY_LENGTH = 50;
 
-const unknownAiMessage = (input: unknown): string => {
-  const key = String(input);
+const unknownAiMessage = (key: unknown): string => {
+  const text = String(key);
   const echoed =
-    key.length > MAX_ECHOED_KEY_LENGTH ? `${key.slice(0, MAX_ECHOED_KEY_LENGTH)}…` : key;
+    text.length > MAX_ECHOED_KEY_LENGTH ? `${text.slice(0, MAX_ECHOED_KEY_LENGTH)}…` : text;
   return `"${echoed}" is not a known GS1 data-attribute AI`;
 };
 
 /**
- * Zod schema for a single GS1 data-attribute Application Identifier key.
+ * Error map for the map itself: names every key that is no GS1 data-attribute
+ * AI, and leaves all other issues to zod's default message.
  *
- * The custom error map replaces zod's default enum message, which would join
- * every permitted AI into one multi-kilobyte string.
+ * zod reports those keys as one `unrecognized_keys` issue on the record, with
+ * the keys in `issue.keys`. Its default message is replaced because it echoes
+ * each key in full. zod's typings for a record's issues do not list that code,
+ * hence the loose parameter type.
  */
-const Gs1DataAttributeAiSchema = z.enum(Gs1DataAttributeAi, {
-  error: (issue) => unknownAiMessage(issue.input),
-});
+const unknownAiKeysErrorMap = (issue: { code?: string; keys?: unknown }): string | undefined =>
+  issue.code === "unrecognized_keys" && Array.isArray(issue.keys)
+    ? issue.keys.map(unknownAiMessage).join("; ")
+    : undefined;
 
 /**
  * Zod schema for a map of GS1 data-attribute Application Identifiers to their values.
@@ -32,31 +36,25 @@ const Gs1DataAttributeAiSchema = z.enum(Gs1DataAttributeAi, {
  * satisfy the format/length rules for the corresponding AI.
  *
  * An empty map `{}` is accepted.
- * Non-object input (array, string, null, undefined) is rejected by the base
- * `z.partialRecord` schema before the custom check runs.
+ * Non-object input (array, string, null, undefined) and non-string values are
+ * rejected by the base `z.partialRecord` schema; the value check does not run
+ * for them.
  *
- * Error reporting is keys-first: when a map contains both an unknown AI and an
- * invalid value for a valid AI, only the unknown-key issue is reported (the
- * value check runs only once the base parse succeeds). Among invalid values,
- * only the first (in key order) is reported: a single value check can cost
- * ~100ms on adversarial input (see GS1_DATA_ATTRIBUTE_MAX_LENGTH), so checking
- * every entry would let one request multiply that by the number of entries.
+ * Error reporting: all unknown AIs share one issue on the map itself. The
+ * values of the known AIs are checked as well, so a map with an unknown AI and
+ * an invalid value reports both. Among invalid values, only the first (in key
+ * order) is reported: a single value check can cost ~100ms on adversarial
+ * input (see GS1_DATA_ATTRIBUTE_MAX_LENGTH), so checking every entry would let
+ * one request multiply that by the number of entries.
  *
  * Pure module: no DOM or Node-only globals required at import time.
  */
 export const Gs1DataAttributesSchema = z
-  .partialRecord(Gs1DataAttributeAiSchema, z.string(), {
-    error: (issue) => (issue.code === "invalid_key" ? unknownAiMessage(issue.input) : undefined),
-  })
-  .check((ctx) => {
-    for (const [ai, value] of Object.entries(ctx.value)) {
+  .partialRecord(z.enum(Gs1DataAttributeAi), z.string(), { error: unknownAiKeysErrorMap })
+  .superRefine((attributes, ctx) => {
+    for (const [ai, value] of Object.entries(attributes)) {
       if (!isValidGs1DataAttributeValue(ai, value)) {
-        ctx.issues.push({
-          code: "custom",
-          input: ctx.value,
-          message: `value for AI "${ai}" is invalid`,
-          path: [ai],
-        });
+        ctx.addIssue({ code: "custom", message: `value for AI "${ai}" is invalid`, path: [ai] });
         return;
       }
     }
