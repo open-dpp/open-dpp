@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import * as XLSX from "@e965/xlsx";
 import type { BulkImportRowDto } from "@open-dpp/dto";
 import { FileParser } from "./file-parser";
 
@@ -11,7 +11,10 @@ export class CsvParser extends FileParser {
     const text = buffer.toString("utf8");
 
     // Use XLSX to parse CSV - it handles delimiters, quotes, etc.
-    const workbook = XLSX.read(text, { type: "string", raw: false });
+    // `raw: true` keeps every cell as the text written in the file. Without it the library
+    // turns cells into numbers, dates, booleans and formulas, which drops the leading zeros
+    // of a GTIN and depends on the library version and the host's time zone.
+    const workbook = XLSX.read(text, { type: "string", raw: true });
     const sheetName = workbook.SheetNames[0];
 
     if (!sheetName) {

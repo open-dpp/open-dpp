@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import * as XLSX from "@e965/xlsx";
 import type { BulkImportRowDto } from "@open-dpp/dto";
 import { FileParser } from "./file-parser";
 
