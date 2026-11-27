@@ -8,25 +8,45 @@ import {
   Param,
   ParseFilePipe,
   Post,
+  Query,
   Res,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
+import { CursorQueryParam } from "../../aas/presentation/aas.decorators";
 import { Session } from "../../identity/auth/domain/session";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { Pagination } from "../../pagination/pagination";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
 import { sendMediaFile } from "./media-response";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
+import type { MediaInfoPaginationDto } from "@open-dpp/dto";
 import {
+  MEDIA_INFO_PAGE_MAX_SIZE,
   MEDIA_UPLOAD_MAX_SIZE_BYTES,
+  MediaInfoPaginationDtoSchema,
   ORGANIZATION_PROFILE_UPLOAD_MIME_TYPES,
   PolicyKeyList,
 } from "@open-dpp/dto";
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { z } from "zod";
+
+/**
+ * The `limit` of the media list. Bounded, unlike the limit of the other lists: without a lower
+ * bound the query would run unlimited, and without an upper bound one request could still ask
+ * for every file.
+ */
+const MediaPageLimitSchema = z.coerce
+  .number()
+  .int()
+  .min(1)
+  .max(MEDIA_INFO_PAGE_MAX_SIZE)
+  .default(MEDIA_INFO_PAGE_MAX_SIZE);
 
 /**
  * Size and virus checks. The type is detected from the content by `MediaService`, which
@@ -103,8 +123,16 @@ export class MediaController {
   }
 
   @Get("by-organization")
-  async getFileInfoByOrganization(@OrganizationId() organizationId: string): Promise<Array<Media>> {
-    return this.filesService.findAllByOrganizationId(organizationId);
+  async getFileInfoByOrganization(
+    @OrganizationId() organizationId: string,
+    @Query("limit", new ZodValidationPipe(MediaPageLimitSchema)) limit: number,
+    @CursorQueryParam() cursor: string | undefined,
+  ): Promise<MediaInfoPaginationDto> {
+    const page = await this.filesService.findPageByOrganizationId(
+      organizationId,
+      Pagination.create({ limit, cursor }),
+    );
+    return MediaInfoPaginationDtoSchema.parse(page.toPlain());
   }
 
   @Get(":id/download")

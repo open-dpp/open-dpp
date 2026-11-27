@@ -1,5 +1,5 @@
+import type { MediaInfoDto, MediaInfoPaginationDto, PagingParamsDto } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
-import type { MediaInfoDto } from "./media.dtos";
 
 export class MediaNamespace {
   private readonly mediaEndpoint = `/media`;
@@ -22,8 +22,11 @@ export class MediaNamespace {
     return this.axiosInstance.get<MediaInfoDto>(`${this.mediaEndpoint}/${id}/info`);
   }
 
-  async getMediaInfoByOrganization() {
-    return this.axiosInstance.get<MediaInfoDto[]>(`${this.mediaEndpoint}/by-organization`);
+  /** One page of the organization's media, newest first. */
+  async getMediaInfoByOrganization(params?: PagingParamsDto) {
+    return this.axiosInstance.get<MediaInfoPaginationDto>(`${this.mediaEndpoint}/by-organization`, {
+      params,
+    });
   }
 
   async getMediaInfoOfDataField(uuid: string, dataFieldId: string) {

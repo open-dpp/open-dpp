@@ -188,7 +188,10 @@
   },
   "pagination": {
     "footer": "Zeigt: {from} - {to}, Anzahl: {count}",
-    "footerWithTotal": "Zeigt: {from} - {to} von {total}"
+    "footerWithTotal": "Zeigt: {from} - {to} von {total}",
+    "firstPage": "Erste Seite",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite"
   },
   "language": {
     "all": "Verfügbare Sprachen",
@@ -716,7 +719,8 @@
       "message": "Falls diese Datei in Produktpässen angezeigt wird, wird sie daraus entfernt. Trotzdem löschen?"
     },
     "deleteSuccess": "Datei wurde erfolgreich gelöscht",
-    "deleteFailure": "Fehler beim Löschen der Datei"
+    "deleteFailure": "Fehler beim Löschen der Datei",
+    "loadFailure": "Fehler beim Laden der Medien"
   },
   "activityHistory": {
     "errorLoading": "Fehler beim Laden des Aktivitätsverlaufs",

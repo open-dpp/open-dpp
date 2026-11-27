@@ -23,4 +23,13 @@ export class MediaLibraryPage {
     await item.root.click();
     await expect(this.details).toBeVisible();
   }
+
+  /** Deletes the file from its details and confirms the question that follows. */
+  async delete(item: MediaItem): Promise<void> {
+    const deleteFile = /^(Datei löschen|Delete File)$/;
+    await this.openDetails(item);
+    await this.details.getByRole("button", { name: deleteFile }).click();
+    await this.page.getByRole("alertdialog").getByRole("button", { name: deleteFile }).click();
+    await expect(this.details).toBeHidden();
+  }
 }

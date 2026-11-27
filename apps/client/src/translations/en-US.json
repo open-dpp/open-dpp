@@ -188,7 +188,10 @@
   },
   "pagination": {
     "footer": "Showing: {from} - {to}, Count: {count}",
-    "footerWithTotal": "Showing: {from} - {to} of {total}"
+    "footerWithTotal": "Showing: {from} - {to} of {total}",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   },
   "language": {
     "all": "Available languages",
@@ -950,7 +953,8 @@
       "message": "If this file appears in product passports, it will be removed from them. Still delete?"
     },
     "deleteSuccess": "Successfully deleted file",
-    "deleteFailure": "Failed to delete file"
+    "deleteFailure": "Failed to delete file",
+    "loadFailure": "Failed to load media"
   },
   "file": {
     "type": "File type",

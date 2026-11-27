@@ -45,8 +45,10 @@ export class MediaItem {
  */
 export class MediaGrid {
   readonly uploadButton: Locator;
+  /** The files of the shown page, newest first. */
   readonly items: Locator;
-  private readonly lastPageButton: Locator;
+  private readonly nextPageButton: Locator;
+  private readonly previousPageButton: Locator;
 
   constructor(
     private readonly page: Page,
@@ -54,7 +56,10 @@ export class MediaGrid {
   ) {
     this.uploadButton = root.getByRole("button", { name: /Datei hochladen|Upload file/ });
     this.items = root.getByTestId("media-list-item");
-    this.lastPageButton = root.locator(".p-paginator-last");
+    this.nextPageButton = root.getByRole("button", { name: /^(Nächste Seite|Next page)$/ });
+    this.previousPageButton = root.getByRole("button", {
+      name: /^(Vorherige Seite|Previous page)$/,
+    });
   }
 
   /** Picks the file in the file dialog of the upload button; it is uploaded right away. */
@@ -65,17 +70,22 @@ export class MediaGrid {
   }
 
   /**
-   * Brings the file with this title on screen. New files are appended, so once the media fill
-   * more than one page the newest is on the last one.
+   * The file with this title, once it is on screen. The newest files come first and an upload
+   * shows the first page, so a file that was just uploaded is there without paging.
    */
   async reveal(title: string): Promise<MediaItem> {
     const item = new MediaItem(this.items.filter({ hasText: title }));
-    await expect(async () => {
-      if (!(await item.root.isVisible()) && (await this.lastPageButton.isEnabled())) {
-        await this.lastPageButton.click();
-      }
-      await expect(item.root).toBeVisible({ timeout: 1_000 });
-    }).toPass();
+    await expect(item.root).toBeVisible();
     return item;
+  }
+
+  /** Shows the six files after the shown ones. */
+  async nextPage(): Promise<void> {
+    await this.nextPageButton.click();
+  }
+
+  /** Shows the six files before the shown ones. */
+  async previousPage(): Promise<void> {
+    await this.previousPageButton.click();
   }
 }

@@ -8,6 +8,9 @@ import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import _ from "lodash";
 import { Client as S3Client } from "minio";
+import { findPageByCursor } from "../../lib/repositories";
+import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { Media } from "../domain/media";
 import { detectMediaProcessor } from "./media-upload/media-upload-processor";
 import { MediaDoc } from "./media.schema";
@@ -312,30 +315,17 @@ export class MediaService {
     await this.mediaDoc.deleteOne({ _id: id });
   }
 
-  async findAllByOrganizationId(organizationId: string) {
-    const mediaDocuments = await this.mediaDoc.find(
+  /** One page of the organization's media, newest first, with the number of all its media. */
+  async findPageByOrganizationId(
+    organizationId: string,
+    pagination: Pagination,
+  ): Promise<PagingResult<Media>> {
+    return findPageByCursor<Media>(
+      this.mediaDoc,
       { ownedByOrganizationId: organizationId },
-      {
-        _id: true,
-        ownedByOrganizationId: true,
-        createdByUserId: true,
-        title: true,
-        description: true,
-        mimeType: true,
-        fileExtension: true,
-        size: true,
-        bucket: true,
-        objectName: true,
-        eTag: true,
-        versionId: true,
-        createdAt: true,
-        updatedAt: true,
-        uniqueProductIdentifier: true,
-        dataFieldId: true,
-        originalFilename: true,
-      },
+      (mediaDocument: MediaDoc) => this.convertToDomain(mediaDocument),
+      { pagination, withTotalCount: true },
     );
-    return mediaDocuments.map((mediaDocument) => this.convertToDomain(mediaDocument));
   }
 
   /**
