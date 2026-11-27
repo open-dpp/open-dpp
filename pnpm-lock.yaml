@@ -106,8 +106,8 @@ importers:
         specifier: ^1.6.17
         version: 1.6.17(@opentelemetry/api@1.9.1)(mongodb@7.5.0)(vitest@4.1.12)(vue@3.5.46(typescript@6.0.3))
       chart.js:
-        specifier: ^4.5.1
-        version: 4.5.1
+        specifier: ^4.6.2
+        version: 4.6.2
       dayjs:
         specifier: ^1.11.23
         version: 1.11.23
@@ -146,7 +146,7 @@ importers:
         version: 3.5.46(typescript@6.0.3)
       vue-chartjs:
         specifier: ^5.3.7
-        version: 5.3.7(chart.js@4.5.1)(vue@3.5.46(typescript@6.0.3))
+        version: 5.3.7(chart.js@4.6.2)(vue@3.5.46(typescript@6.0.3))
       vue-i18n:
         specifier: ^11.4.23
         version: 11.4.23(vue@3.5.46(typescript@6.0.3))
@@ -1815,8 +1815,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@kurkle/color@0.3.4':
-    resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
+  '@kurkle/color@0.6.6':
+    resolution: {integrity: sha512-Bd1NjGyoe27ExXRIBu13YymFP6k/wFxpUkX97Z3RlofLFV43nECB2G8vETZzcZzz2Ct2oRzwYElX65lxyi5UNg==}
 
   '@langchain/core@1.5.1':
     resolution: {integrity: sha512-vPtTZGYxzpJBDJ4BHkPJZpC4+ceAFl+Fs1YCXy2VQiUsPRvNEJmXIE/sJLza5MroKRltPLMfJ/qIsSPHqUBr1w==}
@@ -4490,9 +4490,9 @@ packages:
   chardet@2.1.1:
     resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
 
-  chart.js@4.5.1:
-    resolution: {integrity: sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==}
-    engines: {pnpm: '>=8'}
+  chart.js@4.6.2:
+    resolution: {integrity: sha512-xachB+pPHjp0syJi7llUBA1w3kMYl6NF3o7eVrvjnWCT+IB2zMaF2pX5UYDiwbbfsioFEIRnAjreNOMsGj5TIA==}
+    engines: {pnpm: '>=12'}
 
   cheerio-select@2.1.0:
     resolution: {integrity: sha512-9v9kG0LvzrlcungtnJtpGNxY+fzECQKhK4EGJX2vByejiMX84MFNQw4UxPJl3bFbTMw+Dfs37XaIkCwTZfLh4g==}
@@ -10124,7 +10124,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@kurkle/color@0.3.4': {}
+  '@kurkle/color@0.6.6': {}
 
   '@langchain/core@1.5.1(@opentelemetry/api@1.9.1)(ws@8.21.0)':
     dependencies:
@@ -12551,9 +12551,9 @@ snapshots:
 
   chardet@2.1.1: {}
 
-  chart.js@4.5.1:
+  chart.js@4.6.2:
     dependencies:
-      '@kurkle/color': 0.3.4
+      '@kurkle/color': 0.6.6
 
   cheerio-select@2.1.0:
     dependencies:
@@ -17428,9 +17428,9 @@ snapshots:
 
   vscode-uri@3.1.0: {}
 
-  vue-chartjs@5.3.7(chart.js@4.5.1)(vue@3.5.46(typescript@6.0.3)):
+  vue-chartjs@5.3.7(chart.js@4.6.2)(vue@3.5.46(typescript@6.0.3)):
     dependencies:
-      chart.js: 4.5.1
+      chart.js: 4.6.2
       vue: 3.5.46(typescript@6.0.3)
 
   vue-component-type-helpers@3.3.4: {}
