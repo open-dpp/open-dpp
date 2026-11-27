@@ -20,8 +20,8 @@
     "check-ts": "tsc --noEmit && tsc --project tsconfig.build.json --noEmit"
   },
   "dependencies": {
-    "@better-auth/api-key": "^1.6.17",
-    "@better-auth/core": "^1.6.17",
+    "@better-auth/api-key": "^1.7.28",
+    "@better-auth/core": "^1.7.28",
     "@better-auth/oauth-provider": "^1.6.17",
     "@e965/xlsx": "^0.20.3",
     "@langchain/core": "^1.5.0",
