@@ -1,15 +1,31 @@
-import { mount } from "@vue/test-utils";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
-import ConfirmationService from "primevue/confirmationservice";
+import Button from "primevue/button";
+import PrimeVue from "primevue/config";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
+import { onlyMediaPage } from "../../testing-utils/fixtures/organization-media";
 import deDE from "../../translations/de-DE.json";
 import enUS from "../../translations/en-US.json";
 import MediaDetailsSidebar from "./MediaDetailsSidebar.vue";
 
-// The preview is stubbed, so the panel makes no request
-vi.mock("../../lib/api-client", () => ({ default: {} }));
+const mocks = vi.hoisted(() => ({
+  deleteFile: vi.fn(),
+  getMediaInfoByOrganization: vi.fn(),
+}));
+
+// The preview is stubbed, so the panel requests nothing until the user deletes the file
+vi.mock("../../lib/api-client", () => ({
+  default: { media: { media: mocks } },
+}));
+
+// Stands in for the confirm dialog of the app, with a user who confirms
+vi.mock("primevue", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("primevue")>()),
+  useConfirm: () => ({ require: (options: ConfirmationOptions) => options.accept?.() }),
+}));
 
 type Locale = "en-US" | "de-DE";
 
@@ -27,9 +43,8 @@ const DrawerStub = defineComponent({
       props.visible ? h("div", slots.default?.()) : null,
 });
 
-/** The value the panel shows next to its "File size" label. */
-function shownFileSize(size: number, locale: Locale = "en-US") {
-  const wrapper = mount(MediaDetailsSidebar, {
+function mountSidebar(size: number, locale: Locale = "en-US") {
+  return mount(MediaDetailsSidebar, {
     props: {
       modelValue: true,
       media: { id: "media-id", title: "logo.svg", mimeType: "image/svg+xml", size },
@@ -37,12 +52,18 @@ function shownFileSize(size: number, locale: Locale = "en-US") {
     global: {
       plugins: [
         createPinia(),
+        PrimeVue,
         createI18n({ legacy: false, locale, messages: { "en-US": enUS, "de-DE": deDE } }),
-        ConfirmationService,
       ],
-      stubs: { Drawer: DrawerStub, MediaPreview: true, Button: true },
+      components: { Button },
+      stubs: { Drawer: DrawerStub, MediaPreview: true },
     },
   });
+}
+
+/** The value the panel shows next to its "File size" label. */
+function shownFileSize(size: number, locale: Locale = "en-US") {
+  const wrapper = mountSidebar(size, locale);
   const label = wrapper.findAll("dt").find((term) => term.text() === FILE_SIZE_LABEL[locale]);
   return label?.element.nextElementSibling?.textContent?.trim();
 }
@@ -59,5 +80,18 @@ describe("MediaDetailsSidebar", () => {
 
   it("shows the file size with the decimal separator of the active language", () => {
     expect(shownFileSize(34_000, "de-DE")).toBe("33,2 KB");
+  });
+
+  it("loads the shown page of the media again after a delete and closes the panel", async () => {
+    mocks.deleteFile.mockResolvedValue({ status: 200 });
+    mocks.getMediaInfoByOrganization.mockResolvedValue({ data: onlyMediaPage([]) });
+    const wrapper = mountSidebar(209);
+
+    await wrapper.find("button").trigger("click");
+    await flushPromises();
+
+    expect(mocks.deleteFile.mock.calls).toEqual([["media-id"]]);
+    expect(mocks.getMediaInfoByOrganization.mock.calls).toEqual([[{ limit: 6 }]]);
+    expect(wrapper.emitted("update:modelValue")).toEqual([[false]]);
   });
 });

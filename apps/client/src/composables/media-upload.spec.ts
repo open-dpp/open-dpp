@@ -1,3 +1,4 @@
+import type { PagingParamsDto } from "@open-dpp/dto";
 import type { VueWrapper } from "@vue/test-utils";
 import { MEDIA_UPLOAD_MAX_SIZE_BYTES, MEDIA_UPLOAD_MIME_TYPES } from "@open-dpp/dto";
 import { flushPromises, mount } from "@vue/test-utils";
@@ -9,13 +10,18 @@ import { createI18n } from "vue-i18n";
 import MediaModal from "../components/media/MediaModal.vue";
 import { useMediaStore } from "../stores/media";
 import { NotificationType, useNotificationStore } from "../stores/notification";
+import {
+  eightMediaOnTwoPages,
+  newestSixMedia,
+  onlyMediaPage,
+  servedMediaPage,
+} from "../testing-utils/fixtures/organization-media";
 import deDE from "../translations/de-DE.json";
 import enUS from "../translations/en-US.json";
 import MediaView from "../view/media/MediaView.vue";
 
 const mocks = vi.hoisted(() => ({
   uploadGeneralMedia: vi.fn(),
-  getMediaInfo: vi.fn(),
   getMediaInfoByOrganization: vi.fn(),
 }));
 
@@ -109,8 +115,7 @@ describe.each(entryPoints)("uploading in the $name", ({ mountEntryPoint }) => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mocks.getMediaInfoByOrganization.mockResolvedValue({ data: [] });
-    mocks.getMediaInfo.mockResolvedValue({ data: uploaded });
+    mocks.getMediaInfoByOrganization.mockResolvedValue({ data: onlyMediaPage([]) });
     // the error handling store logs every failed upload
     vi.spyOn(console, "error").mockImplementation(() => {});
     pinia = createPinia();
@@ -142,19 +147,59 @@ describe.each(entryPoints)("uploading in the $name", ({ mountEntryPoint }) => {
     expect(shownMessages(NotificationType.ERROR)).toEqual([]);
   });
 
-  it("adds the uploaded file to the loaded media without loading the others again", async () => {
-    const alreadyLoaded = { id: "older-id", title: "older.png", mimeType: "image/png", size: 7 };
+  it("shows the first page again, with the uploaded file before the ones already shown", async () => {
+    const alreadyShown = { id: "older-id", title: "older.png", mimeType: "image/png", size: 7 };
     const mediaStore = useMediaStore();
-    mediaStore.organizationMedia = [alreadyLoaded];
+    mediaStore.organizationMedia = [alreadyShown];
+    const [shownBefore] = mediaStore.organizationMedia;
+    mocks.uploadGeneralMedia.mockResolvedValue(uploaded.id);
+    mocks.getMediaInfoByOrganization.mockResolvedValue({
+      data: onlyMediaPage([uploaded, alreadyShown]),
+    });
+    const wrapper = mountEntryPoint();
+
+    await selectFile(wrapper, [svg]);
+
+    expect(mocks.getMediaInfoByOrganization.mock.calls).toEqual([[{ limit: 6 }]]);
+    expect(mediaStore.organizationMedia).toEqual([uploaded, alreadyShown]);
+    // An entry that stays the same object gives its preview no reason to load the file again
+    expect(mediaStore.organizationMedia[1]).toBe(shownBefore);
+  });
+
+  it("shows the first page after an upload from a later page", async () => {
+    mocks.getMediaInfoByOrganization.mockImplementation(async (params?: PagingParamsDto) => ({
+      data: servedMediaPage(eightMediaOnTwoPages, 8, params?.cursor),
+    }));
+    const mediaStore = useMediaStore();
+    await mediaStore.showFirstOrganizationMediaPage();
+    await mediaStore.showNextOrganizationMediaPage();
     mocks.uploadGeneralMedia.mockResolvedValue(uploaded.id);
     const wrapper = mountEntryPoint();
 
     await selectFile(wrapper, [svg]);
 
-    expect(mediaStore.organizationMedia).toEqual([alreadyLoaded, uploaded]);
-    expect(mocks.getMediaInfo.mock.calls).toEqual([[uploaded.id]]);
-    expect(mocks.getMediaInfoByOrganization).not.toHaveBeenCalled();
+    expect(mediaStore.organizationMedia).toEqual(newestSixMedia);
+    expect(mediaStore.organizationMediaPage).toMatchObject({ from: 0, itemCount: 6 });
+    expect(mediaStore.hasPreviousOrganizationMediaPage).toBe(false);
   });
+
+  it.each(LOCALES)(
+    "keeps the upload confirmed in %s when the list cannot be loaded afterwards",
+    async (locale) => {
+      i18n.global.locale.value = locale;
+      mocks.uploadGeneralMedia.mockResolvedValue(uploaded.id);
+      mocks.getMediaInfoByOrganization.mockRejectedValue(apiError(500));
+      const wrapper = mountEntryPoint();
+
+      await selectFile(wrapper, [svg]);
+
+      expect(i18n.global.te("media.loadFailure", locale)).toBe(true);
+      expect(shownMessages(NotificationType.SUCCESS)).toEqual([
+        i18n.global.t("file.uploadSuccess"),
+      ]);
+      expect(shownMessages(NotificationType.ERROR)).toEqual([i18n.global.t("media.loadFailure")]);
+    },
+  );
 
   it.each(LOCALES)(
     "says in %s that the file is unsupported or invalid when the upload answers 400",

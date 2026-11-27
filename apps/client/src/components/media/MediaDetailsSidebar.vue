@@ -14,7 +14,7 @@ const { media } = defineProps<{
 const open = defineModel<boolean>({ required: true });
 
 const { t, locale } = useI18n();
-const { deleteMedia, fetchMediaByOrganizationId } = useMediaStore();
+const { deleteMedia, reloadOrganizationMediaPage } = useMediaStore();
 const notificationStore = useNotificationStore();
 const confirm = useConfirm();
 
@@ -34,7 +34,7 @@ const deleteFile = async () => {
       if (media) {
         try {
           await deleteMedia(media.id);
-          await fetchMediaByOrganizationId();
+          await reloadOrganizationMediaPage();
           notificationStore.addSuccessNotification(t("media.deleteSuccess"));
           open.value = false;
         } catch {

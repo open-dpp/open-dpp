@@ -1,5 +1,31 @@
 # @open-dpp/main
 
+## 7.5.1
+
+### Patch Changes
+
+- [#1274](https://github.com/open-dpp/open-dpp/pull/1274) [`6d01e73`](https://github.com/open-dpp/open-dpp/commit/6d01e73f997745197870522e655acbe9b49537a4) Thanks [@florianBieck](https://github.com/florianBieck)! - The bulk import reads every cell of a CSV file, column names included, as the text written in the file. A cell is only unquoted and trimmed. Before, cells were interpreted and rewritten:
+
+  - Numbers lost their form: `007` became `7`, the GTIN `04012345678901` lost its leading zero, `123456789012345678` became `123456789012345680`, `1e5` became `100000`, `50%` became `0.5` and a quoted `"1,5"` became `15`.
+  - Dates became serial numbers that depended on the server's time zone: `2024-01-31` became `45322` or `45322.041666666664`.
+  - `TRUE` became `true`, and a formula such as `=1+1` became an empty cell.
+
+  One notation to check in existing files: a cell written as `="007"` arrived as `007` and now arrives as written. Write `007` instead.
+
+  `.xlsx` files are read as before, with one exception: a date cell that the file stores as ISO text without a time zone offset (for example `2024-07-15T12:00:00`) was shifted by the server's UTC offset and now gives the same serial number on every server. A server that runs in UTC sees no difference.
+
+  The library that reads these files changes from `xlsx` 0.18.5, the last version published under that name on npm, to `@e965/xlsx` 0.20.3, which republishes the vendor's current release. It contains the fixes for two advisories rated high that affect 0.18.5: GHSA-4r6h-8v6p-xvw6 (prototype pollution) and GHSA-5pgg-2g8v-p4x9 (regular expression denial of service).
+
+## 7.5.0
+
+### Minor Changes
+
+- [#1236](https://github.com/open-dpp/open-dpp/pull/1236) [`668e1e1`](https://github.com/open-dpp/open-dpp/commit/668e1e16c6fdd3d95721de7f91c0130889cd12f4) Thanks [@florianBieck](https://github.com/florianBieck)! - The media library and the media picker load the media of the organization one page at a time: six files, newest first. Before, they loaded the info of every file the organization has. An upload shows the first page, where the new file comes first. After a delete the shown page is loaded again, and the previews of the files that stay do not request their files again. The grid has the previous/next bar of the other lists, with the number of all files.
+
+  Breaking: `GET /media/by-organization` no longer answers a bare array with every file. It takes the query parameters `limit` (1 to 100, 100 when absent) and `cursor` and answers `{ paging_metadata: { cursor, total_count }, result }` like the other list endpoints, newest first. The api-client method `media.getMediaInfoByOrganization` takes `{ limit, cursor }` and returns that page. The api-client type `MediaInfoDto` now comes from `@open-dpp/dto` and has every field the backend returns.
+
+  The buttons of the previous/next bar below every list have an accessible name and a tooltip. After a list loads its page again, for example when an API key was revoked, a later page that was opened before no longer repeats an entry or shows a wrong range.
+
 ## 7.4.2
 
 ## 7.4.1

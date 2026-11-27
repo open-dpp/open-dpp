@@ -213,4 +213,114 @@ describe("pagination", () => {
     await nextPage();
     expect(totalCount.value).toBeNull();
   });
+
+  describe("with three pages that were all opened before", () => {
+    const items = [0, 1, 2, 3, 4, 5];
+    const firstPage: Page = { cursor: null, itemCount: 2, from: 0, to: 1 };
+    const secondPage: Page = { cursor: "1", itemCount: 2, from: 2, to: 3 };
+    const thirdPage: Page = { cursor: "3", itemCount: 2, from: 4, to: 5 };
+
+    /**
+     * A list on its third page. `shown` holds the items of the last answer, as a list keeps
+     * them in its fetch callback. `beforeAnswer` runs before an answer comes back.
+     */
+    async function openThirdPage() {
+      const list = {
+        shown: [] as number[],
+        beforeAnswer: async (_params: PagingParamsDto): Promise<void> => {},
+      };
+      const pagination = usePagination({
+        limit: 2,
+        fetchCallback: async (params) => {
+          const answer = await fetchCallbackNullOnLastPage(params, items);
+          await list.beforeAnswer(params);
+          list.shown = answer.result;
+          return answer;
+        },
+        changeQueryParams,
+      });
+      await pagination.nextPage();
+      await pagination.nextPage();
+      await pagination.nextPage();
+      return { list, ...pagination };
+    }
+
+    function failEveryRequest() {
+      return async () => {
+        throw new Error("offline");
+      };
+    }
+
+    it("stays on the shown page when the next one cannot be fetched", async () => {
+      const { list, nextPage, previousPage, currentPage } = await openThirdPage();
+      await previousPage();
+      await previousPage();
+
+      list.beforeAnswer = failEveryRequest();
+      await expect(nextPage()).rejects.toThrow("offline");
+      expect(currentPage.value).toEqual(firstPage);
+
+      list.beforeAnswer = async () => {};
+      await nextPage();
+      expect(currentPage.value).toEqual(secondPage);
+      expect(list.shown).toEqual([2, 3]);
+    });
+
+    it("stays on the shown page when the previous one cannot be fetched", async () => {
+      const { list, previousPage, currentPage } = await openThirdPage();
+
+      list.beforeAnswer = failEveryRequest();
+      await expect(previousPage()).rejects.toThrow("offline");
+      expect(currentPage.value).toEqual(thirdPage);
+
+      list.beforeAnswer = async () => {};
+      await previousPage();
+      expect(currentPage.value).toEqual(secondPage);
+      expect(list.shown).toEqual([2, 3]);
+    });
+
+    it("stays on the shown page when the first one cannot be fetched", async () => {
+      const { list, resetCursor, previousPage, currentPage, hasPrevious, hasNext } =
+        await openThirdPage();
+      await previousPage();
+      changeQueryParams.mockClear();
+
+      list.beforeAnswer = failEveryRequest();
+      await expect(resetCursor()).rejects.toThrow("offline");
+      expect(currentPage.value).toEqual(secondPage);
+      expect(hasPrevious.value).toBe(true);
+      expect(hasNext.value).toBe(true);
+      expect(changeQueryParams).not.toHaveBeenCalled();
+
+      list.beforeAnswer = async () => {};
+      await resetCursor();
+      expect(currentPage.value).toEqual(firstPage);
+      expect(hasPrevious.value).toBe(false);
+      expect(hasNext.value).toBe(true);
+      expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
+      expect(list.shown).toEqual([0, 1]);
+    });
+
+    it("shows the items of the page it names when two navigations overlap", async () => {
+      const { list, nextPage, previousPage, currentPage } = await openThirdPage();
+      await previousPage();
+      await previousPage();
+      // The second page takes longer to answer than the third
+      const answerDelayMs: Record<string, number> = { "1": 20, "3": 10 };
+      list.beforeAnswer = (params) =>
+        new Promise((resolve) => setTimeout(resolve, answerDelayMs[params.cursor ?? ""] ?? 0));
+      vi.useFakeTimers();
+
+      try {
+        const navigations = [nextPage(), nextPage()];
+        await vi.runAllTimersAsync();
+        await Promise.all(navigations);
+      } finally {
+        vi.useRealTimers();
+      }
+
+      expect(currentPage.value).toEqual(thirdPage);
+      expect(list.shown).toEqual([4, 5]);
+    });
+  });
 });

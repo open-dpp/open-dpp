@@ -27,6 +27,7 @@ import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorat
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
+import { Media } from "../domain/media";
 import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
 import { MediaService } from "../infrastructure/media.service";
 import { MediaController } from "./media.controller";
@@ -166,6 +167,145 @@ describe("MediaController", () => {
   function download(path: string) {
     return request(app.getHttpServer()).get(path).buffer(true).parse(binaryParser);
   }
+
+  /** Stores the record of a file created at the given time, without a file in the object store. */
+  async function storeMedia(ownedByOrganizationId: string, title: string, createdAt: string) {
+    const id = randomUUID();
+    await module.get(MediaService).save(
+      Media.loadFromDb({
+        id,
+        ownedByOrganizationId,
+        createdByUserId: "user-id",
+        title,
+        description: title,
+        mimeType: "image/png",
+        fileExtension: "png",
+        size: 7,
+        originalFilename: title,
+        uniqueProductIdentifier: null,
+        dataFieldId: null,
+        bucket: "bucket",
+        objectName: `product-passport-files/${id}`,
+        eTag: "etag",
+        versionId: "unversioned",
+        createdAt: new Date(createdAt),
+        updatedAt: new Date(createdAt),
+      }),
+    );
+    return id;
+  }
+
+  describe("GET /media/by-organization", () => {
+    async function signInToNewOrganization() {
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      return {
+        organizationId: org.id,
+        list: (query: { limit?: number; cursor?: string } = {}) =>
+          request(app.getHttpServer())
+            .get("/media/by-organization")
+            .query(query)
+            .set("Cookie", userCookie)
+            .set(ORGANIZATION_ID_HEADER, org.id),
+      };
+    }
+
+    it("answers one page of the organization's files, newest first, with their total", async () => {
+      const { organizationId, list } = await signInToNewOrganization();
+      await storeMedia(organizationId, "oldest.png", "2026-01-01T00:00:00.000Z");
+      const newestId = await storeMedia(organizationId, "newest.png", "2026-01-03T00:00:00.000Z");
+      await storeMedia(organizationId, "middle.png", "2026-01-02T00:00:00.000Z");
+
+      const response = await list({ limit: 2 }).expect(200);
+
+      expect(response.body.result.map((media: { title: string }) => media.title)).toEqual([
+        "newest.png",
+        "middle.png",
+      ]);
+      expect(response.body.result[0]).toMatchObject({
+        id: newestId,
+        mimeType: "image/png",
+        size: 7,
+        createdAt: "2026-01-03T00:00:00.000Z",
+      });
+      expect(response.body.paging_metadata).toEqual({
+        cursor: expect.any(String),
+        total_count: 3,
+      });
+    });
+
+    it("continues after the cursor until every file was listed once", async () => {
+      const { organizationId, list } = await signInToNewOrganization();
+      await storeMedia(organizationId, "first.png", "2026-01-01T00:00:00.000Z");
+      // Two files of the same instant: the cursor has to tell them apart by their id
+      await storeMedia(organizationId, "twin-a.png", "2026-01-02T00:00:00.000Z");
+      await storeMedia(organizationId, "twin-b.png", "2026-01-02T00:00:00.000Z");
+      await storeMedia(organizationId, "fourth.png", "2026-01-03T00:00:00.000Z");
+      await storeMedia(organizationId, "fifth.png", "2026-01-04T00:00:00.000Z");
+
+      // One file per page, so that a page ends between the twins
+      const pages: string[][] = [];
+      let cursor: string | undefined;
+      do {
+        const response = await list({ limit: 1, cursor }).expect(200);
+        pages.push(response.body.result.map((media: { title: string }) => media.title));
+        cursor = response.body.paging_metadata.cursor ?? undefined;
+      } while (cursor && pages.length < 5);
+
+      const titles = pages.flat();
+      expect(titles.toSorted()).toEqual([
+        "fifth.png",
+        "first.png",
+        "fourth.png",
+        "twin-a.png",
+        "twin-b.png",
+      ]);
+      // Which twin comes first is up to their ids, so only the order of the others is fixed
+      expect(titles.filter((title) => !title.startsWith("twin-"))).toEqual([
+        "fifth.png",
+        "fourth.png",
+        "first.png",
+      ]);
+    });
+
+    it("lists and counts only the files of the organization in the header", async () => {
+      const { organizationId, list } = await signInToNewOrganization();
+      const other = await signInToNewOrganization();
+      await storeMedia(organizationId, "ours.png", "2026-01-01T00:00:00.000Z");
+      await storeMedia(other.organizationId, "theirs.png", "2026-01-02T00:00:00.000Z");
+
+      const response = await list().expect(200);
+
+      expect(response.body.result.map((media: { title: string }) => media.title)).toEqual([
+        "ours.png",
+      ]);
+      expect(response.body.paging_metadata).toEqual({ cursor: null, total_count: 1 });
+    });
+
+    it.each([-1, 0, 1.5, 101])("rejects a limit of %s", async (limit) => {
+      const { organizationId, list } = await signInToNewOrganization();
+      await storeMedia(organizationId, "file.png", "2026-01-01T00:00:00.000Z");
+
+      await list({ limit }).expect(400);
+    });
+
+    it("answers 100 files when no limit is given", async () => {
+      const { organizationId, list } = await signInToNewOrganization();
+      const start = Date.parse("2026-01-01T00:00:00.000Z");
+      await Promise.all(
+        Array.from({ length: 101 }, (_, index) =>
+          storeMedia(organizationId, `file-${index}.png`, new Date(start + index).toISOString()),
+        ),
+      );
+
+      const response = await list().expect(200);
+
+      expect(response.body.result).toHaveLength(100);
+      expect(response.body.paging_metadata).toEqual({
+        cursor: expect.any(String),
+        total_count: 101,
+      });
+    });
+  });
 
   describe("POST /media/upload", () => {
     it("stores a sanitized SVG and serves it with a sandboxing CSP", async () => {

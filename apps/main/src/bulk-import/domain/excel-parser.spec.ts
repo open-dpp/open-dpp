@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import * as XLSX from "xlsx";
+import * as XLSX from "@e965/xlsx";
 import { ExcelParser } from "./excel-parser";
 
 // Helper to create a minimal Excel workbook with given data

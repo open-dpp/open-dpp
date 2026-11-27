@@ -64,7 +64,7 @@ export type {
 export { UniqueProductIdentifiersNamespace } from "./dpp/unique-product-identifiers/unique-product-identifiers.namespace";
 export type { CreateUserDto, UserDto } from "./dpp/users/user.dtos";
 export { UsersNamespace } from "./dpp/users/users.namespace";
-export type { MediaInfoDto } from "./media/media.dtos";
+export type { MediaInfoDto } from "@open-dpp/dto";
 export { MediaNamespace } from "./media/media.namespace";
 
 export { OpenDppClient } from "./open-dpp-client";

@@ -444,17 +444,4 @@ describe("MediaService", () => {
       expect(mockMediaModel.deleteOne).not.toHaveBeenCalled();
     });
   });
-
-  describe("findAllByOrganizationId", () => {
-    it("should return array of domain objects", async () => {
-      mockMediaModel.find.mockResolvedValue([validMediaDoc]);
-      const result = await service.findAllByOrganizationId("org-id");
-      expect(result).toHaveLength(1);
-      expect(result[0]).toBeInstanceOf(Media);
-      expect(mockMediaModel.find).toHaveBeenCalledWith(
-        { ownedByOrganizationId: "org-id" },
-        expect.anything(),
-      );
-    });
-  });
 });

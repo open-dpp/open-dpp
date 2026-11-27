@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { beforeEach, describe, expect, it } from "vitest";
-import * as XLSX from "xlsx";
+import * as XLSX from "@e965/xlsx";
 import { BulkImportFileParserService } from "./bulk-import-file-parser.service";
 
 // Helper to create a minimal Excel workbook
