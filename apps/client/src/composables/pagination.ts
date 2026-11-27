@@ -160,13 +160,17 @@ export function usePagination({
     }
   };
 
+  // The pages are replaced only once the first one was fetched: after a failed request the
+  // shown page and its controls are still the ones of the items on screen.
   const showFirstPage = async () => {
+    const response = await fetchPage(null);
     startCursor.value = null;
-    pages.value = [{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }];
+    pages.value = [{ cursor: null, from: 0, to: limit - 1, itemCount: response.result.length }];
+    if (response.paging_metadata.cursor !== null) {
+      addPage(response.paging_metadata.cursor);
+    }
     currentPageIndex.value = 0;
     await updateCurrentPage();
-    await showNextPage();
-    changeQueryParams({ cursor: undefined });
   };
 
   return {
