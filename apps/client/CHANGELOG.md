@@ -1,5 +1,23 @@
 # @open-dpp/client
 
+## 7.4.1
+
+### Patch Changes
+
+- [#1264](https://github.com/open-dpp/open-dpp/pull/1264) [`9ce3b1d`](https://github.com/open-dpp/open-dpp/commit/9ce3b1dfbbf0cf57c512944f20c916bd127584ed) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `@vueuse/core` ^14.3.0 → ^14.4.0
+
+- [#1265](https://github.com/open-dpp/open-dpp/pull/1265) [`b7723ed`](https://github.com/open-dpp/open-dpp/commit/b7723eda8996e67be57b3aa7b22126ae74cfd937) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `axios` ^1.20.0 → ^1.21.1
+  - @open-dpp/main: `axios` ^1.20.0 → ^1.21.1
+  - @open-dpp/api-client: `axios` ^1.20.0 → ^1.21.1
+
+- [#1266](https://github.com/open-dpp/open-dpp/pull/1266) [`e3ac8f4`](https://github.com/open-dpp/open-dpp/commit/e3ac8f47e3bf325fe115c05b81b4770a3870386a) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `chart.js` ^4.5.1 → ^4.6.2
+
 ## 7.4.0
 
 ### Minor Changes
