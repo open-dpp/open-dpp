@@ -1,5 +1,7 @@
 # @open-dpp/main
 
+## 7.4.2
+
 ## 7.4.1
 
 ### Patch Changes
