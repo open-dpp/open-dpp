@@ -104,9 +104,8 @@ const trustedClientEnvSchema = z
     redirectUris: requiredWhileEnabled("redirectUris").pipe(trustedClientRedirectUrisSchema),
     clientName: z.string().optional(),
   })
-  .transform(
-    ({ clientName, ...client }): TrustedClientEnv =>
-      clientName ? { ...client, clientName } : client,
+  .transform(({ clientName, ...client }): TrustedClientEnv =>
+    clientName ? { ...client, clientName } : client,
   );
 
 /**

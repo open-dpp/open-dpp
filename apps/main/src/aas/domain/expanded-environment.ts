@@ -77,8 +77,8 @@ export class ExpandedEnvironment {
 
     const shells = environment.assetAdministrationShells.map((id) => shellMap.get(id)!);
     const submodels = environment.submodels.map((id) => submodelMap.get(id)!);
-    const conceptDescriptions = environment.conceptDescriptions.map(
-      (id) => conceptDescriptionMap.get(id)!,
+    const conceptDescriptions = environment.conceptDescriptions.map((id) =>
+      conceptDescriptionMap.get(id)!,
     );
 
     return new ExpandedEnvironment(shells, submodels, conceptDescriptions);
