@@ -1,5 +1,7 @@
 # @open-dpp/client
 
+## 7.5.1
+
 ## 7.5.0
 
 ### Minor Changes

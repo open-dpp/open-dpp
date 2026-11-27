@@ -1,5 +1,7 @@
 # @open-dpp/dto
 
+## 7.5.1
+
 ## 7.5.0
 
 ### Minor Changes
