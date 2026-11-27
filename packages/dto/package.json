@@ -26,7 +26,8 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./src/index.ts",
     "exports": {
       ".": {
         "types": "./src/index.ts",
@@ -34,8 +35,7 @@
       },
       "./package.json": "./package.json"
     },
-    "main": "./dist/index.js",
-    "types": "./src/index.ts"
+    "access": "public"
   },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",

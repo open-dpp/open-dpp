@@ -12,11 +12,11 @@ describe("downloadZip", () => {
     globalThis.URL.createObjectURL = createObjectURL;
     globalThis.URL.revokeObjectURL = revokeObjectURL;
     clickedLinks = [];
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-      function (this: HTMLAnchorElement) {
-        clickedLinks.push(this);
-      },
-    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clickedLinks.push(this);
+    });
   });
 
   it("downloads the blob as file with the given name and cleans up", () => {

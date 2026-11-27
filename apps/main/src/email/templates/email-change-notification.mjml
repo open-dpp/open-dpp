@@ -11,14 +11,12 @@
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >We received a request to change your account email from
-          <strong>{{ currentEmail }}</strong> to <strong>{{ newEmail }}</strong
-          >.<br />
+          <strong>{{ currentEmail }}</strong> to <strong>{{ newEmail }}</strong>.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
           >If this was you, no action is needed &mdash; finish the change by clicking the
-          verification link we sent to <strong>{{ newEmail }}</strong
-          >.<br />
+          verification link we sent to <strong>{{ newEmail }}</strong>.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
