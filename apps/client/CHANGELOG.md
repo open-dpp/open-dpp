@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 7.4.2
+
+### Patch Changes
+
+- [#1268](https://github.com/open-dpp/open-dpp/pull/1268) [`e83cdf7`](https://github.com/open-dpp/open-dpp/commit/e83cdf748dbd310d6b2854f7f789e6e9e2f10ecf) Thanks [@florianBieck](https://github.com/florianBieck)! - Update dependencies:
+
+  - @open-dpp/client: `vue-tsc` ^3.3.11 → ^3.3.14 (dev)
+
 ## 7.4.1
 
 ### Patch Changes
