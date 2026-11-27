@@ -22,7 +22,7 @@
   "dependencies": {
     "@better-auth/api-key": "^1.6.17",
     "@better-auth/core": "^1.6.17",
-    "@better-auth/oauth-provider": "^1.6.17",
+    "@better-auth/oauth-provider": "^1.7.0",
     "@e965/xlsx": "^0.20.3",
     "@langchain/core": "^1.5.0",
     "@langchain/langgraph": "^0.4.10",
