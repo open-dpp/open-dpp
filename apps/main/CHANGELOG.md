@@ -1,5 +1,21 @@
 # @open-dpp/main
 
+## 7.4.2
+
+## 7.4.1
+
+### Patch Changes
+
+- [#1263](https://github.com/open-dpp/open-dpp/pull/1263) [`ebb5c88`](https://github.com/open-dpp/open-dpp/commit/ebb5c88065974d6736876dda9430032d6f2bc482) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@nestjs/throttler` ^6.7.1 → ^6.8.0
+
+- [#1265](https://github.com/open-dpp/open-dpp/pull/1265) [`b7723ed`](https://github.com/open-dpp/open-dpp/commit/b7723eda8996e67be57b3aa7b22126ae74cfd937) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `axios` ^1.20.0 → ^1.21.1
+  - @open-dpp/main: `axios` ^1.20.0 → ^1.21.1
+  - @open-dpp/api-client: `axios` ^1.20.0 → ^1.21.1
+
 ## 7.4.0
 
 ### Minor Changes

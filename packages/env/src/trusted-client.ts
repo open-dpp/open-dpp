@@ -129,9 +129,8 @@ const trustedClientEnvSchema = z
     clientAuthMethod: trustedClientAuthMethodSchema,
     clientName: z.string().optional(),
   })
-  .transform(
-    ({ clientName, ...client }): TrustedClientEnv =>
-      clientName ? { ...client, clientName } : client,
+  .transform(({ clientName, ...client }): TrustedClientEnv =>
+    clientName ? { ...client, clientName } : client,
   );
 
 /**

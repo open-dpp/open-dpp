@@ -62,7 +62,7 @@ const InputTextStub = defineComponent({
   name: "InputText",
   props: ["modelValue", "disabled", "invalid", "placeholder", "id"],
   emits: ["update:modelValue"],
-  template: `<input :id="id" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />`,
+  template: `<input :id="id" :value="modelValue" :placeholder="placeholder" @input="$emit('update:modelValue', $event.target.value)" />`,
 });
 
 const ButtonStub = defineComponent({
@@ -136,6 +136,14 @@ describe("OrganizationSettingsView — permalink base URL override", () => {
     const wrapper = mountView();
     await flushPromises();
     expect(wrapper.find("#permalinkBaseUrl").exists()).toBe(true);
+  });
+
+  it("shows an example URL as the placeholder of the permalink base URL field", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+    expect(wrapper.find("#permalinkBaseUrl").attributes("placeholder")).toBe(
+      "https://passports.example.com",
+    );
   });
 
   it("sends the permalinkBaseUrl on save", async () => {

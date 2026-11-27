@@ -53,11 +53,11 @@ describe("useRegistryExport", () => {
     globalThis.URL.createObjectURL = createObjectURL;
     globalThis.URL.revokeObjectURL = revokeObjectURL;
     clickedLinks = [];
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-      function (this: HTMLAnchorElement) {
-        clickedLinks.push(this);
-      },
-    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clickedLinks.push(this);
+    });
   });
 
   it("sends the filter and downloads the ZIP", async () => {

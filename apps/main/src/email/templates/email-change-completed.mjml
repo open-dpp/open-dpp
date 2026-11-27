@@ -11,8 +11,7 @@
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >Your account email was changed from <strong>{{ previousEmail }}</strong> to
-          <strong>{{ currentEmail }}</strong
-          >.<br />
+          <strong>{{ currentEmail }}</strong>.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"

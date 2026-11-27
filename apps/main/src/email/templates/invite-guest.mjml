@@ -10,8 +10,7 @@
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >The organization {{ organizationName }} gives you access to selected product passport
-          data as <strong>{{ guestRoleName }}</strong
-          >.<br />
+          data as <strong>{{ guestRoleName }}</strong>.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"

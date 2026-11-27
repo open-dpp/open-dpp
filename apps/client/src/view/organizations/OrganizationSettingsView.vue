@@ -16,6 +16,11 @@ import ContentViewWrapper from "../ContentViewWrapper.vue";
 import { createColorPalette, isValidHexColor } from "../../lib/color";
 
 const defaultColor = "6bad87";
+// Bound from here, not written in the template: vue-tsc 3.3.12 to 3.3.14 turn a
+// `//` inside a component attribute value into a comment in the code they
+// generate, which breaks the type-check of that component's props. It can move
+// back into the template with a release that has vuejs/language-tools#6371.
+const permalinkBaseUrlPlaceholder = "https://passports.example.com";
 
 const { t } = useI18n();
 const organizationStore = useOrganizationsStore();
@@ -175,7 +180,7 @@ onMounted(async () => {
           <InputText
             id="permalinkBaseUrl"
             v-model="branding.permalinkBaseUrl"
-            placeholder="https://passports.example.com"
+            :placeholder="permalinkBaseUrlPlaceholder"
             inputmode="url"
             autocomplete="off"
             spellcheck="false"

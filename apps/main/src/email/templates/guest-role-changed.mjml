@@ -10,8 +10,7 @@
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >The organization {{ organizationName }} changed your role to
-          <strong>{{ guestRoleName }}</strong
-          >.</mj-text
+          <strong>{{ guestRoleName }}</strong>.</mj-text
         >
         {{#if link}}
         <mj-text align="center" font-size="18px" font-family="Arial"
