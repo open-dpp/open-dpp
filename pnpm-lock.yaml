@@ -40,7 +40,7 @@ importers:
         specifier: ^0.45.0
         version: 0.45.0
       oxlint:
-        specifier: ^1.94.0
+        specifier: ^1.95.0
         version: 1.95.0
       tsx:
         specifier: ^4.23.15
