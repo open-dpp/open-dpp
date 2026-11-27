@@ -9,21 +9,21 @@ import apiClient from "../lib/api-client.ts";
 /** How many media of the organization the media library and the media picker show at a time. */
 export const ORGANIZATION_MEDIA_PAGE_SIZE = 6;
 
-/**
- * The fetched media, with the object that is already loaded for each one whose info is unchanged.
- * An entry that stays the same object gives its preview no reason to request the file again.
- */
-function keepLoadedMedia(loaded: Array<MediaInfo>, fetched: Array<MediaInfo>): Array<MediaInfo> {
-  const loadedById = new Map(loaded.map((media) => [media.id, media]));
-  return fetched.map((media) => {
-    const known = loadedById.get(media.id);
-    return known && isEqual(known, media) ? known : media;
-  });
-}
-
 export const useMediaStore = defineStore("media", () => {
   /** The page of the organization's media that is shown, newest first. */
   const organizationMedia = ref<Array<MediaInfo>>([]);
+
+  /**
+   * The fetched media, with the object that is already loaded for each one whose info is unchanged.
+   * An entry that stays the same object gives its preview no reason to request the file again.
+   */
+  const keepLoadedMedia = (fetched: Array<MediaInfo>): Array<MediaInfo> => {
+    const loadedById = new Map(organizationMedia.value.map((media) => [media.id, media]));
+    return fetched.map((media) => {
+      const known = loadedById.get(media.id);
+      return known && isEqual(known, media) ? known : media;
+    });
+  };
 
   const getDppMediaInfo = async (
     uuid: string | undefined,
@@ -82,7 +82,7 @@ export const useMediaStore = defineStore("media", () => {
 
   const fetchOrganizationMediaPage = async (pagingParams: PagingParamsDto) => {
     const response = await apiClient.media.media.getMediaInfoByOrganization(pagingParams);
-    organizationMedia.value = keepLoadedMedia(organizationMedia.value, response.data.result);
+    organizationMedia.value = keepLoadedMedia(response.data.result);
     return response.data;
   };
 
