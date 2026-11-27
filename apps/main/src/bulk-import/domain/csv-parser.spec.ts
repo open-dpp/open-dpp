@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CsvParser } from "./csv-parser";
 
 describe("CsvParser", () => {
@@ -187,6 +187,78 @@ describe("CsvParser", () => {
       const result = parser.parse(buffer);
 
       expect(result.rows).toHaveLength(2);
+    });
+
+    describe("cell values", () => {
+      it.each([
+        ["a number with leading zeros", "007"],
+        ["a GTIN with a leading zero", "04012345678901"],
+        ["a number beyond the safe integer range", "123456789012345678"],
+        ["a number in exponent notation", "1e5"],
+        ["a percentage", "50%"],
+        ["a boolean", "TRUE"],
+        ["a date", "2024-01-31"],
+        ["a date-time", "2024-01-31T10:00:00Z"],
+        ["a time", "12:30"],
+        ["a version number", "1.2.3"],
+        ["a formula", "=1+1"],
+        ["an error value", "#N/A"],
+      ])("returns %s as written: %s", (_kind, cell) => {
+        const buffer = Buffer.from(`name,value\nItem,${cell}`, "utf8");
+
+        const result = parser.parse(buffer);
+
+        expect(result.rows).toEqual([{ name: "Item", value: cell }]);
+      });
+
+      it("returns a quoted decimal comma without the quotes", () => {
+        const buffer = Buffer.from(`name,value\nItem,"1,5"`, "utf8");
+
+        const result = parser.parse(buffer);
+
+        expect(result.rows).toEqual([{ name: "Item", value: "1,5" }]);
+      });
+
+      it("keeps a decimal comma in a semicolon-delimited file", () => {
+        const buffer = Buffer.from(`name;value\nItem;1,5`, "utf8");
+
+        const result = parser.parse(buffer);
+
+        expect(result.rows).toEqual([{ name: "Item", value: "1,5" }]);
+      });
+
+      it("keeps a column name as written", () => {
+        const buffer = Buffer.from(`007,50%\nfirst,second`, "utf8");
+
+        const result = parser.parse(buffer);
+
+        expect(result.rows).toEqual([{ "007": "first", "50%": "second" }]);
+      });
+
+      describe("on hosts in different time zones", () => {
+        afterEach(() => {
+          vi.unstubAllEnvs();
+        });
+
+        // 02:30 on 2024-03-31 does not exist in Europe/Berlin (start of summer time), so a
+        // parser that builds a local Date from the cell gives a different result there.
+        it.each(["UTC", "Europe/Berlin"])(
+          "returns dates and times as written in %s",
+          (timeZone) => {
+            vi.stubEnv("TZ", timeZone);
+            const buffer = Buffer.from(
+              `date,dateTime,time\n2024-01-31,2024-03-31T02:30:00,12:30`,
+              "utf8",
+            );
+
+            const result = parser.parse(buffer);
+
+            expect(result.rows).toEqual([
+              { date: "2024-01-31", dateTime: "2024-03-31T02:30:00", time: "12:30" },
+            ]);
+          },
+        );
+      });
     });
   });
 });
