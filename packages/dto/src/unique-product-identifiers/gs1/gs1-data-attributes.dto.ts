@@ -36,34 +36,25 @@ const unknownAiKeysErrorMap = (issue: { code?: string; keys?: unknown }): string
  * satisfy the format/length rules for the corresponding AI.
  *
  * An empty map `{}` is accepted.
- * Non-object input (array, string, null, undefined) is rejected by the base
- * `z.partialRecord` schema before the custom check runs.
+ * Non-object input (array, string, null, undefined) and non-string values are
+ * rejected by the base `z.partialRecord` schema; the value check does not run
+ * for them.
  *
- * Error reporting is keys-first: when a map contains both an unknown AI and an
- * invalid value for a valid AI, only the unknown-key issue is reported (the
- * value check skips a map the base parse reported an issue for). All unknown
- * AIs share one issue on the map itself. Among invalid values, only the first
- * (in key order) is reported: a single value check can cost ~100ms on
- * adversarial input (see GS1_DATA_ATTRIBUTE_MAX_LENGTH), so checking every
- * entry would let one request multiply that by the number of entries.
+ * Error reporting: all unknown AIs share one issue on the map itself. The
+ * values of the known AIs are checked as well, so a map with an unknown AI and
+ * an invalid value reports both. Among invalid values, only the first (in key
+ * order) is reported: a single value check can cost ~100ms on adversarial
+ * input (see GS1_DATA_ATTRIBUTE_MAX_LENGTH), so checking every entry would let
+ * one request multiply that by the number of entries.
  *
  * Pure module: no DOM or Node-only globals required at import time.
  */
 export const Gs1DataAttributesSchema = z
   .partialRecord(z.enum(Gs1DataAttributeAi), z.string(), { error: unknownAiKeysErrorMap })
-  .check((ctx) => {
-    // Keys first: zod runs this check even after it reported unknown keys.
-    if (ctx.issues.length > 0) {
-      return;
-    }
-    for (const [ai, value] of Object.entries(ctx.value)) {
+  .superRefine((attributes, ctx) => {
+    for (const [ai, value] of Object.entries(attributes)) {
       if (!isValidGs1DataAttributeValue(ai, value)) {
-        ctx.issues.push({
-          code: "custom",
-          input: ctx.value,
-          message: `value for AI "${ai}" is invalid`,
-          path: [ai],
-        });
+        ctx.addIssue({ code: "custom", message: `value for AI "${ai}" is invalid`, path: [ai] });
         return;
       }
     }

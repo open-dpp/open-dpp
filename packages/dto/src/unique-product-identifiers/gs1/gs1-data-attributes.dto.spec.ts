@@ -40,10 +40,22 @@ describe("Gs1DataAttributesSchema", () => {
     ]);
   });
 
-  it("reports no value issue while the map has an unknown AI key", () => {
+  it("reports an unknown AI key and an invalid value together", () => {
     // "999999" is no valid YYMMDD date for AI 11 (see the next spec).
-    expect(messagesFor({ "9999": "x", "11": "999999" })).toEqual([
+    const result = Gs1DataAttributesSchema.safeParse({ "9999": "x", "11": "999999" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map(({ path, message }) => ({ path, message }))).toEqual([
+        { path: [], message: '"9999" is not a known GS1 data-attribute AI' },
+        { path: ["11"], message: 'value for AI "11" is invalid' },
+      ]);
+    }
+  });
+
+  it("reports only the first invalid value next to an unknown AI key", () => {
+    expect(messagesFor({ "9999": "x", "11": "999999", "17": "999999" })).toEqual([
       '"9999" is not a known GS1 data-attribute AI',
+      'value for AI "11" is invalid',
     ]);
   });
 
