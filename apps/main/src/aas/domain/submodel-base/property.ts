@@ -29,6 +29,21 @@ import { parse as parseUri } from "uri-js";
 import { ICopyOptions } from "../copy-options";
 import { AccessResult } from "../security/access-allowed";
 
+/**
+ * The value of a DateTime property: ISO-8601 with an explicit offset, seconds
+ * optional.
+ *
+ * Since zod 4.5 `z.iso.datetime()` requires seconds. Until then it accepted
+ * minute precision such as `2020-01-01T06:15Z`, so stored values may lack
+ * them, and `fromPlain()` validates stored values too. The second member
+ * (`precision: -1`) is the minute-precision form. The message is the one
+ * `z.iso.datetime()` reports; a union on its own answers "Invalid input".
+ */
+const DateTimeValueSchema = z.union(
+  [z.iso.datetime({ offset: true }), z.iso.datetime({ offset: true, precision: -1 })],
+  { error: "Invalid ISO datetime" },
+);
+
 export class Property implements ISubmodelElement {
   private _value: string | null = null;
   private _displayName: Array<LanguageText>;
@@ -136,7 +151,7 @@ export class Property implements ISubmodelElement {
         // Require ISO-8601 with an explicit timezone offset so the value
         // represents an unambiguous instant. A naive "2026-04-10T14:00:00"
         // would render differently for users in different timezones.
-        parse(z.iso.datetime({ offset: true }));
+        parse(DateTimeValueSchema);
       } else if (valueType === DataTypeDef.Boolean) {
         parse(z.union([z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")]));
       } else if (valueType === DataTypeDef.AnyUri) {

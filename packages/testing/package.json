@@ -28,7 +28,7 @@
     "@open-dpp/dto": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "fishery": "^2.4.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.1",
