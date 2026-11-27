@@ -21,7 +21,7 @@
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.11",
     "@vee-validate/zod": "^4.15.1",
-    "@vueuse/core": "^14.3.0",
+    "@vueuse/core": "^14.4.0",
     "axios": "^1.20.0",
     "better-auth": "^1.6.17",
     "chart.js": "^4.5.1",
