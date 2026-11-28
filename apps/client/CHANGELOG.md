@@ -1,5 +1,18 @@
 # @open-dpp/client
 
+## 7.5.3
+
+### Patch Changes
+
+- [#1283](https://github.com/open-dpp/open-dpp/pull/1283) [`067c9c3`](https://github.com/open-dpp/open-dpp/commit/067c9c3cb690fd2c1d128b6bd643b94c99d9b551) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `dompurify` ^3.4.18 → ^3.5.0
+  - @open-dpp/main: `dompurify` ^3.4.18 → ^3.5.0
+
+- [#1287](https://github.com/open-dpp/open-dpp/pull/1287) [`b498da5`](https://github.com/open-dpp/open-dpp/commit/b498da5471e4dc8d0b4211594d2c5bfe6d33367d) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `motion` ^12.40.0 → ^12.43.0
+
 ## 7.5.2
 
 ### Patch Changes
