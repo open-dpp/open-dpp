@@ -269,7 +269,7 @@ importers:
         specifier: ^0.20.3
         version: 0.20.3
       '@langchain/core':
-        specifier: ^1.5.0
+        specifier: ^1.5.1
         version: 1.5.1(@opentelemetry/api@1.9.1)(ws@8.21.0)
       '@langchain/langgraph':
         specifier: ^0.4.10
