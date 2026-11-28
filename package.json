@@ -39,7 +39,7 @@
     "@dotenvx/dotenvx": "^1.75.1",
     "@shadcn/lint": "^0.2.5",
     "@swc/core": "^1.16.22",
-    "@types/node": "^26.6.6",
+    "@types/node": "^26.6.10",
     "@typescript-eslint/parser": "^8.74.0",
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.15.0",
