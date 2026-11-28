@@ -1,5 +1,24 @@
 # @open-dpp/main
 
+## 7.5.3
+
+### Patch Changes
+
+- [#1279](https://github.com/open-dpp/open-dpp/pull/1279) [`9f957b1`](https://github.com/open-dpp/open-dpp/commit/9f957b13c8fef258be64f7936a8328cbe94a98fe) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@rspack/core` ^2.3.3 → ^2.3.4 (dev)
+
+- [#1280](https://github.com/open-dpp/open-dpp/pull/1280) [`3dbe4d8`](https://github.com/open-dpp/open-dpp/commit/3dbe4d81fd376a53c926bdd48d391c56cf3ef6e0) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@types/node` ^26.6.6 → ^26.6.10 (dev)
+  - @open-dpp/api-client: `@types/node` ^26.6.6 → ^26.6.10 (dev)
+  - @open-dpp/dto: `@types/node` ^26.6.6 → ^26.6.10 (dev)
+
+- [#1283](https://github.com/open-dpp/open-dpp/pull/1283) [`067c9c3`](https://github.com/open-dpp/open-dpp/commit/067c9c3cb690fd2c1d128b6bd643b94c99d9b551) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/client: `dompurify` ^3.4.18 → ^3.5.0
+  - @open-dpp/main: `dompurify` ^3.4.18 → ^3.5.0
+
 ## 7.5.2
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @open-dpp/api-client
 
+## 7.5.3
+
+### Patch Changes
+
+- [#1280](https://github.com/open-dpp/open-dpp/pull/1280) [`3dbe4d8`](https://github.com/open-dpp/open-dpp/commit/3dbe4d81fd376a53c926bdd48d391c56cf3ef6e0) Thanks [@renovate](https://github.com/apps/renovate)! - Update dependencies:
+
+  - @open-dpp/main: `@types/node` ^26.6.6 → ^26.6.10 (dev)
+  - @open-dpp/api-client: `@types/node` ^26.6.6 → ^26.6.10 (dev)
+  - @open-dpp/dto: `@types/node` ^26.6.6 → ^26.6.10 (dev)
+
 ## 7.5.2
 
 ## 7.5.1
