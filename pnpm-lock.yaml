@@ -61,7 +61,7 @@ importers:
         specifier: ^10.4.2
         version: 10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
 
   apps/client:
@@ -154,7 +154,7 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@vue/compiler-sfc@3.5.42)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.46(typescript@6.0.3)))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(vue@3.5.46(typescript@6.0.3))
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
       zod-vue-i18n:
         specifier: ^0.0.10
@@ -251,7 +251,7 @@ importers:
         specifier: ^13.0.2
         version: 13.0.2
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
 
   apps/main:
@@ -422,7 +422,7 @@ importers:
         specifier: ^13.0.2
         version: 13.0.2
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
       zod-openapi:
         specifier: ^5.4.6
@@ -574,7 +574,7 @@ importers:
         specifier: ^13.0.2
         version: 13.0.2
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
       '@tsconfig/node-lts':
@@ -602,7 +602,7 @@ importers:
         specifier: ^12.6.0
         version: 12.6.0(@nestjs/common@12.6.0(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/platform-express@12.6.0)(@nestjs/websockets@12.6.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
       '@tsconfig/node-lts':
@@ -677,7 +677,7 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0
       zod:
-        specifier: ^4.6.6
+        specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
       '@tsconfig/node-lts':
