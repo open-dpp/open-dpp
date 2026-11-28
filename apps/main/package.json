@@ -54,7 +54,7 @@
     "http-proxy-3": "^1.23.3",
     "jsdom": "^27.4.0",
     "jsonata": "^2.2.2",
-    "langchain": "^1.4.4",
+    "langchain": "^1.6.8",
     "load-esm": "^1.0.3",
     "lodash": "^4.18.1",
     "minio": "^8.0.7",
