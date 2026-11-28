@@ -29,7 +29,7 @@
     "dompurify": "^3.4.18",
     "lodash": "^4.18.1",
     "marked": "^17.0.6",
-    "motion": "^12.40.0",
+    "motion": "^12.43.0",
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
